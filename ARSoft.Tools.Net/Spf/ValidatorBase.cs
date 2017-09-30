@@ -232,7 +232,7 @@ namespace ARSoft.Tools.Net.Spf
 							TxtRecord txtRecord = dnsResult.Records.FirstOrDefault();
 							if (txtRecord != null)
 							{
-								result.Explanation = (await ExpandDomainAsync(txtRecord.TextData, ip, domain, sender, token)).ToString();
+								result.Explanation = (await ExpandMacroAsync(txtRecord.TextData, ip, domain, sender, token)).ToString();
 							}
 						}
 					}
@@ -481,13 +481,23 @@ namespace ARSoft.Tools.Net.Spf
 
 		private async Task<DomainName> ExpandDomainAsync(string pattern, IPAddress ip, DomainName domain, string sender, CancellationToken token)
 		{
-			if (String.IsNullOrEmpty(pattern))
+			string expanded = await ExpandMacroAsync(pattern, ip, domain, sender, token);
+
+			if (String.IsNullOrEmpty(expanded))
 				return DomainName.Root;
+
+			return DomainName.Parse(expanded);
+		}
+
+		private async Task<string> ExpandMacroAsync(string pattern, IPAddress ip, DomainName domain, string sender, CancellationToken token)
+		{
+			if (String.IsNullOrEmpty(pattern))
+				return String.Empty;
 
 			Match match = _parseMacroRegex.Match(pattern);
 			if (!match.Success)
 			{
-				return DomainName.Parse(pattern);
+				return pattern;
 			}
 
 			StringBuilder sb = new StringBuilder();
@@ -508,7 +518,7 @@ namespace ARSoft.Tools.Net.Spf
 				sb.Append(pattern, pos, pattern.Length - pos);
 			}
 
-			return DomainName.Parse(sb.ToString());
+			return sb.ToString();
 		}
 
 		private async Task<string> ExpandMacroAsync(Match pattern, IPAddress ip, DomainName domain, string sender, CancellationToken token)

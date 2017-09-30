@@ -236,7 +236,6 @@
     <None Include="..\NOTICE">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Documentation\ARSoft.Tools.Net.dxp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
