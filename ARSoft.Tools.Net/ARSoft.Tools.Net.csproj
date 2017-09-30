@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dns\DnsAsyncState.cs" />
     <Compile Include="Dns\DnsClient.cs" />
     <Compile Include="Dns\DnsMessage.cs" />
     <Compile Include="Dns\DnsMessageEntryBase.cs" />
