@@ -33,7 +33,7 @@ namespace ARSoft.Tools.Net.Dns
 			get { return RecordData.Length; }
 		}
 
-		protected override void EncodeRecordData(byte[] messageData, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
 			if (RecordData.Length != 0)
 			{

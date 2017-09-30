@@ -47,14 +47,14 @@ namespace ARSoft.Tools.Net.Dns
 			get { return Flags.Length + Services.Length + RegExp.Length + Replacement.Length + 13; }
 		}
 
-		protected override void EncodeRecordData(byte[] messageData, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
 			DnsMessage.EncodeUShort(messageData, ref currentPosition, Order);
 			DnsMessage.EncodeUShort(messageData, ref currentPosition, Preference);
 			DnsMessage.EncodeText(messageData, ref currentPosition, Flags);
 			DnsMessage.EncodeText(messageData, ref currentPosition, Services);
 			DnsMessage.EncodeText(messageData, ref currentPosition, RegExp);
-			DnsMessage.EncodeDomainName(messageData, ref currentPosition, Replacement, false, domainNames);
+			DnsMessage.EncodeDomainName(messageData, offset, ref currentPosition, Replacement, false, domainNames);
 		}
 	}
 }

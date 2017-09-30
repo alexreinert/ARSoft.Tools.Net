@@ -135,7 +135,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		protected override void EncodeRecordData(byte[] messageData, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
 			if ((Options != null) && (Options.Count != 0))
 			{

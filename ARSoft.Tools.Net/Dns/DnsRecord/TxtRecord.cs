@@ -44,7 +44,7 @@ namespace ARSoft.Tools.Net.Dns
 			get { return TextData.Length + (TextData.Length / 255) + (TextData.Length % 255 == 0 ? 0 : 1); }
 		}
 
-		protected override void EncodeRecordData(byte[] messageData, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
 			DnsMessage.EncodeText(messageData, ref currentPosition, TextData);
 		}

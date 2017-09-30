@@ -74,15 +74,15 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		internal override sealed void Encode(byte[] messageData, ref  int currentPosition, Dictionary<string, ushort> domainNames)
+		internal override sealed void Encode(byte[] messageData, int offset, ref  int currentPosition, Dictionary<string, ushort> domainNames)
 		{
-			DnsMessage.EncodeDomainName(messageData, ref currentPosition, Name, true, domainNames);
+			DnsMessage.EncodeDomainName(messageData, offset, ref currentPosition, Name, true, domainNames);
 			DnsMessage.EncodeUShort(messageData, ref currentPosition, (ushort)RecordType);
 			DnsMessage.EncodeUShort(messageData, ref currentPosition, (ushort)RecordClass);
 			DnsMessage.EncodeInt(messageData, ref currentPosition, TimeToLive);
 
 			int recordPosition = currentPosition + 2;
-			EncodeRecordData(messageData, ref recordPosition, domainNames);
+			EncodeRecordData(messageData, offset, ref recordPosition, domainNames);
 
 			DnsMessage.EncodeUShort(messageData, ref currentPosition, (ushort)(recordPosition - currentPosition - 2));
 			currentPosition = recordPosition;
@@ -90,7 +90,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected abstract int MaximumRecordDataLength { get; }
 
-		protected abstract void EncodeRecordData(byte[] messageData, ref  int currentPosition, Dictionary<string, ushort> domainNames);
+		protected abstract void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames);
 		#endregion
 	}
 }

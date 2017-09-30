@@ -64,6 +64,7 @@
     <Compile Include="Dns\DnsRecord\MxRecord.cs" />
     <Compile Include="Dns\DnsRecord\NaptrRecord.cs" />
     <Compile Include="Dns\DnsRecord\NsRecord.cs" />
+    <Compile Include="Dns\DnsServer.cs" />
     <Compile Include="Dns\EDns\EDnsOptionBase.cs" />
     <Compile Include="Dns\EDns\EDnsOptionType.cs" />
     <Compile Include="Dns\EDns\NsIdOption.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Dns\DnsRecord\TxtRecord.cs" />
     <Compile Include="Dns\DnsRecord\UnknownRecord.cs" />
     <Compile Include="Dns\EDns\UnknownOption.cs" />
+    <Compile Include="Dns\ExceptionEventArgs.cs" />
     <Compile Include="Dns\OperationCode.cs" />
     <Compile Include="Dns\RecordClass.cs" />
     <Compile Include="Dns\RecordType.cs" />

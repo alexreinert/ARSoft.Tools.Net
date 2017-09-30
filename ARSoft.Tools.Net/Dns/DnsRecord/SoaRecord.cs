@@ -51,10 +51,10 @@ namespace ARSoft.Tools.Net.Dns
 			get { return MasterName.Length + ResponsibleName.Length + 24; }
 		}
 
-		protected override void EncodeRecordData(byte[] messageData, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
-			DnsMessage.EncodeDomainName(messageData, ref currentPosition, MasterName, true, domainNames);
-			DnsMessage.EncodeDomainName(messageData, ref currentPosition, ResponsibleName, true, domainNames);
+			DnsMessage.EncodeDomainName(messageData, offset, ref currentPosition, MasterName, true, domainNames);
+			DnsMessage.EncodeDomainName(messageData, offset, ref currentPosition, ResponsibleName, true, domainNames);
 			DnsMessage.EncodeInt(messageData, ref currentPosition, SerialNumber);
 			DnsMessage.EncodeInt(messageData, ref currentPosition, RefreshInterval);
 			DnsMessage.EncodeInt(messageData, ref currentPosition, RetryInterval);

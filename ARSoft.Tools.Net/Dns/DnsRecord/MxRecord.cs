@@ -35,10 +35,10 @@ namespace ARSoft.Tools.Net.Dns
 			get { return ExchangeDomainName.Length + 4; }
 		}
 
-		protected override void EncodeRecordData(byte[] messageData, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
 			DnsMessage.EncodeUShort(messageData, ref currentPosition, Preference);
-			DnsMessage.EncodeDomainName(messageData, ref currentPosition, ExchangeDomainName, true, domainNames);
+			DnsMessage.EncodeDomainName(messageData, offset, ref currentPosition, ExchangeDomainName, true, domainNames);
 		}
 	}
 }

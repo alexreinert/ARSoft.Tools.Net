@@ -23,9 +23,9 @@ namespace ARSoft.Tools.Net.Dns
 			get { return Name.Length + 6; }
 		}
 
-		internal override void Encode(byte[] messageData, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		internal override void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
-			DnsMessage.EncodeDomainName(messageData, ref currentPosition, Name, true, domainNames);
+			DnsMessage.EncodeDomainName(messageData, offset, ref currentPosition, Name, true, domainNames);
 			DnsMessage.EncodeUShort(messageData, ref currentPosition, (ushort)RecordType);
 			DnsMessage.EncodeUShort(messageData, ref currentPosition, (ushort)RecordClass);
 		}

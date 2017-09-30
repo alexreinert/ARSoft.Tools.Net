@@ -158,10 +158,111 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns>The complete response of the dns server</returns>
 		public DnsMessage SendMessage(DnsMessage message)
 		{
-			IAsyncResult ar = BeginSendMessage(message, null, null);
-			ar.AsyncWaitHandle.WaitOne();
-			ar.AsyncWaitHandle.Close();
-			return EndSendMessage(ar);
+			if (message == null)
+				throw new ArgumentNullException("message");
+
+			if ((message.Questions == null) || (message.Questions.Count == 0))
+				throw new ArgumentException("At least one question must be provided", "message");
+
+			byte[] messageData;
+			int messageLength = message.Encode(out messageData);
+
+			foreach (IPAddress nameServer in _dnsServers)
+			{
+				bool sendByTcp = ((messageLength > 512) || (message.Questions[0].RecordType == RecordType.Axfr) || (message.Questions[0].RecordType == RecordType.Ixfr));
+				byte[] resultData = resultData = sendByTcp ? QueryByTcp(nameServer, messageData, messageLength) : QueryByUdp(nameServer, messageData, messageLength);
+
+				if (resultData != null)
+				{
+					DnsMessage result = new DnsMessage();
+					result.Parse(resultData);
+
+					if (result.IsTruncated)
+					{
+						resultData = QueryByTcp(nameServer, messageData, messageLength);
+						if (resultData != null)
+						{
+							result = new DnsMessage();
+							result.Parse(resultData);
+							return result;
+						}
+					}
+					else
+					{
+						return result;
+					}
+				}
+			}
+
+			return null;
+		}
+
+		private byte[] QueryByUdp(IPAddress nameServer, byte[] messageData, int messageLength)
+		{
+			IPEndPoint endPoint = new IPEndPoint(nameServer, _DNS_PORT);
+			byte[] resultData;
+
+			using (UdpClient udpClient = new UdpClient(nameServer.AddressFamily))
+			{
+				try
+				{
+					udpClient.Client.ReceiveTimeout = QueryTimeout;
+					udpClient.Connect(endPoint);
+					udpClient.Send(messageData, messageLength);
+					resultData = udpClient.Receive(ref endPoint);
+
+					return resultData;
+				}
+				catch (Exception e)
+				{
+					Trace.TraceError("Error on dns query: " + e);
+					return null;
+				}
+			}
+		}
+
+		private byte[] QueryByTcp(IPAddress nameServer, byte[] messageData, int messageLength)
+		{
+			IPEndPoint endPoint = new IPEndPoint(nameServer, _DNS_PORT);
+
+			byte[] resultData;
+
+			using (TcpClient tcpClient = new TcpClient(nameServer.AddressFamily))
+			{
+				try
+				{
+					tcpClient.ReceiveTimeout = QueryTimeout;
+					tcpClient.SendTimeout = QueryTimeout;
+					tcpClient.Connect(endPoint);
+
+					using (NetworkStream tcpStream = tcpClient.GetStream())
+					{
+						int tmp = 0;
+
+						byte[] lengthBuffer = new byte[2];
+						DnsMessage.EncodeUShort(lengthBuffer, ref tmp, (ushort)messageLength);
+
+						tcpStream.Write(lengthBuffer, 0, 2);
+						tcpStream.Write(messageData, 0, messageLength);
+
+						lengthBuffer[0] = (byte)tcpStream.ReadByte();
+						lengthBuffer[1] = (byte)tcpStream.ReadByte();
+
+						tmp = 0;
+						int length = DnsMessage.ParseUShort(lengthBuffer, ref tmp);
+
+						resultData = new byte[length];
+						tcpStream.Read(resultData, 0, length);
+					}
+
+					return resultData;
+				}
+				catch (Exception e)
+				{
+					Trace.TraceError("Error on dns query: " + e);
+					return null;
+				}
+			}
 		}
 
 		/// <summary>
@@ -228,7 +329,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			state.UdpEndpoint = new IPEndPoint(state.ServerEnumerator.Current, _DNS_PORT);
 
-			state.UdpClient = new UdpClient();
+			state.UdpClient = new UdpClient(state.UdpEndpoint.AddressFamily);
 			state.UdpClient.Connect(state.UdpEndpoint);
 			state.TimedOut = false;
 
@@ -315,7 +416,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			state.UdpEndpoint = new IPEndPoint(state.ServerEnumerator.Current, _DNS_PORT);
 
-			state.TcpClient = new TcpClient();
+			state.TcpClient = new TcpClient(state.ServerEnumerator.Current.AddressFamily);
 			state.TimedOut = false;
 
 			IAsyncResult asyncResult = state.TcpClient.BeginConnect(state.ServerEnumerator.Current, _DNS_PORT, TcpConnectCompleted, state);

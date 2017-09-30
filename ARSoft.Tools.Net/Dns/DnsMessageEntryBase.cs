@@ -12,7 +12,7 @@ namespace ARSoft.Tools.Net.Dns
 		public RecordClass RecordClass { get; internal set; }
 
 		internal abstract int MaximumLength { get; }
-		internal abstract void Encode(byte[] destination, ref int startPosition, Dictionary<string, ushort> domainNames);
+		internal abstract void Encode(byte[] destination, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames);
 
 		public override string ToString()
 		{

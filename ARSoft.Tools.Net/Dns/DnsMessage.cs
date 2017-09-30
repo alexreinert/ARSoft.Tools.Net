@@ -572,28 +572,35 @@ namespace ARSoft.Tools.Net.Dns
 		#region Serializing
 		internal int Encode(out byte[] messageData)
 		{
+			return Encode(out messageData, false);
+		}
+
+		internal int Encode(out byte[] messageData, bool addLengthPrefix)
+		{
+			int offset = (addLengthPrefix ? 2 : 0);
+
 			#region Get Message Length
-			int length = 12;
+			int maxLength = 12 + offset;
 			foreach (DnsQuestion question in Questions)
 			{
-				length += question.MaximumLength;
+				maxLength += question.MaximumLength;
 			}
 			foreach (DnsRecordBase record in AnswerRecords)
 			{
-				length += record.MaximumLength;
+				maxLength += record.MaximumLength;
 			}
 			foreach (DnsRecordBase record in AuthorityRecords)
 			{
-				length += record.MaximumLength;
+				maxLength += record.MaximumLength;
 			}
 			foreach (DnsRecordBase record in AdditionalRecords)
 			{
-				length += record.MaximumLength;
+				maxLength += record.MaximumLength;
 			}
 			#endregion
 
-			messageData = new byte[length];
-			int currentPosition = 0;
+			messageData = new byte[maxLength];
+			int currentPosition = offset;
 
 			Dictionary<string, ushort> domainNames = new Dictionary<string, ushort>();
 
@@ -606,19 +613,25 @@ namespace ARSoft.Tools.Net.Dns
 
 			foreach (DnsQuestion question in Questions)
 			{
-				question.Encode(messageData, ref currentPosition, domainNames);
+				question.Encode(messageData, offset, ref currentPosition, domainNames);
 			}
 			foreach (DnsRecordBase record in AnswerRecords)
 			{
-				record.Encode(messageData, ref currentPosition, domainNames);
+				record.Encode(messageData, offset, ref currentPosition, domainNames);
 			}
 			foreach (DnsRecordBase record in AuthorityRecords)
 			{
-				record.Encode(messageData, ref currentPosition, domainNames);
+				record.Encode(messageData, offset, ref currentPosition, domainNames);
 			}
 			foreach (DnsRecordBase record in AdditionalRecords)
 			{
-				record.Encode(messageData, ref currentPosition, domainNames);
+				record.Encode(messageData, offset, ref currentPosition, domainNames);
+			}
+
+			if (addLengthPrefix)
+			{
+				int tmp = 0;
+				DnsMessage.EncodeUShort(messageData, ref tmp, (ushort)(currentPosition - offset));
 			}
 
 			return currentPosition;
@@ -658,7 +671,7 @@ namespace ARSoft.Tools.Net.Dns
 			currentPosition++;
 		}
 
-		internal static void EncodeDomainName(byte[] messageData, ref int currentPosition, string name, bool isCompressionAllowed, Dictionary<string, ushort> domainNames)
+		internal static void EncodeDomainName(byte[] messageData, int offset, ref int currentPosition, string name, bool isCompressionAllowed, Dictionary<string, ushort> domainNames)
 		{
 			if (String.IsNullOrEmpty(name) || name == ".")
 			{
@@ -678,7 +691,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (labelLength == -1)
 				labelLength = name.Length;
 
-			domainNames[name] = (ushort)(currentPosition | 0xc000);
+			domainNames[name] = (ushort)((currentPosition | 0xc000) - offset);
 
 			messageData[currentPosition] = (byte)labelLength;
 			currentPosition++;
@@ -687,11 +700,11 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (labelLength == name.Length)
 			{
-				EncodeDomainName(messageData, ref currentPosition, ".", isCompressionAllowed, domainNames);
+				EncodeDomainName(messageData, offset, ref currentPosition, ".", isCompressionAllowed, domainNames);
 			}
 			else
 			{
-				EncodeDomainName(messageData, ref currentPosition, name.Substring(labelLength + 1), isCompressionAllowed, domainNames);
+				EncodeDomainName(messageData, offset, ref currentPosition, name.Substring(labelLength + 1), isCompressionAllowed, domainNames);
 			}
 		}
 
