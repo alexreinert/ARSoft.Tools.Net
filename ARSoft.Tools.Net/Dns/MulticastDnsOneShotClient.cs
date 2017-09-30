@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +25,12 @@ using System.Net.NetworkInformation;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   Provides a one/shot client for querying Multicast DNS as defined in <see
-	///    cref="!:http://www.ietf.org/id/draft-cheshire-dnsext-multicastdns-15.txt">draft-cheshire-dnsext-multicastdns-15</see> .
+	///   Provides a one/shot client for querying Multicast DNS as defined in
+	///   <see
+	///     cref="!:http://www.ietf.org/id/draft-cheshire-dnsext-multicastdns-15.txt">
+	///     draft-cheshire-dnsext-multicastdns-15
+	///   </see>
+	///   .
 	/// </summary>
 	public class MulticastDnsOneShotClient : DnsClientBase
 	{
@@ -48,9 +54,9 @@ namespace ARSoft.Tools.Net.Dns
 			try
 			{
 				maximumMessageSize = NetworkInterface.GetAllNetworkInterfaces()
-					.Where(n => n.SupportsMulticast && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback) && (n.OperationalStatus == OperationalStatus.Up) && (n.Supports(NetworkInterfaceComponent.IPv4)))
-					.Select(n => n.GetIPProperties())
-					.Min(p => Math.Min(p.GetIPv4Properties().Mtu, p.GetIPv6Properties().Mtu));
+				                                     .Where(n => n.SupportsMulticast && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback) && (n.OperationalStatus == OperationalStatus.Up) && (n.Supports(NetworkInterfaceComponent.IPv4)))
+				                                     .Select(n => n.GetIPProperties())
+				                                     .Min(p => Math.Min(p.GetIPv4Properties().Mtu, p.GetIPv6Properties().Mtu));
 			}
 			catch {}
 
@@ -102,10 +108,18 @@ namespace ARSoft.Tools.Net.Dns
 		///   Queries for specified records asynchronously.
 		/// </summary>
 		/// <param name="name"> Name, that should be queried </param>
-		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
-		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
-		///    name="requestCallback" /> delegate when the operation is complete. </param>
-		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
+		/// <param name="requestCallback">
+		///   An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete.
+		/// </param>
+		/// <param name="state">
+		///   A user-defined object that contains information about the receive operation. This object is passed to the
+		///   <paramref
+		///     name="requestCallback" />
+		///   delegate when the operation is complete.
+		/// </param>
+		/// <returns>
+		///   An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive.
+		/// </returns>
 		public IAsyncResult BeginResolve(string name, AsyncCallback requestCallback, object state)
 		{
 			return BeginResolve(name, RecordType.Any, requestCallback, state);
@@ -116,10 +130,18 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="name"> Name, that should be queried </param>
 		/// <param name="recordType"> Type the should be queried </param>
-		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
-		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
-		///    name="requestCallback" /> delegate when the operation is complete. </param>
-		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
+		/// <param name="requestCallback">
+		///   An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete.
+		/// </param>
+		/// <param name="state">
+		///   A user-defined object that contains information about the receive operation. This object is passed to the
+		///   <paramref
+		///     name="requestCallback" />
+		///   delegate when the operation is complete.
+		/// </param>
+		/// <returns>
+		///   An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive.
+		/// </returns>
 		public IAsyncResult BeginResolve(string name, RecordType recordType, AsyncCallback requestCallback, object state)
 		{
 			if (String.IsNullOrEmpty(name))
@@ -136,8 +158,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Ends a pending asynchronous operation.
 		/// </summary>
-		/// <param name="ar"> An <see cref="System.IAsyncResult" /> object returned by a call to <see
-		///    cref="ARSoft.Tools.Net.Dns.MulticastDnsOneShotClient.BeginResolve" /> . </param>
+		/// <param name="ar">
+		///   An <see cref="System.IAsyncResult" /> object returned by a call to
+		///   <see
+		///     cref="ARSoft.Tools.Net.Dns.MulticastDnsOneShotClient.BeginResolve" />
+		///   .
+		/// </param>
 		/// <returns> All available responses on the local network </returns>
 		public List<MulticastDnsMessage> EndResolve(IAsyncResult ar)
 		{

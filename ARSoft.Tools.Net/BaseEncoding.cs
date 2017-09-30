@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +24,11 @@ using System.Text;
 namespace ARSoft.Tools.Net
 {
 	/// <summary>
-	///   <para>Extension class for encoding and decoding Base16, Base32 and Base64</para> <para>Defined in
-	///                                                                                      <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see>
-	///                                                                                    </para>
+	///   <para>Extension class for encoding and decoding Base16, Base32 and Base64</para>
+	///   <para>
+	///     Defined in
+	///     <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see>
+	///   </para>
 	/// </summary>
 	public static class BaseEncoding
 	{
@@ -89,8 +93,12 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		///   Converts a byte array to its corresponding Base16 encoding described in <see
-		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
+		///   Converts a byte array to its corresponding Base16 encoding described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/html/rfc4648">
+		///     RFC 4648
+		///   </see>
+		///   .
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <returns> Encoded string </returns>
@@ -100,8 +108,12 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		///   Converts a byte array to its corresponding Base16 encoding described in <see
-		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
+		///   Converts a byte array to its corresponding Base16 encoding described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/html/rfc4648">
+		///     RFC 4648
+		///   </see>
+		///   .
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <param name="offset"> An offset in inArray. </param>
@@ -153,8 +165,12 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		///   Converts a byte array to its corresponding Base32 encoding described in <see
-		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
+		///   Converts a byte array to its corresponding Base32 encoding described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/html/rfc4648">
+		///     RFC 4648
+		///   </see>
+		///   .
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <returns> Encoded string </returns>
@@ -164,8 +180,12 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		///   Converts a byte array to its corresponding Base32 encoding described in <see
-		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
+		///   Converts a byte array to its corresponding Base32 encoding described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/html/rfc4648">
+		///     RFC 4648
+		///   </see>
+		///   .
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <param name="offset"> An offset in inArray. </param>
@@ -203,8 +223,12 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		///   Converts a byte array to its corresponding Base32Hex encoding described in <see
-		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
+		///   Converts a byte array to its corresponding Base32Hex encoding described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/html/rfc4648">
+		///     RFC 4648
+		///   </see>
+		///   .
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <returns> Encoded string </returns>
@@ -214,8 +238,12 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		///   Converts a byte array to its corresponding Base32Hex encoding described in <see
-		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
+		///   Converts a byte array to its corresponding Base32Hex encoding described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/html/rfc4648">
+		///     RFC 4648
+		///   </see>
+		///   .
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <param name="offset"> An offset in inArray. </param>
@@ -412,8 +440,12 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		///   Converts a byte array to its corresponding Base64 encoding described in <see
-		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
+		///   Converts a byte array to its corresponding Base64 encoding described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/html/rfc4648">
+		///     RFC 4648
+		///   </see>
+		///   .
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <returns> Encoded string </returns>
@@ -423,8 +455,12 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		///   Converts a byte array to its corresponding Base64 encoding described in <see
-		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
+		///   Converts a byte array to its corresponding Base64 encoding described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/html/rfc4648">
+		///     RFC 4648
+		///   </see>
+		///   .
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <param name="offset"> An offset in inArray. </param>
@@ -462,8 +498,12 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		///   Converts a byte array to its corresponding Base64Url encoding described in <see
-		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
+		///   Converts a byte array to its corresponding Base64Url encoding described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/html/rfc4648">
+		///     RFC 4648
+		///   </see>
+		///   .
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <returns> Encoded string </returns>
@@ -473,8 +513,12 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		///   Converts a byte array to its corresponding Base64Url encoding described in <see
-		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
+		///   Converts a byte array to its corresponding Base64Url encoding described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/html/rfc4648">
+		///     RFC 4648
+		///   </see>
+		///   .
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <param name="offset"> An offset in inArray. </param>

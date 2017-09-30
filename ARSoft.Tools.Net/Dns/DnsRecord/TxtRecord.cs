@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +24,11 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>Text strings</para> <para>Defined in
-	///                               <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-	///                             </para>
+	///   <para>Text strings</para>
+	///   <para>
+	///     Defined in
+	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///   </para>
 	/// </summary>
 	public class TxtRecord : DnsRecordBase, ITextRecord
 	{
@@ -94,7 +98,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			foreach (var part in TextParts)
 			{
-				DnsMessageBase.EncodeText(messageData, ref currentPosition, part);
+				DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, part);
 			}
 		}
 	}

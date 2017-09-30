@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,15 +24,17 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>Security Key record</para> <para>Defined in
-	///                                      <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
-	///                                      ,
-	///                                      <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
-	///                                      ,
-	///                                      <see cref="!:http://tools.ietf.org/html/rfc2535">RFC 2535</see>
-	///                                      and
-	///                                      <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
-	///                                    </para>
+	///   <para>Security Key record</para>
+	///   <para>
+	///     Defined in
+	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+	///     ,
+	///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+	///     ,
+	///     <see cref="!:http://tools.ietf.org/html/rfc2535">RFC 2535</see>
+	///     and
+	///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+	///   </para>
 	/// </summary>
 	public class KeyRecord : KeyRecordBase
 	{

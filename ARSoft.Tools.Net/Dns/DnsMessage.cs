@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,11 +28,23 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public class DnsMessage : DnsMessageBase
 	{
+		/// <summary>
+		///   Parses a the contents of a byte array as DnsMessage
+		/// </summary>
+		/// <param name="data">Buffer, that contains the message data</param>
+		/// <returns>A new instance of the DnsMessage class</returns>
+		public static DnsMessage Parse(byte[] data)
+		{
+			return Parse<DnsMessage>(data);
+		}
+
 		#region Header
 		/// <summary>
-		///   <para>Gets or sets the autoritive answer (AA) flag</para> <para>Defined in
-		///                                                               <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-		///                                                             </para>
+		///   <para>Gets or sets the autoritive answer (AA) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///   </para>
 		/// </summary>
 		public bool IsAuthoritiveAnswer
 		{
@@ -49,9 +63,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   <para>Gets or sets the truncated response (TC) flag</para> <para>Defined in
-		///                                                                <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-		///                                                              </para>
+		///   <para>Gets or sets the truncated response (TC) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///   </para>
 		/// </summary>
 		public bool IsTruncated
 		{
@@ -70,9 +86,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   <para>Gets or sets the recursion desired (RD) flag</para> <para>Defined in
-		///                                                               <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-		///                                                             </para>
+		///   <para>Gets or sets the recursion desired (RD) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///   </para>
 		/// </summary>
 		public bool IsRecursionDesired
 		{
@@ -91,9 +109,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   <para>Gets or sets the recursion allowed (RA) flag</para> <para>Defined in
-		///                                                               <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-		///                                                             </para>
+		///   <para>Gets or sets the recursion allowed (RA) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///   </para>
 		/// </summary>
 		public bool IsRecursionAllowed
 		{
@@ -112,9 +132,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   <para>Gets or sets the authentic data (AD) flag</para> <para>Defined in
-		///                                                            <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
-		///                                                          </para>
+		///   <para>Gets or sets the authentic data (AD) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///   </para>
 		/// </summary>
 		public bool IsAuthenticData
 		{
@@ -133,9 +155,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   <para>Gets or sets the checking disabled (CD) flag</para> <para>Defined in
-		///                                                               <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
-		///                                                             </para>
+		///   <para>Gets or sets the checking disabled (CD) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///   </para>
 		/// </summary>
 		public bool IsCheckingDisabled
 		{
@@ -191,15 +215,22 @@ namespace ARSoft.Tools.Net.Dns
 			get { return IsTruncated; }
 		}
 
-		internal override bool IsTcpNextMessageWaiting
+		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
 		{
-			get
+			if (isSubsequentResponseMessage)
 			{
-				return (Questions.Count > 0)
-				       && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr))
-				       && (AnswerRecords.Count > 0)
-				       && (AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa);
+				return (AnswerRecords.Count > 0) && (AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa);
 			}
+
+			if (Questions.Count == 0)
+				return false;
+
+			if ((Questions[0].RecordType != RecordType.Axfr) && (Questions[0].RecordType != RecordType.Ixfr))
+				return false;
+
+			return (AnswerRecords.Count > 0)
+			       && (AnswerRecords[0].RecordType == RecordType.Soa)
+			       && ((AnswerRecords.Count == 1) || (AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa));
 		}
 	}
 }

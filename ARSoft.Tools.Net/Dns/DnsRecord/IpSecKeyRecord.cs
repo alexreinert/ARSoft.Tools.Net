@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,9 +25,11 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>IPsec key storage</para> <para>Defined in
-	///                                    <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
-	///                                  </para>
+	///   <para>IPsec key storage</para>
+	///   <para>
+	///     Defined in
+	///     <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+	///   </para>
 	/// </summary>
 	public class IpSecKeyRecord : DnsRecordBase
 	{
@@ -40,16 +44,20 @@ namespace ARSoft.Tools.Net.Dns
 			None = 0,
 
 			/// <summary>
-			///   <para>RSA</para> <para>Defined in
-			///                      <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
-			///                    </para>
+			///   <para>RSA</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+			///   </para>
 			/// </summary>
 			Rsa = 1,
 
 			/// <summary>
-			///   <para>DSA</para> <para>Defined in
-			///                      <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
-			///                    </para>
+			///   <para>DSA</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+			///   </para>
 			/// </summary>
 			Dsa = 2,
 		}
@@ -65,23 +73,29 @@ namespace ARSoft.Tools.Net.Dns
 			None = 0,
 
 			/// <summary>
-			///   <para>Gateway is a IPv4 address</para> <para>Defined in
-			///                                            <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
-			///                                          </para>
+			///   <para>Gateway is a IPv4 address</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+			///   </para>
 			/// </summary>
 			IpV4 = 1,
 
 			/// <summary>
-			///   <para>Gateway is a IPv6 address</para> <para>Defined in
-			///                                            <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
-			///                                          </para>
+			///   <para>Gateway is a IPv6 address</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+			///   </para>
 			/// </summary>
 			IpV6 = 2,
 
 			/// <summary>
-			///   <para>Gateway is a domain name</para> <para>Defined in
-			///                                           <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
-			///                                         </para>
+			///   <para>Gateway is a domain name</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+			///   </para>
 			/// </summary>
 			Domain = 3,
 		}

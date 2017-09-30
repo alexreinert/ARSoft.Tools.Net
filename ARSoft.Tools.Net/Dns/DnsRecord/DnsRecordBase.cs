@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -129,14 +131,30 @@ namespace ARSoft.Tools.Net.Dns
 					return new NSec3Record();
 				case RecordType.NSec3Param:
 					return new NSec3ParamRecord();
+				case RecordType.Tlsa:
+					return new TlsaRecord();
 				case RecordType.Hip:
 					return new HipRecord();
 				case RecordType.Spf:
 					return new SpfRecord();
+				case RecordType.NId:
+					return new NIdRecord();
+				case RecordType.L32:
+					return new L32Record();
+				case RecordType.L64:
+					return new L64Record();
+				case RecordType.LP:
+					return new LPRecord();
+				case RecordType.Eui48:
+					return new Eui48Record();
+				case RecordType.Eui64:
+					return new Eui64Record();
 				case RecordType.TKey:
 					return new TKeyRecord();
 				case RecordType.TSig:
 					return new TSigRecord();
+				case RecordType.CAA:
+					return new CAARecord();
 				case RecordType.Dlv:
 					return new DlvRecord();
 

@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,13 +24,15 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>Naming authority pointer record</para> <para>Defined in
-	///                                                  <see cref="!:http://tools.ietf.org/html/rfc2915">RFC 2915</see>
-	///                                                  ,
-	///                                                  <see cref="!:http://tools.ietf.org/html/rfc2168">RFC 2168</see>
-	///                                                  and
-	///                                                  <see cref="!:http://tools.ietf.org/html/rfc3403">RFC 3403</see>
-	///                                                </para>
+	///   <para>Naming authority pointer record</para>
+	///   <para>
+	///     Defined in
+	///     <see cref="!:http://tools.ietf.org/html/rfc2915">RFC 2915</see>
+	///     ,
+	///     <see cref="!:http://tools.ietf.org/html/rfc2168">RFC 2168</see>
+	///     and
+	///     <see cref="!:http://tools.ietf.org/html/rfc3403">RFC 3403</see>
+	///   </para>
 	/// </summary>
 	public class NaptrRecord : DnsRecordBase
 	{
@@ -115,9 +119,9 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Order);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
-			DnsMessageBase.EncodeText(messageData, ref currentPosition, Flags);
-			DnsMessageBase.EncodeText(messageData, ref currentPosition, Services);
-			DnsMessageBase.EncodeText(messageData, ref currentPosition, RegExp);
+			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, Flags);
+			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, Services);
+			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, RegExp);
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Replacement, false, domainNames);
 		}
 	}

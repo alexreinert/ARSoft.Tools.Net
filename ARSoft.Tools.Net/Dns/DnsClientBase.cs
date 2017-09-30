@@ -1,5 +1,7 @@
 #region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,14 +47,20 @@ namespace ARSoft.Tools.Net.Dns
 		public int QueryTimeout { get; private set; }
 
 		/// <summary>
-		///   Gets or set a value indicating whether the response is validated as described in <see
-		///    cref="!:http://tools.ietf.org/id/draft-vixie-dnsext-dns0x20-00.txt">draft-vixie-dnsext-dns0x20-00</see>
+		///   Gets or set a value indicating whether the response is validated as described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/id/draft-vixie-dnsext-dns0x20-00.txt">
+		///     draft-vixie-dnsext-dns0x20-00
+		///   </see>
 		/// </summary>
 		public bool IsResponseValidationEnabled { get; set; }
 
 		/// <summary>
-		///   Gets or set a value indicating whether the query labels are used for additional validation as described in <see
-		///    cref="!:http://tools.ietf.org/id/draft-vixie-dnsext-dns0x20-00.txt">draft-vixie-dnsext-dns0x20-00</see>
+		///   Gets or set a value indicating whether the query labels are used for additional validation as described in
+		///   <see
+		///     cref="!:http://tools.ietf.org/id/draft-vixie-dnsext-dns0x20-00.txt">
+		///     draft-vixie-dnsext-dns0x20-00
+		///   </see>
 		/// </summary>
 		public bool Is0x20ValidationEnabled { get; set; }
 
@@ -88,11 +96,11 @@ namespace ARSoft.Tools.Net.Dns
 
 					if (resultData != null)
 					{
-						TMessage result = new TMessage();
+						TMessage result;
 
 						try
 						{
-							result.Parse(resultData, false, tsigKeySelector, tsigOriginalMac);
+							result = DnsMessageBase.Parse<TMessage>(resultData, tsigKeySelector, tsigOriginalMac);
 						}
 						catch (Exception e)
 						{
@@ -113,11 +121,11 @@ namespace ARSoft.Tools.Net.Dns
 							resultData = QueryByTcp(responderAddress, messageData, messageLength, ref tcpClient, ref tcpStream, out responderAddress);
 							if (resultData != null)
 							{
-								TMessage tcpResult = new TMessage();
+								TMessage tcpResult;
 
 								try
 								{
-									tcpResult.Parse(resultData, false, tsigKeySelector, tsigOriginalMac);
+									tcpResult = DnsMessageBase.Parse<TMessage>(resultData, tsigKeySelector, tsigOriginalMac);
 								}
 								catch (Exception e)
 								{
@@ -139,7 +147,7 @@ namespace ARSoft.Tools.Net.Dns
 							}
 						}
 
-						bool isTcpNextMessageWaiting = result.IsTcpNextMessageWaiting;
+						bool isTcpNextMessageWaiting = result.IsTcpNextMessageWaiting(false);
 						bool isSucessfullFinished = true;
 
 						while (isTcpNextMessageWaiting)
@@ -147,11 +155,11 @@ namespace ARSoft.Tools.Net.Dns
 							resultData = QueryByTcp(responderAddress, null, 0, ref tcpClient, ref tcpStream, out responderAddress);
 							if (resultData != null)
 							{
-								TMessage tcpResult = new TMessage();
+								TMessage tcpResult;
 
 								try
 								{
-									tcpResult.Parse(resultData, false, tsigKeySelector, tsigOriginalMac);
+									tcpResult = DnsMessageBase.Parse<TMessage>(resultData, tsigKeySelector, tsigOriginalMac);
 								}
 								catch (Exception e)
 								{
@@ -168,7 +176,7 @@ namespace ARSoft.Tools.Net.Dns
 								else
 								{
 									result.AnswerRecords.AddRange(tcpResult.AnswerRecords);
-									isTcpNextMessageWaiting = tcpResult.IsTcpNextMessageWaiting;
+									isTcpNextMessageWaiting = tcpResult.IsTcpNextMessageWaiting(true);
 								}
 							}
 							else
@@ -352,10 +360,10 @@ namespace ARSoft.Tools.Net.Dns
 				if (tcpClient == null)
 				{
 					tcpClient = new TcpClient(nameServer.AddressFamily)
-					            {
-					            	ReceiveTimeout = QueryTimeout,
-					            	SendTimeout = QueryTimeout
-					            };
+					{
+						ReceiveTimeout = QueryTimeout,
+						SendTimeout = QueryTimeout
+					};
 
 					tcpClient.Connect(endPoint);
 					tcpStream = tcpClient.GetStream();
@@ -484,10 +492,10 @@ namespace ARSoft.Tools.Net.Dns
 			if (_isAnyServerMulticast)
 			{
 				var localIPs = NetworkInterface.GetAllNetworkInterfaces()
-					.Where(n => n.SupportsMulticast && (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
-					.SelectMany(n => n.GetIPProperties().UnicastAddresses.Select(a => a.Address))
-					.Where(a => !IPAddress.IsLoopback(a) && ((a.AddressFamily == AddressFamily.InterNetwork) || a.IsIPv6LinkLocal))
-					.ToList();
+				                               .Where(n => n.SupportsMulticast && (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+				                               .SelectMany(n => n.GetIPProperties().UnicastAddresses.Select(a => a.Address))
+				                               .Where(a => !IPAddress.IsLoopback(a) && ((a.AddressFamily == AddressFamily.InterNetwork) || a.IsIPv6LinkLocal))
+				                               .ToList();
 
 				endpointInfos = _servers
 					.SelectMany(
@@ -499,23 +507,23 @@ namespace ARSoft.Tools.Net.Dns
 									.Where(l => l.AddressFamily == s.AddressFamily)
 									.Select(
 										l => new DnsClientEndpointInfo
-										     {
-										     	IsMulticast = true,
-										     	ServerAddress = s,
-										     	LocalAddress = l
-										     });
+										{
+											IsMulticast = true,
+											ServerAddress = s,
+											LocalAddress = l
+										});
 							}
 							else
 							{
 								return new[]
-								       {
-								       	new DnsClientEndpointInfo
-								       	{
-								       		IsMulticast = false,
-								       		ServerAddress = s,
-								       		LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
-								       	}
-								       };
+								{
+									new DnsClientEndpointInfo
+									{
+										IsMulticast = false,
+										ServerAddress = s,
+										LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
+									}
+								};
 							}
 						}).ToList();
 			}
@@ -524,11 +532,11 @@ namespace ARSoft.Tools.Net.Dns
 				endpointInfos = _servers
 					.Select(
 						s => new DnsClientEndpointInfo
-						     {
-						     	IsMulticast = false,
-						     	ServerAddress = s,
-						     	LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
-						     }
+						{
+							IsMulticast = false,
+							ServerAddress = s,
+							LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
+						}
 					).ToList();
 			}
 			return endpointInfos;
@@ -669,8 +677,7 @@ namespace ARSoft.Tools.Net.Dns
 					byte[] responseData = new byte[length];
 					Buffer.BlockCopy(state.Buffer, 0, responseData, 0, length);
 
-					TMessage response = new TMessage();
-					response.Parse(responseData, false, state.TSigKeySelector, state.TSigOriginalMac);
+					TMessage response = DnsMessageBase.Parse<TMessage>(responseData, state.TSigKeySelector, state.TSigOriginalMac);
 
 					if (AreMultipleResponsesAllowedInParallelMode)
 					{
@@ -1010,8 +1017,7 @@ namespace ARSoft.Tools.Net.Dns
 						byte[] buffer = state.Buffer;
 						state.Buffer = null;
 
-						TMessage response = new TMessage();
-						response.Parse(buffer, false, state.TSigKeySelector, state.TSigOriginalMac);
+						TMessage response = DnsMessageBase.Parse<TMessage>(buffer, state.TSigKeySelector, state.TSigOriginalMac);
 
 						if (!ValidateResponse(state.Query, response) || (response.ReturnCode == ReturnCode.ServerFailure))
 						{
@@ -1025,7 +1031,9 @@ namespace ARSoft.Tools.Net.Dns
 						}
 						else
 						{
-							if (state.PartialMessage != null)
+							bool isSubsequentResponseMessage = (state.PartialMessage != null);
+
+							if (isSubsequentResponseMessage)
 							{
 								state.PartialMessage.AnswerRecords.AddRange(response.AnswerRecords);
 							}
@@ -1034,7 +1042,7 @@ namespace ARSoft.Tools.Net.Dns
 								state.PartialMessage = response;
 							}
 
-							if (response.IsTcpNextMessageWaiting)
+							if (response.IsTcpNextMessageWaiting(isSubsequentResponseMessage))
 							{
 								state.TcpBytesToReceive = 2;
 								state.Buffer = new byte[2];

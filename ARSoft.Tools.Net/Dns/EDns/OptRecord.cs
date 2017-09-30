@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,16 +24,18 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>OPT record</para> <para>Defined in
-	///                             <see cref="!:http://tools.ietf.org/html/rfc2671">RFC 2671</see>
-	///                           </para>
+	///   <para>OPT record</para>
+	///   <para>
+	///     Defined in
+	///     <see cref="!:http://tools.ietf.org/html/rfc2671">RFC 2671</see>
+	///   </para>
 	/// </summary>
 	public class OptRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Gets or set the sender's UDP payload size
 		/// </summary>
-		public ushort UpdPayloadSize
+		public ushort UdpPayloadSize
 		{
 			get { return (ushort) RecordClass; }
 			set { RecordClass = (RecordClass) value; }
@@ -64,11 +68,13 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   <para>Gets or sets the DNSSEC OK (DO) flag</para> <para>Defined in
-		///                                                       <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
-		///                                                       and
-		///                                                       <see cref="!:http://tools.ietf.org/html/rfc3225">RFC 3225</see>
-		///                                                     </para>
+		///   <para>Gets or sets the DNSSEC OK (DO) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///     and
+		///     <see cref="!:http://tools.ietf.org/html/rfc3225">RFC 3225</see>
+		///   </para>
 		/// </summary>
 		public bool IsDnsSecOk
 		{
@@ -97,6 +103,7 @@ namespace ARSoft.Tools.Net.Dns
 		public OptRecord()
 			: base(".", RecordType.Opt, unchecked((RecordClass) 512), 0)
 		{
+			UdpPayloadSize = 4096;
 			Options = new List<EDnsOptionBase>();
 		}
 
@@ -130,6 +137,22 @@ namespace ARSoft.Tools.Net.Dns
 						option = new OwnerOption();
 						break;
 
+					case EDnsOptionType.DnssecAlgorithmUnderstood:
+						option = new DnssecAlgorithmUnderstoodOption();
+						break;
+
+					case EDnsOptionType.DsHashUnderstood:
+						option = new DsHashUnderstoodOption();
+						break;
+
+					case EDnsOptionType.Nsec3HashUnderstood:
+						option = new Nsec3HashUnderstoodOption();
+						break;
+
+					case EDnsOptionType.ClientSubnet:
+						option = new ClientSubnetOption();
+						break;
+
 					default:
 						option = new UnknownOption(type);
 						break;
@@ -153,7 +176,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			string flags = IsDnsSecOk ? "DO" : "";
-			return String.Format("; EDNS version: {0}; flags: {1}; udp: {2}", Version, flags, UpdPayloadSize);
+			return String.Format("; EDNS version: {0}; flags: {1}; udp: {2}", Version, flags, UdpPayloadSize);
 		}
 
 		protected internal override int MaximumRecordDataLength

@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,12 +24,24 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
 	/// <summary>
-	///   <para>Dynamic DNS update message</para> <para>Defined in
-	///                                             <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
-	///                                           </para>
+	///   <para>Dynamic DNS update message</para>
+	///   <para>
+	///     Defined in
+	///     <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+	///   </para>
 	/// </summary>
 	public class DnsUpdateMessage : DnsMessageBase
 	{
+		/// <summary>
+		///   Parses a the contents of a byte array as DnsUpdateMessage
+		/// </summary>
+		/// <param name="data">Buffer, that contains the message data</param>
+		/// <returns>A new instance of the DnsUpdateMessage class</returns>
+		public static DnsUpdateMessage Parse(byte[] data)
+		{
+			return Parse<DnsUpdateMessage>(data);
+		}
+
 		/// <summary>
 		///   Creates a new instance of the DnsUpdateMessage class
 		/// </summary>
@@ -76,9 +90,9 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 			get { return false; }
 		}
 
-		internal override bool IsTcpNextMessageWaiting
+		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
 		{
-			get { return false; }
+			return false;
 		}
 
 		protected override void PrepareEncoding()
@@ -135,7 +149,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 						{
 							return new DeleteRecordUpdate(record.Name, record.RecordType);
 						}
-						else if (record.RecordClass == RecordClass.Any)
+						else if (record.RecordClass == RecordClass.None)
 						{
 							return new DeleteRecordUpdate(record);
 						}

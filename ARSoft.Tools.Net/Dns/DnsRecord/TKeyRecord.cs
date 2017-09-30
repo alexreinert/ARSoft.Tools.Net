@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +24,11 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>Transaction key</para> <para>Defined in
-	///                                  <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
-	///                                </para>
+	///   <para>Transaction key</para>
+	///   <para>
+	///     Defined in
+	///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+	///   </para>
 	/// </summary>
 	public class TKeyRecord : DnsRecordBase
 	{
@@ -34,37 +38,47 @@ namespace ARSoft.Tools.Net.Dns
 		public enum TKeyMode : ushort
 		{
 			/// <summary>
-			///   <para>Server assignment</para> <para>Defined in
-			///                                    <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
-			///                                  </para>
+			///   <para>Server assignment</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///   </para>
 			/// </summary>
 			ServerAssignment = 1, // RFC2930
 
 			/// <summary>
-			///   <para>Diffie-Hellman exchange</para> <para>Defined in
-			///                                          <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
-			///                                        </para>
+			///   <para>Diffie-Hellman exchange</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///   </para>
 			/// </summary>
 			DiffieHellmanExchange = 2, // RFC2930
 
 			/// <summary>
-			///   <para>GSS-API negotiation</para> <para>Defined in
-			///                                      <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
-			///                                    </para>
+			///   <para>GSS-API negotiation</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///   </para>
 			/// </summary>
 			GssNegotiation = 3, // RFC2930
 
 			/// <summary>
-			///   <para>Resolver assignment</para> <para>Defined in
-			///                                      <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
-			///                                    </para>
+			///   <para>Resolver assignment</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///   </para>
 			/// </summary>
 			ResolverAssignment = 4, // RFC2930
 
 			/// <summary>
-			///   <para>Key deletion</para> <para>Defined in
-			///                               <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
-			///                             </para>
+			///   <para>Key deletion</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///   </para>
 			/// </summary>
 			KeyDeletion = 5, // RFC2930
 		}

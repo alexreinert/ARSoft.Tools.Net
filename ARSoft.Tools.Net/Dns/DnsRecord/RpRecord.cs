@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +24,11 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>Responsible person record</para> <para>Defined in
-	///                                            <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
-	///                                          </para>
+	///   <para>Responsible person record</para>
+	///   <para>
+	///     Defined in
+	///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+	///   </para>
 	/// </summary>
 	public class RpRecord : DnsRecordBase
 	{
@@ -46,7 +50,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Name of the record </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="mailBox"> Mail address of responsable person, the @ should be replaced by a dot </param>
-		/// <param name="txtDomainName"> Domain name of a <see cref="TxtRecord" /> with additional information </param>
+		/// <param name="txtDomainName">
+		///   Domain name of a <see cref="TxtRecord" /> with additional information
+		/// </param>
 		public RpRecord(string name, int timeToLive, string mailBox, string txtDomainName)
 			: base(name, RecordType.Rp, RecordClass.INet, timeToLive)
 		{

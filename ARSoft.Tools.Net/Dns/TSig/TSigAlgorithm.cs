@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,37 +34,47 @@ namespace ARSoft.Tools.Net.Dns
 		Unknown,
 
 		/// <summary>
-		///   <para>MD5</para> <para>Defined in
-		///                      <see cref="!:http://tools.ietf.org/html/rfc2845">RFC 2845</see>
-		///                    </para>
+		///   <para>MD5</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc2845">RFC 2845</see>
+		///   </para>
 		/// </summary>
 		Md5,
 
 		/// <summary>
-		///   <para>SHA-1</para> <para>Defined in
-		///                        <see cref="!:http://tools.ietf.org/html/rfc4635">RFC 4635</see>
-		///                      </para>
+		///   <para>SHA-1</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4635">RFC 4635</see>
+		///   </para>
 		/// </summary>
 		Sha1, // RFC4635
 
 		/// <summary>
-		///   <para>SHA-256</para> <para>Defined in
-		///                          <see cref="!:http://tools.ietf.org/html/rfc4635">RFC 4635</see>
-		///                        </para>
+		///   <para>SHA-256</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4635">RFC 4635</see>
+		///   </para>
 		/// </summary>
 		Sha256,
 
 		/// <summary>
-		///   <para>SHA-384</para> <para>Defined in
-		///                          <see cref="!:http://tools.ietf.org/html/rfc4635">RFC 4635</see>
-		///                        </para>
+		///   <para>SHA-384</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4635">RFC 4635</see>
+		///   </para>
 		/// </summary>
 		Sha384,
 
 		/// <summary>
-		///   <para>SHA-512</para> <para>Defined in
-		///                          <see cref="!:http://tools.ietf.org/html/rfc4635">RFC 4635</see>
-		///                        </para>
+		///   <para>SHA-512</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4635">RFC 4635</see>
+		///   </para>
 		/// </summary>
 		Sha512,
 	}

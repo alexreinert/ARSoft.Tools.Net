@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,7 +105,7 @@ namespace ARSoft.Tools.Net.Dns
 				throw new ArgumentException("Name must be provided", "name");
 			}
 
-			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true };
+			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
 			message.Questions.Add(new DnsQuestion(name, recordType, recordClass));
 
 			return SendMessage(message);
@@ -113,10 +115,18 @@ namespace ARSoft.Tools.Net.Dns
 		///   Queries a dns server for specified records asynchronously.
 		/// </summary>
 		/// <param name="name"> Domain, that should be queried </param>
-		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
-		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
-		///    name="requestCallback" /> delegate when the operation is complete. </param>
-		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
+		/// <param name="requestCallback">
+		///   An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete.
+		/// </param>
+		/// <param name="state">
+		///   A user-defined object that contains information about the receive operation. This object is passed to the
+		///   <paramref
+		///     name="requestCallback" />
+		///   delegate when the operation is complete.
+		/// </param>
+		/// <returns>
+		///   An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive.
+		/// </returns>
 		public IAsyncResult BeginResolve(string name, AsyncCallback requestCallback, object state)
 		{
 			return BeginResolve(name, RecordType.A, RecordClass.INet, requestCallback, state);
@@ -127,10 +137,18 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="name"> Domain, that should be queried </param>
 		/// <param name="recordType"> Type the should be queried </param>
-		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
-		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
-		///    name="requestCallback" /> delegate when the operation is complete. </param>
-		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
+		/// <param name="requestCallback">
+		///   An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete.
+		/// </param>
+		/// <param name="state">
+		///   A user-defined object that contains information about the receive operation. This object is passed to the
+		///   <paramref
+		///     name="requestCallback" />
+		///   delegate when the operation is complete.
+		/// </param>
+		/// <returns>
+		///   An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive.
+		/// </returns>
 		public IAsyncResult BeginResolve(string name, RecordType recordType, AsyncCallback requestCallback, object state)
 		{
 			return BeginResolve(name, recordType, RecordClass.INet, requestCallback, state);
@@ -142,10 +160,18 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain, that should be queried </param>
 		/// <param name="recordType"> Type the should be queried </param>
 		/// <param name="recordClass"> Class the should be queried </param>
-		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
-		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
-		///    name="requestCallback" /> delegate when the operation is complete. </param>
-		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
+		/// <param name="requestCallback">
+		///   An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete.
+		/// </param>
+		/// <param name="state">
+		///   A user-defined object that contains information about the receive operation. This object is passed to the
+		///   <paramref
+		///     name="requestCallback" />
+		///   delegate when the operation is complete.
+		/// </param>
+		/// <returns>
+		///   An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive.
+		/// </returns>
 		public IAsyncResult BeginResolve(string name, RecordType recordType, RecordClass recordClass, AsyncCallback requestCallback, object state)
 		{
 			if (String.IsNullOrEmpty(name))
@@ -153,7 +179,7 @@ namespace ARSoft.Tools.Net.Dns
 				throw new ArgumentException("Name must be provided", "name");
 			}
 
-			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true };
+			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
 			message.Questions.Add(new DnsQuestion(name, recordType, recordClass));
 
 			return BeginSendMessage(message, requestCallback, state);
@@ -162,8 +188,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Ends a pending asynchronous operation.
 		/// </summary>
-		/// <param name="ar"> An <see cref="System.IAsyncResult" /> object returned by a call to <see
-		///    cref="ARSoft.Tools.Net.Dns.DnsClient.BeginResolve" /> . </param>
+		/// <param name="ar">
+		///   An <see cref="System.IAsyncResult" /> object returned by a call to
+		///   <see
+		///     cref="ARSoft.Tools.Net.Dns.DnsClient.BeginResolve" />
+		///   .
+		/// </param>
 		/// <returns> The complete response of the dns server </returns>
 		public DnsMessage EndResolve(IAsyncResult ar)
 		{
@@ -206,10 +236,18 @@ namespace ARSoft.Tools.Net.Dns
 		///   Send a custom message to the dns server and returns the answer asynchronously.
 		/// </summary>
 		/// <param name="message"> Message, that should be send to the dns server </param>
-		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
-		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
-		///    name="requestCallback" /> delegate when the operation is complete. </param>
-		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
+		/// <param name="requestCallback">
+		///   An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete.
+		/// </param>
+		/// <param name="state">
+		///   A user-defined object that contains information about the receive operation. This object is passed to the
+		///   <paramref
+		///     name="requestCallback" />
+		///   delegate when the operation is complete.
+		/// </param>
+		/// <returns>
+		///   An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive.
+		/// </returns>
 		public IAsyncResult BeginSendMessage(DnsMessage message, AsyncCallback requestCallback, object state)
 		{
 			if (message == null)
@@ -225,10 +263,18 @@ namespace ARSoft.Tools.Net.Dns
 		///   Send an dynamic update to the dns server and returns the answer asynchronously.
 		/// </summary>
 		/// <param name="message"> Update, that should be send to the dns server </param>
-		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
-		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
-		///    name="requestCallback" /> delegate when the operation is complete. </param>
-		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
+		/// <param name="requestCallback">
+		///   An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete.
+		/// </param>
+		/// <param name="state">
+		///   A user-defined object that contains information about the receive operation. This object is passed to the
+		///   <paramref
+		///     name="requestCallback" />
+		///   delegate when the operation is complete.
+		/// </param>
+		/// <returns>
+		///   An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive.
+		/// </returns>
 		public IAsyncResult BeginSendUpdate(DnsUpdateMessage message, AsyncCallback requestCallback, object state)
 		{
 			if (message == null)
@@ -243,8 +289,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Ends a pending asynchronous operation.
 		/// </summary>
-		/// <param name="ar"> An <see cref="System.IAsyncResult" /> object returned by a call to <see
-		///    cref="ARSoft.Tools.Net.Dns.DnsClient.BeginSendMessage" /> . </param>
+		/// <param name="ar">
+		///   An <see cref="System.IAsyncResult" /> object returned by a call to
+		///   <see
+		///     cref="ARSoft.Tools.Net.Dns.DnsClient.BeginSendMessage" />
+		///   .
+		/// </param>
 		/// <returns> The complete response of the dns server </returns>
 		public DnsMessage EndSendMessage(IAsyncResult ar)
 		{
@@ -254,8 +304,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Ends a pending asynchronous operation.
 		/// </summary>
-		/// <param name="ar"> An <see cref="System.IAsyncResult" /> object returned by a call to <see
-		///    cref="ARSoft.Tools.Net.Dns.DnsClient.BeginSendUpdate" /> . </param>
+		/// <param name="ar">
+		///   An <see cref="System.IAsyncResult" /> object returned by a call to
+		///   <see
+		///     cref="ARSoft.Tools.Net.Dns.DnsClient.BeginSendUpdate" />
+		///   .
+		/// </param>
 		/// <returns> The complete response of the dns server </returns>
 		public DnsUpdateMessage EndSendUpdate(IAsyncResult ar)
 		{

@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,16 +29,20 @@ namespace ARSoft.Tools.Net.Dns
 	public enum DnsSecDigestType : byte
 	{
 		/// <summary>
-		///   <para>SHA-1</para> <para>Defined in
-		///                        <see cref="!:http://tools.ietf.org/html/rfc3658">RFC 3658</see>
-		///                      </para>
+		///   <para>SHA-1</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc3658">RFC 3658</see>
+		///   </para>
 		/// </summary>
 		Sha1 = 1,
 
 		/// <summary>
-		///   <para>SHA-256</para> <para>Defined in
-		///                          <see cref="!:http://tools.ietf.org/html/rfc4509">RFC 4509</see>
-		///                        </para>
+		///   <para>SHA-256</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4509">RFC 4509</see>
+		///   </para>
 		/// </summary>
 		Sha256 = 2,
 	}

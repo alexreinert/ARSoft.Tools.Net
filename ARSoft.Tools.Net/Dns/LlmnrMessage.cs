@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,11 +28,23 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public class LlmnrMessage : DnsMessageBase
 	{
+		/// <summary>
+		///   Parses a the contents of a byte array as LlmnrMessage
+		/// </summary>
+		/// <param name="data">Buffer, that contains the message data</param>
+		/// <returns>A new instance of the LlmnrMessage class</returns>
+		public static LlmnrMessage Parse(byte[] data)
+		{
+			return Parse<LlmnrMessage>(data);
+		}
+
 		#region Header
 		/// <summary>
-		///   <para>Gets or sets the conflict (C) flag</para> <para>Defined in
-		///                                                     <see cref="!:http://tools.ietf.org/html/rfc4795">RFC 4795</see>
-		///                                                   </para>
+		///   <para>Gets or sets the conflict (C) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4795">RFC 4795</see>
+		///   </para>
 		/// </summary>
 		public bool IsConflict
 		{
@@ -49,9 +63,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   <para>Gets or sets the truncated response (TC) flag</para> <para>Defined in
-		///                                                                <see cref="!:http://tools.ietf.org/html/rfc4795">RFC 4795</see>
-		///                                                              </para>
+		///   <para>Gets or sets the truncated response (TC) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4795">RFC 4795</see>
+		///   </para>
 		/// </summary>
 		public bool IsTruncated
 		{
@@ -70,9 +86,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   <para>Gets or sets the tentive (T) flag</para> <para>Defined in
-		///                                                    <see cref="!:http://tools.ietf.org/html/rfc4795">RFC 4795</see>
-		///                                                  </para>
+		///   <para>Gets or sets the tentive (T) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4795">RFC 4795</see>
+		///   </para>
 		/// </summary>
 		public bool IsTentive
 		{
@@ -128,9 +146,9 @@ namespace ARSoft.Tools.Net.Dns
 			get { return IsTruncated; }
 		}
 
-		internal override bool IsTcpNextMessageWaiting
+		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
 		{
-			get { return false; }
+			return false;
 		}
 	}
 }

@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,11 +24,13 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>AFS data base location</para> <para>Defined in
-	///                                         <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
-	///                                         and
-	///                                         <see cref="!:http://tools.ietf.org/html/rfc5864">RFC 5864</see>
-	///                                       </para>
+	///   <para>AFS data base location</para>
+	///   <para>
+	///     Defined in
+	///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+	///     and
+	///     <see cref="!:http://tools.ietf.org/html/rfc5864">RFC 5864</see>
+	///   </para>
 	/// </summary>
 	public class AfsdbRecord : DnsRecordBase
 	{
@@ -36,16 +40,20 @@ namespace ARSoft.Tools.Net.Dns
 		public enum AfsSubType : ushort
 		{
 			/// <summary>
-			///   <para>Andrews File Service v3.0 Location service</para> <para>Defined in
-			///                                                             <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
-			///                                                           </para>
+			///   <para>Andrews File Service v3.0 Location service</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+			///   </para>
 			/// </summary>
 			Afs = 1,
 
 			/// <summary>
-			///   <para>DCE/NCA root cell directory node</para> <para>Defined in
-			///                                                   <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
-			///                                                 </para>
+			///   <para>DCE/NCA root cell directory node</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+			///   </para>
 			/// </summary>
 			Dce = 2,
 		}

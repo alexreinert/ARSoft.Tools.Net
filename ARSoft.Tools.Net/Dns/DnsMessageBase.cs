@@ -1,5 +1,7 @@
 #region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +49,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal abstract bool IsTcpUsingRequested { get; }
 		internal abstract bool IsTcpResendingRequested { get; }
-		internal abstract bool IsTcpNextMessageWaiting { get; }
+		internal abstract bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage);
 
 		#region Header
 		/// <summary>
@@ -208,11 +210,13 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   <para>Gets or sets the DNSSEC answer OK (DO) flag</para> <para>Defined in
-		///                                                              <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
-		///                                                              and
-		///                                                              <see cref="!:http://tools.ietf.org/html/rfc3225">RFC 3225</see>
-		///                                                            </para>
+		///   <para>Gets or sets the DNSSEC answer OK (DO) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///     and
+		///     <see cref="!:http://tools.ietf.org/html/rfc3225">RFC 3225</see>
+		///   </para>
 		/// </summary>
 		public bool IsDnsSecOk
 		{
@@ -245,10 +249,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public TSigRecord TSigOptions { get; set; }
 
-		internal static DnsMessageBase Create(byte[] resultData, bool isRequest, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
+		internal static DnsMessageBase CreateByFlag(byte[] data, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
 		{
 			int flagPosition = 2;
-			ushort flags = ParseUShort(resultData, ref flagPosition);
+			ushort flags = ParseUShort(data, ref flagPosition);
 
 			DnsMessageBase res;
 
@@ -263,27 +267,41 @@ namespace ARSoft.Tools.Net.Dns
 					break;
 			}
 
-			res.Parse(resultData, isRequest, tsigKeySelector, originalMac);
+			res.ParseInternal(data, tsigKeySelector, originalMac);
 
 			return res;
 		}
 
-		internal void Parse(byte[] resultData, bool isRequest, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
+		internal static TMessage Parse<TMessage>(byte[] data)
+			where TMessage : DnsMessageBase, new()
+		{
+			return Parse<TMessage>(data, null, null);
+		}
+
+		internal static TMessage Parse<TMessage>(byte[] data, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
+			where TMessage : DnsMessageBase, new()
+		{
+			TMessage result = new TMessage();
+			result.ParseInternal(data, tsigKeySelector, originalMac);
+			return result;
+		}
+
+		private void ParseInternal(byte[] data, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
 		{
 			int currentPosition = 0;
 
-			TransactionID = ParseUShort(resultData, ref currentPosition);
-			Flags = ParseUShort(resultData, ref currentPosition);
+			TransactionID = ParseUShort(data, ref currentPosition);
+			Flags = ParseUShort(data, ref currentPosition);
 
-			int questionCount = ParseUShort(resultData, ref currentPosition);
-			int answerRecordCount = ParseUShort(resultData, ref currentPosition);
-			int authorityRecordCount = ParseUShort(resultData, ref currentPosition);
-			int additionalRecordCount = ParseUShort(resultData, ref currentPosition);
+			int questionCount = ParseUShort(data, ref currentPosition);
+			int answerRecordCount = ParseUShort(data, ref currentPosition);
+			int authorityRecordCount = ParseUShort(data, ref currentPosition);
+			int additionalRecordCount = ParseUShort(data, ref currentPosition);
 
-			ParseQuestions(resultData, ref currentPosition, questionCount);
-			ParseSection(resultData, ref currentPosition, AnswerRecords, answerRecordCount);
-			ParseSection(resultData, ref currentPosition, AuthorityRecords, authorityRecordCount);
-			ParseSection(resultData, ref currentPosition, _additionalRecords, additionalRecordCount);
+			ParseQuestions(data, ref currentPosition, questionCount);
+			ParseSection(data, ref currentPosition, AnswerRecords, answerRecordCount);
+			ParseSection(data, ref currentPosition, AuthorityRecords, authorityRecordCount);
+			ParseSection(data, ref currentPosition, _additionalRecords, additionalRecordCount);
 
 			if (_additionalRecords.Count > 0)
 			{
@@ -294,7 +312,7 @@ namespace ARSoft.Tools.Net.Dns
 
 					_additionalRecords.RemoveAt(tSigPos);
 
-					TSigOptions.ValidationResult = ValidateTSig(resultData, tsigKeySelector, originalMac);
+					TSigOptions.ValidationResult = ValidateTSig(data, tsigKeySelector, originalMac);
 				}
 			}
 
@@ -417,7 +435,11 @@ namespace ARSoft.Tools.Net.Dns
 		internal static string ParseText(byte[] resultData, ref int currentPosition)
 		{
 			int length = resultData[currentPosition++];
+			return ParseText(resultData, ref currentPosition, length);
+		}
 
+		internal static string ParseText(byte[] resultData, ref int currentPosition, int length)
+		{
 			string res = Encoding.ASCII.GetString(resultData, currentPosition, length);
 			currentPosition += length;
 
@@ -426,11 +448,10 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static string ParseDomainName(byte[] resultData, ref int currentPosition)
 		{
-			StringBuilder sb = new StringBuilder();
-
-			ParseDomainName(resultData, ref currentPosition, sb);
-
-			return (sb.Length == 0) ? String.Empty : sb.ToString(0, sb.Length - 1);
+			int firstLabelLength;
+			string res = ParseDomainName(resultData, currentPosition, out firstLabelLength);
+			currentPosition += firstLabelLength;
+			return res;
 		}
 
 		internal static ushort ParseUShort(byte[] resultData, ref int currentPosition)
@@ -497,19 +518,33 @@ namespace ARSoft.Tools.Net.Dns
 			return res;
 		}
 
-		private static void ParseDomainName(byte[] resultData, ref int currentPosition, StringBuilder sb)
+		private static string ParseDomainName(byte[] resultData, int currentPosition, out int firstLabelBytes)
 		{
-			while (true)
+			StringBuilder sb = new StringBuilder(64, 255);
+			bool isInFirstLabel = true;
+			firstLabelBytes = 0;
+
+			while (true) // loop will be ended gracefully or when StringBuilder grows over 255 bytes
 			{
 				byte currentByte = resultData[currentPosition++];
 				if (currentByte == 0)
 				{
 					// end of domain, RFC1035
-					return;
+					if (isInFirstLabel)
+						firstLabelBytes += 1;
+
+					break;
 				}
 				else if (currentByte >= 192)
 				{
 					// Pointer, RFC1035
+
+					if (isInFirstLabel)
+					{
+						firstLabelBytes += 2;
+						isInFirstLabel = false;
+					}
+
 					int pointer;
 					if (BitConverter.IsLittleEndian)
 					{
@@ -520,14 +555,14 @@ namespace ARSoft.Tools.Net.Dns
 						pointer = (ushort) ((currentByte - 192) | (resultData[currentPosition++] << 8));
 					}
 
-					ParseDomainName(resultData, ref pointer, sb);
-
-					return;
+					currentPosition = pointer;
 				}
 				else if (currentByte == 65)
 				{
 					// binary EDNS label, RFC2673, RFC3363, RFC3364
 					int length = resultData[currentPosition++];
+					if (isInFirstLabel)
+						firstLabelBytes += 1;
 					if (length == 0)
 						length = 256;
 
@@ -537,6 +572,9 @@ namespace ARSoft.Tools.Net.Dns
 					do
 					{
 						currentByte = resultData[currentPosition++];
+						if (isInFirstLabel)
+							firstLabelBytes += 1;
+
 						if (length < 8)
 						{
 							currentByte &= (byte) (0xff >> (8 - length));
@@ -557,11 +595,16 @@ namespace ARSoft.Tools.Net.Dns
 				else
 				{
 					// append additional text part
+					if (isInFirstLabel)
+						firstLabelBytes += 1 + currentByte;
+
 					sb.Append(Encoding.ASCII.GetString(resultData, currentPosition, currentByte));
 					sb.Append(".");
 					currentPosition += currentByte;
 				}
 			}
+
+			return (sb.Length == 0) ? String.Empty : sb.ToString(0, sb.Length - 1);
 		}
 
 		internal static byte[] ParseByteData(byte[] resultData, ref int currentPosition, int length)
@@ -822,9 +865,9 @@ namespace ARSoft.Tools.Net.Dns
 			EncodeDomainName(messageData, offset, ref currentPosition, labelLength == name.Length ? "." : name.Substring(labelLength + 1), isCompressionAllowed, domainNames);
 		}
 
-		internal static void EncodeText(byte[] messageData, ref int currentPosition, string text)
+		internal static void EncodeTextBlock(byte[] messageData, ref int currentPosition, string text)
 		{
-			byte[] textData = Encoding.ASCII.GetBytes(text.ToCharArray());
+			byte[] textData = Encoding.ASCII.GetBytes(text);
 
 			for (int i = 0; i < textData.Length; i += 255)
 			{
@@ -834,6 +877,13 @@ namespace ARSoft.Tools.Net.Dns
 				Buffer.BlockCopy(textData, i, messageData, currentPosition, blockLength);
 				currentPosition += blockLength;
 			}
+		}
+
+		internal static void EncodeTextWithoutLength(byte[] messageData, ref int currentPosition, string text)
+		{
+			byte[] textData = Encoding.ASCII.GetBytes(text);
+			Buffer.BlockCopy(textData, 0, messageData, currentPosition, textData.Length);
+			currentPosition += textData.Length;
 		}
 
 		internal static void EncodeByteArray(byte[] messageData, ref int currentPosition, byte[] data)

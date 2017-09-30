@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -214,7 +216,7 @@ namespace ARSoft.Tools.Net.Dns
 				byte[] originalMac;
 				try
 				{
-					query = DnsMessageBase.Create(buffer, true, TsigKeySelector, null);
+					query = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
 					originalMac = (query.TSigOptions == null) ? null : query.TSigOptions.Mac;
 				}
 				catch (Exception e)
@@ -250,7 +252,7 @@ namespace ARSoft.Tools.Net.Dns
 					int maxLength = 512;
 					if (query.IsEDnsEnabled && message.IsEDnsEnabled)
 					{
-						maxLength = Math.Max(512, (int) message.EDnsOptions.UpdPayloadSize);
+						maxLength = Math.Max(512, (int) message.EDnsOptions.UdpPayloadSize);
 					}
 
 					while (length > maxLength)
@@ -586,7 +588,7 @@ namespace ARSoft.Tools.Net.Dns
 					DnsMessageBase query;
 					try
 					{
-						query = DnsMessageBase.Create(state.Buffer, true, TsigKeySelector, null);
+						query = DnsMessageBase.CreateByFlag(state.Buffer, TsigKeySelector, null);
 						state.NextTsigMac = (query.TSigOptions == null) ? null : query.TSigOptions.Mac;
 					}
 					catch (Exception e)
@@ -617,7 +619,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if (state.Response == null)
 			{
-				state.Response = DnsMessageBase.Create(state.Buffer, true, TsigKeySelector, null);
+				state.Response = DnsMessageBase.CreateByFlag(state.Buffer, TsigKeySelector, null);
 				state.Response.IsQuery = false;
 				state.Response.AdditionalRecords.Clear();
 				state.Response.AuthorityRecords.Clear();
@@ -633,7 +635,7 @@ namespace ARSoft.Tools.Net.Dns
 				if ((state.Response.Questions.Count == 0) || (state.Response.Questions[0].RecordType != RecordType.Axfr))
 				{
 					OnExceptionThrown(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
-					state.Response = DnsMessageBase.Create(state.Buffer, true, TsigKeySelector, null);
+					state.Response = DnsMessageBase.CreateByFlag(state.Buffer, TsigKeySelector, null);
 					state.Response.IsQuery = false;
 					state.Response.ReturnCode = ReturnCode.ServerFailure;
 					state.Response.AdditionalRecords.Clear();
