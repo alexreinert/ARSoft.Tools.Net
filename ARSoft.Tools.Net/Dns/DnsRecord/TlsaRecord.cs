@@ -65,7 +65,10 @@ namespace ARSoft.Tools.Net.Dns
 			TrustAnchorCertificate = 2,
 
 			/// <summary>
-			///   <para>certificate, or the public key of such a certificate, that MUST match the end entity certificate given by the server in TLS</para>
+			///   <para>
+			///     certificate, or the public key of such a certificate, that MUST match the end entity certificate given by the
+			///     server in TLS
+			///   </para>
 			///   <para>
 			///     Defined in
 			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>

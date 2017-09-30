@@ -69,7 +69,8 @@ namespace ARSoft.Tools.Net.Dns
 			ServerFull = 1,
 
 			/// <summary>
-			///   The data for this name and type is not expected to change frequently, and the server therefore does not support the requested LLQ.
+			///   The data for this name and type is not expected to change frequently, and the server therefore does not support the
+			///   requested LLQ.
 			/// </summary>
 			Static = 2,
 

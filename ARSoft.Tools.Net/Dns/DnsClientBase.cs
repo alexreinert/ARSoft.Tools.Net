@@ -391,28 +391,36 @@ namespace ARSoft.Tools.Net.Dns
 					tcpStream.Write(messageData, 0, messageLength);
 				}
 
-				lengthBuffer[0] = (byte) tcpStream.ReadByte();
-				lengthBuffer[1] = (byte) tcpStream.ReadByte();
+				if (!TryRead(tcpClient, tcpStream, lengthBuffer, 2))
+					return null;
 
 				tmp = 0;
 				int length = DnsMessageBase.ParseUShort(lengthBuffer, ref tmp);
 
 				byte[] resultData = new byte[length];
 
-				int readBytes = 0;
-
-				while (readBytes < length)
-				{
-					readBytes += tcpStream.Read(resultData, readBytes, length - readBytes);
-				}
-
-				return resultData;
+				return TryRead(tcpClient, tcpStream, resultData, length) ? resultData : null;
 			}
 			catch (Exception e)
 			{
 				Trace.TraceError("Error on dns query: " + e);
 				return null;
 			}
+		}
+
+		private bool TryRead(TcpClient client, NetworkStream stream, byte[] buffer, int length)
+		{
+			int readBytes = 0;
+
+			while (readBytes < length)
+			{
+				if (!client.IsConnected())
+					return false;
+
+				readBytes += stream.Read(buffer, readBytes, length - readBytes);
+			}
+
+			return true;
 		}
 
 		protected async Task<TMessage> SendMessageAsync<TMessage>(TMessage message, CancellationToken token)
@@ -648,27 +656,36 @@ namespace ARSoft.Tools.Net.Dns
 					await tcpStream.WriteAsync(messageData, 0, messageLength, token);
 				}
 
-				await tcpStream.ReadAsync(lengthBuffer, 0, 2, token);
+				if (!await TryReadAsync(tcpClient, tcpStream, lengthBuffer, 2, token))
+					return null;
 
 				tmp = 0;
 				int length = DnsMessageBase.ParseUShort(lengthBuffer, ref tmp);
 
 				byte[] resultData = new byte[length];
 
-				int readBytes = 0;
-
-				while (readBytes < length)
-				{
-					readBytes += await tcpStream.ReadAsync(resultData, readBytes, length - readBytes, token);
-				}
-
-				return new QueryResponse(resultData, nameServer, tcpClient, tcpStream);
+				return await TryReadAsync(tcpClient, tcpStream, resultData, length, token) ? new QueryResponse(resultData, nameServer, tcpClient, tcpStream) : null;
 			}
 			catch (Exception e)
 			{
 				Trace.TraceError("Error on dns query: " + e);
 				return null;
 			}
+		}
+
+		private async Task<bool> TryReadAsync(TcpClient client, NetworkStream stream, byte[] buffer, int length, CancellationToken token)
+		{
+			int readBytes = 0;
+
+			while (readBytes < length)
+			{
+				if (token.IsCancellationRequested || !client.IsConnected())
+					return false;
+
+				readBytes += await stream.ReadAsync(buffer, readBytes, length - readBytes, token);
+			}
+
+			return true;
 		}
 
 		protected async Task<List<TMessage>> SendMessageParallelAsync<TMessage>(TMessage message, CancellationToken token)
@@ -745,10 +762,10 @@ namespace ARSoft.Tools.Net.Dns
 			if (_isAnyServerMulticast)
 			{
 				var localIPs = NetworkInterface.GetAllNetworkInterfaces()
-				                               .Where(n => n.SupportsMulticast && (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
-				                               .SelectMany(n => n.GetIPProperties().UnicastAddresses.Select(a => a.Address))
-				                               .Where(a => !IPAddress.IsLoopback(a) && ((a.AddressFamily == AddressFamily.InterNetwork) || a.IsIPv6LinkLocal))
-				                               .ToList();
+					.Where(n => n.SupportsMulticast && (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+					.SelectMany(n => n.GetIPProperties().UnicastAddresses.Select(a => a.Address))
+					.Where(a => !IPAddress.IsLoopback(a) && ((a.AddressFamily == AddressFamily.InterNetwork) || a.IsIPv6LinkLocal))
+					.ToList();
 
 				endpointInfos = _servers
 					.SelectMany(

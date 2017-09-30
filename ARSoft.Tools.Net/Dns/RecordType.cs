@@ -355,7 +355,10 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>ATM address</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://broadband-forum.org/ftp/pub/approved-specs/af-saa-0069.000.pdf">ATM Forum Technical Committee, "ATM Name System, V2.0"</see>
+		///     <see cref="!:http://broadband-forum.org/ftp/pub/approved-specs/af-saa-0069.000.pdf">
+		///       ATM Forum Technical Committee,
+		///       "ATM Name System, V2.0"
+		///     </see>
 		///   </para>
 		/// </summary>
 		AtmA = 34, // not supported yet

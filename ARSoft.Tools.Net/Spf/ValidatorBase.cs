@@ -559,10 +559,10 @@ namespace ARSoft.Tools.Net.Spf
 							IPAddress address =
 								LocalIP
 								?? NetworkInterface.GetAllNetworkInterfaces()
-								                   .Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
-								                   .SelectMany(n => n.GetIPProperties().UnicastAddresses)
-								                   .Select(u => u.Address)
-								                   .FirstOrDefault(a => a.AddressFamily == ip.AddressFamily)
+									.Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+									.SelectMany(n => n.GetIPProperties().UnicastAddresses)
+									.Select(u => u.Address)
+									.FirstOrDefault(a => a.AddressFamily == ip.AddressFamily)
 								?? ((ip.AddressFamily == AddressFamily.InterNetwork) ? IPAddress.Loopback : IPAddress.IPv6Loopback);
 							letter = address.ToString();
 							break;

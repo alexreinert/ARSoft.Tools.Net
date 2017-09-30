@@ -63,5 +63,32 @@ namespace ARSoft.Tools.Net
 			tcpClient.Close();
 			return false;
 		}
+
+		public static bool IsConnected(this TcpClient client)
+		{
+			if (!client.Connected)
+				return false;
+
+			if (client.Client.Poll(0, SelectMode.SelectRead))
+			{
+				if (client.Connected)
+				{
+					byte[] b = new byte[1];
+					try
+					{
+						if (client.Client.Receive(b, SocketFlags.Peek) == 0)
+						{
+							return false;
+						}
+					}
+					catch
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
 	}
 }

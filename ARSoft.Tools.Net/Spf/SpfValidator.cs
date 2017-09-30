@@ -40,9 +40,9 @@ namespace ARSoft.Tools.Net.Spf
 			}
 
 			var spfTextRecords = dnsResult.Records
-			                              .Select(r => r.TextData)
-			                              .Where(SpfRecord.IsSpfRecord)
-			                              .ToList();
+				.Select(r => r.TextData)
+				.Where(SpfRecord.IsSpfRecord)
+				.ToList();
 
 			SpfRecord record;
 

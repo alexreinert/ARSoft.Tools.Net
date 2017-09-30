@@ -19,11 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
@@ -404,7 +404,7 @@ namespace ARSoft.Tools.Net.Dns
 
 				StartTcpListenerTask();
 
-				using (Stream stream = client.GetStream())
+				using (NetworkStream stream = client.GetStream())
 				{
 					while (true)
 					{
@@ -533,57 +533,28 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		private async Task<byte[]> ReadIntoBufferAsync(TcpClient client, Stream stream, int count)
+		private async Task<byte[]> ReadIntoBufferAsync(TcpClient client, NetworkStream stream, int count)
 		{
-			var timeout = Task.Delay(Timeout);
+			CancellationToken token = new CancellationTokenSource(Timeout).Token;
 
 			byte[] buffer = new byte[count];
 
-			int offset = 0;
+			if (await TryReadAsync(client, stream, buffer, count, token))
+				return buffer;
 
-			while (count > 0)
-			{
-				if (!IsTcpClientConnected(client))
-					return null;
-
-				var reader = stream.ReadAsync(buffer, offset, count);
-
-				await Task.WhenAny(timeout, reader);
-
-				if (timeout.IsCompleted)
-					return null;
-
-				int readCount = reader.Result;
-
-				offset += readCount;
-				count -= readCount;
-			}
-
-			return buffer;
+			return null;
 		}
 
-		private static bool IsTcpClientConnected(TcpClient client)
+		private async Task<bool> TryReadAsync(TcpClient client, NetworkStream stream, byte[] buffer, int length, CancellationToken token)
 		{
-			if (!client.Connected)
-				return false;
+			int readBytes = 0;
 
-			if (client.Client.Poll(0, SelectMode.SelectRead))
+			while (readBytes < length)
 			{
-				if (client.Connected)
-				{
-					byte[] b = new byte[1];
-					try
-					{
-						if (client.Client.Receive(b, SocketFlags.Peek) == 0)
-						{
-							return false;
-						}
-					}
-					catch
-					{
-						return false;
-					}
-				}
+				if (token.IsCancellationRequested || !client.IsConnected())
+					return false;
+
+				readBytes += await stream.ReadAsync(buffer, readBytes, length - readBytes, token);
 			}
 
 			return true;

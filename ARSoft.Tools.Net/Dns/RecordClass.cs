@@ -44,7 +44,10 @@ namespace ARSoft.Tools.Net.Dns
 
 		/// <summary>
 		///   <para>Record class Chaois (CH)</para>
-		///   <para>Defined: D. Moon, "Chaosnet", A.I. Memo 628, Massachusetts Institute of Technology Artificial Intelligence Laboratory, June 1981.</para>
+		///   <para>
+		///     Defined: D. Moon, "Chaosnet", A.I. Memo 628, Massachusetts Institute of Technology Artificial Intelligence
+		///     Laboratory, June 1981.
+		///   </para>
 		/// </summary>
 		Chaos = 3,
 

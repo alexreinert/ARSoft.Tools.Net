@@ -57,9 +57,9 @@ namespace ARSoft.Tools.Net.Spf
 			}
 
 			var senderIDTextRecords = dnsResult.Records
-			                                   .Select(r => r.TextData)
-			                                   .Where(t => SenderIDRecord.IsSenderIDRecord(t, Scope))
-			                                   .ToList();
+				.Select(r => r.TextData)
+				.Where(t => SenderIDRecord.IsSenderIDRecord(t, Scope))
+				.ToList();
 
 			if (senderIDTextRecords.Count >= 1)
 			{

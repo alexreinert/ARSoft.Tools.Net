@@ -37,7 +37,8 @@ namespace ARSoft.Tools.Net.Dns
 	public class DnsClient : DnsClientBase
 	{
 		/// <summary>
-		///   Returns a default instance of the DnsClient, which uses the configured dns servers of the executing computer and a query timeout of 10 seconds.
+		///   Returns a default instance of the DnsClient, which uses the configured dns servers of the executing computer and a
+		///   query timeout of 10 seconds.
 		/// </summary>
 		public static DnsClient Default { get; private set; }
 
