@@ -41,7 +41,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
-			Address = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref startPosition, 16));
+			Address = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref startPosition, MaximumRecordDataLength));
 		}
 
 		internal override void ParseRecordData(string origin, string[] stringRepresentation)
@@ -55,11 +55,6 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return Address.ToString();
-		}
-
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 16; }
 		}
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)

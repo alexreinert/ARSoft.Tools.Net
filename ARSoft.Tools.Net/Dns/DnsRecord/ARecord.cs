@@ -43,5 +43,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="address"> IP address of the host </param>
 		public ARecord(string name, int timeToLive, IPAddress address)
 			: base(name, RecordType.A, timeToLive, address ?? IPAddress.None) {}
+
+		protected internal override int MaximumRecordDataLength
+		{
+			get { return 4; }
+		}
 	}
 }

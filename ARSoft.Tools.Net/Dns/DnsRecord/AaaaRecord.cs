@@ -43,5 +43,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="address"> IP address of the host </param>
 		public AaaaRecord(string name, int timeToLive, IPAddress address)
 			: base(name, RecordType.Aaaa, timeToLive, address ?? IPAddress.IPv6None) {}
+
+		protected internal override int MaximumRecordDataLength
+		{
+			get { return 16; }
+		}
 	}
 }
