@@ -8,6 +8,11 @@ namespace ARSoft.Tools.Net
 {
 	public static class IPAddressExtension
 	{
+		/// <summary>
+		/// Reverses the order of the bytes of an IPAddress
+		/// </summary>
+		/// <param name="ipAddress">Instance of the IPAddress, that should be reversed</param>
+		/// <returns>New instance of IPAddress with reversed address</returns>
 		public static IPAddress Reverse(this IPAddress ipAddress)
 		{
 			if (ipAddress == null)
@@ -24,6 +29,12 @@ namespace ARSoft.Tools.Net
 			return new IPAddress(res);
 		}
 
+		/// <summary>
+		/// Gets the network address for a specified IPAddress and netmask
+		/// </summary>
+		/// <param name="ipAddress">IPAddress, for that the network address should be returned</param>
+		/// <param name="netmask">Netmask, that should be used</param>
+		/// <returns>New instance of IPAddress with the network address assigend</returns>
 		public static IPAddress GetNetworkAddress(this IPAddress ipAddress, IPAddress netmask)
 		{
 			if (ipAddress == null)
@@ -47,6 +58,12 @@ namespace ARSoft.Tools.Net
 			return new IPAddress(resultBytes);
 		}
 
+		/// <summary>
+		/// Gets the network address for a specified IPAddress and netmask
+		/// </summary>
+		/// <param name="ipAddress">IPAddress, for that the network address should be returned</param>
+		/// <param name="netmask">Netmask in CIDR format</param>
+		/// <returns>New instance of IPAddress with the network address assigend</returns>
 		public static IPAddress GetNetworkAddress(this IPAddress ipAddress, int netmask)
 		{
 			if (ipAddress == null)
@@ -79,6 +96,11 @@ namespace ARSoft.Tools.Net
 			return new IPAddress(ipAddressBytes);
 		}
 
+		/// <summary>
+		/// Returns the reverse lookup address of an IPAddress
+		/// </summary>
+		/// <param name="ipAddress">Instance of the IPAddress, that should be used</param>
+		/// <returns>A string with the reverse lookup address</returns>
 		public static string GetReverseLookupAddress(this IPAddress ipAddress)
 		{
 			StringBuilder res = new StringBuilder();

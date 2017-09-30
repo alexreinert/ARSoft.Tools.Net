@@ -9,9 +9,16 @@ namespace ARSoft.Tools.Net.Dns
 	public class DnsMessage
 	{
 		#region Header
+		/// <summary>
+		/// Gets or sets the transaction identifier (ID) of the message
+		/// </summary>
 		public ushort TransactionID { get; set; }
+
 		private ushort Flags;
 
+		/// <summary>
+		/// Gets or sets the query (QR) flag
+		/// </summary>
 		public bool IsQuery
 		{
 			get
@@ -31,6 +38,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the Operation Code (OPCODE)
+		/// </summary>
 		public OperationCode OperationCode
 		{
 			get
@@ -44,6 +54,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the autoritive answer (AA) flag
+		/// </summary>
 		public bool IsAuthoritiveAnswer
 		{
 			get
@@ -63,6 +76,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the truncated (TC) flag
+		/// </summary>
 		public bool IsTruncated
 		{
 			get
@@ -82,6 +98,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the recursion desired (RD) flag
+		/// </summary>
 		public bool IsRecursionDesired
 		{
 			get
@@ -101,6 +120,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the recursion allowed (RA) flag
+		/// </summary>
 		public bool IsRecursionAllowed
 		{
 			get
@@ -120,6 +142,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the authentic data (AD) flag
+		/// </summary>
 		public bool IsAuthenticData
 		{
 			get
@@ -139,6 +164,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the checking disabled (CD) flag
+		/// </summary>
 		public bool IsCheckingDisabled
 		{
 			get
@@ -157,7 +185,10 @@ namespace ARSoft.Tools.Net.Dns
 				}
 			}
 		}
-		
+
+		/// <summary>
+		/// Gets or sets the return code (RCODE)
+		/// </summary>
 		public ReturnCode ReturnCode
 		{
 			get
@@ -172,9 +203,24 @@ namespace ARSoft.Tools.Net.Dns
 		}
 		#endregion
 
+		/// <summary>
+		/// Gets or sets the entries in the question section
+		/// </summary>
 		public List<DnsQuestion> Questions { get; private set; }
+
+		/// <summary>
+		/// Gets or sets the entries in the answer records section
+		/// </summary>
 		public List<DnsRecordBase> AnswerRecords { get; private set; }
+
+		/// <summary>
+		/// Gets or sets the entries in the authority records section
+		/// </summary>
 		public List<DnsRecordBase> AuthorityRecords { get; private set; }
+
+		/// <summary>
+		/// Gets or sets the entries in the additional records section
+		/// </summary>
 		public List<DnsRecordBase> AdditionalRecords { get; private set; }
 
 		public DnsMessage()

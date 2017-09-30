@@ -44,7 +44,7 @@ namespace ARSoft.Tools.Net.Dns
 		protected override void EncodeRecordData(byte[] messageData, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
 			DnsMessage.EncodeUShort(messageData, ref currentPosition, (ushort)SubType);
-			DnsMessage.EncodeDomainName(messageData, ref currentPosition, Hostname, true, domainNames);
+			DnsMessage.EncodeDomainName(messageData, ref currentPosition, Hostname, false, domainNames);
 		}
 	}
 }

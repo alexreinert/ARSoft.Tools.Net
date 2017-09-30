@@ -10,12 +10,18 @@ using System.IO;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	/// Provides a client for querying dns records
+	/// </summary>
 	public class DnsClient
 	{
 		private const int _DNS_PORT = 53;
 		private List<IPAddress> _dnsServers;
 		public int QueryTimeout { get; set; }
 
+		/// <summary>
+		/// Returns a default instance of the DnsClient, which uses the configured dns servers of the executing computer and a query timeout of 10 seconds.
+		/// </summary>
 		public static DnsClient Default { get; private set; }
 
 		static DnsClient()
@@ -23,22 +29,56 @@ namespace ARSoft.Tools.Net.Dns
 			Default = new DnsClient(GetDnsServers(), 10000);
 		}
 
+		/// <summary>
+		/// Provides a new instance with custom dns server and query timeout
+		/// </summary>
+		/// <param name="dnsServers">The IPAddress of the dns server to use</param>
+		/// <param name="queryTimeout">Query timeout in milliseconds</param>
+		public DnsClient(IPAddress dnsServers, int queryTimeout)
+		{
+			_dnsServers = new List<IPAddress>() { dnsServers };
+			QueryTimeout = queryTimeout;
+		}
+
+		/// <summary>
+		/// Provides a new instance with custom dns servers and query timeout
+		/// </summary>
+		/// <param name="dnsServers">The IPAddresses of the dns servers to use</param>
+		/// <param name="queryTimeout">Query timeout in milliseconds</param>
 		public DnsClient(List<IPAddress> dnsServers, int queryTimeout)
 		{
 			_dnsServers = dnsServers;
 			QueryTimeout = queryTimeout;
 		}
 
+		/// <summary>
+		/// Queries a dns server for address records.
+		/// </summary>
+		/// <param name="name">Domain, that should be queried</param>
+		/// <returns>The complete response of the dns server</returns>
 		public DnsMessage Resolve(string name)
 		{
 			return Resolve(name, RecordType.A, RecordClass.INet);
 		}
 
+		/// <summary>
+		/// Queries a dns server for specified records.
+		/// </summary>
+		/// <param name="name">Domain, that should be queried</param>
+		/// <param name="recordType">Recordtype the should be queried</param>
+		/// <returns>The complete response of the dns server</returns>
 		public DnsMessage Resolve(string name, RecordType recordType)
 		{
 			return Resolve(name, recordType, RecordClass.INet);
 		}
 
+		/// <summary>
+		/// Queries a dns server for specified records.
+		/// </summary>
+		/// <param name="name">Domain, that should be queried</param>
+		/// <param name="recordType">Type the should be queried</param>
+		/// <param name="recordClass">Class the should be queried</param>
+		/// <returns>The complete response of the dns server</returns>
 		public DnsMessage Resolve(string name, RecordType recordType, RecordClass recordClass)
 		{
 			if (String.IsNullOrEmpty(name))
@@ -52,6 +92,11 @@ namespace ARSoft.Tools.Net.Dns
 			return SendMessage(message);
 		}
 
+		/// <summary>
+		/// Send a custom message to the dns server and returns the answer.
+		/// </summary>
+		/// <param name="message">Message, that should be send to the dns server</param>
+		/// <returns>The complete response of the dns server</returns>
 		public DnsMessage SendMessage(DnsMessage message)
 		{
 			if (message == null)
