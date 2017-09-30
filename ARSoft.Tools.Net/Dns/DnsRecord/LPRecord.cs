@@ -30,6 +30,7 @@ namespace ARSoft.Tools.Net.Dns
 	///     <see cref="!:http://tools.ietf.org/html/rfc6742">RFC 6742</see>
 	///   </para>
 	/// </summary>
+	// ReSharper disable once InconsistentNaming
 	public class LPRecord : DnsRecordBase
 	{
 		/// <summary>
@@ -40,7 +41,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   The FQDN
 		/// </summary>
-		public string FQDN { get; private set; }
+		// ReSharper disable once InconsistentNaming
+		public DomainName FQDN { get; private set; }
 
 		internal LPRecord() {}
 
@@ -51,7 +53,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="preference"> The preference </param>
 		/// <param name="fqdn"> The FQDN </param>
-		public LPRecord(string name, int timeToLive, ushort preference, string fqdn)
+		public LPRecord(DomainName name, int timeToLive, ushort preference, DomainName fqdn)
 			: base(name, RecordType.LP, RecordClass.INet, timeToLive)
 		{
 			Preference = preference;
@@ -64,7 +66,7 @@ namespace ARSoft.Tools.Net.Dns
 			FQDN = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -75,18 +77,15 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return Preference + " " + FQDN + ".";
+			return Preference + " " + FQDN;
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 4 + FQDN.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 4 + FQDN.MaximumRecordDataLength;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, FQDN, false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, FQDN, null, false);
 		}
 	}
 }

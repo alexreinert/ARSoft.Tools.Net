@@ -30,6 +30,7 @@ namespace ARSoft.Tools.Net.Dns
 	///     <see cref="!:http://tools.ietf.org/html/rfc6844">RFC 6844</see>
 	///   </para>
 	/// </summary>
+	// ReSharper disable once InconsistentNaming
 	public class CAARecord : DnsRecordBase
 	{
 		/// <summary>
@@ -57,7 +58,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="flags">The flags</param>
 		/// <param name="tag">The name of the tag</param>
 		/// <param name="value">The value of the tag</param>
-		public CAARecord(string name, int timeToLive, byte flags, string tag, string value)
+		public CAARecord(DomainName name, int timeToLive, byte flags, string tag, string value)
 			: base(name, RecordType.CAA, RecordClass.INet, timeToLive)
 		{
 			Flags = flags;
@@ -72,7 +73,7 @@ namespace ARSoft.Tools.Net.Dns
 			Value = DnsMessageBase.ParseText(resultData, ref startPosition, length - (2 + Tag.Length));
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 3)
 				throw new FormatException();
@@ -84,15 +85,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return Flags + " " + Tag + " " + Value;
+			return Flags + " " + Tag.ToMasterfileLabelRepresentation() + " " + Value.ToMasterfileLabelRepresentation();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 2 + Tag.Length + Value.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 2 + Tag.Length + Value.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = Flags;
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, Tag);

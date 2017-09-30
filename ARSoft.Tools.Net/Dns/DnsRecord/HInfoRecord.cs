@@ -51,7 +51,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="cpu"> Type of the CPU of the host </param>
 		/// <param name="operatingSystem"> Name of the operating system of the host </param>
-		public HInfoRecord(string name, int timeToLive, string cpu, string operatingSystem)
+		public HInfoRecord(DomainName name, int timeToLive, string cpu, string operatingSystem)
 			: base(name, RecordType.HInfo, RecordClass.INet, timeToLive)
 		{
 			Cpu = cpu ?? String.Empty;
@@ -64,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns
 			OperatingSystem = DnsMessageBase.ParseText(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -75,16 +75,13 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return "\"" + Cpu + "\""
-			       + " \"" + OperatingSystem + "\"";
+			return "\"" + Cpu.ToMasterfileLabelRepresentation() + "\""
+			       + " \"" + OperatingSystem.ToMasterfileLabelRepresentation() + "\"";
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 2 + Cpu.Length + OperatingSystem.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 2 + Cpu.Length + OperatingSystem.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, Cpu);
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, OperatingSystem);

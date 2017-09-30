@@ -44,12 +44,17 @@
     <DocumentationFile>..\bin\Release\ARSoft.Tools.Net.xml</DocumentationFile>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="Exists('D:\arsoft.pfx')">
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>D:\arsoft.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.7.4137.9688, Culture=neutral, PublicKeyToken=a4292a325f69b123, processorArchitecture=MSIL">
+      <HintPath>..\packages\BouncyCastle.1.7.0\lib\Net40-Client\BouncyCastle.Crypto.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -64,7 +69,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncEventHandler.cs" />
+    <Compile Include="AsyncEventHandlerExtensions.cs" />
     <Compile Include="BaseEncoding.cs" />
+    <Compile Include="Dns\Cache\DnsCache.cs" />
+    <Compile Include="Dns\Cache\NameserverCache.cs" />
     <Compile Include="Dns\ClientConnectedEventArgs.cs" />
     <Compile Include="Dns\DnsClient.cs" />
     <Compile Include="Dns\DnsClientBase.cs" />
@@ -72,6 +81,7 @@
     <Compile Include="Dns\DnsMessage.cs" />
     <Compile Include="Dns\DnsMessageBase.cs" />
     <Compile Include="Dns\DnsMessageEntryBase.cs" />
+    <Compile Include="Dns\DnsQueryOptions.cs" />
     <Compile Include="Dns\DnsQuestion.cs" />
     <Compile Include="Dns\DnsRecord\AaaaRecord.cs" />
     <Compile Include="Dns\DnsRecord\AddressRecordBase.cs" />
@@ -79,8 +89,11 @@
     <Compile Include="Dns\DnsRecord\AplRecord.cs" />
     <Compile Include="Dns\DnsRecord\ARecord.cs" />
     <Compile Include="Dns\DnsRecord\CAARecord.cs" />
+    <Compile Include="Dns\DnsRecord\CDnsKeyRecord.cs" />
+    <Compile Include="Dns\DnsRecord\CDsRecord.cs" />
     <Compile Include="Dns\DnsRecord\CertRecord.cs" />
     <Compile Include="Dns\DnsRecord\CNameRecord.cs" />
+    <Compile Include="Dns\DnsRecord\CSyncRecord.cs" />
     <Compile Include="Dns\DnsRecord\DhcidRecord.cs" />
     <Compile Include="Dns\DnsRecord\DNameRecord.cs" />
     <Compile Include="Dns\DnsRecord\DnsRecordBase.cs" />
@@ -103,26 +116,45 @@
     <Compile Include="Dns\DnsRecord\NIdRecord.cs" />
     <Compile Include="Dns\DnsRecord\NsapRecord.cs" />
     <Compile Include="Dns\DnsRecord\NsRecord.cs" />
+    <Compile Include="Dns\DnsRecord\OpenPGPKeyRecord.cs" />
     <Compile Include="Dns\DnsRecord\PxRecord.cs" />
     <Compile Include="Dns\DnsRecord\RpRecord.cs" />
     <Compile Include="Dns\DnsRecord\RtRecord.cs" />
     <Compile Include="Dns\DnsRecord\SshFpRecord.cs" />
+    <Compile Include="Dns\DnsRecord\TextRecordBase.cs" />
     <Compile Include="Dns\DnsRecord\TKeyRecord.cs" />
     <Compile Include="Dns\DnsRecord\TlsaRecord.cs" />
+    <Compile Include="Dns\DnsRecord\UriRecord.cs" />
     <Compile Include="Dns\DnsRecord\WksRecord.cs" />
     <Compile Include="Dns\DnsRecord\X25Record.cs" />
     <Compile Include="Dns\DnsSec\DiffieHellmanKeyRecord.cs" />
     <Compile Include="Dns\DnsSec\DlvRecord.cs" />
+    <Compile Include="Dns\DnsSec\DnsKeyFlags.cs" />
     <Compile Include="Dns\DnsSec\DnsKeyRecord.cs" />
     <Compile Include="Dns\DnsSec\DnsSecAlgorithm.cs" />
     <Compile Include="Dns\DnsSec\DnsSecDigestType.cs" />
+    <Compile Include="Dns\DnsSec\DnsSecValidationException.cs" />
+    <Compile Include="Dns\DnsSec\DnsSecValidator.cs" />
+    <Compile Include="Dns\DnsSec\IInternalDnsSecResolver.cs" />
+    <Compile Include="Dns\EDns\CookieOption.cs" />
+    <Compile Include="Dns\Resolver\IResolverHintStore.cs" />
+    <Compile Include="Dns\Resolver\DnsSecRecursiveDnsResolver.cs" />
     <Compile Include="Dns\DnsSec\DsRecord.cs" />
+    <Compile Include="Dns\Resolver\DnsSecResolverExtensions.cs" />
+    <Compile Include="Dns\Resolver\DnsSecResult.cs" />
+    <Compile Include="Dns\Resolver\DnsSecValidationResult.cs" />
+    <Compile Include="Dns\Resolver\IDnsSecResolver.cs" />
     <Compile Include="Dns\DnsSec\KeyRecord.cs" />
     <Compile Include="Dns\DnsSec\KeyRecordBase.cs" />
+    <Compile Include="Dns\DnsSec\NSec3HashAlgorithm.cs" />
     <Compile Include="Dns\DnsSec\NSec3ParamRecord.cs" />
     <Compile Include="Dns\DnsSec\Nsec3Record.cs" />
     <Compile Include="Dns\DnsSec\NSecRecord.cs" />
     <Compile Include="Dns\DnsSec\RrSigRecord.cs" />
+    <Compile Include="Dns\Resolver\StaticResolverHintStore.cs" />
+    <Compile Include="Dns\Resolver\UpdateableResolverHintStoreBase.cs" />
+    <Compile Include="Dns\Resolver\ZoneFileResolverHintStore.cs" />
+    <Compile Include="DomainName.cs" />
     <Compile Include="Dns\DynamicUpdate\AddRecordUpdate.cs" />
     <Compile Include="Dns\DynamicUpdate\DeleteAllRecordsUpdate.cs" />
     <Compile Include="Dns\DynamicUpdate\DeleteRecordUpdate.cs" />
@@ -147,6 +179,11 @@
     <Compile Include="Dns\MulticastDnsOneShotClient.cs" />
     <Compile Include="Dns\MulticastDnsMessage.cs" />
     <Compile Include="Dns\QueryReceivedEventArgs.cs" />
+    <Compile Include="Dns\Resolver\DnsResolverExtensions.cs" />
+    <Compile Include="Dns\Resolver\DnsStubResolver.cs" />
+    <Compile Include="Dns\Resolver\IDnsResolver.cs" />
+    <Compile Include="Dns\Resolver\RecursiveDnsResolver.cs" />
+    <Compile Include="Dns\Resolver\SelfValidatingDnsSecStubResolver.cs" />
     <Compile Include="Dns\TSig\TSigAlgorithm.cs" />
     <Compile Include="Dns\TSig\TSigAlgorithmHelper.cs" />
     <Compile Include="Dns\TSig\TSigRecord.cs" />
@@ -172,6 +209,8 @@
     <Compile Include="Dns\InvalidSignedMessageEventArgs.cs" />
     <Compile Include="EventHandlerExtensions.cs" />
     <Compile Include="IPAddressExtensions.cs" />
+    <Compile Include="Net\DaneStream.cs" />
+    <Compile Include="StringExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spf\SenderIDScope.cs" />
     <Compile Include="Spf\SenderIDValidator.cs" />
@@ -198,6 +237,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="..\Documentation\ARSoft.Tools.Net.dxp" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

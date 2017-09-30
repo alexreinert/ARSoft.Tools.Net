@@ -77,7 +77,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Domain name of generator of the signature
 		/// </summary>
-		public string SignersName { get; private set; }
+		public DomainName SignersName { get; private set; }
 
 		/// <summary>
 		///   Binary data of the signature
@@ -105,7 +105,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="keyTag"> Key tag </param>
 		/// <param name="signersName"> Domain name of generator of the signature </param>
 		/// <param name="signature"> Binary data of the signature </param>
-		public SigRecord(string name, RecordClass recordClass, int timeToLive, RecordType typeCovered, DnsSecAlgorithm algorithm, byte labels, int originalTimeToLive, DateTime signatureExpiration, DateTime signatureInception, ushort keyTag, string signersName, byte[] signature)
+		public SigRecord(DomainName name, RecordClass recordClass, int timeToLive, RecordType typeCovered, DnsSecAlgorithm algorithm, byte labels, int originalTimeToLive, DateTime signatureExpiration, DateTime signatureInception, ushort keyTag, DomainName signersName, byte[] signature)
 			: base(name, RecordType.Sig, recordClass, timeToLive)
 		{
 			TypeCovered = typeCovered;
@@ -115,7 +115,7 @@ namespace ARSoft.Tools.Net.Dns
 			SignatureExpiration = signatureExpiration;
 			SignatureInception = signatureInception;
 			KeyTag = keyTag;
-			SignersName = signersName ?? String.Empty;
+			SignersName = signersName ?? DomainName.Root;
 			Signature = signature ?? new byte[] { };
 		}
 
@@ -134,7 +134,7 @@ namespace ARSoft.Tools.Net.Dns
 			Signature = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length + startPosition - currentPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 9)
 				throw new FormatException();
@@ -159,16 +159,13 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + SignatureExpiration.ToString("yyyyMMddHHmmss")
 			       + " " + SignatureInception.ToString("yyyyMMddHHmmss")
 			       + " " + KeyTag
-			       + " " + SignersName + "."
+			       + " " + SignersName
 			       + " " + Signature.ToBase64String();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 20 + SignersName.Length + Signature.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 20 + SignersName.MaximumRecordDataLength + Signature.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) TypeCovered);
 			messageData[currentPosition++] = (byte) Algorithm;
@@ -177,7 +174,7 @@ namespace ARSoft.Tools.Net.Dns
 			EncodeDateTime(messageData, ref currentPosition, SignatureExpiration);
 			EncodeDateTime(messageData, ref currentPosition, SignatureInception);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, KeyTag);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, SignersName, false, null);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, SignersName, null, useCanonical);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Signature);
 		}
 

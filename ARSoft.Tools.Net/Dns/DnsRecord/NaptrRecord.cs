@@ -64,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   The next name to query
 		/// </summary>
-		public string Replacement { get; private set; }
+		public DomainName Replacement { get; private set; }
 
 		internal NaptrRecord() {}
 
@@ -79,7 +79,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="services"> Available services </param>
 		/// <param name="regExp"> Substitution expression that is applied to the original string </param>
 		/// <param name="replacement"> The next name to query </param>
-		public NaptrRecord(string name, int timeToLive, ushort order, ushort preference, string flags, string services, string regExp, string replacement)
+		public NaptrRecord(DomainName name, int timeToLive, ushort order, ushort preference, string flags, string services, string regExp, DomainName replacement)
 			: base(name, RecordType.Naptr, RecordClass.INet, timeToLive)
 		{
 			Order = order;
@@ -87,7 +87,7 @@ namespace ARSoft.Tools.Net.Dns
 			Flags = flags ?? String.Empty;
 			Services = services ?? String.Empty;
 			RegExp = regExp ?? String.Empty;
-			Replacement = replacement ?? String.Empty;
+			Replacement = replacement ?? DomainName.Root;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -100,7 +100,7 @@ namespace ARSoft.Tools.Net.Dns
 			Replacement = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 6)
 				throw new NotSupportedException();
@@ -117,25 +117,22 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			return Order
 			       + " " + Preference
-			       + " \"" + Flags + "\""
-			       + " \"" + Services + "\""
-			       + " \"" + RegExp + "\""
-			       + " " + Replacement + ".";
+			       + " \"" + Flags.ToMasterfileLabelRepresentation() + "\""
+			       + " \"" + Services.ToMasterfileLabelRepresentation() + "\""
+			       + " \"" + RegExp.ToMasterfileLabelRepresentation() + "\""
+			       + " " + Replacement;
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return Flags.Length + Services.Length + RegExp.Length + Replacement.Length + 13; }
-		}
+		protected internal override int MaximumRecordDataLength => Flags.Length + Services.Length + RegExp.Length + Replacement.MaximumRecordDataLength + 13;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Order);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, Flags);
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, Services);
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, RegExp);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Replacement, false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Replacement, null, useCanonical);
 		}
 	}
 }

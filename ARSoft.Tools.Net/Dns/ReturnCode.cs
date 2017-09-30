@@ -89,6 +89,7 @@ namespace ARSoft.Tools.Net.Dns
 		///     <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
 		///   </para>
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		YXDomain = 6,
 
 		/// <summary>
@@ -98,6 +99,7 @@ namespace ARSoft.Tools.Net.Dns
 		///     <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
 		///   </para>
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		YXRRSet = 7,
 
 		/// <summary>
@@ -107,6 +109,7 @@ namespace ARSoft.Tools.Net.Dns
 		///     <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
 		///   </para>
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		NXRRSet = 8,
 
 		/// <summary>
@@ -198,5 +201,14 @@ namespace ARSoft.Tools.Net.Dns
 		///   </para>
 		/// </summary>
 		BadTrunc = 22,
+
+		/// <summary>
+		///   <para>Bad/missing server cookie</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/draft-ietf-dnsop-cookies">draft-ietf-dnsop-cookies</see>
+		///   </para>
+		/// </summary>
+		BadCookie = 23,
 	}
 }

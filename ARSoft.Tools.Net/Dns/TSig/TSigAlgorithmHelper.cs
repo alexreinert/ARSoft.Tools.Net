@@ -24,31 +24,32 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	// ReSharper disable once InconsistentNaming
 	internal class TSigAlgorithmHelper
 	{
-		public static string GetDomainName(TSigAlgorithm algorithm)
+		public static DomainName GetDomainName(TSigAlgorithm algorithm)
 		{
 			switch (algorithm)
 			{
 				case TSigAlgorithm.Md5:
-					return "hmac-md5.sig-alg.reg.int";
+					return DomainName.Parse("hmac-md5.sig-alg.reg.int");
 				case TSigAlgorithm.Sha1:
-					return "hmac-sha1";
+					return DomainName.Parse("hmac-sha1");
 				case TSigAlgorithm.Sha256:
-					return "hmac-sha256";
+					return DomainName.Parse("hmac-sha256");
 				case TSigAlgorithm.Sha384:
-					return "hmac-sha384";
+					return DomainName.Parse("hmac-sha384");
 				case TSigAlgorithm.Sha512:
-					return "hmac-sha512";
+					return DomainName.Parse("hmac-sha512");
 
 				default:
 					return null;
 			}
 		}
 
-		public static TSigAlgorithm GetAlgorithmByName(string name)
+		public static TSigAlgorithm GetAlgorithmByName(DomainName name)
 		{
-			switch (name.ToLower())
+			switch (name.ToString().ToLower())
 			{
 				case "hmac-md5.sig-alg.reg.int":
 					return TSigAlgorithm.Md5;

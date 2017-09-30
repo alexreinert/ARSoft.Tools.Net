@@ -29,12 +29,12 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   Provides a one/shot client for querying Multicast DNS as defined in
 	///   <see
-	///     cref="!:http://www.ietf.org/id/draft-cheshire-dnsext-multicastdns-15.txt">
-	///     draft-cheshire-dnsext-multicastdns-15
+	///     cref="!:http://tools.ietf.org/html/rfc6762">
+	///     RFC 6762
 	///   </see>
 	///   .
 	/// </summary>
-	public class MulticastDnsOneShotClient : DnsClientBase
+	public sealed class MulticastDnsOneShotClient : DnsClientBase
 	{
 		private static readonly List<IPAddress> _addresses = new List<IPAddress> { IPAddress.Parse("FF02::FB"), IPAddress.Parse("224.0.0.251") };
 
@@ -60,20 +60,18 @@ namespace ARSoft.Tools.Net.Dns
 					.Select(n => n.GetIPProperties())
 					.Min(p => Math.Min(p.GetIPv4Properties().Mtu, p.GetIPv6Properties().Mtu));
 			}
-			catch {}
+			catch
+			{
+				// ignored
+			}
 
-			_maximumMessageSize = Math.Max(512, maximumMessageSize);
+			MaximumQueryMessageSize = Math.Max(512, maximumMessageSize);
 
 			IsUdpEnabled = true;
 			IsTcpEnabled = false;
 		}
 
-		private readonly int _maximumMessageSize;
-
-		protected override int MaximumQueryMessageSize
-		{
-			get { return _maximumMessageSize; }
-		}
+		protected override int MaximumQueryMessageSize { get; }
 
 		/// <summary>
 		///   Queries for specified records.
@@ -81,12 +79,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Name, that should be queried </param>
 		/// <param name="recordType"> Type the should be queried </param>
 		/// <returns> All available responses on the local network </returns>
-		public List<MulticastDnsMessage> Resolve(string name, RecordType recordType = RecordType.Any)
+		public List<MulticastDnsMessage> Resolve(DomainName name, RecordType recordType = RecordType.Any)
 		{
-			if (String.IsNullOrEmpty(name))
-			{
-				throw new ArgumentException("Name must be provided", "name");
-			}
+			if (name == null)
+				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
 			MulticastDnsMessage message = new MulticastDnsMessage { IsQuery = true, OperationCode = OperationCode.Query };
 			message.Questions.Add(new DnsQuestion(name, recordType, RecordClass.INet));
@@ -101,12 +97,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="recordType"> Type the should be queried </param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> All available responses on the local network </returns>
-		public Task<List<MulticastDnsMessage>> ResolveAsync(string name, RecordType recordType = RecordType.Any, CancellationToken token = default(CancellationToken))
+		public Task<List<MulticastDnsMessage>> ResolveAsync(DomainName name, RecordType recordType = RecordType.Any, CancellationToken token = default(CancellationToken))
 		{
-			if (String.IsNullOrEmpty(name))
-			{
-				throw new ArgumentException("Name must be provided", "name");
-			}
+			if (name == null)
+				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
 			MulticastDnsMessage message = new MulticastDnsMessage { IsQuery = true, OperationCode = OperationCode.Query };
 			message.Questions.Add(new DnsQuestion(name, recordType, RecordClass.INet));

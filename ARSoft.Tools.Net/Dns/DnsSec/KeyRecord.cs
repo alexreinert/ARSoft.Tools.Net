@@ -55,7 +55,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="protocol"> Protocol for which the key is used </param>
 		/// <param name="algorithm"> Algorithm of the key </param>
 		/// <param name="publicKey"> Binary data of the public key </param>
-		public KeyRecord(string name, RecordClass recordClass, int timeToLive, ushort flags, ProtocolType protocol, DnsSecAlgorithm algorithm, byte[] publicKey)
+		public KeyRecord(DomainName name, RecordClass recordClass, int timeToLive, ushort flags, ProtocolType protocol, DnsSecAlgorithm algorithm, byte[] publicKey)
 			: base(name, recordClass, timeToLive, flags, protocol, algorithm)
 		{
 			PublicKey = publicKey ?? new byte[] { };
@@ -66,7 +66,7 @@ namespace ARSoft.Tools.Net.Dns
 			PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 1)
 				throw new FormatException();
@@ -79,12 +79,9 @@ namespace ARSoft.Tools.Net.Dns
 			return PublicKey.ToBase64String();
 		}
 
-		protected override int MaximumPublicKeyLength
-		{
-			get { return PublicKey.Length; }
-		}
+		protected override int MaximumPublicKeyLength => PublicKey.Length;
 
-		protected override void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected override void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
 		}

@@ -30,11 +30,13 @@ namespace ARSoft.Tools.Net.Dns
 	///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
 	///   </para>
 	/// </summary>
+	// ReSharper disable once InconsistentNaming
 	public class TKeyRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Mode of transaction
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		public enum TKeyMode : ushort
 		{
 			/// <summary>
@@ -131,7 +133,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="error"> Error field </param>
 		/// <param name="key"> Binary data of the key </param>
 		/// <param name="otherData"> Binary other data </param>
-		public TKeyRecord(string name, TSigAlgorithm algorithm, DateTime inception, DateTime expiration, TKeyMode mode, ReturnCode error, byte[] key, byte[] otherData)
+		public TKeyRecord(DomainName name, TSigAlgorithm algorithm, DateTime inception, DateTime expiration, TKeyMode mode, ReturnCode error, byte[] key, byte[] otherData)
 			: base(name, RecordType.TKey, RecordClass.Any, 0)
 		{
 			Algorithm = algorithm;
@@ -156,7 +158,7 @@ namespace ARSoft.Tools.Net.Dns
 			OtherData = DnsMessageBase.ParseByteData(resultData, ref startPosition, otherDataLength);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			throw new NotSupportedException();
 		}
@@ -172,14 +174,11 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + OtherData.ToBase64String();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 18 + TSigAlgorithmHelper.GetDomainName(Algorithm).Length + Key.Length + OtherData.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 18 + TSigAlgorithmHelper.GetDomainName(Algorithm).MaximumRecordDataLength + Key.Length + OtherData.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TSigAlgorithmHelper.GetDomainName(Algorithm), false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TSigAlgorithmHelper.GetDomainName(Algorithm), null, false);
 			EncodeDateTime(messageData, ref currentPosition, Inception);
 			EncodeDateTime(messageData, ref currentPosition, Expiration);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Mode);

@@ -567,13 +567,45 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Trust anchor link</para>
 		///   <para>Defined by Wouter Wijngaards, &lt;wouter@nlnetlabs.nl&gt;, 2010-02-17</para>
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		TALink = 58, // not supported yet
 
 		/// <summary>
 		///   <para>Child DS</para>
-		///   <para>Defined by George Barwood, &lt;george.barwood@blueyonder.co.uk&gt;, 06 June 2011</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc7344">RFC 7344</see>
+		///   </para>
 		/// </summary>
-		CDS = 59, // not supported yet
+		CDs = 59,
+
+		/// <summary>
+		///   <para>Child DnsKey</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc7344">RFC 7344</see>
+		///   </para>
+		/// </summary>
+		CDnsKey = 60,
+
+		/// <summary>
+		///   <para>OpenPGP Key</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/draft-ietf-dane-openpgpkey">draft-ietf-dane-openpgpkey</see>
+		///   </para>
+		/// </summary>
+		// ReSharper disable once InconsistentNaming
+		OpenPGPKey = 61,
+
+		/// <summary>
+		///   <para>Child-to-Parent Synchronization</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc7477">RFC 7477</see>
+		///   </para>
+		/// </summary>
+		CSync = 62,
 
 		/// <summary>
 		///   <para>Sender Policy Framework</para>
@@ -645,6 +677,7 @@ namespace ARSoft.Tools.Net.Dns
 		///     <see cref="!:http://tools.ietf.org/html/rfc6742">RFC 6742</see>
 		///   </para>
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		LP = 107,
 
 		/// <summary>
@@ -672,6 +705,7 @@ namespace ARSoft.Tools.Net.Dns
 		///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
 		///   </para>
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		TKey = 249,
 
 		/// <summary>
@@ -681,6 +715,7 @@ namespace ARSoft.Tools.Net.Dns
 		///     <see cref="!:http://tools.ietf.org/html/rfc2845">RFC 2845</see>
 		///   </para>
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		TSig = 250,
 
 		/// <summary>
@@ -732,10 +767,13 @@ namespace ARSoft.Tools.Net.Dns
 		Any = 255,
 
 		/// <summary>
-		///   <para>URI</para>
-		///   <para>Defined by Patrik Faltstrom, &lt;paf@cisco.com&gt;, 22 February 2011</para>
+		///   <para>Uniform Resource Identifier</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc7553">RFC 7553</see>
+		///   </para>
 		/// </summary>
-		Uri = 256, // not supported yet
+		Uri = 256,
 
 		/// <summary>
 		///   <para>Certification authority auhtorization</para>
@@ -744,6 +782,7 @@ namespace ARSoft.Tools.Net.Dns
 		///     <see cref="!:http://tools.ietf.org/html/rfc6844">RFC 6844</see>
 		///   </para>
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		CAA = 257,
 
 		/// <summary>
@@ -801,7 +840,7 @@ namespace ARSoft.Tools.Net.Dns
 		public static RecordType ParseShortString(string s)
 		{
 			if (String.IsNullOrEmpty(s))
-				throw new ArgumentOutOfRangeException("s");
+				throw new ArgumentOutOfRangeException(nameof(s));
 
 			RecordType recordType;
 			if (EnumHelper<RecordType>.TryParse(s, true, out recordType))
@@ -814,7 +853,7 @@ namespace ARSoft.Tools.Net.Dns
 					return (RecordType) classValue;
 			}
 
-			throw new ArgumentOutOfRangeException("s");
+			throw new ArgumentOutOfRangeException(nameof(s));
 		}
 	}
 }

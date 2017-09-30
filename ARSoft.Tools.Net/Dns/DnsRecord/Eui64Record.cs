@@ -45,7 +45,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain name of the host </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="address"> The EUI48 address</param>
-		public Eui64Record(string name, int timeToLive, byte[] address)
+		public Eui64Record(DomainName name, int timeToLive, byte[] address)
 			: base(name, RecordType.Eui64, RecordClass.INet, timeToLive)
 		{
 			Address = address ?? new byte[8];
@@ -61,7 +61,7 @@ namespace ARSoft.Tools.Net.Dns
 			return String.Join("-", Address.Select(x => x.ToString("x2")).ToArray());
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 1)
 				throw new NotSupportedException();
@@ -72,12 +72,9 @@ namespace ARSoft.Tools.Net.Dns
 				throw new NotSupportedException();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 8; }
-		}
+		protected internal override int MaximumRecordDataLength => 8;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address);
 		}

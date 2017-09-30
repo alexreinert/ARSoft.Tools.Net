@@ -30,6 +30,7 @@ namespace ARSoft.Tools.Net.Dns
 	///     <see cref="!:http://tools.ietf.org/html/rfc2845">RFC 2845</see>
 	///   </para>
 	/// </summary>
+	// ReSharper disable once InconsistentNaming
 	public class TSigRecord : DnsRecordBase
 	{
 		/// <summary>
@@ -90,7 +91,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="error"> Error field </param>
 		/// <param name="otherData"> Binary other data </param>
 		/// <param name="keyData"> Binary data of the key </param>
-		public TSigRecord(string name, TSigAlgorithm algorithm, DateTime timeSigned, TimeSpan fudge, ushort originalID, ReturnCode error, byte[] otherData, byte[] keyData)
+		public TSigRecord(DomainName name, TSigAlgorithm algorithm, DateTime timeSigned, TimeSpan fudge, ushort originalID, ReturnCode error, byte[] otherData, byte[] keyData)
 			: base(name, RecordType.TSig, RecordClass.Any, 0)
 		{
 			Algorithm = algorithm;
@@ -116,7 +117,7 @@ namespace ARSoft.Tools.Net.Dns
 			OtherData = DnsMessageBase.ParseByteData(resultData, ref startPosition, otherDataSize);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			throw new NotSupportedException();
 		}
@@ -134,24 +135,20 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + OtherData.ToBase64String();
 		}
 
-		protected internal override int MaximumRecordDataLength
+		protected internal override int MaximumRecordDataLength => TSigAlgorithmHelper.GetDomainName(Algorithm).MaximumRecordDataLength + 18 + TSigAlgorithmHelper.GetHashSize(Algorithm) + OtherData.Length;
+
+		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, byte[] mac)
 		{
-			get { return TSigAlgorithmHelper.GetDomainName(Algorithm).Length + 18 + TSigAlgorithmHelper.GetHashSize(Algorithm) + OtherData.Length; }
-		}
-
-		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames, byte[] mac)
-		{
-			int recordDataOffset;
-			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, out recordDataOffset);
-
-			EncodeRecordData(messageData, offset, ref recordDataOffset, domainNames, mac);
-
+			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, false);
+			DnsMessageBase.EncodeInt(messageData, ref currentPosition, TimeToLive);
+			int recordDataOffset = currentPosition + 2;
+			EncodeRecordData(messageData, offset, ref recordDataOffset, mac);
 			EncodeRecordLength(messageData, offset, ref currentPosition, domainNames, recordDataOffset);
 		}
 
-		private void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames, byte[] mac)
+		private void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, byte[] mac)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TSigAlgorithmHelper.GetDomainName(Algorithm), false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TSigAlgorithmHelper.GetDomainName(Algorithm), null, false);
 			EncodeDateTime(messageData, ref currentPosition, TimeSigned);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Fudge.TotalSeconds);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) mac.Length);
@@ -162,9 +159,9 @@ namespace ARSoft.Tools.Net.Dns
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, OtherData);
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			EncodeRecordData(messageData, offset, ref currentPosition, domainNames, Mac);
+			EncodeRecordData(messageData, offset, ref currentPosition, Mac);
 		}
 
 		internal static void EncodeDateTime(byte[] buffer, ref int currentPosition, DateTime value)

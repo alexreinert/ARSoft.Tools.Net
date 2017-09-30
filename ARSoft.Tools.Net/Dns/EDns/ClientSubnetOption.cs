@@ -37,10 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   The address family
 		/// </summary>
-		public AddressFamily Family
-		{
-			get { return Address.AddressFamily; }
-		}
+		public AddressFamily Family => Address.AddressFamily;
 
 		/// <summary>
 		///   The source subnet mask
@@ -94,10 +91,7 @@ namespace ARSoft.Tools.Net.Dns
 			Address = new IPAddress(addressData);
 		}
 
-		internal override ushort DataLength
-		{
-			get { return (ushort) (4 + GetAddressLength()); }
-		}
+		internal override ushort DataLength => (ushort) (4 + GetAddressLength());
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{

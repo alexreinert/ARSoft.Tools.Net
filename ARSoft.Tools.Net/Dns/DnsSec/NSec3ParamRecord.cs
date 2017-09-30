@@ -35,7 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Algorithm of the hash
 		/// </summary>
-		public DnsSecAlgorithm HashAlgorithm { get; private set; }
+		public NSec3HashAlgorithm HashAlgorithm { get; private set; }
 
 		/// <summary>
 		///   Flags of the record
@@ -64,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="flags"> Flags of the record </param>
 		/// <param name="iterations"> Number of iterations </param>
 		/// <param name="salt"> Binary data of salt </param>
-		public NSec3ParamRecord(string name, RecordClass recordClass, int timeToLive, DnsSecAlgorithm hashAlgorithm, byte flags, ushort iterations, byte[] salt)
+		public NSec3ParamRecord(DomainName name, RecordClass recordClass, int timeToLive, NSec3HashAlgorithm hashAlgorithm, byte flags, ushort iterations, byte[] salt)
 			: base(name, RecordType.NSec3Param, recordClass, timeToLive)
 		{
 			HashAlgorithm = hashAlgorithm;
@@ -75,19 +75,19 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
 		{
-			HashAlgorithm = (DnsSecAlgorithm) resultData[currentPosition++];
+			HashAlgorithm = (NSec3HashAlgorithm) resultData[currentPosition++];
 			Flags = resultData[currentPosition++];
 			Iterations = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
 			int saltLength = resultData[currentPosition++];
 			Salt = DnsMessageBase.ParseByteData(resultData, ref currentPosition, saltLength);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 4)
 				throw new FormatException();
 
-			HashAlgorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[0]);
+			HashAlgorithm = (NSec3HashAlgorithm) Byte.Parse(stringRepresentation[0]);
 			Flags = Byte.Parse(stringRepresentation[1]);
 			Iterations = UInt16.Parse(stringRepresentation[2]);
 			Salt = (stringRepresentation[3] == "-") ? new byte[] { } : stringRepresentation[3].FromBase16String();
@@ -101,12 +101,9 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + ((Salt.Length == 0) ? "-" : Salt.ToBase16String());
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 5 + Salt.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 5 + Salt.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) HashAlgorithm;
 			messageData[currentPosition++] = Flags;

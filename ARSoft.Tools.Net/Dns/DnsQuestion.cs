@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -26,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   A single entry of the Question section of a dns query
 	/// </summary>
-	public class DnsQuestion : DnsMessageEntryBase
+	public class DnsQuestion : DnsMessageEntryBase, IEquatable<DnsQuestion>
 	{
 		/// <summary>
 		///   Creates a new instance of the DnsQuestion class
@@ -34,25 +35,51 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain name </param>
 		/// <param name="recordType"> Record type </param>
 		/// <param name="recordClass"> Record class </param>
-		public DnsQuestion(string name, RecordType recordType, RecordClass recordClass)
+		public DnsQuestion(DomainName name, RecordType recordType, RecordClass recordClass)
 		{
-			Name = name ?? String.Empty;
+			if (name == null)
+				throw new ArgumentNullException(nameof(name));
+
+			Name = name;
 			RecordType = recordType;
 			RecordClass = recordClass;
 		}
 
 		internal DnsQuestion() {}
 
-		internal override int MaximumLength
-		{
-			get { return Name.Length + 6; }
-		}
+		internal override int MaximumLength => Name.MaximumRecordDataLength + 6;
 
-		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, true, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, domainNames, false);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordClass);
+		}
+
+		private int? _hashCode;
+
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+		public override int GetHashCode()
+		{
+			if (!_hashCode.HasValue)
+			{
+				_hashCode = ToString().GetHashCode();
+			}
+
+			return _hashCode.Value;
+		}
+
+		public override bool Equals(object obj)
+		{
+			return Equals(obj as DnsQuestion);
+		}
+
+		public bool Equals(DnsQuestion other)
+		{
+			if (other == null)
+				return false;
+
+			return base.Equals(other);
 		}
 	}
 }

@@ -50,7 +50,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Domain name of the target host
 		/// </summary>
-		public string Target { get; private set; }
+		public DomainName Target { get; private set; }
 
 		internal SrvRecord() {}
 
@@ -63,13 +63,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="weight"> Relative weight for records with the same priority </param>
 		/// <param name="port"> The port of the service on the target </param>
 		/// <param name="target"> Domain name of the target host </param>
-		public SrvRecord(string name, int timeToLive, ushort priority, ushort weight, ushort port, string target)
+		public SrvRecord(DomainName name, int timeToLive, ushort priority, ushort weight, ushort port, DomainName target)
 			: base(name, RecordType.Srv, RecordClass.INet, timeToLive)
 		{
 			Priority = priority;
 			Weight = weight;
 			Port = port;
-			Target = target ?? String.Empty;
+			Target = target ?? DomainName.Root;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -80,7 +80,7 @@ namespace ARSoft.Tools.Net.Dns
 			Target = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 4)
 				throw new FormatException();
@@ -96,20 +96,17 @@ namespace ARSoft.Tools.Net.Dns
 			return Priority
 			       + " " + Weight
 			       + " " + Port
-			       + " " + Target + ".";
+			       + " " + Target;
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return Target.Length + 8; }
-		}
+		protected internal override int MaximumRecordDataLength => Target.MaximumRecordDataLength + 8;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Priority);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Weight);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Port);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Target, false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Target, null, useCanonical);
 		}
 	}
 }

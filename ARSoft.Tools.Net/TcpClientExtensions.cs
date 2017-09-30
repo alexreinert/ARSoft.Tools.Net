@@ -32,7 +32,7 @@ namespace ARSoft.Tools.Net
 		public static bool TryConnect(this TcpClient tcpClient, IPEndPoint endPoint, int timeout)
 		{
 			IAsyncResult ar = tcpClient.BeginConnect(endPoint.Address, endPoint.Port, null, null);
-			System.Threading.WaitHandle wh = ar.AsyncWaitHandle;
+			var wh = ar.AsyncWaitHandle;
 			try
 			{
 				if (!ar.AsyncWaitHandle.WaitOne(TimeSpan.FromMilliseconds(timeout), false))

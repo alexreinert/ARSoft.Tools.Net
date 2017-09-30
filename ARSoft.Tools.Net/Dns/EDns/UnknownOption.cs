@@ -39,7 +39,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Creates a new instance of the UnknownOption class
 		/// </summary>
-		/// <param name="type"> Type of the option </param>
+		/// <param name="type">Type of the option</param>
+		/// <param name="data">The data of the option</param>
 		public UnknownOption(EDnsOptionType type, byte[] data)
 			: this(type)
 		{
@@ -51,10 +52,7 @@ namespace ARSoft.Tools.Net.Dns
 			Data = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
 
-		internal override ushort DataLength
-		{
-			get { return (ushort) ((Data == null) ? 0 : Data.Length); }
-		}
+		internal override ushort DataLength => (ushort) (Data?.Length ?? 0);
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{

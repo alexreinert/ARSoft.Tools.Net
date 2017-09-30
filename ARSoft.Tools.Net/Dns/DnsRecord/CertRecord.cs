@@ -76,6 +76,7 @@ namespace ARSoft.Tools.Net.Dns
 			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
 			///   </para>
 			/// </summary>
+			// ReSharper disable once InconsistentNaming
 			IPkix = 4,
 
 			/// <summary>
@@ -85,6 +86,7 @@ namespace ARSoft.Tools.Net.Dns
 			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
 			///   </para>
 			/// </summary>
+			// ReSharper disable once InconsistentNaming
 			ISpki = 5,
 
 			/// <summary>
@@ -94,6 +96,7 @@ namespace ARSoft.Tools.Net.Dns
 			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
 			///   </para>
 			/// </summary>
+			// ReSharper disable once InconsistentNaming
 			IPgp = 6,
 
 			/// <summary>
@@ -112,6 +115,7 @@ namespace ARSoft.Tools.Net.Dns
 			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
 			///   </para>
 			/// </summary>
+			// ReSharper disable once InconsistentNaming
 			IAcpkix = 8,
 
 			/// <summary>
@@ -164,7 +168,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="keyTag"> Key tag </param>
 		/// <param name="algorithm"> Algorithm of the certificate </param>
 		/// <param name="certificate"> Binary data of the certificate </param>
-		public CertRecord(string name, int timeToLive, CertType type, ushort keyTag, DnsSecAlgorithm algorithm, byte[] certificate)
+		public CertRecord(DomainName name, int timeToLive, CertType type, ushort keyTag, DnsSecAlgorithm algorithm, byte[] certificate)
 			: base(name, RecordType.Cert, RecordClass.INet, timeToLive)
 		{
 			Type = type;
@@ -181,7 +185,7 @@ namespace ARSoft.Tools.Net.Dns
 			Certificate = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 5);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 4)
 				throw new FormatException();
@@ -200,12 +204,9 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + Certificate.ToBase64String();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 5 + Certificate.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 5 + Certificate.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Type);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, KeyTag);

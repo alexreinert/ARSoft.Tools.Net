@@ -28,8 +28,7 @@ namespace ARSoft.Tools.Net
 		public static void Raise<T>(this EventHandler<T> eventHandler, object sender, T eventArgs)
 			where T : EventArgs
 		{
-			if (eventHandler != null)
-				eventHandler(sender, eventArgs);
+			eventHandler?.Invoke(sender, eventArgs);
 		}
 	}
 }

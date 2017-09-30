@@ -31,7 +31,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// <summary>
 		///   Record that should exist
 		/// </summary>
-		public DnsRecordBase Record { get; private set; }
+		public DnsRecordBase Record { get; }
 
 		internal RecordExistsPrequisite() {}
 
@@ -40,7 +40,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		/// <param name="name"> Name of record that should be checked </param>
 		/// <param name="recordType"> Type of record that should be checked </param>
-		public RecordExistsPrequisite(string name, RecordType recordType)
+		public RecordExistsPrequisite(DomainName name, RecordType recordType)
 			: base(name, recordType, RecordClass.Any, 0) {}
 
 		/// <summary>
@@ -55,15 +55,11 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return (Record == null) ? 0 : Record.MaximumRecordDataLength; }
-		}
+		protected internal override int MaximumRecordDataLength => Record?.MaximumRecordDataLength ?? 0;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			if (Record != null)
-				Record.EncodeRecordData(messageData, offset, ref currentPosition, domainNames);
+			Record?.EncodeRecordData(messageData, offset, ref currentPosition, domainNames, useCanonical);
 		}
 	}
 }

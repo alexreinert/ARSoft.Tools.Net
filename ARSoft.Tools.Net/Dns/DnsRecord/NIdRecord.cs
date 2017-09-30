@@ -51,7 +51,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="preference"> The preference </param>
 		/// <param name="nodeID"> The Node ID </param>
-		public NIdRecord(string name, int timeToLive, ushort preference, ulong nodeID)
+		public NIdRecord(DomainName name, int timeToLive, ushort preference, ulong nodeID)
 			: base(name, RecordType.NId, RecordClass.INet, timeToLive)
 		{
 			Preference = preference;
@@ -64,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns
 			NodeID = DnsMessageBase.ParseULong(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -92,12 +92,9 @@ namespace ARSoft.Tools.Net.Dns
 			return Preference + " " + nodeID.Substring(0, 4) + ":" + nodeID.Substring(4, 4) + ":" + nodeID.Substring(8, 4) + ":" + nodeID.Substring(12);
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 10; }
-		}
+		protected internal override int MaximumRecordDataLength => 10;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
 			DnsMessageBase.EncodeULong(messageData, ref currentPosition, NodeID);

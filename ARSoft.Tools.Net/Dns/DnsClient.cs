@@ -62,7 +62,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		static DnsClient()
 		{
-			Default = new DnsClient(GetLocalConfiguredDnsServers(), 10000);
+			Default = new DnsClient(GetLocalConfiguredDnsServers(), 10000) { IsResponseValidationEnabled = true };
 		}
 
 		/// <summary>
@@ -78,17 +78,14 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="dnsServers"> The IPAddresses of the dns servers to use </param>
 		/// <param name="queryTimeout"> Query timeout in milliseconds </param>
-		public DnsClient(List<IPAddress> dnsServers, int queryTimeout)
+		public DnsClient(IEnumerable<IPAddress> dnsServers, int queryTimeout)
 			: base(dnsServers, queryTimeout, 53)
 		{
 			IsUdpEnabled = true;
 			IsTcpEnabled = true;
 		}
 
-		protected override int MaximumQueryMessageSize
-		{
-			get { return 512; }
-		}
+		protected override int MaximumQueryMessageSize => 512;
 
 		/// <summary>
 		///   Queries a dns server for specified records.
@@ -96,15 +93,27 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain, that should be queried </param>
 		/// <param name="recordType"> Type the should be queried </param>
 		/// <param name="recordClass"> Class the should be queried </param>
+		/// <param name="options"> Options for the query </param>
 		/// <returns> The complete response of the dns server </returns>
-		public DnsMessage Resolve(string name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet)
+		public DnsMessage Resolve(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, DnsQueryOptions options = null)
 		{
-			if (String.IsNullOrEmpty(name))
-			{
-				throw new ArgumentException("Name must be provided", "name");
-			}
+			if (name == null)
+				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
 			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
+
+			if (options == null)
+			{
+				message.IsRecursionDesired = true;
+				message.IsEDnsEnabled = true;
+			}
+			else
+			{
+				message.IsRecursionDesired = options.IsRecursionDesired;
+				message.IsCheckingDisabled = options.IsCheckingDisabled;
+				message.EDnsOptions = options.EDnsOptions;
+			}
+
 			message.Questions.Add(new DnsQuestion(name, recordType, recordClass));
 
 			return SendMessage(message);
@@ -116,16 +125,28 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain, that should be queried </param>
 		/// <param name="recordType"> Type the should be queried </param>
 		/// <param name="recordClass"> Class the should be queried </param>
+		/// <param name="options"> Options for the query </param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> The complete response of the dns server </returns>
-		public Task<DnsMessage> ResolveAsync(string name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, CancellationToken token = default(CancellationToken))
+		public Task<DnsMessage> ResolveAsync(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, DnsQueryOptions options = null, CancellationToken token = default(CancellationToken))
 		{
-			if (String.IsNullOrEmpty(name))
-			{
-				throw new ArgumentException("Name must be provided", "name");
-			}
+			if (name == null)
+				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
 			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
+
+			if (options == null)
+			{
+				message.IsRecursionDesired = true;
+				message.IsEDnsEnabled = true;
+			}
+			else
+			{
+				message.IsRecursionDesired = options.IsRecursionDesired;
+				message.IsCheckingDisabled = options.IsCheckingDisabled;
+				message.EDnsOptions = options.EDnsOptions;
+			}
+
 			message.Questions.Add(new DnsQuestion(name, recordType, recordClass));
 
 			return SendMessageAsync(message, token);
@@ -139,10 +160,10 @@ namespace ARSoft.Tools.Net.Dns
 		public DnsMessage SendMessage(DnsMessage message)
 		{
 			if (message == null)
-				throw new ArgumentNullException("message");
+				throw new ArgumentNullException(nameof(message));
 
 			if ((message.Questions == null) || (message.Questions.Count == 0))
-				throw new ArgumentException("At least one question must be provided", "message");
+				throw new ArgumentException("At least one question must be provided", nameof(message));
 
 			return SendMessage<DnsMessage>(message);
 		}
@@ -156,10 +177,10 @@ namespace ARSoft.Tools.Net.Dns
 		public Task<DnsMessage> SendMessageAsync(DnsMessage message, CancellationToken token = default(CancellationToken))
 		{
 			if (message == null)
-				throw new ArgumentNullException("message");
+				throw new ArgumentNullException(nameof(message));
 
 			if ((message.Questions == null) || (message.Questions.Count == 0))
-				throw new ArgumentException("At least one question must be provided", "message");
+				throw new ArgumentException("At least one question must be provided", nameof(message));
 
 			return SendMessageAsync<DnsMessage>(message, token);
 		}
@@ -172,10 +193,10 @@ namespace ARSoft.Tools.Net.Dns
 		public DnsUpdateMessage SendUpdate(DnsUpdateMessage message)
 		{
 			if (message == null)
-				throw new ArgumentNullException("message");
+				throw new ArgumentNullException(nameof(message));
 
-			if (String.IsNullOrEmpty(message.ZoneName))
-				throw new ArgumentException("Zone name must be provided", "message");
+			if (message.ZoneName == null)
+				throw new ArgumentException("Zone name must be provided", nameof(message));
 
 			return SendMessage(message);
 		}
@@ -189,10 +210,10 @@ namespace ARSoft.Tools.Net.Dns
 		public Task<DnsUpdateMessage> SendUpdateAsync(DnsUpdateMessage message, CancellationToken token = default(CancellationToken))
 		{
 			if (message == null)
-				throw new ArgumentNullException("message");
+				throw new ArgumentNullException(nameof(message));
 
-			if (String.IsNullOrEmpty(message.ZoneName))
-				throw new ArgumentException("Zone name must be provided", "message");
+			if (message.ZoneName == null)
+				throw new ArgumentException("Zone name must be provided", nameof(message));
 
 			return SendMessageAsync(message, token);
 		}

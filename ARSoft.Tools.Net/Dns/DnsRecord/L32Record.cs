@@ -52,7 +52,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="preference"> The preference </param>
 		/// <param name="locator32"> The Locator </param>
-		public L32Record(string name, int timeToLive, ushort preference, uint locator32)
+		public L32Record(DomainName name, int timeToLive, ushort preference, uint locator32)
 			: base(name, RecordType.L32, RecordClass.INet, timeToLive)
 		{
 			Preference = preference;
@@ -65,7 +65,7 @@ namespace ARSoft.Tools.Net.Dns
 			Locator32 = DnsMessageBase.ParseUInt(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -79,12 +79,9 @@ namespace ARSoft.Tools.Net.Dns
 			return Preference + " " + new IPAddress(Locator32);
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 6; }
-		}
+		protected internal override int MaximumRecordDataLength => 6;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
 			DnsMessageBase.EncodeUInt(messageData, ref currentPosition, Locator32);

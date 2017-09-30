@@ -40,12 +40,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Domain name containing the RFC822 domain
 		/// </summary>
-		public string Map822 { get; private set; }
+		public DomainName Map822 { get; private set; }
 
 		/// <summary>
 		///   Domain name containing the X.400 part
 		/// </summary>
-		public string MapX400 { get; private set; }
+		public DomainName MapX400 { get; private set; }
 
 		internal PxRecord() {}
 
@@ -57,12 +57,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="preference"> Preference of the record </param>
 		/// <param name="map822"> Domain name containing the RFC822 domain </param>
 		/// <param name="mapX400"> Domain name containing the X.400 part </param>
-		public PxRecord(string name, int timeToLive, ushort preference, string map822, string mapX400)
+		public PxRecord(DomainName name, int timeToLive, ushort preference, DomainName map822, DomainName mapX400)
 			: base(name, RecordType.Px, RecordClass.INet, timeToLive)
 		{
 			Preference = preference;
-			Map822 = map822 ?? String.Empty;
-			MapX400 = mapX400 ?? String.Empty;
+			Map822 = map822 ?? DomainName.Root;
+			MapX400 = mapX400 ?? DomainName.Root;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -72,7 +72,7 @@ namespace ARSoft.Tools.Net.Dns
 			MapX400 = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 3)
 				throw new FormatException();
@@ -85,20 +85,17 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return Preference
-			       + " " + Map822 + "."
-			       + " " + MapX400 + ".";
+			       + " " + Map822
+			       + " " + MapX400;
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 6 + Map822.Length + MapX400.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 6 + Map822.MaximumRecordDataLength + MapX400.MaximumRecordDataLength;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Map822, false, domainNames);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MapX400, false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Map822, null, useCanonical);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MapX400, null, useCanonical);
 		}
 	}
 }

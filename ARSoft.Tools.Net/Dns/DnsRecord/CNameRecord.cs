@@ -35,7 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Canonical name
 		/// </summary>
-		public string CanonicalName { get; private set; }
+		public DomainName CanonicalName { get; private set; }
 
 		internal CNameRecord() {}
 
@@ -45,10 +45,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain name the host </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="canonicalName"> Canocical name for the alias of the host </param>
-		public CNameRecord(string name, int timeToLive, string canonicalName)
+		public CNameRecord(DomainName name, int timeToLive, DomainName canonicalName)
 			: base(name, RecordType.CName, RecordClass.INet, timeToLive)
 		{
-			CanonicalName = canonicalName ?? String.Empty;
+			CanonicalName = canonicalName ?? DomainName.Root;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -56,7 +56,7 @@ namespace ARSoft.Tools.Net.Dns
 			CanonicalName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 1)
 				throw new FormatException();
@@ -66,17 +66,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return CanonicalName + ".";
+			return CanonicalName.ToString();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return CanonicalName.Length + 2; }
-		}
+		protected internal override int MaximumRecordDataLength => CanonicalName.MaximumRecordDataLength + 2;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, CanonicalName, true, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, CanonicalName, domainNames, useCanonical);
 		}
 	}
 }

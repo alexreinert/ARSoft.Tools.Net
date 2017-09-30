@@ -313,7 +313,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected KeyRecordBase() {}
 
-		protected KeyRecordBase(string name, RecordClass recordClass, int timeToLive, ushort flags, ProtocolType protocol, DnsSecAlgorithm algorithm)
+		protected KeyRecordBase(DomainName name, RecordClass recordClass, int timeToLive, ushort flags, ProtocolType protocol, DnsSecAlgorithm algorithm)
 			: base(name, RecordType.Key, recordClass, timeToLive)
 		{
 			Flags = flags;
@@ -341,14 +341,11 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected abstract string PublicKeyToString();
 
-		protected internal override sealed int MaximumRecordDataLength
-		{
-			get { return 4 + MaximumPublicKeyLength; }
-		}
+		protected internal override sealed int MaximumRecordDataLength => 4 + MaximumPublicKeyLength;
 
 		protected abstract int MaximumPublicKeyLength { get; }
 
-		protected internal override sealed void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override sealed void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Flags);
 			messageData[currentPosition++] = (byte) Protocol;
@@ -356,6 +353,6 @@ namespace ARSoft.Tools.Net.Dns
 			EncodePublicKey(messageData, offset, ref currentPosition, domainNames);
 		}
 
-		protected abstract void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames);
+		protected abstract void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames);
 	}
 }

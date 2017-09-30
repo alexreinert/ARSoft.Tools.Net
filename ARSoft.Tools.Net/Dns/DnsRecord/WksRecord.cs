@@ -59,7 +59,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="address"> IP address of the host </param>
 		/// <param name="protocol"> Type of the protocol </param>
 		/// <param name="ports"> List of ports which are supported by the host </param>
-		public WksRecord(string name, int timeToLive, IPAddress address, ProtocolType protocol, List<ushort> ports)
+		public WksRecord(DomainName name, int timeToLive, IPAddress address, ProtocolType protocol, List<ushort> ports)
 			: base(name, RecordType.Wks, RecordClass.INet, timeToLive)
 		{
 			Address = address ?? IPAddress.None;
@@ -92,28 +92,25 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 2)
 				throw new FormatException();
 
 			Address = IPAddress.Parse(stringRepresentation[0]);
-			Ports = stringRepresentation.Skip(1).Select(x => UInt16.Parse(x)).ToList();
+			Ports = stringRepresentation.Skip(1).Select(UInt16.Parse).ToList();
 		}
 
 		internal override string RecordDataToString()
 		{
 			return Address
 			       + " " + (byte) Protocol
-			       + " " + String.Join(" ", Ports.ConvertAll(port => port.ToString()).ToArray());
+			       + " " + String.Join(" ", Ports.Select(port => port.ToString()));
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 5 + Ports.Max() / 8 + 1; }
-		}
+		protected internal override int MaximumRecordDataLength => 5 + Ports.Max() / 8 + 1;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
 			messageData[currentPosition++] = (byte) Protocol;

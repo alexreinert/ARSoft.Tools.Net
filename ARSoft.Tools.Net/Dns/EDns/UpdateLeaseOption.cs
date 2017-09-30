@@ -54,10 +54,7 @@ namespace ARSoft.Tools.Net.Dns
 			LeaseTime = TimeSpan.FromSeconds(DnsMessageBase.ParseInt(resultData, ref startPosition));
 		}
 
-		internal override ushort DataLength
-		{
-			get { return 4; }
-		}
+		internal override ushort DataLength => 4;
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{

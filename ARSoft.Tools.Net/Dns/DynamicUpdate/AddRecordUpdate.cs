@@ -31,7 +31,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// <summary>
 		///   Record which should be added
 		/// </summary>
-		public DnsRecordBase Record { get; private set; }
+		public DnsRecordBase Record { get; }
 
 		internal AddRecordUpdate() {}
 
@@ -49,17 +49,14 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		internal override string RecordDataToString()
 		{
-			return (Record == null) ? null : Record.RecordDataToString();
+			return Record?.RecordDataToString();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return Record.MaximumRecordDataLength; }
-		}
+		protected internal override int MaximumRecordDataLength => Record.MaximumRecordDataLength;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			Record.EncodeRecordData(messageData, offset, ref currentPosition, domainNames);
+			Record.EncodeRecordData(messageData, offset, ref currentPosition, domainNames, useCanonical);
 		}
 	}
 }

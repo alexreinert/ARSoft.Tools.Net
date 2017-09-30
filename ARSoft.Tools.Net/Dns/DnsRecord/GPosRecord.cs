@@ -58,7 +58,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="longitude"> Longitude of the geographical position </param>
 		/// <param name="latitude"> Latitude of the geographical position </param>
 		/// <param name="altitude"> Altitude of the geographical position </param>
-		public GPosRecord(string name, int timeToLive, double longitude, double latitude, double altitude)
+		public GPosRecord(DomainName name, int timeToLive, double longitude, double latitude, double altitude)
 			: base(name, RecordType.GPos, RecordClass.INet, timeToLive)
 		{
 			Longitude = longitude;
@@ -73,7 +73,7 @@ namespace ARSoft.Tools.Net.Dns
 			Altitude = Double.Parse(DnsMessageBase.ParseText(resultData, ref currentPosition), CultureInfo.InvariantCulture);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 3)
 				throw new FormatException();
@@ -90,12 +90,9 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + Altitude.ToString(CultureInfo.InvariantCulture);
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 3 + Longitude.ToString().Length + Latitude.ToString().Length + Altitude.ToString().Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 3 + Longitude.ToString(CultureInfo.InvariantCulture).Length + Latitude.ToString(CultureInfo.InvariantCulture).Length + Altitude.ToString(CultureInfo.InvariantCulture).Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, Longitude.ToString(CultureInfo.InvariantCulture));
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, Latitude.ToString(CultureInfo.InvariantCulture));

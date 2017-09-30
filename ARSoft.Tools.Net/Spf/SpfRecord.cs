@@ -49,7 +49,7 @@ namespace ARSoft.Tools.Net.Spf
 					if ((modifier == null) || (modifier.Type != SpfModifierType.Unknown))
 					{
 						res.Append(" ");
-						res.Append(term.ToString());
+						res.Append(term);
 					}
 				}
 			}

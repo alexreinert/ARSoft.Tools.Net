@@ -33,7 +33,7 @@ namespace ARSoft.Tools.Net.Spf
 	/// </summary>
 	public class SenderIDRecord : SpfRecordBase
 	{
-		private static Regex _prefixRegex = new Regex(@"^v=spf((?<version>1)|(?<version>2)\.(?<minor>\d)/(?<scopes>(([a-z0-9]+,)*[a-z0-9]+)))$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly Regex _prefixRegex = new Regex(@"^v=spf((?<version>1)|(?<version>2)\.(?<minor>\d)/(?<scopes>(([a-z0-9]+,)*[a-z0-9]+)))$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		/// <summary>
 		///   Version of the SenderID record.
@@ -69,7 +69,7 @@ namespace ARSoft.Tools.Net.Spf
 				res.Append(".");
 				res.Append(MinorVersion);
 				res.Append("/");
-				res.Append(String.Join(",", Scopes.Where(s => s != SenderIDScope.Unknown).Select(s => EnumHelper<SenderIDScope>.ToString(s).ToLower()).ToArray()));
+				res.Append(String.Join(",", Scopes.Where(s => s != SenderIDScope.Unknown).Select(s => EnumHelper<SenderIDScope>.ToString(s).ToLower())));
 			}
 
 			if ((Terms != null) && (Terms.Count > 0))
@@ -80,7 +80,7 @@ namespace ARSoft.Tools.Net.Spf
 					if ((modifier == null) || (modifier.Type != SpfModifierType.Unknown))
 					{
 						res.Append(" ");
-						res.Append(term.ToString());
+						res.Append(term);
 					}
 				}
 			}

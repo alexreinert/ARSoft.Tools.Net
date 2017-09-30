@@ -205,15 +205,69 @@ namespace ARSoft.Tools.Net.Dns
 			set { base.AuthorityRecords = (value ?? new List<DnsRecordBase>()); }
 		}
 
-		internal override bool IsTcpUsingRequested
+		/// <summary>
+		///   <para>Gets or sets the DNSSEC answer OK (DO) flag</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///     and
+		///     <see cref="!:http://tools.ietf.org/html/rfc3225">RFC 3225</see>
+		///   </para>
+		/// </summary>
+		public bool IsDnsSecOk
 		{
-			get { return (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr)); }
+			get
+			{
+				OptRecord ednsOptions = EDnsOptions;
+				return (ednsOptions != null) && ednsOptions.IsDnsSecOk;
+			}
+			set
+			{
+				OptRecord ednsOptions = EDnsOptions;
+				if (ednsOptions == null)
+				{
+					if (value)
+					{
+						throw new ArgumentOutOfRangeException(nameof(value), "Setting DO flag is allowed in edns messages only");
+					}
+				}
+				else
+				{
+					ednsOptions.IsDnsSecOk = value;
+				}
+			}
 		}
 
-		internal override bool IsTcpResendingRequested
+		/// <summary>
+		///   Creates a new instance of the DnsMessage as response to the current instance
+		/// </summary>
+		/// <returns>A new instance of the DnsMessage as response to the current instance</returns>
+		public DnsMessage CreateResponseInstance()
 		{
-			get { return IsTruncated; }
+			DnsMessage result = new DnsMessage()
+			{
+				TransactionID = TransactionID,
+				IsEDnsEnabled = IsEDnsEnabled,
+				IsQuery = false,
+				OperationCode = OperationCode,
+				IsRecursionDesired = IsRecursionDesired,
+				IsCheckingDisabled = IsCheckingDisabled,
+				IsDnsSecOk = IsDnsSecOk,
+				Questions = new List<DnsQuestion>(Questions),
+			};
+
+			if (IsEDnsEnabled)
+			{
+				result.EDnsOptions.Version = EDnsOptions.Version;
+				result.EDnsOptions.UdpPayloadSize = EDnsOptions.UdpPayloadSize;
+			}
+
+			return result;
 		}
+
+		internal override bool IsTcpUsingRequested => (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr));
+
+		internal override bool IsTcpResendingRequested => IsTruncated;
 
 		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
 		{

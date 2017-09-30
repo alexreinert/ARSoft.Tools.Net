@@ -59,7 +59,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Owner</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/draft-cheshire-edns0-owner-option-00">draft-cheshire-edns0-owner-option</see>
+		///     <see cref="!:http://tools.ietf.org/html/draft-cheshire-edns0-owner-option">draft-cheshire-edns0-owner-option</see>
 		///   </para>
 		/// </summary>
 		Owner = 4,
@@ -95,7 +95,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>ClientSubnet</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-02">draft-vandergaast-edns-client-subnet</see>
+		///     <see cref="!:http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet">draft-vandergaast-edns-client-subnet</see>
 		///   </para>
 		/// </summary>
 		ClientSubnet = 8,
@@ -108,5 +108,14 @@ namespace ARSoft.Tools.Net.Dns
 		///   </para>
 		/// </summary>
 		Expire = 9,
+
+		/// <summary>
+		///   <para>Cookie Option</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/draft-ietf-dnsop-cookies">draft-ietf-dnsop-cookies</see>
+		///   </para>
+		/// </summary>
+		Cookie = 10,
 	}
 }

@@ -26,6 +26,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   Type of algorithm
 	/// </summary>
+	// ReSharper disable once InconsistentNaming
 	public enum TSigAlgorithm
 	{
 		/// <summary>

@@ -31,7 +31,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// <summary>
 		///   Record that should be deleted
 		/// </summary>
-		public DnsRecordBase Record { get; private set; }
+		public DnsRecordBase Record { get; }
 
 		internal DeleteRecordUpdate() {}
 
@@ -40,7 +40,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		/// <param name="name"> Name of the record that should be deleted </param>
 		/// <param name="recordType"> Type of the record that should be deleted </param>
-		public DeleteRecordUpdate(string name, RecordType recordType)
+		public DeleteRecordUpdate(DomainName name, RecordType recordType)
 			: base(name, recordType, RecordClass.Any, 0) {}
 
 		/// <summary>
@@ -57,18 +57,14 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		internal override string RecordDataToString()
 		{
-			return (Record == null) ? null : Record.RecordDataToString();
+			return Record?.RecordDataToString();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return (Record == null) ? 0 : Record.MaximumRecordDataLength; }
-		}
+		protected internal override int MaximumRecordDataLength => Record?.MaximumRecordDataLength ?? 0;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			if (Record != null)
-				Record.EncodeRecordData(messageData, offset, ref currentPosition, domainNames);
+			Record?.EncodeRecordData(messageData, offset, ref currentPosition, domainNames, useCanonical);
 		}
 	}
 }

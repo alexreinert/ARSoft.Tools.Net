@@ -60,27 +60,27 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public class AddressPrefix
 		{
-			private static Regex _parserRegex = new Regex(@"^(?<isneg>!?)(?<fam>(1|2)):(?<addr>[^/]+)/(?<pref>\d+)$", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+			private static readonly Regex _parserRegex = new Regex(@"^(?<isneg>!?)(?<fam>(1|2)):(?<addr>[^/]+)/(?<pref>\d+)$", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 
 			/// <summary>
 			///   Is negated prefix
 			/// </summary>
-			public bool IsNegated { get; private set; }
+			public bool IsNegated { get; }
 
 			/// <summary>
 			///   Address familiy
 			/// </summary>
-			internal Family AddressFamily { get; private set; }
+			internal Family AddressFamily { get; }
 
 			/// <summary>
 			///   Network address
 			/// </summary>
-			public IPAddress Address { get; private set; }
+			public IPAddress Address { get; }
 
 			/// <summary>
 			///   Prefix of the network
 			/// </summary>
-			public byte Prefix { get; private set; }
+			public byte Prefix { get; }
 
 			/// <summary>
 			///   Creates a new instance of the AddressPrefix class
@@ -134,7 +134,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Name of the record </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="prefixes"> List of address prefixes covered by this record </param>
-		public AplRecord(string name, int timeToLive, List<AddressPrefix> prefixes)
+		public AplRecord(DomainName name, int timeToLive, List<AddressPrefix> prefixes)
 			: base(name, RecordType.Apl, RecordClass.INet, timeToLive)
 		{
 			Prefixes = prefixes ?? new List<AddressPrefix>();
@@ -166,25 +166,22 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length == 0)
 				throw new FormatException();
 
-			Prefixes = stringRepresentation.Select(x => AddressPrefix.Parse(x)).ToList();
+			Prefixes = stringRepresentation.Select(AddressPrefix.Parse).ToList();
 		}
 
 		internal override string RecordDataToString()
 		{
-			return String.Join(" ", Prefixes.ConvertAll(p => p.ToString()).ToArray());
+			return String.Join(" ", Prefixes.Select(p => p.ToString()));
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return Prefixes.Count * 20; }
-		}
+		protected internal override int MaximumRecordDataLength => Prefixes.Count * 20;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			foreach (AddressPrefix addressPrefix in Prefixes)
 			{

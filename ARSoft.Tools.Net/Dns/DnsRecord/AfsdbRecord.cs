@@ -66,7 +66,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Hostname of the AFS database
 		/// </summary>
-		public string Hostname { get; private set; }
+		public DomainName Hostname { get; private set; }
 
 		internal AfsdbRecord() {}
 
@@ -77,11 +77,11 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="subType"> Subtype of the record </param>
 		/// <param name="hostname"> Hostname of the AFS database </param>
-		public AfsdbRecord(string name, int timeToLive, AfsSubType subType, string hostname)
+		public AfsdbRecord(DomainName name, int timeToLive, AfsSubType subType, DomainName hostname)
 			: base(name, RecordType.Afsdb, RecordClass.INet, timeToLive)
 		{
 			SubType = subType;
-			Hostname = hostname ?? String.Empty;
+			Hostname = hostname ?? DomainName.Root;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -90,7 +90,7 @@ namespace ARSoft.Tools.Net.Dns
 			Hostname = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -102,18 +102,15 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return (byte) SubType
-			       + " " + Hostname + ".";
+			       + " " + Hostname;
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return Hostname.Length + 4; }
-		}
+		protected internal override int MaximumRecordDataLength => Hostname.MaximumRecordDataLength + 4;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) SubType);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Hostname, false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Hostname, null, useCanonical);
 		}
 	}
 }

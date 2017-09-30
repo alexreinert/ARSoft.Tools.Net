@@ -73,12 +73,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Domain name of generator of the signature
 		/// </summary>
-		public string SignersName { get; private set; }
+		public DomainName SignersName { get; private set; }
 
 		/// <summary>
 		///   Binary data of the signature
 		/// </summary>
-		public byte[] Signature { get; private set; }
+		public byte[] Signature { get; internal set; }
 
 		internal RrSigRecord() {}
 
@@ -101,7 +101,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="keyTag"> Key tag </param>
 		/// <param name="signersName"> Domain name of generator of the signature </param>
 		/// <param name="signature"> Binary data of the signature </param>
-		public RrSigRecord(string name, RecordClass recordClass, int timeToLive, RecordType typeCovered, DnsSecAlgorithm algorithm, byte labels, int originalTimeToLive, DateTime signatureExpiration, DateTime signatureInception, ushort keyTag, string signersName, byte[] signature)
+		public RrSigRecord(DomainName name, RecordClass recordClass, int timeToLive, RecordType typeCovered, DnsSecAlgorithm algorithm, byte labels, int originalTimeToLive, DateTime signatureExpiration, DateTime signatureInception, ushort keyTag, DomainName signersName, byte[] signature)
 			: base(name, RecordType.RrSig, recordClass, timeToLive)
 		{
 			TypeCovered = typeCovered;
@@ -111,8 +111,28 @@ namespace ARSoft.Tools.Net.Dns
 			SignatureExpiration = signatureExpiration;
 			SignatureInception = signatureInception;
 			KeyTag = keyTag;
-			SignersName = signersName ?? String.Empty;
+			SignersName = signersName ?? DomainName.Root;
 			Signature = signature ?? new byte[] { };
+		}
+
+		internal RrSigRecord(List<DnsRecordBase> records, DnsKeyRecord key, DateTime inception, DateTime expiration)
+			: base(records[0].Name, RecordType.RrSig, records[0].RecordClass, records[0].TimeToLive)
+		{
+			TypeCovered = records[0].RecordType;
+			Algorithm = key.Algorithm;
+			Labels = (byte) (records[0].Name.Labels[0] == DomainName.Asterisk.Labels[0] ? records[0].Name.LabelCount - 1 : records[0].Name.LabelCount);
+			OriginalTimeToLive = records[0].TimeToLive;
+			SignatureExpiration = expiration;
+			SignatureInception = inception;
+			KeyTag = key.CalculateKeyTag();
+			SignersName = key.Name;
+			Signature = new byte[] { };
+
+			byte[] signBuffer;
+			int signBufferLength;
+			EncodeSigningBuffer(records, out signBuffer, out signBufferLength);
+
+			Signature = key.Sign(signBuffer, signBufferLength);
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -130,7 +150,7 @@ namespace ARSoft.Tools.Net.Dns
 			Signature = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length + startPosition - currentPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 9)
 				throw new FormatException();
@@ -139,8 +159,8 @@ namespace ARSoft.Tools.Net.Dns
 			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
 			Labels = Byte.Parse(stringRepresentation[2]);
 			OriginalTimeToLive = Int32.Parse(stringRepresentation[3]);
-			SignatureExpiration = DateTime.ParseExact(stringRepresentation[4], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-			SignatureInception = DateTime.ParseExact(stringRepresentation[5], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+			SignatureExpiration = DateTime.ParseExact(stringRepresentation[4], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+			SignatureInception = DateTime.ParseExact(stringRepresentation[5], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 			KeyTag = UInt16.Parse(stringRepresentation[6]);
 			SignersName = ParseDomainName(origin, stringRepresentation[7]);
 			Signature = String.Join(String.Empty, stringRepresentation.Skip(8)).FromBase64String();
@@ -152,19 +172,21 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + (byte) Algorithm
 			       + " " + Labels
 			       + " " + OriginalTimeToLive
-			       + " " + SignatureExpiration.ToString("yyyyMMddHHmmss")
-			       + " " + SignatureInception.ToString("yyyyMMddHHmmss")
+			       + " " + SignatureExpiration.ToUniversalTime().ToString("yyyyMMddHHmmss")
+			       + " " + SignatureInception.ToUniversalTime().ToString("yyyyMMddHHmmss")
 			       + " " + KeyTag
-			       + " " + SignersName + "."
+			       + " " + SignersName
 			       + " " + Signature.ToBase64String();
 		}
 
-		protected internal override int MaximumRecordDataLength
+		protected internal override int MaximumRecordDataLength => 20 + SignersName.MaximumRecordDataLength + Signature.Length;
+
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			get { return 20 + SignersName.Length + Signature.Length; }
+			EncodeRecordData(messageData, offset, ref currentPosition, domainNames, useCanonical, true);
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		internal void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical, bool encodeSignature)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) TypeCovered);
 			messageData[currentPosition++] = (byte) Algorithm;
@@ -173,8 +195,10 @@ namespace ARSoft.Tools.Net.Dns
 			EncodeDateTime(messageData, ref currentPosition, SignatureExpiration);
 			EncodeDateTime(messageData, ref currentPosition, SignatureInception);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, KeyTag);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, SignersName, false, null);
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Signature);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, SignersName, null, useCanonical);
+
+			if (encodeSignature)
+				DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Signature);
 		}
 
 		internal static void EncodeDateTime(byte[] buffer, ref int currentPosition, DateTime value)
@@ -187,6 +211,47 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			int timeStamp = DnsMessageBase.ParseInt(buffer, ref currentPosition);
 			return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timeStamp).ToLocalTime();
+		}
+
+		internal bool Verify<T>(List<T> coveredRecords, IEnumerable<DnsKeyRecord> dnsKeys)
+			where T : DnsRecordBase
+		{
+			byte[] messageData;
+			int length;
+
+			EncodeSigningBuffer(coveredRecords, out messageData, out length);
+
+			return dnsKeys
+				.Where(x => x.IsZoneKey && (x.Protocol == 3) && x.Algorithm.IsSupported() && (KeyTag == x.CalculateKeyTag()))
+				.Any(x => x.Verify(messageData, length, Signature));
+		}
+
+		private void EncodeSigningBuffer<T>(List<T> records, out byte[] messageData, out int length)
+			where T : DnsRecordBase
+		{
+			messageData = new byte[2 + MaximumRecordDataLength - Signature.Length + records.Sum(x => x.MaximumLength)];
+			length = 0;
+			EncodeRecordData(messageData, 0, ref length, null, true, false);
+			foreach (var record in records.OrderBy(x => x))
+			{
+				if (record.Name.LabelCount == Labels)
+				{
+					DnsMessageBase.EncodeDomainName(messageData, 0, ref length, record.Name, null, true);
+				}
+				else if (record.Name.LabelCount > Labels)
+				{
+					DnsMessageBase.EncodeDomainName(messageData, 0, ref length, DomainName.Asterisk + record.Name.GetParentName(record.Name.LabelCount - Labels), null, true);
+				}
+				else
+				{
+					throw new Exception("Encoding of records with less labels than RrSigRecord is not allowed");
+				}
+				DnsMessageBase.EncodeUShort(messageData, ref length, (ushort) record.RecordType);
+				DnsMessageBase.EncodeUShort(messageData, ref length, (ushort) record.RecordClass);
+				DnsMessageBase.EncodeInt(messageData, ref length, OriginalTimeToLive);
+
+				record.EncodeRecordBody(messageData, 0, ref length, null, true);
+			}
 		}
 	}
 }

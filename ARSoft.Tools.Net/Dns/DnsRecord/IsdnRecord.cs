@@ -50,7 +50,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Name of the record </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="isdnAddress"> ISDN number </param>
-		public IsdnRecord(string name, int timeToLive, string isdnAddress)
+		public IsdnRecord(DomainName name, int timeToLive, string isdnAddress)
 			: this(name, timeToLive, isdnAddress, String.Empty) {}
 
 		/// <summary>
@@ -60,7 +60,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="isdnAddress"> ISDN number </param>
 		/// <param name="subAddress"> Sub address </param>
-		public IsdnRecord(string name, int timeToLive, string isdnAddress, string subAddress)
+		public IsdnRecord(DomainName name, int timeToLive, string isdnAddress, string subAddress)
 			: base(name, RecordType.Isdn, RecordClass.INet, timeToLive)
 		{
 			IsdnAddress = isdnAddress ?? String.Empty;
@@ -75,7 +75,7 @@ namespace ARSoft.Tools.Net.Dns
 			SubAddress = (currentPosition < endPosition) ? DnsMessageBase.ParseText(resultData, ref currentPosition) : String.Empty;
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length > 2)
 				throw new FormatException();
@@ -88,16 +88,13 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return IsdnAddress
-			       + (String.IsNullOrEmpty(SubAddress) ? String.Empty : " " + SubAddress);
+			return IsdnAddress.ToMasterfileLabelRepresentation()
+			       + (String.IsNullOrEmpty(SubAddress) ? String.Empty : " " + SubAddress.ToMasterfileLabelRepresentation());
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 2 + IsdnAddress.Length + SubAddress.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 2 + IsdnAddress.Length + SubAddress.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, IsdnAddress);
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, SubAddress);

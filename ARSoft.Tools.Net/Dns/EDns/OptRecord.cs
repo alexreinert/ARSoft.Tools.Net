@@ -101,7 +101,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   Creates a new instance of the OptRecord
 		/// </summary>
 		public OptRecord()
-			: base(".", RecordType.Opt, unchecked((RecordClass) 512), 0)
+			: base(DomainName.Root, RecordType.Opt, unchecked((RecordClass) 512), 0)
 		{
 			UdpPayloadSize = 4096;
 			Options = new List<EDnsOptionBase>();
@@ -157,6 +157,10 @@ namespace ARSoft.Tools.Net.Dns
 						option = new ExpireOption();
 						break;
 
+					case EDnsOptionType.Cookie:
+						option = new CookieOption();
+						break;
+
 					default:
 						option = new UnknownOption(type);
 						break;
@@ -168,7 +172,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			throw new NotSupportedException();
 		}
@@ -203,7 +207,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			if ((Options != null) && (Options.Count != 0))
 			{

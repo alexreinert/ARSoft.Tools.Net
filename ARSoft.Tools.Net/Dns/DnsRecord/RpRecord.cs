@@ -35,12 +35,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Mail address of responsable person, the @ should be replaced by a dot
 		/// </summary>
-		public string MailBox { get; protected set; }
+		public DomainName MailBox { get; protected set; }
 
 		/// <summary>
 		///   Domain name of a <see cref="TxtRecord" /> with additional information
 		/// </summary>
-		public string TxtDomainName { get; protected set; }
+		public DomainName TxtDomainName { get; protected set; }
 
 		internal RpRecord() {}
 
@@ -53,11 +53,11 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="txtDomainName">
 		///   Domain name of a <see cref="TxtRecord" /> with additional information
 		/// </param>
-		public RpRecord(string name, int timeToLive, string mailBox, string txtDomainName)
+		public RpRecord(DomainName name, int timeToLive, DomainName mailBox, DomainName txtDomainName)
 			: base(name, RecordType.Rp, RecordClass.INet, timeToLive)
 		{
-			MailBox = mailBox ?? String.Empty;
-			TxtDomainName = txtDomainName ?? String.Empty;
+			MailBox = mailBox ?? DomainName.Root;
+			TxtDomainName = txtDomainName ?? DomainName.Root;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -66,7 +66,7 @@ namespace ARSoft.Tools.Net.Dns
 			TxtDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -77,19 +77,16 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return MailBox + "."
-			       + " " + TxtDomainName + ".";
+			return MailBox
+			       + " " + TxtDomainName;
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 4 + MailBox.Length + TxtDomainName.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 4 + MailBox.MaximumRecordDataLength + TxtDomainName.MaximumRecordDataLength;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MailBox, false, domainNames);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TxtDomainName, false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MailBox, null, useCanonical);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TxtDomainName, null, useCanonical);
 		}
 	}
 }

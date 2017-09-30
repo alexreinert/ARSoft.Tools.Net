@@ -37,7 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Name of next owner
 		/// </summary>
-		public string NextDomainName { get; private set; }
+		public DomainName NextDomainName { get; internal set; }
 
 		/// <summary>
 		///   Record types of the next owner
@@ -54,10 +54,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="nextDomainName"> Name of next owner </param>
 		/// <param name="types"> Record types of the next owner </param>
-		public NSecRecord(string name, RecordClass recordClass, int timeToLive, string nextDomainName, List<RecordType> types)
+		public NSecRecord(DomainName name, RecordClass recordClass, int timeToLive, DomainName nextDomainName, List<RecordType> types)
 			: base(name, RecordType.NSec, recordClass, timeToLive)
 		{
-			NextDomainName = nextDomainName ?? String.Empty;
+			NextDomainName = nextDomainName ?? DomainName.Root;
 
 			if ((types == null) || (types.Count == 0))
 			{
@@ -65,8 +65,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 			else
 			{
-				Types = new List<RecordType>(types);
-				types.Sort((left, right) => ((ushort) left).CompareTo((ushort) right));
+				Types = types.Distinct().OrderBy(x => x).ToList();
 			}
 		}
 
@@ -103,7 +102,7 @@ namespace ARSoft.Tools.Net.Dns
 			return types;
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 2)
 				throw new FormatException();
@@ -114,14 +113,11 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return NextDomainName + "."
-			       + " " + String.Join(" ", Types.ConvertAll<String>(RecordTypeHelper.ToShortString).ToArray());
+			return NextDomainName
+			       + " " + String.Join(" ", Types.Select(RecordTypeHelper.ToShortString));
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 2 + NextDomainName.Length + GetMaximumTypeBitmapLength(Types); }
-		}
+		protected internal override int MaximumRecordDataLength => 2 + NextDomainName.MaximumRecordDataLength + GetMaximumTypeBitmapLength(Types);
 
 		internal static int GetMaximumTypeBitmapLength(List<RecordType> types)
 		{
@@ -144,9 +140,9 @@ namespace ARSoft.Tools.Net.Dns
 			return res + 3 + lastType % 256 / 8;
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, NextDomainName, false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, NextDomainName, null, useCanonical);
 			EncodeTypeBitmap(messageData, ref currentPosition, Types);
 		}
 
@@ -193,6 +189,12 @@ namespace ARSoft.Tools.Net.Dns
 				messageData[currentPosition++] = (byte) windowLength;
 				DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, windowData, windowLength);
 			}
+		}
+
+		internal bool IsCovering(DomainName name, DomainName zone)
+		{
+			return ((name.CompareTo(Name) > 0) && (name.CompareTo(NextDomainName) < 0)) // within zone
+			       || ((name.CompareTo(Name) > 0) && NextDomainName.Equals(zone)); // behind zone
 		}
 	}
 }

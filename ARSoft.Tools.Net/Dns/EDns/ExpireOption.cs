@@ -59,10 +59,7 @@ namespace ARSoft.Tools.Net.Dns
 				SoaExpire = DnsMessageBase.ParseInt(resultData, ref startPosition);
 		}
 
-		internal override ushort DataLength
-		{
-			get { return (ushort) (SoaExpire.HasValue ? 4 : 0); }
-		}
+		internal override ushort DataLength => (ushort) (SoaExpire.HasValue ? 4 : 0);
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{

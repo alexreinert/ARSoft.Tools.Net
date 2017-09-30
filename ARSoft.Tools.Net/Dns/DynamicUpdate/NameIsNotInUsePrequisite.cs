@@ -34,16 +34,13 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		///   Creates a new instance of the NameIsNotInUsePrequisite class
 		/// </summary>
 		/// <param name="name"> Name that should be checked </param>
-		public NameIsNotInUsePrequisite(string name)
+		public NameIsNotInUsePrequisite(DomainName name)
 			: base(name, RecordType.Any, RecordClass.None, 0) {}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 0; }
-		}
+		protected internal override int MaximumRecordDataLength => 0;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames) {}
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical) {}
 	}
 }

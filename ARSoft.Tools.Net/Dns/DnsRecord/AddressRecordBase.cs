@@ -24,6 +24,9 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Base record class for storing host to ip allocation (ARecord and AaaaRecord)
+	/// </summary>
 	public abstract class AddressRecordBase : DnsRecordBase, IAddressRecord
 	{
 		/// <summary>
@@ -33,7 +36,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected AddressRecordBase() {}
 
-		protected AddressRecordBase(string name, RecordType recordType, int timeToLive, IPAddress address)
+		protected AddressRecordBase(DomainName name, RecordType recordType, int timeToLive, IPAddress address)
 			: base(name, recordType, RecordClass.INet, timeToLive)
 		{
 			Address = address;
@@ -44,7 +47,7 @@ namespace ARSoft.Tools.Net.Dns
 			Address = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref startPosition, MaximumRecordDataLength));
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 1)
 				throw new FormatException();
@@ -57,7 +60,7 @@ namespace ARSoft.Tools.Net.Dns
 			return Address.ToString();
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
 		}

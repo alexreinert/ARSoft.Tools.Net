@@ -40,7 +40,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Host name of the mail exchanger
 		/// </summary>
-		public string ExchangeDomainName { get; private set; }
+		public DomainName ExchangeDomainName { get; private set; }
 
 		internal MxRecord() {}
 
@@ -51,11 +51,11 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="preference"> Preference of the record </param>
 		/// <param name="exchangeDomainName"> Host name of the mail exchanger </param>
-		public MxRecord(string name, int timeToLive, ushort preference, string exchangeDomainName)
+		public MxRecord(DomainName name, int timeToLive, ushort preference, DomainName exchangeDomainName)
 			: base(name, RecordType.Mx, RecordClass.INet, timeToLive)
 		{
 			Preference = preference;
-			ExchangeDomainName = exchangeDomainName ?? String.Empty;
+			ExchangeDomainName = exchangeDomainName ?? DomainName.Root;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -64,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns
 			ExchangeDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -76,18 +76,15 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return Preference
-			       + " " + ExchangeDomainName + ".";
+			       + " " + ExchangeDomainName;
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return ExchangeDomainName.Length + 4; }
-		}
+		protected internal override int MaximumRecordDataLength => ExchangeDomainName.MaximumRecordDataLength + 4;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, ExchangeDomainName, true, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, ExchangeDomainName, domainNames, useCanonical);
 		}
 	}
 }

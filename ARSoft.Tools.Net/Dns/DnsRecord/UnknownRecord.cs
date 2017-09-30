@@ -43,7 +43,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="recordClass"> Record class </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="recordData"> Binary data of the RDATA section of the record </param>
-		public UnknownRecord(string name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] recordData)
+		public UnknownRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] recordData)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			RecordData = recordData ?? new byte[] { };
@@ -54,14 +54,8 @@ namespace ARSoft.Tools.Net.Dns
 			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
-			if (stringRepresentation.Length == 0)
-				throw new FormatException();
-
-			if (!stringRepresentation[0].StartsWith(@"\#"))
-				throw new FormatException();
-
 			ParseUnknownRecordData(stringRepresentation);
 		}
 
@@ -70,12 +64,9 @@ namespace ARSoft.Tools.Net.Dns
 			return @"\# " + ((RecordData == null) ? "0" : RecordData.Length + " " + RecordData.ToBase16String());
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return RecordData.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => RecordData.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, RecordData);
 		}

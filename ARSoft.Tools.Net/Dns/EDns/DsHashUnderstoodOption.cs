@@ -59,10 +59,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		internal override ushort DataLength
-		{
-			get { return (ushort) ((Algorithms == null) ? 0 : Algorithms.Count); }
-		}
+		internal override ushort DataLength => (ushort) (Algorithms?.Count ?? 0);
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{

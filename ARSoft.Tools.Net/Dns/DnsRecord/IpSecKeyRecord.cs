@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
@@ -133,17 +134,35 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Name of the record </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="precedence"> Precedence of the record </param>
-		/// <param name="gatewayType"> Type of gateway </param>
 		/// <param name="algorithm"> Algorithm of the key </param>
 		/// <param name="gateway"> Address of the gateway </param>
 		/// <param name="publicKey"> Binary data of the public key </param>
-		public IpSecKeyRecord(string name, int timeToLive, byte precedence, IpSecGatewayType gatewayType, IpSecAlgorithm algorithm, string gateway, byte[] publicKey)
+		public IpSecKeyRecord(DomainName name, int timeToLive, byte precedence, IpSecAlgorithm algorithm, DomainName gateway, byte[] publicKey)
 			: base(name, RecordType.IpSecKey, RecordClass.INet, timeToLive)
 		{
 			Precedence = precedence;
-			GatewayType = gatewayType;
+			GatewayType = IpSecGatewayType.Domain;
 			Algorithm = algorithm;
-			Gateway = gateway ?? String.Empty;
+			Gateway = (gateway ?? DomainName.Root).ToString();
+			PublicKey = publicKey ?? new byte[] { };
+		}
+
+		/// <summary>
+		///   Creates a new instance of the IpSecKeyRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="precedence"> Precedence of the record </param>
+		/// <param name="algorithm"> Algorithm of the key </param>
+		/// <param name="gateway"> Address of the gateway </param>
+		/// <param name="publicKey"> Binary data of the public key </param>
+		public IpSecKeyRecord(DomainName name, int timeToLive, byte precedence, IpSecAlgorithm algorithm, IPAddress gateway, byte[] publicKey)
+			: base(name, RecordType.IpSecKey, RecordClass.INet, timeToLive)
+		{
+			Precedence = precedence;
+			GatewayType = (gateway.AddressFamily == AddressFamily.InterNetwork) ? IpSecGatewayType.IpV4 : IpSecGatewayType.IpV6;
+			Algorithm = algorithm;
+			Gateway = gateway.ToString();
 			PublicKey = publicKey ?? new byte[] { };
 		}
 
@@ -166,13 +185,13 @@ namespace ARSoft.Tools.Net.Dns
 					Gateway = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref currentPosition, 16)).ToString();
 					break;
 				case IpSecGatewayType.Domain:
-					Gateway = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
+					Gateway = DnsMessageBase.ParseDomainName(resultData, ref currentPosition).ToString();
 					break;
 			}
 			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length + startPosition - currentPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 5)
 				throw new FormatException();
@@ -198,7 +217,7 @@ namespace ARSoft.Tools.Net.Dns
 			switch (GatewayType)
 			{
 				case IpSecGatewayType.Domain:
-					return Gateway + ".";
+					return Gateway.ToMasterfileLabelRepresentation() + ".";
 
 				case IpSecGatewayType.IpV4:
 				case IpSecGatewayType.IpV6:
@@ -231,7 +250,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = Precedence;
 			messageData[currentPosition++] = (byte) GatewayType;
@@ -244,7 +263,7 @@ namespace ARSoft.Tools.Net.Dns
 					DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, addressBuffer);
 					break;
 				case IpSecGatewayType.Domain:
-					DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Gateway, false, domainNames);
+					DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, ParseDomainName(DomainName.Root, Gateway), null, false);
 					break;
 			}
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);

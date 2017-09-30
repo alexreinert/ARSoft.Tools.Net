@@ -45,7 +45,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Name of the record </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="x25Address"> PSDN (Public Switched Data Network) address </param>
-		public X25Record(string name, int timeToLive, string x25Address)
+		public X25Record(DomainName name, int timeToLive, string x25Address)
 			: base(name, RecordType.X25, RecordClass.INet, timeToLive)
 		{
 			X25Address = x25Address ?? String.Empty;
@@ -56,7 +56,7 @@ namespace ARSoft.Tools.Net.Dns
 			X25Address += DnsMessageBase.ParseText(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 1)
 				throw new FormatException();
@@ -66,15 +66,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return X25Address;
+			return X25Address.ToMasterfileLabelRepresentation();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 1 + X25Address.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 1 + X25Address.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, X25Address);
 		}

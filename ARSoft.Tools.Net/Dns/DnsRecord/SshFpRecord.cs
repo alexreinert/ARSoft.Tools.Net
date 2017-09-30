@@ -59,6 +59,24 @@ namespace ARSoft.Tools.Net.Dns
 			///   </para>
 			/// </summary>
 			Dsa = 2,
+
+			/// <summary>
+			///   <para>ECDSA</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc6594">RFC 6594</see>
+			///   </para>
+			/// </summary>
+			EcDsa = 3,
+
+			/// <summary>
+			///   <para>Ed25519</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc7479">RFC 7479</see>
+			///   </para>
+			/// </summary>
+			Ed25519 = 4,
 		}
 
 		/// <summary>
@@ -79,6 +97,15 @@ namespace ARSoft.Tools.Net.Dns
 			///   </para>
 			/// </summary>
 			Sha1 = 1,
+
+			/// <summary>
+			///   <para>SHA-1</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc6594">RFC 6594</see>
+			///   </para>
+			/// </summary>
+			Sha256 = 2,
 		}
 
 		/// <summary>
@@ -106,7 +133,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="algorithm"> Algorithm of fingerprint </param>
 		/// <param name="fingerPrintType"> Type of fingerprint </param>
 		/// <param name="fingerPrint"> Binary data of the fingerprint </param>
-		public SshFpRecord(string name, int timeToLive, SshFpAlgorithm algorithm, SshFpFingerPrintType fingerPrintType, byte[] fingerPrint)
+		public SshFpRecord(DomainName name, int timeToLive, SshFpAlgorithm algorithm, SshFpFingerPrintType fingerPrintType, byte[] fingerPrint)
 			: base(name, RecordType.SshFp, RecordClass.INet, timeToLive)
 		{
 			Algorithm = algorithm;
@@ -121,7 +148,7 @@ namespace ARSoft.Tools.Net.Dns
 			FingerPrint = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 2);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 3)
 				throw new FormatException();
@@ -138,12 +165,9 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + FingerPrint.ToBase16String();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 2 + FingerPrint.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 2 + FingerPrint.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) Algorithm;
 			messageData[currentPosition++] = (byte) FingerPrintType;

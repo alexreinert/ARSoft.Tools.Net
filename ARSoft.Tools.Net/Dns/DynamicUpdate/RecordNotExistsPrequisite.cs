@@ -35,16 +35,13 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		/// <param name="name"> Name of record that should be checked </param>
 		/// <param name="recordType"> Type of record that should be checked </param>
-		public RecordNotExistsPrequisite(string name, RecordType recordType)
+		public RecordNotExistsPrequisite(DomainName name, RecordType recordType)
 			: base(name, recordType, RecordClass.None, 0) {}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 0; }
-		}
+		protected internal override int MaximumRecordDataLength => 0;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames) {}
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical) {}
 	}
 }

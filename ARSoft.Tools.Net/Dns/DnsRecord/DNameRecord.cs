@@ -35,7 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Target of the redirection
 		/// </summary>
-		public string Target { get; private set; }
+		public DomainName Target { get; private set; }
 
 		internal DNameRecord() {}
 
@@ -45,10 +45,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Name of the record </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="target"> Target of the redirection </param>
-		public DNameRecord(string name, int timeToLive, string target)
+		public DNameRecord(DomainName name, int timeToLive, DomainName target)
 			: base(name, RecordType.DName, RecordClass.INet, timeToLive)
 		{
-			Target = target ?? String.Empty;
+			Target = target ?? DomainName.Root;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -56,7 +56,7 @@ namespace ARSoft.Tools.Net.Dns
 			Target = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 1)
 				throw new FormatException();
@@ -66,17 +66,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return Target + ".";
+			return Target.ToString();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return Target.Length + 2; }
-		}
+		protected internal override int MaximumRecordDataLength => Target.MaximumRecordDataLength + 2;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Target, false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Target, null, useCanonical);
 		}
 	}
 }

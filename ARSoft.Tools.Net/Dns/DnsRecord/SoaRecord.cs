@@ -35,12 +35,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Hostname of the primary name server
 		/// </summary>
-		public string MasterName { get; private set; }
+		public DomainName MasterName { get; private set; }
 
 		/// <summary>
 		///   Mail address of the responsable person. The @ should be replaced by a dot.
 		/// </summary>
-		public string ResponsibleName { get; private set; }
+		public DomainName ResponsibleName { get; private set; }
 
 		/// <summary>
 		///   Serial number of the zone
@@ -69,6 +69,7 @@ namespace ARSoft.Tools.Net.Dns
 		///     <see cref="!:http://tools.ietf.org/html/rfc2308">RFC 2308</see>
 		///   </para>
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		public int NegativeCachingTTL { get; private set; }
 
 		internal SoaRecord() {}
@@ -91,11 +92,12 @@ namespace ARSoft.Tools.Net.Dns
 		///     <see cref="!:http://tools.ietf.org/html/rfc2308">RFC 2308</see>
 		///   </para>
 		/// </param>
-		public SoaRecord(string name, int timeToLive, string masterName, string responsibleName, uint serialNumber, int refreshInterval, int retryInterval, int expireInterval, int negativeCachingTTL)
+		// ReSharper disable once InconsistentNaming
+		public SoaRecord(DomainName name, int timeToLive, DomainName masterName, DomainName responsibleName, uint serialNumber, int refreshInterval, int retryInterval, int expireInterval, int negativeCachingTTL)
 			: base(name, RecordType.Soa, RecordClass.INet, timeToLive)
 		{
-			MasterName = masterName ?? String.Empty;
-			ResponsibleName = responsibleName ?? String.Empty;
+			MasterName = masterName ?? DomainName.Root;
+			ResponsibleName = responsibleName ?? DomainName.Root;
 			SerialNumber = serialNumber;
 			RefreshInterval = refreshInterval;
 			RetryInterval = retryInterval;
@@ -115,7 +117,7 @@ namespace ARSoft.Tools.Net.Dns
 			NegativeCachingTTL = DnsMessageBase.ParseInt(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			MasterName = ParseDomainName(origin, stringRepresentation[0]);
 			ResponsibleName = ParseDomainName(origin, stringRepresentation[1]);
@@ -129,8 +131,8 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return MasterName + "."
-			       + " " + ResponsibleName + "."
+			return MasterName
+			       + " " + ResponsibleName
 			       + " " + SerialNumber
 			       + " " + RefreshInterval
 			       + " " + RetryInterval
@@ -138,15 +140,12 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + NegativeCachingTTL;
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return MasterName.Length + ResponsibleName.Length + 24; }
-		}
+		protected internal override int MaximumRecordDataLength => MasterName.MaximumRecordDataLength + ResponsibleName.MaximumRecordDataLength + 24;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MasterName, true, domainNames);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, ResponsibleName, true, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MasterName, domainNames, useCanonical);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, ResponsibleName, domainNames, useCanonical);
 			DnsMessageBase.EncodeUInt(messageData, ref currentPosition, SerialNumber);
 			DnsMessageBase.EncodeInt(messageData, ref currentPosition, RefreshInterval);
 			DnsMessageBase.EncodeInt(messageData, ref currentPosition, RetryInterval);

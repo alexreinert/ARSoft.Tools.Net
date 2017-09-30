@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -26,12 +27,12 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   Base class for a dns name identity
 	/// </summary>
-	public abstract class DnsMessageEntryBase
+	public abstract class DnsMessageEntryBase : IEquatable<DnsMessageEntryBase>
 	{
 		/// <summary>
 		///   Domain name
 		/// </summary>
-		public string Name { get; internal set; }
+		public DomainName Name { get; internal set; }
 
 		/// <summary>
 		///   Type of the record
@@ -52,6 +53,34 @@ namespace ARSoft.Tools.Net.Dns
 		public override string ToString()
 		{
 			return Name + " " + RecordType + " " + RecordClass;
+		}
+
+		private int? _hashCode;
+
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+		public override int GetHashCode()
+		{
+			if (!_hashCode.HasValue)
+			{
+				_hashCode = ToString().GetHashCode();
+			}
+
+			return _hashCode.Value;
+		}
+
+		public override bool Equals(object obj)
+		{
+			return Equals(obj as DnsMessageEntryBase);
+		}
+
+		public bool Equals(DnsMessageEntryBase other)
+		{
+			if (other == null)
+				return false;
+
+			return Name.Equals(other.Name)
+			       && RecordType.Equals(other.RecordType)
+			       && RecordClass.Equals(other.RecordClass);
 		}
 	}
 }

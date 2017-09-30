@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -34,7 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public class LocRecord : DnsRecordBase
 	{
-		private static Regex _parserRegex = new Regex(@"^(?<latd>\d{1,2})( (?<latm>\d{1,2})( (?<lats>\d{1,2})(\.(?<latms>\d{1,3}))?)?)? (?<lat>(N|S)) (?<longd>\d{1,2})( (?<longm>\d{1,2})( (?<longs>\d{1,2})(\.(?<longms>\d{1,3}))?)?)? (?<long>(W|E)) (?<alt>-?\d{1,2}(\.\d+)?)m?( (?<size>\d+(\.\d+)?)m?( (?<hp>\d+(\.\d+)?)m?( (?<vp>\d+(\.\d+)?)m?)?)?)?$", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+		private static readonly Regex _parserRegex = new Regex(@"^(?<latd>\d{1,2})( (?<latm>\d{1,2})( (?<lats>\d{1,2})(\.(?<latms>\d{1,3}))?)?)? (?<lat>(N|S)) (?<longd>\d{1,2})( (?<longm>\d{1,2})( (?<longs>\d{1,2})(\.(?<longms>\d{1,3}))?)?)? (?<long>(W|E)) (?<alt>-?\d{1,2}(\.\d+)?)m?( (?<size>\d+(\.\d+)?)m?( (?<hp>\d+(\.\d+)?)m?( (?<vp>\d+(\.\d+)?)m?)?)?)?$", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 
 		/// <summary>
 		///   Represents a geopgraphical degree
@@ -44,35 +45,32 @@ namespace ARSoft.Tools.Net.Dns
 			/// <summary>
 			///   Is negative value
 			/// </summary>
-			public bool IsNegative { get; private set; }
+			public bool IsNegative { get; }
 
 			/// <summary>
 			///   Number of full degrees
 			/// </summary>
-			public int Degrees { get; private set; }
+			public int Degrees { get; }
 
 			/// <summary>
 			///   Number of minutes
 			/// </summary>
-			public int Minutes { get; private set; }
+			public int Minutes { get; }
 
 			/// <summary>
 			///   Number of seconds
 			/// </summary>
-			public int Seconds { get; private set; }
+			public int Seconds { get; }
 
 			/// <summary>
 			///   Number of Milliseconds
 			/// </summary>
-			public int Milliseconds { get; private set; }
+			public int Milliseconds { get; }
 
 			/// <summary>
 			///   Returns the decimal representation of the Degree instance
 			/// </summary>
-			public double DecimalDegrees
-			{
-				get { return (IsNegative ? -1d : 1d) * (Degrees + (double) Minutes / 6000 * 100 + (Seconds + (double) Milliseconds / 1000) / 360000 * 100); }
-			}
+			public double DecimalDegrees => (IsNegative ? -1d : 1d) * (Degrees + (double) Minutes / 6000 * 100 + (Seconds + (double) Milliseconds / 1000) / 360000 * 100);
 
 			/// <summary>
 			///   Creates a new instance of the Degree class
@@ -203,7 +201,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="latitude"> Latitude of the geographical position </param>
 		/// <param name="longitude"> Longitude of the geographical position </param>
 		/// <param name="altitude"> Altitude of the geographical position </param>
-		public LocRecord(string name, int timeToLive, byte version, double size, double horizontalPrecision, double verticalPrecision, Degree latitude, Degree longitude, double altitude)
+		public LocRecord(DomainName name, int timeToLive, byte version, double size, double horizontalPrecision, double verticalPrecision, Degree latitude, Degree longitude, double altitude)
 			: base(name, RecordType.Loc, RecordClass.INet, timeToLive)
 		{
 			Version = version;
@@ -226,7 +224,7 @@ namespace ARSoft.Tools.Net.Dns
 			Altitude = ConvertAltitude(DnsMessageBase.ParseInt(resultData, ref currentPosition));
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			var groups = _parserRegex
 				.Match(String.Join(" ", stringRepresentation))
@@ -244,6 +242,7 @@ namespace ARSoft.Tools.Net.Dns
 			VerticalPrecision = String.IsNullOrEmpty(groups["vp"].Value) ? 10 : Double.Parse(groups["vp"].Value, CultureInfo.InvariantCulture);
 		}
 
+		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 		internal override string RecordDataToString()
 		{
 			return Latitude.ToLatitudeString()
@@ -255,12 +254,9 @@ namespace ARSoft.Tools.Net.Dns
 			       + ((VerticalPrecision != 10) ? " " + VerticalPrecision + "m" : "");
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 16; }
-		}
+		protected internal override int MaximumRecordDataLength => 16;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = Version;
 			messageData[currentPosition++] = ConvertPrecision(Size);
@@ -272,13 +268,13 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		#region Convert Precision
-		private static readonly int[] _POWER_OFTEN = new int[] { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
+		private static readonly int[] _powerOften = new int[] { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
 
 		private static double ConvertPrecision(byte precision)
 		{
 			int mantissa = ((precision >> 4) & 0x0f) % 10;
 			int exponent = (precision & 0x0f) % 10;
-			return mantissa * (double) _POWER_OFTEN[exponent] / 100;
+			return mantissa * (double) _powerOften[exponent] / 100;
 		}
 
 		private static byte ConvertPrecision(double precision)
@@ -288,11 +284,11 @@ namespace ARSoft.Tools.Net.Dns
 			int exponent;
 			for (exponent = 0; exponent < 9; exponent++)
 			{
-				if (centimeters < _POWER_OFTEN[exponent + 1])
+				if (centimeters < _powerOften[exponent + 1])
 					break;
 			}
 
-			int mantissa = (int) (centimeters / _POWER_OFTEN[exponent]);
+			int mantissa = (int) (centimeters / _powerOften[exponent]);
 			if (mantissa > 9)
 				mantissa = 9;
 

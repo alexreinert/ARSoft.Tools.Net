@@ -40,6 +40,7 @@ namespace ARSoft.Tools.Net.Dns
 		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
 		///   </para>
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		INet = 1,
 
 		/// <summary>
@@ -97,7 +98,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		public static bool TryParseShortString(string s, out RecordClass recordClass)
+		public static bool TryParseShortString(string s, out RecordClass recordClass, bool allowAny = true)
 		{
 			if (String.IsNullOrEmpty(s))
 			{
@@ -124,8 +125,16 @@ namespace ARSoft.Tools.Net.Dns
 					return true;
 
 				case "*":
-					recordClass = RecordClass.Any;
-					return true;
+					if (allowAny)
+					{
+						recordClass = RecordClass.Any;
+						return true;
+					}
+					else
+					{
+						recordClass = RecordClass.Invalid;
+						return false;
+					}
 
 				default:
 					if (s.StartsWith("CLASS", StringComparison.InvariantCultureIgnoreCase))

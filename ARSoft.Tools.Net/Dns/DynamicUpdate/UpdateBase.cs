@@ -30,10 +30,10 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 	{
 		internal UpdateBase() {}
 
-		protected UpdateBase(string name, RecordType recordType, RecordClass recordClass, int timeToLive)
+		protected UpdateBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive)
 			: base(name, recordType, recordClass, timeToLive) {}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			throw new NotSupportedException();
 		}

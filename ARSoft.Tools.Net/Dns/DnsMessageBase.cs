@@ -105,6 +105,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else
 				{
+					// ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
 					return (rcode | ednsOptions.ExtendedReturnCode);
 				}
 			}
@@ -116,7 +117,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					if (ednsOptions == null)
 					{
-						throw new ArgumentOutOfRangeException("value", "ReturnCodes greater than 15 only allowed in edns messages");
+						throw new ArgumentOutOfRangeException(nameof(value), "ReturnCodes greater than 15 only allowed in edns messages");
 					}
 					else
 					{
@@ -176,17 +177,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public OptRecord EDnsOptions
 		{
-			get
-			{
-				if (_additionalRecords != null)
-				{
-					return (OptRecord) _additionalRecords.Find(record => (record.RecordType == RecordType.Opt));
-				}
-				else
-				{
-					return null;
-				}
-			}
+			get { return (OptRecord) _additionalRecords?.Find(record => (record.RecordType == RecordType.Opt)); }
 			set
 			{
 				if (value == null)
@@ -208,45 +199,13 @@ namespace ARSoft.Tools.Net.Dns
 				}
 			}
 		}
-
-		/// <summary>
-		///   <para>Gets or sets the DNSSEC answer OK (DO) flag</para>
-		///   <para>
-		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
-		///     and
-		///     <see cref="!:http://tools.ietf.org/html/rfc3225">RFC 3225</see>
-		///   </para>
-		/// </summary>
-		public bool IsDnsSecOk
-		{
-			get
-			{
-				OptRecord ednsOptions = EDnsOptions;
-				return (ednsOptions != null) && ednsOptions.IsDnsSecOk;
-			}
-			set
-			{
-				OptRecord ednsOptions = EDnsOptions;
-				if (ednsOptions == null)
-				{
-					if (value)
-					{
-						throw new ArgumentOutOfRangeException("value", "Setting DO flag is allowed in edns messages only");
-					}
-				}
-				else
-				{
-					ednsOptions.IsDnsSecOk = value;
-				}
-			}
-		}
 		#endregion
 
 		#region TSig
 		/// <summary>
 		///   Gets or set the TSigRecord for the tsig signed messages
 		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		public TSigRecord TSigOptions { get; set; }
 
 		internal static DnsMessageBase CreateByFlag(byte[] data, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
@@ -367,10 +326,10 @@ namespace ARSoft.Tools.Net.Dns
 				currentPosition += TSigOptions.StartPosition;
 
 				// TSig Variables
-				EncodeDomainName(validationBuffer, 0, ref currentPosition, TSigOptions.Name, false, null);
+				EncodeDomainName(validationBuffer, 0, ref currentPosition, TSigOptions.Name, null, false);
 				EncodeUShort(validationBuffer, ref currentPosition, (ushort) TSigOptions.RecordClass);
 				EncodeInt(validationBuffer, ref currentPosition, (ushort) TSigOptions.TimeToLive);
-				EncodeDomainName(validationBuffer, 0, ref currentPosition, TSigAlgorithmHelper.GetDomainName(TSigOptions.Algorithm), false, null);
+				EncodeDomainName(validationBuffer, 0, ref currentPosition, TSigAlgorithmHelper.GetDomainName(TSigOptions.Algorithm), null, false);
 				TSigRecord.EncodeDateTime(validationBuffer, ref currentPosition, TSigOptions.TimeSigned);
 				EncodeUShort(validationBuffer, ref currentPosition, (ushort) TSigOptions.Fudge.TotalSeconds);
 				EncodeUShort(validationBuffer, ref currentPosition, (ushort) TSigOptions.Error);
@@ -401,7 +360,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			int startPosition = currentPosition;
 
-			string name = ParseDomainName(resultData, ref currentPosition);
+			DomainName name = ParseDomainName(resultData, ref currentPosition);
 			RecordType recordType = (RecordType) ParseUShort(resultData, ref currentPosition);
 			DnsRecordBase record = DnsRecordBase.Create(recordType, resultData, currentPosition + 6);
 			record.StartPosition = startPosition;
@@ -446,10 +405,10 @@ namespace ARSoft.Tools.Net.Dns
 			return res;
 		}
 
-		internal static string ParseDomainName(byte[] resultData, ref int currentPosition)
+		internal static DomainName ParseDomainName(byte[] resultData, ref int currentPosition)
 		{
 			int firstLabelLength;
-			string res = ParseDomainName(resultData, currentPosition, out firstLabelLength);
+			DomainName res = ParseDomainName(resultData, currentPosition, out firstLabelLength);
 			currentPosition += firstLabelLength;
 			return res;
 		}
@@ -518,41 +477,42 @@ namespace ARSoft.Tools.Net.Dns
 			return res;
 		}
 
-		private static string ParseDomainName(byte[] resultData, int currentPosition, out int firstLabelBytes)
+		private static DomainName ParseDomainName(byte[] resultData, int currentPosition, out int uncompressedLabelBytes)
 		{
-			StringBuilder sb = new StringBuilder(64, 255);
-			bool isInFirstLabel = true;
-			firstLabelBytes = 0;
+			List<string> labels = new List<string>();
 
-			while (true) // loop will be ended gracefully or when StringBuilder grows over 255 bytes
+			bool isInUncompressedSpace = true;
+			uncompressedLabelBytes = 0;
+
+			for (int i = 0; i < 127; i++) // max is 127 labels (see RFC 2065)
 			{
 				byte currentByte = resultData[currentPosition++];
 				if (currentByte == 0)
 				{
 					// end of domain, RFC1035
-					if (isInFirstLabel)
-						firstLabelBytes += 1;
+					if (isInUncompressedSpace)
+						uncompressedLabelBytes += 1;
 
-					break;
+					return new DomainName(labels.ToArray());
 				}
 				else if (currentByte >= 192)
 				{
 					// Pointer, RFC1035
 
-					if (isInFirstLabel)
+					if (isInUncompressedSpace)
 					{
-						firstLabelBytes += 2;
-						isInFirstLabel = false;
+						uncompressedLabelBytes += 2;
+						isInUncompressedSpace = false;
 					}
 
 					int pointer;
 					if (BitConverter.IsLittleEndian)
 					{
-						pointer = (ushort) (((currentByte - 192) << 8) | resultData[currentPosition++]);
+						pointer = (ushort) (((currentByte - 192) << 8) | resultData[currentPosition]);
 					}
 					else
 					{
-						pointer = (ushort) ((currentByte - 192) | (resultData[currentPosition++] << 8));
+						pointer = (ushort) ((currentByte - 192) | (resultData[currentPosition] << 8));
 					}
 
 					currentPosition = pointer;
@@ -561,10 +521,12 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					// binary EDNS label, RFC2673, RFC3363, RFC3364
 					int length = resultData[currentPosition++];
-					if (isInFirstLabel)
-						firstLabelBytes += 1;
+					if (isInUncompressedSpace)
+						uncompressedLabelBytes += 1;
 					if (length == 0)
 						length = 256;
+
+					StringBuilder sb = new StringBuilder();
 
 					sb.Append(@"\[x");
 					string suffix = "/" + length + "]";
@@ -572,8 +534,8 @@ namespace ARSoft.Tools.Net.Dns
 					do
 					{
 						currentByte = resultData[currentPosition++];
-						if (isInFirstLabel)
-							firstLabelBytes += 1;
+						if (isInUncompressedSpace)
+							uncompressedLabelBytes += 1;
 
 						if (length < 8)
 						{
@@ -586,6 +548,8 @@ namespace ARSoft.Tools.Net.Dns
 					} while (length > 0);
 
 					sb.Append(suffix);
+
+					labels.Add(sb.ToString());
 				}
 				else if (currentByte >= 64)
 				{
@@ -595,16 +559,15 @@ namespace ARSoft.Tools.Net.Dns
 				else
 				{
 					// append additional text part
-					if (isInFirstLabel)
-						firstLabelBytes += 1 + currentByte;
+					if (isInUncompressedSpace)
+						uncompressedLabelBytes += 1 + currentByte;
 
-					sb.Append(Encoding.ASCII.GetString(resultData, currentPosition, currentByte));
-					sb.Append(".");
+					labels.Add(Encoding.ASCII.GetString(resultData, currentPosition, currentByte));
 					currentPosition += currentByte;
 				}
 			}
 
-			return (sb.Length == 0) ? String.Empty : sb.ToString(0, sb.Length - 1);
+			throw new FormatException("Domain name could not be parsed. Invalid message?");
 		}
 
 		internal static byte[] ParseByteData(byte[] resultData, ref int currentPosition, int length)
@@ -674,7 +637,7 @@ namespace ARSoft.Tools.Net.Dns
 			messageData = new byte[maxLength];
 			int currentPosition = offset;
 
-			Dictionary<string, ushort> domainNames = new Dictionary<string, ushort>();
+			Dictionary<DomainName, ushort> domainNames = new Dictionary<DomainName, ushort>();
 
 			EncodeUShort(messageData, ref currentPosition, TransactionID);
 			EncodeUShort(messageData, ref currentPosition, Flags);
@@ -723,10 +686,10 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else
 				{
-					EncodeDomainName(messageData, offset, ref tsigVariablesPosition, TSigOptions.Name, false, null);
+					EncodeDomainName(messageData, offset, ref tsigVariablesPosition, TSigOptions.Name, null, false);
 					EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.RecordClass);
 					EncodeInt(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.TimeToLive);
-					EncodeDomainName(messageData, offset, ref tsigVariablesPosition, TSigAlgorithmHelper.GetDomainName(TSigOptions.Algorithm), false, null);
+					EncodeDomainName(messageData, offset, ref tsigVariablesPosition, TSigAlgorithmHelper.GetDomainName(TSigOptions.Algorithm), null, false);
 					TSigRecord.EncodeDateTime(messageData, ref tsigVariablesPosition, TSigOptions.TimeSigned);
 					EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.Fudge.TotalSeconds);
 					EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.Error);
@@ -836,13 +799,15 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		internal static void EncodeDomainName(byte[] messageData, int offset, ref int currentPosition, string name, bool isCompressionAllowed, Dictionary<string, ushort> domainNames)
+		internal static void EncodeDomainName(byte[] messageData, int offset, ref int currentPosition, DomainName name, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			if (String.IsNullOrEmpty(name) || (name == "."))
+			if (name.LabelCount == 0)
 			{
 				messageData[currentPosition++] = 0;
 				return;
 			}
+
+			bool isCompressionAllowed = !useCanonical & (domainNames != null);
 
 			ushort pointer;
 			if (isCompressionAllowed && domainNames.TryGetValue(name, out pointer))
@@ -851,17 +816,19 @@ namespace ARSoft.Tools.Net.Dns
 				return;
 			}
 
-			int labelLength = name.IndexOf('.');
-			if (labelLength == -1)
-				labelLength = name.Length;
+			string label = name.Labels[0];
 
 			if (isCompressionAllowed)
 				domainNames[name] = (ushort) ((currentPosition | 0xc000) - offset);
 
-			messageData[currentPosition++] = (byte) labelLength;
-			EncodeByteArray(messageData, ref currentPosition, Encoding.ASCII.GetBytes(name.ToCharArray(0, labelLength)));
+			messageData[currentPosition++] = (byte) label.Length;
 
-			EncodeDomainName(messageData, offset, ref currentPosition, labelLength == name.Length ? "." : name.Substring(labelLength + 1), isCompressionAllowed, domainNames);
+			if (useCanonical)
+				label = label.ToLowerInvariant();
+
+			EncodeByteArray(messageData, ref currentPosition, Encoding.ASCII.GetBytes(label));
+
+			EncodeDomainName(messageData, offset, ref currentPosition, name.GetParentName(), domainNames, useCanonical);
 		}
 
 		internal static void EncodeTextBlock(byte[] messageData, ref int currentPosition, string text)

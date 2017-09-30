@@ -20,6 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Org.BouncyCastle.Crypto.Digests;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.X509;
+using X509Certificate = System.Security.Cryptography.X509Certificates.X509Certificate;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -38,43 +42,57 @@ namespace ARSoft.Tools.Net.Dns
 		public enum TlsaCertificateUsage : byte
 		{
 			/// <summary>
-			///   <para>CA certificate, or the public key of such a certificate</para>
+			///   <para>CA constraint</para>
 			///   <para>
 			///     Defined in
 			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
 			///   </para>
 			/// </summary>
-			CACertificate = 0,
+			// ReSharper disable once InconsistentNaming
+			PkixTA = 0,
 
 			/// <summary>
-			///   <para>End entity certificate, or the public key of such a certificate</para>
+			///   <para>Service certificate constraint</para>
 			///   <para>
 			///     Defined in
 			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
 			///   </para>
 			/// </summary>
-			EndEntityCertificate = 1,
+			// ReSharper disable once InconsistentNaming
+			PkixEE = 1,
 
 			/// <summary>
-			///   <para> Certificate, or the public key of such a certificate, that MUST be used as the trust anchor</para>
+			///   <para> Trust anchor assertion</para>
 			///   <para>
 			///     Defined in
 			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
 			///   </para>
 			/// </summary>
-			TrustAnchorCertificate = 2,
+			// ReSharper disable once InconsistentNaming
+			DaneTA = 2,
 
 			/// <summary>
 			///   <para>
-			///     certificate, or the public key of such a certificate, that MUST match the end entity certificate given by the
-			///     server in TLS
+			///     Domain-issued certificate
 			///   </para>
 			///   <para>
 			///     Defined in
 			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
 			///   </para>
 			/// </summary>
-			DomainIssuedCertificate = 3,
+			// ReSharper disable once InconsistentNaming
+			DaneEE = 3,
+
+			/// <summary>
+			///   <para>
+			///     Reserved for Private Use
+			///   </para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///   </para>
+			/// </summary>
+			PrivCert = 255,
 		}
 
 		/// <summary>
@@ -107,13 +125,13 @@ namespace ARSoft.Tools.Net.Dns
 		public enum TlsaMatchingType : byte
 		{
 			/// <summary>
-			///   <para>ExactMatch</para>
+			///   <para>No hash used</para>
 			///   <para>
 			///     Defined in
 			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
 			///   </para>
 			/// </summary>
-			ExactMatch = 0,
+			Full = 0,
 
 			/// <summary>
 			///   <para>SHA-256 hash</para>
@@ -132,6 +150,15 @@ namespace ARSoft.Tools.Net.Dns
 			///   </para>
 			/// </summary>
 			Sha512Hash = 2,
+
+			/// <summary>
+			///   <para>Reserved for Private Use</para>
+			///   <para>
+			///     Defined in
+			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///   </para>
+			/// </summary>
+			PrivMatch = 255,
 		}
 
 		/// <summary>
@@ -152,26 +179,89 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   The certificate association data
 		/// </summary>
-		public byte[] CertificateAssociation { get; private set; }
+		public byte[] CertificateAssociationData { get; private set; }
 
 		internal TlsaRecord() {}
 
 		/// <summary>
-		///   Creates a new instance of the NIdRecord class
+		///   Creates a new instance of the TlsaRecord class
 		/// </summary>
 		/// <param name="name"> Domain name of the host </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="certificateUsage"></param>
-		/// <param name="selector"></param>
-		/// <param name="matchingType"></param>
-		/// <param name="certificateAssociation"></param>
-		public TlsaRecord(string name, int timeToLive, TlsaCertificateUsage certificateUsage, TlsaSelector selector, TlsaMatchingType matchingType, byte[] certificateAssociation)
+		/// <param name="certificateUsage">The certificate usage</param>
+		/// <param name="selector">The selector</param>
+		/// <param name="matchingType">The matching type</param>
+		/// <param name="certificateAssociationData">The certificate association data</param>
+		public TlsaRecord(DomainName name, int timeToLive, TlsaCertificateUsage certificateUsage, TlsaSelector selector, TlsaMatchingType matchingType, byte[] certificateAssociationData)
 			: base(name, RecordType.Tlsa, RecordClass.INet, timeToLive)
 		{
 			CertificateUsage = certificateUsage;
 			Selector = selector;
 			MatchingType = matchingType;
-			CertificateAssociation = certificateAssociation ?? new byte[] { };
+			CertificateAssociationData = certificateAssociationData ?? new byte[] { };
+		}
+
+		/// <summary>
+		///   Creates a new instance of the TlsaRecord class
+		/// </summary>
+		/// <param name="name"> Domain name of the host </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="certificateUsage">The certificate usage</param>
+		/// <param name="selector">The selector</param>
+		/// <param name="matchingType">The matching type</param>
+		/// <param name="certificate">The certificate to get the association data from</param>
+		public TlsaRecord(DomainName name, int timeToLive, TlsaCertificateUsage certificateUsage, TlsaSelector selector, TlsaMatchingType matchingType, X509Certificate certificate)
+			: base(name, RecordType.Tlsa, RecordClass.INet, timeToLive)
+		{
+			CertificateUsage = certificateUsage;
+			Selector = selector;
+			MatchingType = matchingType;
+			CertificateAssociationData = GetCertificateAssocicationData(selector, matchingType, certificate);
+		}
+
+		internal static byte[] GetCertificateAssocicationData(TlsaSelector selector, TlsaMatchingType matchingType, X509Certificate certificate)
+		{
+			byte[] selectedBytes;
+			switch (selector)
+			{
+				case TlsaSelector.FullCertificate:
+					selectedBytes = certificate.GetRawCertData();
+					break;
+
+				case TlsaSelector.SubjectPublicKeyInfo:
+					selectedBytes = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(DotNetUtilities.FromX509Certificate(certificate).GetPublicKey()).GetDerEncoded();
+					break;
+
+				default:
+					throw new NotSupportedException();
+			}
+
+			byte[] matchingBytes;
+			switch (matchingType)
+			{
+				case TlsaMatchingType.Full:
+					matchingBytes = selectedBytes;
+					break;
+
+				case TlsaMatchingType.Sha256Hash:
+					Sha256Digest sha256Digest = new Sha256Digest();
+					sha256Digest.BlockUpdate(selectedBytes, 0, selectedBytes.Length);
+					matchingBytes = new byte[sha256Digest.GetDigestSize()];
+					sha256Digest.DoFinal(matchingBytes, 0);
+					break;
+
+				case TlsaMatchingType.Sha512Hash:
+					Sha512Digest sha512Digest = new Sha512Digest();
+					sha512Digest.BlockUpdate(selectedBytes, 0, selectedBytes.Length);
+					matchingBytes = new byte[sha512Digest.GetDigestSize()];
+					sha512Digest.DoFinal(matchingBytes, 0);
+					break;
+
+				default:
+					throw new NotSupportedException();
+			}
+
+			return matchingBytes;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -179,10 +269,10 @@ namespace ARSoft.Tools.Net.Dns
 			CertificateUsage = (TlsaCertificateUsage) resultData[startPosition++];
 			Selector = (TlsaSelector) resultData[startPosition++];
 			MatchingType = (TlsaMatchingType) resultData[startPosition++];
-			CertificateAssociation = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 3);
+			CertificateAssociationData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 3);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 4)
 				throw new FormatException();
@@ -190,7 +280,7 @@ namespace ARSoft.Tools.Net.Dns
 			CertificateUsage = (TlsaCertificateUsage) Byte.Parse(stringRepresentation[0]);
 			Selector = (TlsaSelector) Byte.Parse(stringRepresentation[1]);
 			MatchingType = (TlsaMatchingType) Byte.Parse(stringRepresentation[2]);
-			CertificateAssociation = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase16String();
+			CertificateAssociationData = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase16String();
 		}
 
 		internal override string RecordDataToString()
@@ -198,20 +288,17 @@ namespace ARSoft.Tools.Net.Dns
 			return (byte) CertificateUsage
 			       + " " + (byte) Selector
 			       + " " + (byte) MatchingType
-			       + " " + String.Join(String.Empty, CertificateAssociation.ToBase16String());
+			       + " " + String.Join(String.Empty, CertificateAssociationData.ToBase16String());
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 3 + CertificateAssociation.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 3 + CertificateAssociationData.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) CertificateUsage;
 			messageData[currentPosition++] = (byte) Selector;
 			messageData[currentPosition++] = (byte) MatchingType;
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, CertificateAssociation);
+			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, CertificateAssociationData);
 		}
 	}
 }

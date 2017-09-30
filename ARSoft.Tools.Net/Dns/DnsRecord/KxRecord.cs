@@ -40,7 +40,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Domain name of the exchange host
 		/// </summary>
-		public string Exchanger { get; private set; }
+		public DomainName Exchanger { get; private set; }
 
 		internal KxRecord() {}
 
@@ -51,14 +51,14 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="preference"> Preference of the record </param>
 		/// <param name="exchanger"> Domain name of the exchange host </param>
-		public KxRecord(string name, int timeToLive, ushort preference, string exchanger)
+		public KxRecord(DomainName name, int timeToLive, ushort preference, DomainName exchanger)
 			: base(name, RecordType.Kx, RecordClass.INet, timeToLive)
 		{
 			Preference = preference;
-			Exchanger = exchanger ?? String.Empty;
+			Exchanger = exchanger ?? DomainName.Root;
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -76,18 +76,15 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return Preference
-			       + " " + Exchanger + ".";
+			       + " " + Exchanger;
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return Exchanger.Length + 4; }
-		}
+		protected internal override int MaximumRecordDataLength => Exchanger.MaximumRecordDataLength + 4;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Exchanger, true, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Exchanger, domainNames, useCanonical);
 		}
 	}
 }

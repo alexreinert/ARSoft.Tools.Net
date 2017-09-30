@@ -205,15 +205,9 @@ namespace ARSoft.Tools.Net.Dns
 			set { base.AuthorityRecords = (value ?? new List<DnsRecordBase>()); }
 		}
 
-		internal override bool IsTcpUsingRequested
-		{
-			get { return (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr)); }
-		}
+		internal override bool IsTcpUsingRequested => (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr));
 
-		internal override bool IsTcpResendingRequested
-		{
-			get { return IsTruncated; }
-		}
+		internal override bool IsTcpResendingRequested => IsTruncated;
 
 		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
 		{

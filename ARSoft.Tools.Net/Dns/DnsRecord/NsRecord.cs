@@ -35,7 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Name of the authoritatitve nameserver for the zone
 		/// </summary>
-		public string NameServer { get; private set; }
+		public DomainName NameServer { get; private set; }
 
 		internal NsRecord() {}
 
@@ -45,10 +45,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain name of the zone </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="nameServer"> Name of the authoritative name server </param>
-		public NsRecord(string name, int timeToLive, string nameServer)
+		public NsRecord(DomainName name, int timeToLive, DomainName nameServer)
 			: base(name, RecordType.Ns, RecordClass.INet, timeToLive)
 		{
-			NameServer = nameServer ?? String.Empty;
+			NameServer = nameServer ?? DomainName.Root;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -56,7 +56,7 @@ namespace ARSoft.Tools.Net.Dns
 			NameServer = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 1)
 				throw new FormatException();
@@ -66,17 +66,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return NameServer + ".";
+			return NameServer.ToString();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return NameServer.Length + 2; }
-		}
+		protected internal override int MaximumRecordDataLength => NameServer.MaximumRecordDataLength + 2;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, NameServer, true, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, NameServer, domainNames, useCanonical);
 		}
 	}
 }

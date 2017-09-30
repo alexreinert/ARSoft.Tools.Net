@@ -62,10 +62,7 @@ namespace ARSoft.Tools.Net
 			return _names.TryGetValue(value, out res) ? res : Convert.ToInt64(value).ToString();
 		}
 
-		public static Dictionary<T, string> Names
-		{
-			get { return _names; }
-		}
+		public static Dictionary<T, string> Names => _names;
 
 		internal static T Parse(string s, bool ignoreCase, T defaultValue)
 		{
@@ -80,7 +77,7 @@ namespace ARSoft.Tools.Net
 			if (TryParse(s, ignoreCase, out res))
 				return res;
 
-			throw new ArgumentOutOfRangeException("s");
+			throw new ArgumentOutOfRangeException(nameof(s));
 		}
 	}
 }

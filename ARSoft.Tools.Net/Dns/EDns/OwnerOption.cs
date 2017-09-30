@@ -136,10 +136,7 @@ namespace ARSoft.Tools.Net.Dns
 				Password = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 14);
 		}
 
-		internal override ushort DataLength
-		{
-			get { return (ushort) (8 + (WakeupMacAddress != null ? 6 : 0) + (Password != null ? Password.Length : 0)); }
-		}
+		internal override ushort DataLength => (ushort) (8 + (WakeupMacAddress != null ? 6 : 0) + (Password?.Length ?? 0));
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{

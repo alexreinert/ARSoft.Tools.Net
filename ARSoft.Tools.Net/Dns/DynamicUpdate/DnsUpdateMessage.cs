@@ -56,7 +56,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// <summary>
 		///   Gets or sets the zone name
 		/// </summary>
-		public string ZoneName
+		public DomainName ZoneName
 		{
 			get { return Questions.Count > 0 ? Questions[0].Name : null; }
 			set { Questions = new List<DnsQuestion>() { new DnsQuestion(value, RecordType.Soa, RecordClass.INet) }; }
@@ -80,15 +80,33 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 			set { _updates = value; }
 		}
 
-		internal override bool IsTcpUsingRequested
+		/// <summary>
+		///   Creates a new instance of the DnsUpdateMessage as response to the current instance
+		/// </summary>
+		/// <returns>A new instance of the DnsUpdateMessage as response to the current instance</returns>
+		public DnsUpdateMessage CreateResponseInstance()
 		{
-			get { return false; }
+			DnsUpdateMessage result = new DnsUpdateMessage()
+			{
+				TransactionID = TransactionID,
+				IsEDnsEnabled = IsEDnsEnabled,
+				IsQuery = false,
+				OperationCode = OperationCode,
+				Questions = new List<DnsQuestion>(Questions),
+			};
+
+			if (IsEDnsEnabled)
+			{
+				result.EDnsOptions.Version = EDnsOptions.Version;
+				result.EDnsOptions.UdpPayloadSize = EDnsOptions.UdpPayloadSize;
+			}
+
+			return result;
 		}
 
-		internal override bool IsTcpResendingRequested
-		{
-			get { return false; }
-		}
+		internal override bool IsTcpUsingRequested => false;
+
+		internal override bool IsTcpResendingRequested => false;
 
 		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
 		{
@@ -97,8 +115,8 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		protected override void PrepareEncoding()
 		{
-			AnswerRecords = (Prequisites != null ? Prequisites.Cast<DnsRecordBase>().ToList() : new List<DnsRecordBase>());
-			AuthorityRecords = (Updates != null ? Updates.Cast<DnsRecordBase>().ToList() : new List<DnsRecordBase>());
+			AnswerRecords = Prequisites?.Cast<DnsRecordBase>().ToList() ?? new List<DnsRecordBase>();
+			AuthorityRecords = Updates?.Cast<DnsRecordBase>().ToList() ?? new List<DnsRecordBase>();
 		}
 
 		protected override void FinishParsing()

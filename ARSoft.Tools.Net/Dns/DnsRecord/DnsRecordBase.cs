@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -26,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   Base class representing a dns record
 	/// </summary>
-	public abstract class DnsRecordBase : DnsMessageEntryBase
+	public abstract class DnsRecordBase : DnsMessageEntryBase, IComparable<DnsRecordBase>, IEquatable<DnsRecordBase>
 	{
 		internal int StartPosition { get; set; }
 		internal ushort RecordDataLength { get; set; }
@@ -38,9 +39,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected DnsRecordBase() {}
 
-		protected DnsRecordBase(string name, RecordType recordType, RecordClass recordClass, int timeToLive)
+		protected DnsRecordBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive)
 		{
-			Name = name ?? String.Empty;
+			if (name == null)
+				throw new ArgumentNullException(nameof(name));
+
+			Name = name;
 			RecordType = recordType;
 			RecordClass = recordClass;
 			TimeToLive = timeToLive;
@@ -140,6 +144,14 @@ namespace ARSoft.Tools.Net.Dns
 					return new TlsaRecord();
 				case RecordType.Hip:
 					return new HipRecord();
+				case RecordType.CDs:
+					return new CDsRecord();
+				case RecordType.CDnsKey:
+					return new CDnsKeyRecord();
+				case RecordType.OpenPGPKey:
+					return new OpenPGPKeyRecord();
+				case RecordType.CSync:
+					return new CSyncRecord();
 #pragma warning disable 0612
 				case RecordType.Spf:
 					return new SpfRecord();
@@ -160,6 +172,8 @@ namespace ARSoft.Tools.Net.Dns
 					return new TKeyRecord();
 				case RecordType.TSig:
 					return new TSigRecord();
+				case RecordType.Uri:
+					return new UriRecord();
 				case RecordType.CAA:
 					return new CAARecord();
 				case RecordType.Dlv:
@@ -180,20 +194,26 @@ namespace ARSoft.Tools.Net.Dns
 		public override string ToString()
 		{
 			string recordData = RecordDataToString();
-			return Name + ". " + TimeToLive + " " + RecordClass.ToShortString() + " " + RecordType.ToShortString() + (String.IsNullOrEmpty(recordData) ? "" : " " + recordData);
+			return Name + " " + TimeToLive + " " + RecordClass.ToShortString() + " " + RecordType.ToShortString() + (String.IsNullOrEmpty(recordData) ? "" : " " + recordData);
 		}
 		#endregion
 
 		#region Parsing
 		internal abstract void ParseRecordData(byte[] resultData, int startPosition, int length);
 
-		internal abstract void ParseRecordData(string origin, string[] stringRepresentation);
+		internal abstract void ParseRecordData(DomainName origin, string[] stringRepresentation);
 
 		internal void ParseUnknownRecordData(string[] stringRepresentation)
 		{
-			int length = Int32.Parse(stringRepresentation[0].Substring(2));
+			if (stringRepresentation.Length < 2)
+				throw new FormatException();
 
-			byte[] byteData = String.Join("", stringRepresentation.Skip(1)).FromBase16String();
+			if (stringRepresentation[0] != @"\#")
+				throw new FormatException();
+
+			int length = Int32.Parse(stringRepresentation[1]);
+
+			byte[] byteData = String.Join("", stringRepresentation.Skip(2)).FromBase16String();
 
 			if (length != byteData.Length)
 				throw new FormatException();
@@ -201,45 +221,43 @@ namespace ARSoft.Tools.Net.Dns
 			ParseRecordData(byteData, 0, length);
 		}
 
-		protected string ParseDomainName(string origin, string name)
+		protected DomainName ParseDomainName(DomainName origin, string name)
 		{
 			if (String.IsNullOrEmpty(name))
-				return String.Empty;
+				throw new ArgumentException("Name must be provided", nameof(name));
 
 			if (name.EndsWith("."))
-				return name.Substring(0, name.Length - 1);
+				return DomainName.ParseFromMasterfile(name);
 
-			return name + "." + origin;
+			return DomainName.ParseFromMasterfile(name) + origin;
 		}
 		#endregion
 
 		#region Encoding
-		internal override sealed int MaximumLength
+		internal override sealed int MaximumLength => Name.MaximumRecordDataLength + 12 + MaximumRecordDataLength;
+
+		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical = false)
 		{
-			get { return Name.Length + 12 + MaximumRecordDataLength; }
+			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, useCanonical);
+			EncodeRecordBody(messageData, offset, ref currentPosition, domainNames, useCanonical);
 		}
 
-		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		internal void EncodeRecordHeader(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			int recordDataOffset;
-			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, out recordDataOffset);
-
-			EncodeRecordData(messageData, offset, ref recordDataOffset, domainNames);
-
-			EncodeRecordLength(messageData, offset, ref currentPosition, domainNames, recordDataOffset);
-		}
-
-		internal void EncodeRecordHeader(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames, out int recordPosition)
-		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, true, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, domainNames, useCanonical);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordClass);
 			DnsMessageBase.EncodeInt(messageData, ref currentPosition, TimeToLive);
-
-			recordPosition = currentPosition + 2;
 		}
 
-		internal void EncodeRecordLength(byte[] messageData, int offset, ref int recordDataOffset, Dictionary<string, ushort> domainNames, int recordPosition)
+		internal void EncodeRecordBody(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		{
+			int recordDataOffset = currentPosition + 2;
+			EncodeRecordData(messageData, offset, ref recordDataOffset, domainNames, useCanonical);
+			EncodeRecordLength(messageData, offset, ref currentPosition, domainNames, recordDataOffset);
+		}
+
+		internal void EncodeRecordLength(byte[] messageData, int offset, ref int recordDataOffset, Dictionary<DomainName, ushort> domainNames, int recordPosition)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref recordDataOffset, (ushort) (recordPosition - recordDataOffset - 2));
 			recordDataOffset = recordPosition;
@@ -248,7 +266,78 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal abstract int MaximumRecordDataLength { get; }
 
-		protected internal abstract void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames);
+		protected internal abstract void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical);
 		#endregion
+
+		internal T Clone<T>()
+			where T : DnsRecordBase
+		{
+			return (T) MemberwiseClone();
+		}
+
+		public int CompareTo(DnsRecordBase other)
+		{
+			int compare = Name.CompareTo(other.Name);
+			if (compare != 0)
+				return compare;
+
+			compare = RecordType.CompareTo(other.RecordType);
+			if (compare != 0)
+				return compare;
+
+			compare = RecordClass.CompareTo(other.RecordClass);
+			if (compare != 0)
+				return compare;
+
+			compare = TimeToLive.CompareTo(other.TimeToLive);
+			if (compare != 0)
+				return compare;
+
+			int maxLength = 2 + Math.Max(MaximumRecordDataLength, other.MaximumRecordDataLength);
+
+			byte[] thisBuffer = new byte[maxLength];
+			int thisLength = 0;
+			EncodeRecordBody(thisBuffer, 0, ref thisLength, null, false);
+
+			byte[] otherBuffer = new byte[maxLength];
+			int otherLength = 0;
+			other.EncodeRecordBody(otherBuffer, 0, ref otherLength, null, false);
+
+			for (int i = 0; i < Math.Min(thisLength, otherLength); i++)
+			{
+				compare = thisBuffer[i].CompareTo(otherBuffer[i]);
+				if (compare != 0)
+					return compare;
+			}
+
+			return thisLength.CompareTo(otherLength);
+		}
+
+		private int? _hashCode;
+
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+		public override int GetHashCode()
+		{
+			if (!_hashCode.HasValue)
+			{
+				_hashCode = ToString().GetHashCode();
+			}
+
+			return _hashCode.Value;
+		}
+
+		public override bool Equals(object obj)
+		{
+			return Equals(obj as DnsRecordBase);
+		}
+
+		public bool Equals(DnsRecordBase other)
+		{
+			if (other == null)
+				return false;
+
+			return base.Equals(other)
+			       && RecordDataToString().Equals(other.RecordDataToString());
+		}
 	}
 }

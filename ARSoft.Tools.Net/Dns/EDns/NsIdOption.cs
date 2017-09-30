@@ -54,10 +54,7 @@ namespace ARSoft.Tools.Net.Dns
 			Payload = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
 
-		internal override ushort DataLength
-		{
-			get { return (ushort) ((Payload == null) ? 0 : Payload.Length); }
-		}
+		internal override ushort DataLength => (ushort) (Payload?.Length ?? 0);
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{

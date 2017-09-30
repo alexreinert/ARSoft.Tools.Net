@@ -39,7 +39,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="algorithm"> The algorithm which is used in the message </param>
 		/// <param name="keyName"> The keyname which is used in the message </param>
 		/// <returns> Binary representation of the key </returns>
-		public delegate byte[] SelectTsigKey(TSigAlgorithm algorithm, string keyName);
+		public delegate byte[] SelectTsigKey(TSigAlgorithm algorithm, DomainName keyName);
 
 		private const int _DNS_PORT = 53;
 
@@ -71,7 +71,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
 		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
-		/// <param name="processQuery"> Method, which process the queries and returns the response </param>
 		public DnsServer(int udpListenerCount, int tcpListenerCount)
 			: this(IPAddress.Any, udpListenerCount, tcpListenerCount) {}
 
@@ -81,7 +80,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="bindAddress"> The address, on which should be listend </param>
 		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
 		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
-		/// <param name="processQuery"> Method, which process the queries and returns the response </param>
 		public DnsServer(IPAddress bindAddress, int udpListenerCount, int tcpListenerCount)
 			: this(new IPEndPoint(bindAddress, _DNS_PORT), udpListenerCount, tcpListenerCount) {}
 
@@ -91,7 +89,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="bindEndPoint"> The endpoint, on which should be listend </param>
 		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
 		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
-		/// <param name="processQuery"> Method, which process the queries and returns the response </param>
 		public DnsServer(IPEndPoint bindEndPoint, int udpListenerCount, int tcpListenerCount)
 		{
 			_bindEndPoint = bindEndPoint;
@@ -109,14 +106,20 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if (_udpListenerCount > 0)
 			{
-				_availableUdpListener = _udpListenerCount;
+				lock (_udpListener)
+				{
+					_availableUdpListener = _udpListenerCount;
+				}
 				_udpListener = new UdpClient(_bindEndPoint);
 				StartUdpListenerTask();
 			}
 
 			if (_tcpListenerCount > 0)
 			{
-				_availableTcpListener = _tcpListenerCount;
+				lock (_tcpListener)
+				{
+					_availableTcpListener = _tcpListenerCount;
+				}
 				_tcpListener = new TcpListener(_bindEndPoint);
 				_tcpListener.Start();
 				StartTcpListenerTask();
@@ -138,7 +141,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		private DnsMessageBase ProcessMessage(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
+		private async Task<DnsMessageBase> ProcessMessageAsync(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
 		{
 			if (query.TSigOptions != null)
 			{
@@ -151,7 +154,9 @@ namespace ARSoft.Tools.Net.Dns
 						query.TSigOptions.Error = query.TSigOptions.ValidationResult;
 						query.TSigOptions.KeyData = null;
 
-						InvalidSignedMessageReceived.Raise(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
+#pragma warning disable 4014
+						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
+#pragma warning restore 4014
 
 						return query;
 
@@ -163,20 +168,17 @@ namespace ARSoft.Tools.Net.Dns
 						int tmp = 0;
 						TSigRecord.EncodeDateTime(query.TSigOptions.OtherData, ref tmp, DateTime.Now);
 
-						InvalidSignedMessageReceived.Raise(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
+#pragma warning disable 4014
+						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
+#pragma warning restore 4014
 
 						return query;
 				}
 			}
 
-			if (QueryReceived != null)
-			{
-				QueryReceivedEventArgs eventArgs = new QueryReceivedEventArgs(query, protocolType, remoteEndpoint);
-				QueryReceived(null, eventArgs);
-				return eventArgs.Response;
-			}
-
-			return null;
+			QueryReceivedEventArgs eventArgs = new QueryReceivedEventArgs(query, protocolType, remoteEndpoint);
+			await QueryReceived.RaiseAsync(this, eventArgs);
+			return eventArgs.Response;
 		}
 
 		private void StartUdpListenerTask()
@@ -217,7 +219,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 
 				ClientConnectedEventArgs clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Udp, receiveResult.RemoteEndPoint);
-				ClientConnected.Raise(this, clientConnectedEventArgs);
+				await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
 
 				if (clientConnectedEventArgs.RefuseConnect)
 					return;
@@ -231,7 +233,7 @@ namespace ARSoft.Tools.Net.Dns
 				try
 				{
 					query = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
-					originalMac = (query.TSigOptions == null) ? null : query.TSigOptions.Mac;
+					originalMac = query.TSigOptions?.Mac;
 				}
 				catch (Exception e)
 				{
@@ -241,11 +243,11 @@ namespace ARSoft.Tools.Net.Dns
 				DnsMessageBase response;
 				try
 				{
-					response = ProcessMessage(query, ProtocolType.Udp, receiveResult.RemoteEndPoint);
+					response = await ProcessMessageAsync(query, ProtocolType.Udp, receiveResult.RemoteEndPoint);
 				}
 				catch (Exception ex)
 				{
-					OnExceptionThrown(ex);
+					OnExceptionThrownAsync(ex);
 					response = null;
 				}
 
@@ -350,7 +352,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 			catch (Exception ex)
 			{
-				OnExceptionThrown(ex);
+				OnExceptionThrownAsync(ex);
 			}
 			finally
 			{
@@ -389,7 +391,7 @@ namespace ARSoft.Tools.Net.Dns
 					client = await _tcpListener.AcceptTcpClientAsync();
 
 					ClientConnectedEventArgs clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Udp, (IPEndPoint) client.Client.RemoteEndPoint);
-					ClientConnected.Raise(this, clientConnectedEventArgs);
+					await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
 
 					if (clientConnectedEventArgs.RefuseConnect)
 						return;
@@ -426,7 +428,7 @@ namespace ARSoft.Tools.Net.Dns
 						try
 						{
 							query = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
-							tsigMac = (query.TSigOptions == null) ? null : query.TSigOptions.Mac;
+							tsigMac = query.TSigOptions?.Mac;
 						}
 						catch (Exception e)
 						{
@@ -436,11 +438,11 @@ namespace ARSoft.Tools.Net.Dns
 						DnsMessageBase response;
 						try
 						{
-							response = ProcessMessage(query, ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint);
+							response = await ProcessMessageAsync(query, ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint);
 						}
 						catch (Exception ex)
 						{
-							OnExceptionThrown(ex);
+							OnExceptionThrownAsync(ex);
 
 							response = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
 							response.IsQuery = false;
@@ -461,7 +463,7 @@ namespace ARSoft.Tools.Net.Dns
 						{
 							if ((response.Questions.Count == 0) || (response.Questions[0].RecordType != RecordType.Axfr))
 							{
-								OnExceptionThrown(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
+								OnExceptionThrownAsync(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
 
 								response = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
 								response.IsQuery = false;
@@ -512,18 +514,19 @@ namespace ARSoft.Tools.Net.Dns
 			}
 			catch (Exception ex)
 			{
-				OnExceptionThrown(ex);
+				OnExceptionThrownAsync(ex);
 			}
 			finally
 			{
 				try
 				{
-					if (client != null)
-					{
-						client.Close();
-					}
+					// ReSharper disable once ConstantConditionalAccessQualifier
+					client?.Close();
 				}
-				catch {}
+				catch
+				{
+					// ignored
+				}
 
 				lock (_tcpListener)
 				{
@@ -560,34 +563,34 @@ namespace ARSoft.Tools.Net.Dns
 			return true;
 		}
 
-		private void OnExceptionThrown(Exception e)
+		private void OnExceptionThrownAsync(Exception e)
 		{
 			if (e is ObjectDisposedException)
 				return;
 
-			ExceptionThrown.Raise(this, new ExceptionEventArgs(e));
 			Trace.TraceError("Exception in DnsServer: " + e);
+			ExceptionThrown.RaiseAsync(this, new ExceptionEventArgs(e));
 		}
 
 		/// <summary>
 		///   This event is fired on exceptions of the listeners. You can use it for custom logging.
 		/// </summary>
-		public event EventHandler<ExceptionEventArgs> ExceptionThrown;
+		public event AsyncEventHandler<ExceptionEventArgs> ExceptionThrown;
 
 		/// <summary>
 		///   This event is fired whenever a message is received, that is not correct signed
 		/// </summary>
-		public event EventHandler<InvalidSignedMessageEventArgs> InvalidSignedMessageReceived;
+		public event AsyncEventHandler<InvalidSignedMessageEventArgs> InvalidSignedMessageReceived;
 
 		/// <summary>
 		///   This event is fired whenever a client connects to the server
 		/// </summary>
-		public event EventHandler<ClientConnectedEventArgs> ClientConnected;
+		public event AsyncEventHandler<ClientConnectedEventArgs> ClientConnected;
 
 		/// <summary>
 		///   This event is fired whenever a query is received by the server
 		/// </summary>
-		public event EventHandler<QueryReceivedEventArgs> QueryReceived;
+		public event AsyncEventHandler<QueryReceivedEventArgs> QueryReceived;
 
 		void IDisposable.Dispose()
 		{

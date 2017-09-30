@@ -1,2 +1,3 @@
-ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
-Copyright 2010..2015 Alexander Reinert
+ARSoft.Tools.Net - C# DNS client/server and SPF Library, Copyright (c) 2010-2015 Alexander Reinert (http://arsofttoolsnet.codeplex.com/)
+
+The library uses the Bouncy Castle C# API, Copyright (c) 2000-2015 The Legion of the Bouncy Castle Inc. (http://www.bouncycastle.org/csharp/)

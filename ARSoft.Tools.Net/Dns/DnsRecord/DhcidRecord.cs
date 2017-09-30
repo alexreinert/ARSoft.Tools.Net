@@ -45,7 +45,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Name of the record </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="recordData"> Record data </param>
-		public DhcidRecord(string name, int timeToLive, byte[] recordData)
+		public DhcidRecord(DomainName name, int timeToLive, byte[] recordData)
 			: base(name, RecordType.Dhcid, RecordClass.INet, timeToLive)
 		{
 			RecordData = recordData ?? new byte[] { };
@@ -56,7 +56,7 @@ namespace ARSoft.Tools.Net.Dns
 			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 1)
 				throw new FormatException();
@@ -69,12 +69,9 @@ namespace ARSoft.Tools.Net.Dns
 			return RecordData.ToBase64String();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return RecordData.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => RecordData.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, RecordData);
 		}

@@ -41,12 +41,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain name of the host </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="address"> IP address of the host </param>
-		public ARecord(string name, int timeToLive, IPAddress address)
+		public ARecord(DomainName name, int timeToLive, IPAddress address)
 			: base(name, RecordType.A, timeToLive, address ?? IPAddress.None) {}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 4; }
-		}
+		protected internal override int MaximumRecordDataLength => 4;
 	}
 }

@@ -39,7 +39,7 @@ namespace ARSoft.Tools.Net
 		public static IPAddress Reverse(this IPAddress ipAddress)
 		{
 			if (ipAddress == null)
-				throw new ArgumentNullException("ipAddress");
+				throw new ArgumentNullException(nameof(ipAddress));
 
 			byte[] addressBytes = ipAddress.GetAddressBytes();
 			byte[] res = new byte[addressBytes.Length];
@@ -61,13 +61,13 @@ namespace ARSoft.Tools.Net
 		public static IPAddress GetNetworkAddress(this IPAddress ipAddress, IPAddress netmask)
 		{
 			if (ipAddress == null)
-				throw new ArgumentNullException("ipAddress");
+				throw new ArgumentNullException(nameof(ipAddress));
 
 			if (netmask == null)
-				throw new ArgumentNullException("netMask");
+				throw new ArgumentNullException(nameof(netmask));
 
 			if (ipAddress.AddressFamily != netmask.AddressFamily)
-				throw new ArgumentOutOfRangeException("netmask", "Protocoll version of ipAddress and netmask do not match");
+				throw new ArgumentOutOfRangeException(nameof(netmask), "Protocoll version of ipAddress and netmask do not match");
 
 			byte[] resultBytes = ipAddress.GetAddressBytes();
 			byte[] ipAddressBytes = ipAddress.GetAddressBytes();
@@ -90,13 +90,13 @@ namespace ARSoft.Tools.Net
 		public static IPAddress GetNetworkAddress(this IPAddress ipAddress, int netmask)
 		{
 			if (ipAddress == null)
-				throw new ArgumentNullException("ipAddress");
+				throw new ArgumentNullException(nameof(ipAddress));
 
 			if ((ipAddress.AddressFamily == AddressFamily.InterNetwork) && ((netmask < 0) || (netmask > 32)))
-				throw new ArgumentException("Netmask have to be in range of 0 to 32 on IPv4 addresses", "netmask");
+				throw new ArgumentException("Netmask have to be in range of 0 to 32 on IPv4 addresses", nameof(netmask));
 
 			if ((ipAddress.AddressFamily == AddressFamily.InterNetworkV6) && ((netmask < 0) || (netmask > 128)))
-				throw new ArgumentException("Netmask have to be in range of 0 to 128 on IPv6 addresses", "netmask");
+				throw new ArgumentException("Netmask have to be in range of 0 to 128 on IPv6 addresses", nameof(netmask));
 
 			byte[] ipAddressBytes = ipAddress.GetAddressBytes();
 
@@ -127,7 +127,7 @@ namespace ARSoft.Tools.Net
 		public static string GetReverseLookupAddress(this IPAddress ipAddress)
 		{
 			if (ipAddress == null)
-				throw new ArgumentNullException("ipAddress");
+				throw new ArgumentNullException(nameof(ipAddress));
 
 			StringBuilder res = new StringBuilder();
 
@@ -159,6 +159,55 @@ namespace ARSoft.Tools.Net
 			return res.ToString();
 		}
 
+		/// <summary>
+		///   Returns the reverse lookup DomainName of an IPAddress
+		/// </summary>
+		/// <param name="ipAddress"> Instance of the IPAddress, that should be used </param>
+		/// <returns> A DomainName with the reverse lookup address </returns>
+		public static DomainName GetReverseLookupDomain(this IPAddress ipAddress)
+		{
+			if (ipAddress == null)
+				throw new ArgumentNullException(nameof(ipAddress));
+
+			byte[] addressBytes = ipAddress.GetAddressBytes();
+
+			if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+			{
+				string[] labels = new string[addressBytes.Length + 2];
+
+				int labelPos = 0;
+
+				for (int i = addressBytes.Length - 1; i >= 0; i--)
+				{
+					labels[labelPos++] = addressBytes[i].ToString();
+				}
+
+				labels[labelPos++] = "in-addr";
+				labels[labelPos] = "arpa";
+
+				return new DomainName(labels);
+			}
+			else
+			{
+				string[] labels = new string[addressBytes.Length * 2 + 2];
+
+				int labelPos = 0;
+
+				for (int i = addressBytes.Length - 1; i >= 0; i--)
+				{
+					string hex = addressBytes[i].ToString("x2");
+
+					labels[labelPos++] = hex[1].ToString();
+					labels[labelPos++] = hex[0].ToString();
+				}
+
+				labels[labelPos++] = "in6";
+				labels[labelPos] = "arpa";
+
+				return new DomainName(labels);
+			}
+		}
+
 		private static readonly IPAddress _ipv4MulticastNetworkAddress = IPAddress.Parse("224.0.0.0");
 		private static readonly IPAddress _ipv6MulticastNetworkAddress = IPAddress.Parse("FF00::");
 
@@ -170,7 +219,7 @@ namespace ARSoft.Tools.Net
 		public static bool IsMulticast(this IPAddress ipAddress)
 		{
 			if (ipAddress == null)
-				throw new ArgumentNullException("ipAddress");
+				throw new ArgumentNullException(nameof(ipAddress));
 
 			if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
 			{
@@ -190,7 +239,7 @@ namespace ARSoft.Tools.Net
 		public static int GetInterfaceIndex(this IPAddress ipAddress)
 		{
 			if (ipAddress == null)
-				throw new ArgumentNullException("ipAddress");
+				throw new ArgumentNullException(nameof(ipAddress));
 
 			var interfaceProperty = NetworkInterface.GetAllNetworkInterfaces().Select(n => n.GetIPProperties()).FirstOrDefault(p => p.UnicastAddresses.Any(a => a.Address.Equals(ipAddress)));
 
@@ -210,7 +259,7 @@ namespace ARSoft.Tools.Net
 				}
 			}
 
-			throw new ArgumentOutOfRangeException("ipAddress", "The given ip address is not configured on the local system");
+			throw new ArgumentOutOfRangeException(nameof(ipAddress), "The given ip address is not configured on the local system");
 		}
 
 		private static byte ReverseBitOrder(byte value)

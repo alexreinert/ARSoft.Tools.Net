@@ -40,7 +40,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Name of the intermediate host
 		/// </summary>
-		public string IntermediateHost { get; private set; }
+		public DomainName IntermediateHost { get; private set; }
 
 		internal RtRecord() {}
 
@@ -51,14 +51,14 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="preference"> Preference of the record </param>
 		/// <param name="intermediateHost"> Name of the intermediate host </param>
-		public RtRecord(string name, int timeToLive, ushort preference, string intermediateHost)
+		public RtRecord(DomainName name, int timeToLive, ushort preference, DomainName intermediateHost)
 			: base(name, RecordType.Rt, RecordClass.INet, timeToLive)
 		{
 			Preference = preference;
-			IntermediateHost = intermediateHost ?? String.Empty;
+			IntermediateHost = intermediateHost ?? DomainName.Root;
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -76,18 +76,15 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return Preference
-			       + " " + IntermediateHost + ".";
+			       + " " + IntermediateHost;
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return IntermediateHost.Length + 4; }
-		}
+		protected internal override int MaximumRecordDataLength => IntermediateHost.MaximumRecordDataLength + 4;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, IntermediateHost, false, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, IntermediateHost, null, useCanonical);
 		}
 	}
 }

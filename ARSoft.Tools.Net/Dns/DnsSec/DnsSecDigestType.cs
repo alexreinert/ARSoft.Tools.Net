@@ -45,5 +45,23 @@ namespace ARSoft.Tools.Net.Dns
 		///   </para>
 		/// </summary>
 		Sha256 = 2,
+
+		/// <summary>
+		///   <para>GOST R 34.11-94</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc5933">RFC 5933</see>
+		///   </para>
+		/// </summary>
+		EccGost = 3,
+
+		/// <summary>
+		///   <para>SHA-384</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc6605">RFC 6605</see>
+		///   </para>
+		/// </summary>
+		Sha384 = 4,
 	}
 }

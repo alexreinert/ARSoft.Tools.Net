@@ -35,7 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Domain name the address points to
 		/// </summary>
-		public string PointerDomainName { get; private set; }
+		public DomainName PointerDomainName { get; private set; }
 
 		internal PtrRecord() {}
 
@@ -45,10 +45,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Reverse name of the address </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="pointerDomainName"> Domain name the address points to </param>
-		public PtrRecord(string name, int timeToLive, string pointerDomainName)
+		public PtrRecord(DomainName name, int timeToLive, DomainName pointerDomainName)
 			: base(name, RecordType.Ptr, RecordClass.INet, timeToLive)
 		{
-			PointerDomainName = pointerDomainName ?? String.Empty;
+			PointerDomainName = pointerDomainName ?? DomainName.Root;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -56,7 +56,7 @@ namespace ARSoft.Tools.Net.Dns
 			PointerDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 1)
 				throw new FormatException();
@@ -66,17 +66,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return PointerDomainName + ".";
+			return PointerDomainName.ToString();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return PointerDomainName.Length + 2; }
-		}
+		protected internal override int MaximumRecordDataLength => PointerDomainName.MaximumRecordDataLength + 2;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, PointerDomainName, true, domainNames);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, PointerDomainName, domainNames, useCanonical);
 		}
 	}
 }

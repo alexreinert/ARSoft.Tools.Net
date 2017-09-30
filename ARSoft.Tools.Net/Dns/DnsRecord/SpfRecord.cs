@@ -33,13 +33,8 @@ namespace ARSoft.Tools.Net.Dns
 	///   </para>
 	/// </summary>
 	[Obsolete]
-	public class SpfRecord : DnsRecordBase, ITextRecord
+	public class SpfRecord : TextRecordBase
 	{
-		/// <summary>
-		///   Text data of the record
-		/// </summary>
-		public string TextData { get; protected set; }
-
 		internal SpfRecord() {}
 
 		/// <summary>
@@ -48,44 +43,16 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Name of the record </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="textData"> Text data of the record </param>
-		public SpfRecord(string name, int timeToLive, string textData)
-			: base(name, RecordType.Spf, RecordClass.INet, timeToLive)
-		{
-			TextData = textData ?? String.Empty;
-		}
+		public SpfRecord(DomainName name, int timeToLive, string textData)
+			: base(name, RecordType.Spf, timeToLive, textData) {}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			int endPosition = startPosition + length;
-
-			TextData = String.Empty;
-			while (startPosition < endPosition)
-			{
-				TextData += DnsMessageBase.ParseText(resultData, ref startPosition);
-			}
-		}
-
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 1)
-				throw new FormatException();
-
-			TextData = stringRepresentation[0];
-		}
-
-		internal override string RecordDataToString()
-		{
-			return "\"" + TextData.Replace("\"", "\\\"") + "\"";
-		}
-
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return TextData.Length + (TextData.Length / 255) + (TextData.Length % 255 == 0 ? 0 : 1); }
-		}
-
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
-		{
-			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, TextData);
-		}
+		/// <summary>
+		///   Creates a new instance of the SpfRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="textParts"> All parts of the text data </param>
+		public SpfRecord(DomainName name, int timeToLive, IEnumerable<string> textParts)
+			: base(name, RecordType.Spf, timeToLive, textParts) {}
 	}
 }

@@ -34,7 +34,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		///   Creates a new instance of the DeleteAllRecordsUpdate class
 		/// </summary>
 		/// <param name="name"> Name of records, that should be deleted </param>
-		public DeleteAllRecordsUpdate(string name)
+		public DeleteAllRecordsUpdate(DomainName name)
 			: base(name, RecordType.Any) {}
 	}
 }

@@ -64,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="algorithm"> Algorithm used </param>
 		/// <param name="digestType"> Type of the digest </param>
 		/// <param name="digest"> Binary data of the digest </param>
-		public DlvRecord(string name, RecordClass recordClass, int timeToLive, ushort keyTag, DnsSecAlgorithm algorithm, DnsSecDigestType digestType, byte[] digest)
+		public DlvRecord(DomainName name, RecordClass recordClass, int timeToLive, ushort keyTag, DnsSecAlgorithm algorithm, DnsSecDigestType digestType, byte[] digest)
 			: base(name, RecordType.Dlv, recordClass, timeToLive)
 		{
 			KeyTag = keyTag;
@@ -81,7 +81,7 @@ namespace ARSoft.Tools.Net.Dns
 			Digest = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 4);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length < 4)
 				throw new FormatException();
@@ -89,7 +89,7 @@ namespace ARSoft.Tools.Net.Dns
 			KeyTag = UInt16.Parse(stringRepresentation[0]);
 			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
 			DigestType = (DnsSecDigestType) Byte.Parse(stringRepresentation[2]);
-			Digest = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
+			Digest = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase16String();
 		}
 
 		internal override string RecordDataToString()
@@ -97,15 +97,12 @@ namespace ARSoft.Tools.Net.Dns
 			return KeyTag
 			       + " " + (byte) Algorithm
 			       + " " + (byte) DigestType
-			       + " " + Digest.ToBase64String();
+			       + " " + Digest.ToBase16String();
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 4 + Digest.Length; }
-		}
+		protected internal override int MaximumRecordDataLength => 4 + Digest.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, KeyTag);
 			messageData[currentPosition++] = (byte) Algorithm;

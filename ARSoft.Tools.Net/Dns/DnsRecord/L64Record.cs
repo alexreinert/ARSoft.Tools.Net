@@ -51,7 +51,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="preference"> The preference </param>
 		/// <param name="locator64"> The Locator </param>
-		public L64Record(string name, int timeToLive, ushort preference, ulong locator64)
+		public L64Record(DomainName name, int timeToLive, ushort preference, ulong locator64)
 			: base(name, RecordType.L64, RecordClass.INet, timeToLive)
 		{
 			Preference = preference;
@@ -64,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns
 			Locator64 = DnsMessageBase.ParseULong(resultData, ref startPosition);
 		}
 
-		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -79,12 +79,9 @@ namespace ARSoft.Tools.Net.Dns
 			return Preference + " " + locator.Substring(0, 4) + ":" + locator.Substring(4, 4) + ":" + locator.Substring(8, 4) + ":" + locator.Substring(12);
 		}
 
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 10; }
-		}
+		protected internal override int MaximumRecordDataLength => 10;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
 			DnsMessageBase.EncodeULong(messageData, ref currentPosition, Locator64);
