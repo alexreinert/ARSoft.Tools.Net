@@ -37,7 +37,12 @@ namespace ARSoft.Tools.Net.Spf
 	public abstract class ValidatorBase<T>
 		where T : SpfRecordBase
 	{
-		private static Regex _parseMacroRegex = new Regex(@"(%%|%_|%-|%\{(?<letter>[slodiphcrtv])(?<count>\d*)(?<reverse>r?)(?<delimiter>[\.\-+,/=]*)})", RegexOptions.Compiled);
+		protected class DnsCache : Dictionary<string, DnsMessage>
+		{
+			public int DnsTermCount { get; set; }
+		}
+
+		private static readonly Regex _parseMacroRegex = new Regex(@"(%%|%_|%-|%\{(?<letter>[slodiphcrtv])(?<count>\d*)(?<reverse>r?)(?<delimiter>[\.\-+,/=]*)})", RegexOptions.Compiled);
 
 		/// <summary>
 		///   DnsClient which is used for DNS lookups
@@ -74,7 +79,7 @@ namespace ARSoft.Tools.Net.Spf
 			set { _dnsLookupLimit = value; }
 		}
 
-		protected abstract Task<LoadRecordResult> LoadRecordsAsync(string domain, Dictionary<string, DnsMessage> dnsCache, CancellationToken token);
+		protected abstract Task<LoadRecordResult> LoadRecordsAsync(string domain, DnsCache dnsCache, CancellationToken token);
 
 		/// <summary>
 		///   Validates the record(s)
@@ -86,7 +91,7 @@ namespace ARSoft.Tools.Net.Spf
 		/// <returns> The result of the evaluation </returns>
 		public ValidationResult CheckHost(IPAddress ip, string domain, string sender, bool expandExplanation = false)
 		{
-			var result = CheckHostInternalAsync(ip, domain, sender, expandExplanation, new Dictionary<string, DnsMessage>(), default(CancellationToken));
+			var result = CheckHostInternalAsync(ip, domain, sender, expandExplanation, new DnsCache(), default(CancellationToken));
 			result.Wait();
 
 			return result.Result;
@@ -103,7 +108,7 @@ namespace ARSoft.Tools.Net.Spf
 		/// <returns> The result of the evaluation </returns>
 		public Task<ValidationResult> CheckHostAsync(IPAddress ip, string domain, string sender, bool expandExplanation = false, CancellationToken token = default(CancellationToken))
 		{
-			return CheckHostInternalAsync(ip, domain, sender, expandExplanation, new Dictionary<string, DnsMessage>(), token);
+			return CheckHostInternalAsync(ip, domain, sender, expandExplanation, new DnsCache(), token);
 		}
 
 		protected class LoadRecordResult
@@ -113,7 +118,7 @@ namespace ARSoft.Tools.Net.Spf
 			public SpfQualifier ErrorResult { get; internal set; }
 		}
 
-		private async Task<ValidationResult> CheckHostInternalAsync(IPAddress ip, string domain, string sender, bool expandExplanation, Dictionary<string, DnsMessage> dnsCache, CancellationToken token)
+		private async Task<ValidationResult> CheckHostInternalAsync(IPAddress ip, string domain, string sender, bool expandExplanation, DnsCache dnsCache, CancellationToken token)
 		{
 			if (String.IsNullOrEmpty(domain))
 			{
@@ -172,6 +177,9 @@ namespace ARSoft.Tools.Net.Spf
 				SpfModifier redirectModifier = record.Terms.OfType<SpfModifier>().FirstOrDefault(m => m.Type == SpfModifierType.Redirect);
 				if (redirectModifier != null)
 				{
+					if (++dnsCache.DnsTermCount > 10)
+						return new ValidationResult() { Result = SpfQualifier.PermError, Explanation = String.Empty };
+
 					string redirectDomain = await ExpandDomainAsync(redirectModifier.Domain ?? String.Empty, ip, domain, sender, dnsCache, token);
 
 					if (String.IsNullOrEmpty(redirectDomain) || (redirectDomain.Equals(domain, StringComparison.InvariantCultureIgnoreCase)))
@@ -189,7 +197,7 @@ namespace ARSoft.Tools.Net.Spf
 			}
 			else if ((result.Result == SpfQualifier.Fail) && expandExplanation)
 			{
-				SpfModifier expModifier = record.Terms.OfType<SpfModifier>().Where(m => m.Type == SpfModifierType.Exp).FirstOrDefault();
+				SpfModifier expModifier = record.Terms.OfType<SpfModifier>().FirstOrDefault(m => m.Type == SpfModifierType.Exp);
 				if (expModifier != null)
 				{
 					string target = await ExpandDomainAsync(expModifier.Domain, ip, domain, sender, dnsCache, token);
@@ -220,7 +228,7 @@ namespace ARSoft.Tools.Net.Spf
 			return result;
 		}
 
-		private async Task<SpfQualifier> CheckMechanismAsync(SpfMechanism mechanism, IPAddress ip, string domain, string sender, Dictionary<string, DnsMessage> dnsCache, CancellationToken token)
+		private async Task<SpfQualifier> CheckMechanismAsync(SpfMechanism mechanism, IPAddress ip, string domain, string sender, DnsCache dnsCache, CancellationToken token)
 		{
 			switch (mechanism.Type)
 			{
@@ -228,6 +236,9 @@ namespace ARSoft.Tools.Net.Spf
 					return mechanism.Qualifier;
 
 				case SpfMechanismType.A:
+					if (++dnsCache.DnsTermCount > 10)
+						return SpfQualifier.PermError;
+
 					bool? isAMatch = await IsIpMatchAsync(String.IsNullOrEmpty(mechanism.Domain) ? domain : mechanism.Domain, ip, mechanism.Prefix, mechanism.Prefix6, dnsCache, token);
 					if (!isAMatch.HasValue)
 						return SpfQualifier.TempError;
@@ -239,6 +250,9 @@ namespace ARSoft.Tools.Net.Spf
 					break;
 
 				case SpfMechanismType.Mx:
+					if (++dnsCache.DnsTermCount > 10)
+						return SpfQualifier.PermError;
+
 					DnsResolveResult<MxRecord> dnsMxResult = await ResolveDnsAsync<MxRecord>(await ExpandDomainAsync(String.IsNullOrEmpty(mechanism.Domain) ? domain : mechanism.Domain, ip, domain, sender, dnsCache, token), RecordType.Mx, dnsCache, token);
 					if ((dnsMxResult == null) || ((dnsMxResult.ReturnCode != ReturnCode.NoError) && (dnsMxResult.ReturnCode != ReturnCode.NxDomain)))
 						return SpfQualifier.TempError;
@@ -292,6 +306,9 @@ namespace ARSoft.Tools.Net.Spf
 					break;
 
 				case SpfMechanismType.Ptr:
+					if (++dnsCache.DnsTermCount > 10)
+						return SpfQualifier.PermError;
+
 					DnsResolveResult<PtrRecord> dnsPtrResult = await ResolveDnsAsync<PtrRecord>(ip.GetReverseLookupAddress(), RecordType.Ptr, dnsCache, token);
 					if ((dnsPtrResult == null) || ((dnsPtrResult.ReturnCode != ReturnCode.NoError) && (dnsPtrResult.ReturnCode != ReturnCode.NxDomain)))
 						return SpfQualifier.TempError;
@@ -314,6 +331,9 @@ namespace ARSoft.Tools.Net.Spf
 					break;
 
 				case SpfMechanismType.Exist:
+					if (++dnsCache.DnsTermCount > 10)
+						return SpfQualifier.PermError;
+
 					if (String.IsNullOrEmpty(mechanism.Domain))
 						return SpfQualifier.PermError;
 
@@ -328,6 +348,9 @@ namespace ARSoft.Tools.Net.Spf
 					break;
 
 				case SpfMechanismType.Include:
+					if (++dnsCache.DnsTermCount > 10)
+						return SpfQualifier.PermError;
+
 					if (String.IsNullOrEmpty(mechanism.Domain) || (mechanism.Domain.Equals(domain, StringComparison.InvariantCultureIgnoreCase)))
 						return SpfQualifier.PermError;
 
@@ -419,7 +442,12 @@ namespace ARSoft.Tools.Net.Spf
 		{
 			DnsMessage msg = await ResolveDnsMessageAsync(domain, recordType, dnsCache, token);
 
-			if ((msg == null) || ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain)))
+			if (msg == null)
+			{
+				return new DnsResolveResult<TRecord>(ReturnCode.ServerFailure, new List<TRecord>());
+			}
+
+			if ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain))
 			{
 				return new DnsResolveResult<TRecord>(msg.ReturnCode, new List<TRecord>());
 			}
