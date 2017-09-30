@@ -797,12 +797,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static bool IsIPv6Enabled { get; } = IsAnyIPv6Configured();
 
+		private static readonly IPAddress _ipvMappedNetworkAddress = IPAddress.Parse("0:0:0:0:0:FFFF::");
+
 		private static bool IsAnyIPv6Configured()
 		{
 			return NetworkInterface.GetAllNetworkInterfaces()
 				.Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
 				.SelectMany(n => n.GetIPProperties().UnicastAddresses.Select(a => a.Address))
-				.Any(a => !IPAddress.IsLoopback(a) && (a.AddressFamily == AddressFamily.InterNetworkV6) && !a.IsIPv6LinkLocal && !a.IsIPv6Teredo && !a.IsIPv4MappedToIPv6);
+				.Any(a => !IPAddress.IsLoopback(a) && (a.AddressFamily == AddressFamily.InterNetworkV6) && !a.IsIPv6LinkLocal && !a.IsIPv6Teredo && !a.GetNetworkAddress(96).Equals(_ipvMappedNetworkAddress));
 		}
 	}
 }
