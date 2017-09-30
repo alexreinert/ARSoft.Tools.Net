@@ -34,7 +34,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   Provides a new instance with a timeout of 2.5 seconds
 		/// </summary>
 		public MulticastDnsOneShotClient()
-			: this(2500) { }
+			: this(2500) {}
 
 		/// <summary>
 		///   Provides a new instance with a custom timeout
@@ -52,9 +52,7 @@ namespace ARSoft.Tools.Net.Dns
 					.Select(n => n.GetIPProperties())
 					.Min(p => Math.Min(p.GetIPv4Properties().Mtu, p.GetIPv6Properties().Mtu));
 			}
-			catch
-			{
-			}
+			catch {}
 
 			_maximumMessageSize = Math.Max(512, maximumMessageSize);
 		}

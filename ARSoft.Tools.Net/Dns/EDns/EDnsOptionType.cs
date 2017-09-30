@@ -28,15 +28,15 @@ namespace ARSoft.Tools.Net.Dns
 	{
 		/// <summary>
 		///   <para>Update Lease</para> <para>Defined in
-		///                                 <see cref="!:http://files.dns-sd.org/draft-sekar-dns-llq.txt">draft-sekar-dns-llq</see>
-		///                               </para>
+		///                               <see cref="!:http://files.dns-sd.org/draft-sekar-dns-llq.txt">draft-sekar-dns-llq</see>
+		///                             </para>
 		/// </summary>
 		LongLivedQuery = 1,
 
 		/// <summary>
 		///   <para>Update Lease</para> <para>Defined in
-		///                                 <see cref="!:http://files.dns-sd.org/draft-sekar-dns-ul.txt">draft-sekar-dns-ul</see>
-		///                               </para>
+		///                               <see cref="!:http://files.dns-sd.org/draft-sekar-dns-ul.txt">draft-sekar-dns-ul</see>
+		///                             </para>
 		/// </summary>
 		UpdateLease = 2,
 
@@ -49,8 +49,8 @@ namespace ARSoft.Tools.Net.Dns
 
 		/// <summary>
 		///   <para>Owner</para> <para>Defined in
-		///                                 <see cref="!:http://tools.ietf.org/html/draft-cheshire-edns0-owner-option-00">draft-cheshire-edns0-owner-option</see>
-		///                               </para>
+		///                        <see cref="!:http://tools.ietf.org/html/draft-cheshire-edns0-owner-option-00">draft-cheshire-edns0-owner-option</see>
+		///                      </para>
 		/// </summary>
 		Owner = 4,
 	}

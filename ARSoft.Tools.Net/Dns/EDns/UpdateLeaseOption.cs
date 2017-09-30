@@ -23,8 +23,8 @@ namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
 	///   <para>Update lease option</para> <para>Defined in
-	///                                 <see cref="!:http://files.dns-sd.org/draft-sekar-dns-ul.txt">draft-sekar-dns-ul</see>
-	///                               </para>
+	///                                      <see cref="!:http://files.dns-sd.org/draft-sekar-dns-ul.txt">draft-sekar-dns-ul</see>
+	///                                    </para>
 	/// </summary>
 	public class UpdateLeaseOption : EDnsOptionBase
 	{
@@ -34,7 +34,7 @@ namespace ARSoft.Tools.Net.Dns
 		public TimeSpan LeaseTime { get; private set; }
 
 		internal UpdateLeaseOption()
-			: base(EDnsOptionType.UpdateLease) { }
+			: base(EDnsOptionType.UpdateLease) {}
 
 		/// <summary>
 		///   Creates a new instance of the UpdateLeaseOption class

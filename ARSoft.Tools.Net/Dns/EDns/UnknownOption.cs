@@ -32,7 +32,7 @@ namespace ARSoft.Tools.Net.Dns
 		public byte[] Data { get; private set; }
 
 		internal UnknownOption(EDnsOptionType type)
-			: base(type) { }
+			: base(type) {}
 
 		/// <summary>
 		///   Creates a new instance of the UnknownOption class

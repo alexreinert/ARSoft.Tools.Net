@@ -79,6 +79,12 @@ namespace ARSoft.Tools.Net.Dns
 		private readonly int _udpListenerCount;
 		private readonly int _tcpListenerCount;
 
+		private int _availableUdpListener;
+		private bool _hasActiveUdpListener;
+
+		private int _availableTcpListener;
+		private bool _hasActiveTcpListener;
+
 		private readonly ProcessQuery _processQueryDelegate;
 
 		/// <summary>
@@ -135,21 +141,17 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if (_udpListenerCount > 0)
 			{
+				_availableUdpListener = _udpListenerCount;
 				_udpListener = new UdpListener(_bindEndPoint);
-				for (int i = 0; i < _udpListenerCount; i++)
-				{
-					StartUdpListen();
-				}
+				StartUdpListen();
 			}
 
 			if (_tcpListenerCount > 0)
 			{
+				_availableTcpListener = _tcpListenerCount;
 				_tcpListener = new TcpListener(_bindEndPoint);
 				_tcpListener.Start();
-				for (int i = 0; i < _tcpListenerCount; i++)
-				{
-					StartTcpAcceptConnection();
-				}
+				StartTcpAcceptConnection();
 			}
 		}
 
@@ -172,16 +174,23 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			try
 			{
-				_udpListener.BeginReceive(EndUdpReceive, null);
-			}
-			catch (ObjectDisposedException)
-			{
-				return;
+				lock (_udpListener)
+				{
+					if ((_availableUdpListener > 0) && !_hasActiveUdpListener)
+					{
+						_availableUdpListener--;
+						_hasActiveUdpListener = true;
+						_udpListener.BeginReceive(EndUdpReceive, null);
+					}
+				}
 			}
 			catch (Exception e)
 			{
-				OnExceptionThrown(e);
-				StartUdpListen();
+				lock (_udpListener)
+				{
+					_hasActiveUdpListener = false;
+				}
+				HandleUdpException(e);
 			}
 		}
 
@@ -189,6 +198,12 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			try
 			{
+				lock (_udpListener)
+				{
+					_hasActiveUdpListener = false;
+				}
+				StartUdpListen();
+
 				IPEndPoint endpoint;
 
 				byte[] buffer = _udpListener.EndReceive(ar, out endpoint);
@@ -203,7 +218,16 @@ namespace ARSoft.Tools.Net.Dns
 					throw new Exception("Error parsing dns query", e);
 				}
 
-				DnsMessageBase response = ProcessMessage(query, endpoint.Address, ProtocolType.Udp);
+				DnsMessageBase response;
+				try
+				{
+					response = ProcessMessage(query, endpoint.Address, ProtocolType.Udp);
+				}
+				catch (Exception ex)
+				{
+					OnExceptionThrown(ex);
+					response = null;
+				}
 
 				if (response == null)
 				{
@@ -305,16 +329,10 @@ namespace ARSoft.Tools.Net.Dns
 
 				_udpListener.BeginSend(buffer, 0, length, endpoint, EndUdpSend, null);
 			}
-			catch (ObjectDisposedException)
-			{
-				return;
-			}
 			catch (Exception e)
 			{
-				OnExceptionThrown(e);
+				HandleUdpException(e);
 			}
-
-			StartUdpListen();
 		}
 
 		private DnsMessageBase ProcessMessage(DnsMessageBase query, IPAddress ipAddress, ProtocolType protocolType)
@@ -359,19 +377,39 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				_udpListener.EndSend(ar);
 			}
-			catch (ObjectDisposedException) {}
+			catch (Exception e)
+			{
+				HandleUdpException(e);
+			}
+
+			lock (_udpListener)
+			{
+				_availableUdpListener++;
+			}
+			StartUdpListen();
 		}
 
 		private void StartTcpAcceptConnection()
 		{
 			try
 			{
-				_tcpListener.BeginAcceptTcpClient(EndTcpAcceptConnection, null);
+				lock (_tcpListener)
+				{
+					if ((_availableTcpListener > 0) && !_hasActiveTcpListener)
+					{
+						_availableTcpListener--;
+						_hasActiveTcpListener = true;
+						_tcpListener.BeginAcceptTcpClient(EndTcpAcceptConnection, null);
+					}
+				}
 			}
-			catch (ObjectDisposedException) {}
 			catch (Exception e)
 			{
-				OnExceptionThrown(e);
+				lock (_tcpListener)
+				{
+					_hasActiveTcpListener = false;
+				}
+				HandleTcpException(e, null, null);
 			}
 		}
 
@@ -383,6 +421,12 @@ namespace ARSoft.Tools.Net.Dns
 			try
 			{
 				client = _tcpListener.EndAcceptTcpClient(ar);
+				lock (_tcpListener)
+				{
+					_hasActiveTcpListener = false;
+					StartTcpAcceptConnection();
+				}
+
 				stream = client.GetStream();
 
 				MyState state =
@@ -398,37 +442,13 @@ namespace ARSoft.Tools.Net.Dns
 				state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
 				state.AsyncResult = stream.BeginRead(state.Buffer, 0, 2, EndTcpReadLength, state);
 			}
-			catch (ObjectDisposedException)
-			{
-				return;
-			}
 			catch (Exception e)
 			{
-				try
-				{
-					if (stream != null)
-					{
-						stream.Close();
-					}
-				}
-				catch {}
-
-				try
-				{
-					if (client != null)
-					{
-						client.Close();
-					}
-				}
-				catch {}
-
-				OnExceptionThrown(e);
+				HandleTcpException(e, stream, client);
 			}
-
-			StartTcpAcceptConnection();
 		}
 
-		private static void TcpTimedOut(object timeoutState)
+		private void TcpTimedOut(object timeoutState)
 		{
 			MyState state = timeoutState as MyState;
 
@@ -454,6 +474,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+
 		private void EndTcpReadLength(IAsyncResult ar)
 		{
 			TcpClient client = null;
@@ -471,6 +492,12 @@ namespace ARSoft.Tools.Net.Dns
 
 				if (state.BytesToReceive > 0)
 				{
+					if (!IsTcpClientConnected(client))
+					{
+						HandleTcpException(null, stream, client);
+						return;
+					}
+
 					state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
 					state.AsyncResult = stream.BeginRead(state.Buffer, state.Buffer.Length - state.BytesToReceive, state.BytesToReceive, EndTcpReadLength, state);
 				}
@@ -486,34 +513,43 @@ namespace ARSoft.Tools.Net.Dns
 						state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
 						state.AsyncResult = stream.BeginRead(state.Buffer, 0, length, EndTcpReadData, state);
 					}
+					else
+					{
+						HandleTcpException(null, stream, client);
+					}
 				}
-			}
-			catch (ObjectDisposedException)
-			{
-				return;
 			}
 			catch (Exception e)
 			{
-				try
-				{
-					if (stream != null)
-					{
-						stream.Close();
-					}
-				}
-				catch {}
-
-				try
-				{
-					if (client != null)
-					{
-						client.Close();
-					}
-				}
-				catch {}
-
-				OnExceptionThrown(e);
+				HandleTcpException(e, stream, client);
 			}
+		}
+
+		private static bool IsTcpClientConnected(TcpClient client)
+		{
+			if (!client.Connected)
+				return false;
+
+			if (client.Client.Poll(0, SelectMode.SelectRead))
+			{
+				if (client.Connected)
+				{
+					byte[] b = new byte[1];
+					try
+					{
+						if (client.Client.Receive(b, SocketFlags.Peek) == 0)
+						{
+							return false;
+						}
+					}
+					catch
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
 		}
 
 		private void EndTcpReadData(IAsyncResult ar)
@@ -533,6 +569,12 @@ namespace ARSoft.Tools.Net.Dns
 
 				if (state.BytesToReceive > 0)
 				{
+					if (!IsTcpClientConnected(client))
+					{
+						HandleTcpException(null, stream, client);
+						return;
+					}
+
 					state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
 					state.AsyncResult = stream.BeginRead(state.Buffer, state.Buffer.Length - state.BytesToReceive, state.BytesToReceive, EndTcpReadData, state);
 				}
@@ -549,7 +591,16 @@ namespace ARSoft.Tools.Net.Dns
 						throw new Exception("Error parsing dns query", e);
 					}
 
-					DnsMessageBase response = ProcessMessage(query, ((IPEndPoint) client.Client.RemoteEndPoint).Address, ProtocolType.Tcp);
+					DnsMessageBase response;
+					try
+					{
+						response = ProcessMessage(query, ((IPEndPoint) client.Client.RemoteEndPoint).Address, ProtocolType.Tcp);
+					}
+					catch (Exception ex)
+					{
+						OnExceptionThrown(ex);
+						response = null;
+					}
 
 					if (response == null)
 					{
@@ -564,34 +615,9 @@ namespace ARSoft.Tools.Net.Dns
 					state.AsyncResult = stream.BeginWrite(state.Buffer, 0, length, EndTcpSendData, state);
 				}
 			}
-			catch (ObjectDisposedException)
-			{
-				return;
-			}
 			catch (Exception e)
 			{
-				if (e.InnerException is ObjectDisposedException)
-					return;
-
-				try
-				{
-					if (stream != null)
-					{
-						stream.Close();
-					}
-				}
-				catch {}
-
-				try
-				{
-					if (client != null)
-					{
-						client.Close();
-					}
-				}
-				catch {}
-
-				OnExceptionThrown(e);
+				HandleTcpException(e, stream, client);
 			}
 		}
 
@@ -611,40 +637,64 @@ namespace ARSoft.Tools.Net.Dns
 				stream.EndWrite(ar);
 
 				state.Buffer = new byte[2];
+				state.BytesToReceive = 2;
+				state.TimeRemaining = Timeout;
 
 				state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
 				state.AsyncResult = stream.BeginRead(state.Buffer, 0, 2, EndTcpReadLength, state);
 			}
-			catch (ObjectDisposedException)
-			{
-				return;
-			}
 			catch (Exception e)
 			{
-				try
-				{
-					if (stream != null)
-					{
-						stream.Close();
-					}
-				}
-				catch {}
-
-				try
-				{
-					if (client != null)
-					{
-						client.Close();
-					}
-				}
-				catch {}
-
-				OnExceptionThrown(e);
+				HandleTcpException(e, stream, client);
 			}
+		}
+
+		private void HandleUdpException(Exception e)
+		{
+			lock (_udpListener)
+			{
+				_availableUdpListener++;
+			}
+			StartUdpListen();
+
+			OnExceptionThrown(e);
+		}
+
+		private void HandleTcpException(Exception e, NetworkStream stream, TcpClient client)
+		{
+			try
+			{
+				if (stream != null)
+				{
+					stream.Close();
+				}
+			}
+			catch {}
+
+			try
+			{
+				if (client != null)
+				{
+					client.Close();
+				}
+			}
+			catch {}
+
+			lock (_tcpListener)
+			{
+				_availableTcpListener++;
+			}
+			StartTcpAcceptConnection();
+
+			if (e != null)
+				OnExceptionThrown(e);
 		}
 
 		private void OnExceptionThrown(Exception e)
 		{
+			if (e is ObjectDisposedException)
+				return;
+
 			if (ExceptionThrown != null)
 			{
 				ExceptionThrown(this, new ExceptionEventArgs(e));

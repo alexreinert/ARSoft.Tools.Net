@@ -34,7 +34,7 @@ namespace ARSoft.Tools.Net.Dns
 		public byte[] Payload { get; private set; }
 
 		internal NsIdOption()
-			: base(EDnsOptionType.NsId) { }
+			: base(EDnsOptionType.NsId) {}
 
 		/// <summary>
 		///   Creates a new instance of the NsIdOption class

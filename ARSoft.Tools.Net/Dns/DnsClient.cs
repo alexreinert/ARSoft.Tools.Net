@@ -66,7 +66,7 @@ namespace ARSoft.Tools.Net.Dns
 		protected override bool AreMultipleResponsesAllowedInParallelMode
 		{
 			get { return false; }
-		} 
+		}
 
 		/// <summary>
 		///   Queries a dns server for address records.

@@ -367,7 +367,7 @@ namespace ARSoft.Tools.Net.Dns
 		#endregion
 
 		#region Parsing
-		protected virtual void FinishParsing() { }
+		protected virtual void FinishParsing() {}
 
 		#region Methods for parsing answer
 		private static void ParseSection(byte[] resultData, ref int currentPosition, List<DnsRecordBase> sectionList, int recordCount)
@@ -582,7 +582,7 @@ namespace ARSoft.Tools.Net.Dns
 		#endregion
 
 		#region Serializing
-		protected virtual void PrepareEncoding() { }
+		protected virtual void PrepareEncoding() {}
 
 		internal int Encode(bool addLengthPrefix, out byte[] messageData)
 		{

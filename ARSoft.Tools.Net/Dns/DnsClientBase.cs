@@ -171,8 +171,8 @@ namespace ARSoft.Tools.Net.Dns
 						DnsQuestion responseQuestion = message.Questions[j];
 
 						if ((queryQuestion.RecordClass != responseQuestion.RecordClass)
-								|| (queryQuestion.RecordType != responseQuestion.RecordType)
-								|| (queryQuestion.Name != responseQuestion.Name))
+						    || (queryQuestion.RecordType != responseQuestion.RecordType)
+						    || (queryQuestion.Name != responseQuestion.Name))
 						{
 							return false;
 						}
@@ -438,11 +438,11 @@ namespace ARSoft.Tools.Net.Dns
 									.Where(l => l.AddressFamily == s.AddressFamily)
 									.Select(
 										l => new DnsClientEndpointInfo
-												 {
-													 IsMulticast = true,
-													 ServerAddress = s,
-													 LocalAddress = l
-												 });
+										     {
+										     	IsMulticast = true,
+										     	ServerAddress = s,
+										     	LocalAddress = l
+										     });
 							}
 							else
 							{
@@ -463,11 +463,11 @@ namespace ARSoft.Tools.Net.Dns
 				endpointInfos = _servers
 					.Select(
 						s => new DnsClientEndpointInfo
-								 {
-									 IsMulticast = false,
-									 ServerAddress = s,
-									 LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
-								 }
+						     {
+						     	IsMulticast = false,
+						     	ServerAddress = s,
+						     	LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
+						     }
 					).ToList();
 			}
 			return endpointInfos;
@@ -523,7 +523,7 @@ namespace ARSoft.Tools.Net.Dns
 					state.UdpClient.Close();
 					state.Timer.Dispose();
 				}
-				catch { }
+				catch {}
 
 				state.EndpointInfoIndex++;
 				UdpBeginSend(state);
@@ -579,7 +579,7 @@ namespace ARSoft.Tools.Net.Dns
 						state.UdpClient.Close();
 						state.Timer.Dispose();
 					}
-					catch { }
+					catch {}
 
 					state.EndpointInfoIndex++;
 					UdpBeginSend(state);
@@ -667,7 +667,7 @@ namespace ARSoft.Tools.Net.Dns
 						state.UdpClient.Close();
 						state.Timer.Dispose();
 					}
-					catch { }
+					catch {}
 
 					state.EndpointInfoIndex++;
 					UdpBeginSend(state);
@@ -718,7 +718,7 @@ namespace ARSoft.Tools.Net.Dns
 					state.TcpClient.Close();
 					state.Timer.Dispose();
 				}
-				catch { }
+				catch {}
 
 				state.EndpointInfoIndex++;
 				TcpBeginConnect(state);
@@ -778,7 +778,7 @@ namespace ARSoft.Tools.Net.Dns
 						state.TcpClient.Close();
 						state.Timer.Dispose();
 					}
-					catch { }
+					catch {}
 
 					state.EndpointInfoIndex++;
 					TcpBeginConnect(state);
@@ -817,7 +817,7 @@ namespace ARSoft.Tools.Net.Dns
 						state.TcpClient.Close();
 						state.Timer.Dispose();
 					}
-					catch { }
+					catch {}
 
 					state.EndpointInfoIndex++;
 					TcpBeginConnect(state);
@@ -858,7 +858,7 @@ namespace ARSoft.Tools.Net.Dns
 						state.TcpClient.Close();
 						state.Timer.Dispose();
 					}
-					catch { }
+					catch {}
 
 					state.EndpointInfoIndex++;
 					TcpBeginConnect(state);
@@ -911,7 +911,7 @@ namespace ARSoft.Tools.Net.Dns
 						state.TcpClient.Close();
 						state.Timer.Dispose();
 					}
-					catch { }
+					catch {}
 
 					state.EndpointInfoIndex++;
 					TcpBeginConnect(state);
@@ -977,7 +977,7 @@ namespace ARSoft.Tools.Net.Dns
 						state.TcpClient.Close();
 						state.Timer.Dispose();
 					}
-					catch { }
+					catch {}
 
 					state.EndpointInfoIndex++;
 					TcpBeginConnect(state);
