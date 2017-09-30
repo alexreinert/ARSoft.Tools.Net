@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2015 Alexander Reinert
+// Copyright 2010..2016 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -369,7 +369,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			lock (_listenerLock)
 			{
-				if (!_tcpListener.Server.IsBound) // server is stopped
+				if ((_tcpListener.Server == null) || !_tcpListener.Server.IsBound) // server is stopped
 					return;
 
 				if ((_availableTcpListener > 0) && !_hasActiveTcpListener)
@@ -391,7 +391,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					client = await _tcpListener.AcceptTcpClientAsync();
 
-					ClientConnectedEventArgs clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Udp, (IPEndPoint) client.Client.RemoteEndPoint);
+					ClientConnectedEventArgs clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint);
 					await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
 
 					if (clientConnectedEventArgs.RefuseConnect)

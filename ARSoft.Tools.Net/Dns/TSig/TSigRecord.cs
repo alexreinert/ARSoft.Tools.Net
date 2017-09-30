@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2015 Alexander Reinert
+// Copyright 2010..2016 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -140,7 +140,6 @@ namespace ARSoft.Tools.Net.Dns
 		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, byte[] mac)
 		{
 			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, false);
-			DnsMessageBase.EncodeInt(messageData, ref currentPosition, TimeToLive);
 			int recordDataOffset = currentPosition + 2;
 			EncodeRecordData(messageData, offset, ref recordDataOffset, mac);
 			EncodeRecordLength(messageData, offset, ref currentPosition, domainNames, recordDataOffset);
