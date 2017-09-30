@@ -1,11 +1,27 @@
-﻿using System;
+﻿#region Copyright and License
+// Copyright 2010 Alexander Reinert
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//   http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using ARSoft.Tools.Net.Dns;
-using System.Net;
-using System.Net.Sockets;
 
 namespace ARSoft.Tools.Net.Spf
 {
@@ -47,14 +63,7 @@ namespace ARSoft.Tools.Net.Spf
 				}
 
 				SpfMechanismType type;
-				if (EnumHelper<SpfMechanismType>.TryParse(match.Groups["type"].Value, true, out type))
-				{
-					mechanism.Type = type;
-				}
-				else
-				{
-					mechanism.Type = SpfMechanismType.Unknown;
-				}
+				mechanism.Type = EnumHelper<SpfMechanismType>.TryParse(match.Groups["type"].Value, true, out type) ? type : SpfMechanismType.Unknown;
 
 				mechanism.Domain = match.Groups["domain"].Value;
 
@@ -75,6 +84,7 @@ namespace ARSoft.Tools.Net.Spf
 				return true;
 			}
 			#endregion
+
 			#region Parse Modifier
 			regex = new Regex(@"^(\s)*(?<type>[a-z]+)=(?<domain>[^\s]+)(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 			match = regex.Match(s);
@@ -83,14 +93,7 @@ namespace ARSoft.Tools.Net.Spf
 				SpfModifier modifier = new SpfModifier();
 
 				SpfModifierType type;
-				if (EnumHelper<SpfModifierType>.TryParse(match.Groups["type"].Value, true, out type))
-				{
-					modifier.Type = type;
-				}
-				else
-				{
-					modifier.Type = SpfModifierType.Unknown;
-				}
+				modifier.Type = EnumHelper<SpfModifierType>.TryParse(match.Groups["type"].Value, true, out type) ? type : SpfModifierType.Unknown;
 				modifier.Domain = match.Groups["domain"].Value;
 
 				value = modifier;
@@ -185,21 +188,12 @@ namespace ARSoft.Tools.Net.Spf
 						string ptrCompareName = String.IsNullOrEmpty(spfMechanism.Domain) ? parameters.CurrentDomain : spfMechanism.Domain;
 
 						int ptrCheckedCount = 0;
-						foreach (DnsRecordBase dnsRecord in dnsMessage.AnswerRecords)
+						if ((from ptrRecord in dnsMessage.AnswerRecords.OfType<PtrRecord>().TakeWhile(ptrRecord => ++ptrCheckedCount != 10)
+						     let isPtrMatch = IsIpMatch(ptrRecord.PointerDomainName, parameters.ClientAddress, 0, 0)
+						     where isPtrMatch.HasValue && isPtrMatch.Value
+						     select ptrRecord).Any(ptrRecord => ptrRecord.PointerDomainName.Equals(ptrCompareName, StringComparison.InvariantCultureIgnoreCase) || (ptrRecord.PointerDomainName.EndsWith("." + ptrCompareName, StringComparison.InvariantCultureIgnoreCase))))
 						{
-							PtrRecord ptrRecord = dnsRecord as PtrRecord;
-							if (ptrRecord != null)
-							{
-								if (++ptrCheckedCount == 10)
-									break;
-
-								bool? isPtrMatch = IsIpMatch(ptrRecord.PointerDomainName, parameters.ClientAddress, 0, 0);
-								if (isPtrMatch.HasValue && isPtrMatch.Value)
-								{
-									if (ptrRecord.PointerDomainName.Equals(ptrCompareName, StringComparison.InvariantCultureIgnoreCase) || (ptrRecord.PointerDomainName.EndsWith("." + ptrCompareName, StringComparison.InvariantCultureIgnoreCase)))
-										return spfMechanism.Qualifier;
-								}
-							}
+							return spfMechanism.Qualifier;
 						}
 						break;
 
@@ -273,7 +267,7 @@ namespace ARSoft.Tools.Net.Spf
 		{
 			Regex regex = new Regex(@"(%%|%_|%-|%\{(?<letter>[slodiphcrtv])(?<count>\d*)(?<reverse>r?)(?<delimiter>[\.\-+,/=]*)})", RegexOptions.Compiled);
 
-			return regex.Replace(pattern, delegate(Match match) { return ExpandMacro(match, parameters); });
+			return regex.Replace(pattern, match => ExpandMacro(match, parameters));
 		}
 
 		private static string ExpandMacro(Match pattern, SpfCheckHostParameter parameters)
@@ -324,7 +318,7 @@ namespace ARSoft.Tools.Net.Spf
 							letter = System.Net.Dns.GetHostName();
 							break;
 						case "t":
-							letter = ((int)(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) - DateTime.Now).TotalSeconds).ToString();
+							letter = ((int) (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) - DateTime.Now).TotalSeconds).ToString();
 							break;
 						default:
 							return null;
@@ -335,7 +329,7 @@ namespace ARSoft.Tools.Net.Spf
 						return letter;
 
 					char[] delimiters = pattern.Groups["delimiter"].Value.ToCharArray();
-					if ((delimiters == null) || (delimiters.Length == 0))
+					if (delimiters.Length == 0)
 						delimiters = new char[] { '.' };
 
 					string[] parts = letter.Split(delimiters);
@@ -360,14 +354,7 @@ namespace ARSoft.Tools.Net.Spf
 
 		private static bool? IsIpMatch(string domain, IPAddress ipAddress, int? prefix4, int? prefix6)
 		{
-			if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
-			{
-				return IsIp6Match(domain, ipAddress, prefix6);
-			}
-			else
-			{
-				return IsIp4Match(domain, ipAddress, prefix4);
-			}
+			return (ipAddress.AddressFamily == AddressFamily.InterNetworkV6) ? IsIp6Match(domain, ipAddress, prefix6) : IsIp4Match(domain, ipAddress, prefix4);
 		}
 
 		private static bool? IsIp4Match(string domain, IPAddress ipAddress, int? prefix4)

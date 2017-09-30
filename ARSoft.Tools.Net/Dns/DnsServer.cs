@@ -1,11 +1,27 @@
-﻿using System;
+﻿#region Copyright and License
+// Copyright 2010 Alexander Reinert
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//   http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#endregion
+
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net.Sockets;
-using System.Threading;
-using System.Net;
 using System.Diagnostics;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -19,21 +35,33 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="query">The query, for that a response should be returned</param>
 		/// <param name="clientAddress">The ip address from which the queries comes</param>
+		/// <param name="protocolType">The protocol which was used for the query</param>
 		/// <returns>A DnsMessage with the response to the query</returns>
-		public delegate DnsMessage ProcessQuery(DnsMessage query, IPAddress clientAddress, ProtocolType protocolType);
+		public delegate DnsMessageBase ProcessQuery(DnsMessageBase query, IPAddress clientAddress, ProtocolType protocolType);
+
+		/// <summary>
+		/// Represents the method, that will be called to get the keydata for processing a tsig signed message
+		/// </summary>
+		/// <param name="algorithm">The algorithm which is used in the message</param>
+		/// <param name="keyName">The keyname which is used in the message</param>
+		/// <returns>Binary representation of the key</returns>
+		public delegate byte[] SelectTsigKey(TSigAlgorithm algorithm, string keyName);
 
 		private const int _DNS_PORT = 53;
 
-		private IPAddress _bindAddress;
 		private TcpListener _tcpListener;
 		private UdpClient _udpClient;
+		private readonly IPAddress _bindAddress;
 
-		private int _udpListenerCount;
-		private int _tcpListenerCount;
+		private readonly int _udpListenerCount;
+		private readonly int _tcpListenerCount;
 
-		private bool _isShutdownRequested;
+		private readonly ProcessQuery _processQueryDelegate;
 
-		private ProcessQuery _processQueryDelegate;
+		/// <summary>
+		/// Method that will be called to get the keydata for processing a tsig signed message
+		/// </summary>
+		public SelectTsigKey TsigKeySelector;
 
 		/// <summary>
 		/// Gets or sets the timeout for sending and receiving data
@@ -47,9 +75,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="tcpListenerCount">The count of threads listings on tcp, 0 to deactivate tcp</param>
 		/// <param name="processQuery">Method, which process the queries and returns the response</param>
 		public DnsServer(int udpListenerCount, int tcpListenerCount, ProcessQuery processQuery)
-			: this(IPAddress.Any, udpListenerCount, tcpListenerCount, processQuery)
-		{
-		}
+			: this(IPAddress.Any, udpListenerCount, tcpListenerCount, processQuery) {}
 
 		/// <summary>
 		/// Creates a new dns server instance
@@ -72,8 +98,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public void Start()
 		{
-			_isShutdownRequested = false;
-
 			if (_udpListenerCount > 0)
 			{
 				_udpClient = new UdpClient(new IPEndPoint(_bindAddress, _DNS_PORT));
@@ -99,15 +123,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public void Stop()
 		{
-			_isShutdownRequested = true;
-
 			if (_udpListenerCount > 0)
 			{
 				_udpClient.Close();
 			}
 			if (_tcpListenerCount > 0)
 			{
-				_udpClient.Close();
+				_tcpListener.Stop();
 			}
 		}
 
@@ -131,17 +153,17 @@ namespace ARSoft.Tools.Net.Dns
 
 				byte[] buffer = _udpClient.EndReceive(ar, ref endpoint);
 
-				DnsMessage query = new DnsMessage();
+				DnsMessageBase query;
 				try
 				{
-					query.Parse(buffer);
+					query = DnsMessageBase.Create(buffer, true, TsigKeySelector, null);
 				}
 				catch (Exception e)
 				{
 					throw new Exception("Error parsing dns query", e);
 				}
 
-				DnsMessage response = _processQueryDelegate(query, endpoint.Address, ProtocolType.Udp);
+				DnsMessageBase response = ProcessMessage(query, endpoint.Address, ProtocolType.Udp);
 
 				if (response == null)
 				{
@@ -150,88 +172,93 @@ namespace ARSoft.Tools.Net.Dns
 					query.ReturnCode = ReturnCode.ServerFailure;
 				}
 
-				int length = response.Encode(out buffer);
+				int length = response.Encode(out buffer, false);
 
 				#region Truncating
-				int maxLength = 512;
-				if (query.IsEDnsEnabled && response.IsEDnsEnabled)
+				DnsMessage message = response as DnsMessage;
+
+				if (message != null)
 				{
-					maxLength = Math.Max(512, (int)response.EDnsOptions.UpdPayloadSize);
-				}
-
-				while (length > maxLength)
-				{
-					// First step: remove data from additional records except the opt record
-					if ((response.IsEDnsEnabled && (response.AdditionalRecords.Count > 1)) || (!response.IsEDnsEnabled && (response.AdditionalRecords.Count > 0)))
+					int maxLength = 512;
+					if (query.IsEDnsEnabled && message.IsEDnsEnabled)
 					{
-						for (int i = response.AdditionalRecords.Count - 1; i >= 0; i--)
-						{
-							if (response.AdditionalRecords[i].RecordType != RecordType.Opt)
-							{
-								response.AdditionalRecords.RemoveAt(i);
-							}
-						}
-
-						length = response.Encode(out buffer);
-						continue;
+						maxLength = Math.Max(512, (int) message.EDnsOptions.UpdPayloadSize);
 					}
 
-					int savedLength = 0;
-					if (response.AuthorityRecords.Count > 0)
+					while (length > maxLength)
 					{
-						for (int i = response.AuthorityRecords.Count - 1; i >= 0; i--)
+						// First step: remove data from additional records except the opt record
+						if ((message.IsEDnsEnabled && (message.AdditionalRecords.Count > 1)) || (!message.IsEDnsEnabled && (message.AdditionalRecords.Count > 0)))
 						{
-							savedLength += response.AuthorityRecords[i].MaximumLength;
-							response.AuthorityRecords.RemoveAt(i);
-
-							if ((length - savedLength) < maxLength)
+							for (int i = message.AdditionalRecords.Count - 1; i >= 0; i--)
 							{
-								break;
+								if (message.AdditionalRecords[i].RecordType != RecordType.Opt)
+								{
+									message.AdditionalRecords.RemoveAt(i);
+								}
 							}
+
+							length = message.Encode(out buffer, false);
+							continue;
 						}
 
-						response.IsTruncated = true;
-
-						length = response.Encode(out buffer);
-						continue;
-					}
-
-					if (response.AnswerRecords.Count > 0)
-					{
-						for (int i = response.AnswerRecords.Count - 1; i >= 0; i--)
+						int savedLength = 0;
+						if (message.AuthorityRecords.Count > 0)
 						{
-							savedLength += response.AnswerRecords[i].MaximumLength;
-							response.AnswerRecords.RemoveAt(i);
-
-							if ((length - savedLength) < maxLength)
+							for (int i = message.AuthorityRecords.Count - 1; i >= 0; i--)
 							{
-								break;
+								savedLength += message.AuthorityRecords[i].MaximumLength;
+								message.AuthorityRecords.RemoveAt(i);
+
+								if ((length - savedLength) < maxLength)
+								{
+									break;
+								}
 							}
+
+							message.IsTruncated = true;
+
+							length = message.Encode(out buffer, false);
+							continue;
 						}
 
-						response.IsTruncated = true;
-
-						length = response.Encode(out buffer);
-						continue;
-					}
-
-					if (response.Questions.Count > 0)
-					{
-						for (int i = response.Questions.Count - 1; i >= 0; i--)
+						if (message.AnswerRecords.Count > 0)
 						{
-							savedLength += response.Questions[i].MaximumLength;
-							response.Questions.RemoveAt(i);
-
-							if ((length - savedLength) < maxLength)
+							for (int i = message.AnswerRecords.Count - 1; i >= 0; i--)
 							{
-								break;
+								savedLength += message.AnswerRecords[i].MaximumLength;
+								message.AnswerRecords.RemoveAt(i);
+
+								if ((length - savedLength) < maxLength)
+								{
+									break;
+								}
 							}
+
+							message.IsTruncated = true;
+
+							length = message.Encode(out buffer, false);
+							continue;
 						}
 
-						response.IsTruncated = true;
+						if (message.Questions.Count > 0)
+						{
+							for (int i = message.Questions.Count - 1; i >= 0; i--)
+							{
+								savedLength += message.Questions[i].MaximumLength;
+								message.Questions.RemoveAt(i);
 
-						length = response.Encode(out buffer);
-						continue;
+								if ((length - savedLength) < maxLength)
+								{
+									break;
+								}
+							}
+
+							message.IsTruncated = true;
+
+							length = message.Encode(out buffer, false);
+							continue;
+						}
 					}
 				}
 				#endregion
@@ -244,6 +271,42 @@ namespace ARSoft.Tools.Net.Dns
 			}
 
 			StartUdpListen();
+		}
+
+		private DnsMessageBase ProcessMessage(DnsMessageBase query, IPAddress ipAddress, ProtocolType protocolType)
+		{
+			if (query.TSigOptions != null)
+			{
+				switch (query.TSigOptions.ValidationResult)
+				{
+					case ReturnCode.BadKey:
+					case ReturnCode.BadSig:
+						query.IsQuery = false;
+						query.ReturnCode = ReturnCode.NotAuthoritive;
+						query.TSigOptions.Error = query.TSigOptions.ValidationResult;
+						query.TSigOptions.KeyData = null;
+
+						if (InvalidSignedMessageReceived != null)
+							InvalidSignedMessageReceived(this, new InvalidSignedMessageEventArgs(query));
+
+						return query;
+
+					case ReturnCode.BadTime:
+						query.IsQuery = false;
+						query.ReturnCode = ReturnCode.NotAuthoritive;
+						query.TSigOptions.Error = query.TSigOptions.ValidationResult;
+						query.TSigOptions.OtherData = new byte[6];
+						int tmp = 0;
+						TSigRecord.EncodeDateTime(query.TSigOptions.OtherData, ref tmp, DateTime.Now);
+
+						if (InvalidSignedMessageReceived != null)
+							InvalidSignedMessageReceived(this, new InvalidSignedMessageEventArgs(query));
+
+						return query;
+				}
+			}
+
+			return _processQueryDelegate(query, ipAddress, protocolType);
 		}
 
 		private void EndUdpSend(IAsyncResult ar)
@@ -286,7 +349,7 @@ namespace ARSoft.Tools.Net.Dns
 						stream.Close();
 					}
 				}
-				catch { }
+				catch {}
 
 				try
 				{
@@ -295,7 +358,7 @@ namespace ARSoft.Tools.Net.Dns
 						client.Close();
 					}
 				}
-				catch { }
+				catch {}
 
 				OnExceptionThrown(e);
 			}
@@ -303,15 +366,15 @@ namespace ARSoft.Tools.Net.Dns
 			StartTcpAcceptConnection();
 		}
 
-		private void TcpTimedOut(object ar)
+		private static void TcpTimedOut(object ar)
 		{
-			IAsyncResult asyncResult = (IAsyncResult)ar;
+			IAsyncResult asyncResult = (IAsyncResult) ar;
 
 			if (!asyncResult.IsCompleted)
 			{
-				object[] state = (object[])asyncResult.AsyncState;
-				TcpClient client = (TcpClient)state[0];
-				NetworkStream stream = (NetworkStream)state[1];
+				object[] state = (object[]) asyncResult.AsyncState;
+				TcpClient client = (TcpClient) state[0];
+				NetworkStream stream = (NetworkStream) state[1];
 
 				try
 				{
@@ -320,7 +383,7 @@ namespace ARSoft.Tools.Net.Dns
 						stream.Close();
 					}
 				}
-				catch { }
+				catch {}
 
 				try
 				{
@@ -329,7 +392,7 @@ namespace ARSoft.Tools.Net.Dns
 						client.Close();
 					}
 				}
-				catch { }
+				catch {}
 			}
 		}
 
@@ -340,18 +403,18 @@ namespace ARSoft.Tools.Net.Dns
 
 			try
 			{
-				object[] state = (object[])ar.AsyncState;
-				client = (TcpClient)state[0];
-				stream = (NetworkStream)state[1];
-				byte[] buffer = (byte[])state[2];
+				object[] state = (object[]) ar.AsyncState;
+				client = (TcpClient) state[0];
+				stream = (NetworkStream) state[1];
+				byte[] buffer = (byte[]) state[2];
 
-				Timer timer = (Timer)state[3];
+				Timer timer = (Timer) state[3];
 				timer.Dispose();
 
 				stream.EndRead(ar);
 
 				int tmp = 0;
-				int length = (int)DnsMessage.ParseUShort(buffer, ref tmp);
+				int length = DnsMessageBase.ParseUShort(buffer, ref tmp);
 
 				if (length > 0)
 				{
@@ -370,7 +433,7 @@ namespace ARSoft.Tools.Net.Dns
 						stream.Close();
 					}
 				}
-				catch { }
+				catch {}
 
 				try
 				{
@@ -379,7 +442,7 @@ namespace ARSoft.Tools.Net.Dns
 						client.Close();
 					}
 				}
-				catch { }
+				catch {}
 
 				OnExceptionThrown(e);
 			}
@@ -392,28 +455,28 @@ namespace ARSoft.Tools.Net.Dns
 
 			try
 			{
-				object[] state = (object[])ar.AsyncState;
-				client = (TcpClient)state[0];
-				stream = (NetworkStream)state[1];
-				byte[] buffer = (byte[])state[2];
+				object[] state = (object[]) ar.AsyncState;
+				client = (TcpClient) state[0];
+				stream = (NetworkStream) state[1];
+				byte[] buffer = (byte[]) state[2];
 
-				Timer timer = (Timer)state[3];
+				Timer timer = (Timer) state[3];
 				timer.Dispose();
 
 				stream.EndRead(ar);
 
-				DnsMessage query = new DnsMessage();
+				DnsMessageBase query;
 
 				try
 				{
-					query.Parse(buffer);
+					query = DnsMessageBase.Create(buffer, true, TsigKeySelector, null);
 				}
 				catch (Exception e)
 				{
 					throw new Exception("Error parsing dns query", e);
 				}
 
-				DnsMessage response = _processQueryDelegate(query, ((IPEndPoint)client.Client.RemoteEndPoint).Address, ProtocolType.Tcp);
+				DnsMessageBase response = ProcessMessage(query, ((IPEndPoint) client.Client.RemoteEndPoint).Address, ProtocolType.Tcp);
 
 				if (response == null)
 				{
@@ -436,7 +499,7 @@ namespace ARSoft.Tools.Net.Dns
 						stream.Close();
 					}
 				}
-				catch { }
+				catch {}
 
 				try
 				{
@@ -445,7 +508,7 @@ namespace ARSoft.Tools.Net.Dns
 						client.Close();
 					}
 				}
-				catch { }
+				catch {}
 
 				OnExceptionThrown(e);
 			}
@@ -458,11 +521,11 @@ namespace ARSoft.Tools.Net.Dns
 
 			try
 			{
-				object[] state = (object[])ar.AsyncState;
-				client = (TcpClient)state[0];
-				stream = (NetworkStream)state[1];
+				object[] state = (object[]) ar.AsyncState;
+				client = (TcpClient) state[0];
+				stream = (NetworkStream) state[1];
 
-				Timer timer = (Timer)state[2];
+				Timer timer = (Timer) state[2];
 				timer.Dispose();
 
 				stream.EndWrite(ar);
@@ -481,7 +544,7 @@ namespace ARSoft.Tools.Net.Dns
 						stream.Close();
 					}
 				}
-				catch { }
+				catch {}
 
 				try
 				{
@@ -490,7 +553,7 @@ namespace ARSoft.Tools.Net.Dns
 						client.Close();
 					}
 				}
-				catch { }
+				catch {}
 
 				OnExceptionThrown(e);
 			}
@@ -509,9 +572,14 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// This event in fired on exceptions of the listeners. You can use it for custom logging.
+		/// This event is fired on exceptions of the listeners. You can use it for custom logging.
 		/// </summary>
 		public event EventHandler<ExceptionEventArgs> ExceptionThrown;
+
+		/// <summary>
+		/// This event is fired whenever a message is received, that is not correct signed
+		/// </summary>
+		public event EventHandler<InvalidSignedMessageEventArgs> InvalidSignedMessageReceived;
 
 		void IDisposable.Dispose()
 		{

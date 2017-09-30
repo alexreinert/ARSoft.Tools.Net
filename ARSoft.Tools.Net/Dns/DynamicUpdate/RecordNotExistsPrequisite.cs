@@ -19,22 +19,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ARSoft.Tools.Net.Spf
+namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
-	public class SpfModifier : SpfTerm
+	public class RecordNotExistsPrequisite : PrequisiteBase
 	{
-		public SpfModifierType Type { get; set; }
-		public string Domain { get; set; }
+		internal RecordNotExistsPrequisite() {}
 
-		public override string ToString()
+		public RecordNotExistsPrequisite(string name, RecordType recordType)
+			: base(name, recordType, RecordClass.None, 0) {}
+
+		internal override void ParseAnswer(byte[] resultData, int startPosition, int length) {}
+
+		protected internal override int MaximumRecordDataLength
 		{
-			StringBuilder res = new StringBuilder();
-
-			res.Append(EnumHelper<SpfModifierType>.ToString(Type).ToLower());
-			res.Append("=");
-			res.Append(Domain);
-
-			return res.ToString();
+			get { return 0; }
 		}
+
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames) {}
 	}
 }

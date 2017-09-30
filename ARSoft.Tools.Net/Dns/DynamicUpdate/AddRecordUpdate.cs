@@ -19,29 +19,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
-	public class DnsQuestion : DnsMessageEntryBase
+	public class AddRecordUpdate : UpdateBase
 	{
-		public DnsQuestion(string name, RecordType recordType, RecordClass recordClass)
+		public DnsRecordBase Record { get; private set; }
+
+		internal AddRecordUpdate() {}
+
+		public AddRecordUpdate(DnsRecordBase record)
+			: base(record.Name, record.RecordType, record.RecordClass, record.TimeToLive)
 		{
-			Name = name ?? String.Empty;
-			RecordType = recordType;
-			RecordClass = recordClass;
+			Record = record;
 		}
 
-		internal DnsQuestion() {}
+		internal override void ParseAnswer(byte[] resultData, int startPosition, int length) {}
 
-		internal override int MaximumLength
+		protected internal override int MaximumRecordDataLength
 		{
-			get { return Name.Length + 6; }
+			get { return Record.MaximumRecordDataLength; }
 		}
 
-		internal override void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, true, domainNames);
-			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
-			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordClass);
+			Record.EncodeRecordData(messageData, offset, ref currentPosition, domainNames);
 		}
 	}
 }

@@ -1,4 +1,20 @@
-﻿using System;
+﻿#region Copyright and License
+// Copyright 2010 Alexander Reinert
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//   http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,8 +28,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public ushort UpdPayloadSize
 		{
-			get { return (ushort)RecordClass; }
-			set { RecordClass = (RecordClass)value; }
+			get { return (ushort) RecordClass; }
+			set { RecordClass = (RecordClass) value; }
 		}
 
 		/// <summary>
@@ -21,14 +37,11 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public ReturnCode ExtendedReturnCode
 		{
-			get
-			{
-				return (ReturnCode)((TimeToLive & 0xff000000) >> 20);
-			}
+			get { return (ReturnCode) ((TimeToLive & 0xff000000) >> 20); }
 			set
 			{
 				int clearedTtl = (TimeToLive & 0x00ffffff);
-				TimeToLive = (clearedTtl | ((int)value << 20));
+				TimeToLive = (clearedTtl | ((int) value << 20));
 			}
 		}
 
@@ -37,14 +50,11 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte Version
 		{
-			get
-			{
-				return (byte)((TimeToLive & 0x00ff0000) >> 16);
-			}
+			get { return (byte) ((TimeToLive & 0x00ff0000) >> 16); }
 			set
 			{
-				int clearedTtl = (int)((uint)TimeToLive & 0xff00ffff);
-				TimeToLive = (int)(clearedTtl | (value << 16));
+				int clearedTtl = (int) ((uint) TimeToLive & 0xff00ffff);
+				TimeToLive = clearedTtl | (value << 16);
 			}
 		}
 
@@ -53,10 +63,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsDnsSecOk
 		{
-			get
-			{
-				return (TimeToLive & 0x8000) != 0;
-			}
+			get { return (TimeToLive & 0x8000) != 0; }
 			set
 			{
 				if (value)
@@ -65,7 +72,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else
 				{
-					TimeToLive ^= 0x8000;
+					TimeToLive &= 0x8000;
 				}
 			}
 		}
@@ -76,9 +83,7 @@ namespace ARSoft.Tools.Net.Dns
 		public List<EDnsOptionBase> Options { get; set; }
 
 		public OptRecord()
-			: base(".", RecordType.Opt, unchecked((RecordClass)512), 0)
-		{
-		}
+			: base(".", RecordType.Opt, unchecked((RecordClass) 512), 0) {}
 
 		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
 		{
@@ -87,8 +92,8 @@ namespace ARSoft.Tools.Net.Dns
 			Options = new List<EDnsOptionBase>();
 			while (startPosition < endPosition)
 			{
-				EDnsOptionType type = (EDnsOptionType)DnsMessage.ParseUShort(resultData, ref startPosition);
-				ushort dataLength = DnsMessage.ParseUShort(resultData, ref startPosition);
+				EDnsOptionType type = (EDnsOptionType) DnsMessageBase.ParseUShort(resultData, ref startPosition);
+				ushort dataLength = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 
 				EDnsOptionBase option;
 
@@ -115,7 +120,7 @@ namespace ARSoft.Tools.Net.Dns
 			return String.Format("; EDNS version: {0}; flags: {1}; udp: {2}", Version, flags, UpdPayloadSize);
 		}
 
-		protected override int MaximumRecordDataLength
+		protected internal override int MaximumRecordDataLength
 		{
 			get
 			{
@@ -125,24 +130,19 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else
 				{
-					int res = 0;
-					foreach (EDnsOptionBase option in Options)
-					{
-						res += option.DataLength + 4;
-					}
-					return res;
+					return Options.Sum(option => option.DataLength + 4);
 				}
 			}
 		}
 
-		protected override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
 			if ((Options != null) && (Options.Count != 0))
 			{
 				foreach (EDnsOptionBase option in Options)
 				{
-					DnsMessage.EncodeUShort(messageData, ref currentPosition, (ushort)option.Type);
-					DnsMessage.EncodeUShort(messageData, ref currentPosition, option.DataLength);
+					DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) option.Type);
+					DnsMessageBase.EncodeUShort(messageData, ref currentPosition, option.DataLength);
 					option.EncodeData(messageData, ref currentPosition);
 				}
 			}

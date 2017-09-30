@@ -17,44 +17,36 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
-	public class AaaaRecord : DnsRecordBase
+	public class DeleteRecordUpdate : UpdateBase
 	{
-		public IPAddress Address { get; private set; }
+		public DnsRecordBase Record { get; private set; }
 
-		internal AaaaRecord() {}
+		internal DeleteRecordUpdate() {}
 
-		public AaaaRecord(string name, int timeToLive, IPAddress address)
-			: base(name, RecordType.Aaaa, RecordClass.INet, timeToLive)
+		public DeleteRecordUpdate(string name, RecordType recordType)
+			: base(name, recordType, RecordClass.Any, 0) {}
+
+		public DeleteRecordUpdate(DnsRecordBase record)
+			: base(record.Name, record.RecordType, RecordClass.None, 0)
 		{
-			Address = address;
+			Record = record;
 		}
 
-		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
-		{
-			byte[] data = new byte[16];
-			Buffer.BlockCopy(resultData, startPosition, data, 0, 16);
-			Address = new IPAddress(data);
-		}
-
-		public override string ToString()
-		{
-			return base.ToString() + " " + Address;
-		}
+		internal override void ParseAnswer(byte[] resultData, int startPosition, int length) {}
 
 		protected internal override int MaximumRecordDataLength
 		{
-			get { return 16; }
+			get { return (Record == null) ? 0 : Record.MaximumRecordDataLength; }
 		}
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
-			Buffer.BlockCopy(Address.GetAddressBytes(), 0, messageData, currentPosition, 16);
-			currentPosition += 16;
+			if (Record != null)
+				Record.EncodeRecordData(messageData, offset, ref currentPosition, domainNames);
 		}
 	}
 }

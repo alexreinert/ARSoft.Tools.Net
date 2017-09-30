@@ -1,4 +1,20 @@
-﻿using System;
+﻿#region Copyright and License
+// Copyright 2010 Alexander Reinert
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//   http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,11 +23,14 @@ namespace ARSoft.Tools.Net.Dns
 {
 	public abstract class DnsRecordBase : DnsMessageEntryBase
 	{
+		internal int StartPosition { get; set; }
+		internal ushort RecordDataLength { get; set; }
+
 		public int TimeToLive { get; internal set; }
 
-		internal DnsRecordBase() { }
+		internal DnsRecordBase() {}
 
-		public DnsRecordBase(string name, RecordType recordType, RecordClass recordClass, int timeToLive)
+		protected DnsRecordBase(string name, RecordType recordType, RecordClass recordClass, int timeToLive)
 		{
 			Name = name ?? String.Empty;
 			RecordType = recordType;
@@ -60,6 +79,9 @@ namespace ARSoft.Tools.Net.Dns
 				case RecordType.Opt:
 					return new OptRecord();
 
+				case RecordType.TSig:
+					return new TSigRecord();
+
 				default:
 					return new UnknownRecord();
 			}
@@ -68,29 +90,26 @@ namespace ARSoft.Tools.Net.Dns
 		#region Sending data
 		internal override sealed int MaximumLength
 		{
-			get
-			{
-				return Name.Length + 12 + MaximumRecordDataLength;
-			}
+			get { return Name.Length + 12 + MaximumRecordDataLength; }
 		}
 
-		internal override sealed void Encode(byte[] messageData, int offset, ref  int currentPosition, Dictionary<string, ushort> domainNames)
+		internal override sealed void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
-			DnsMessage.EncodeDomainName(messageData, offset, ref currentPosition, Name, true, domainNames);
-			DnsMessage.EncodeUShort(messageData, ref currentPosition, (ushort)RecordType);
-			DnsMessage.EncodeUShort(messageData, ref currentPosition, (ushort)RecordClass);
-			DnsMessage.EncodeInt(messageData, ref currentPosition, TimeToLive);
+			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, true, domainNames);
+			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
+			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordClass);
+			DnsMessageBase.EncodeInt(messageData, ref currentPosition, TimeToLive);
 
 			int recordPosition = currentPosition + 2;
 			EncodeRecordData(messageData, offset, ref recordPosition, domainNames);
 
-			DnsMessage.EncodeUShort(messageData, ref currentPosition, (ushort)(recordPosition - currentPosition - 2));
+			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) (recordPosition - currentPosition - 2));
 			currentPosition = recordPosition;
 		}
 
-		protected abstract int MaximumRecordDataLength { get; }
+		protected internal abstract int MaximumRecordDataLength { get; }
 
-		protected abstract void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames);
+		protected internal abstract void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames);
 		#endregion
 	}
 }

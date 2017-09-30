@@ -1,13 +1,30 @@
-﻿using System;
+﻿#region Copyright and License
+// Copyright 2010 Alexander Reinert
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//   http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#endregion
+
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net;
-using System.Net.Sockets;
 using System.Diagnostics;
-using System.Net.NetworkInformation;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Text;
 using System.Threading;
+using ARSoft.Tools.Net.Dns.DynamicUpdate;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -17,7 +34,7 @@ namespace ARSoft.Tools.Net.Dns
 	public class DnsClient
 	{
 		private const int _DNS_PORT = 53;
-		private List<IPAddress> _dnsServers;
+		private readonly List<IPAddress> _dnsServers;
 		public int QueryTimeout { get; set; }
 
 		/// <summary>
@@ -147,7 +164,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns>The complete response of the dns server</returns>
 		public DnsMessage EndResolve(IAsyncResult ar)
 		{
-			DnsAsyncState state = (DnsAsyncState)ar;
+			DnsAsyncState state = (DnsAsyncState) ar;
 			return state.Response;
 		}
 
@@ -164,33 +181,91 @@ namespace ARSoft.Tools.Net.Dns
 			if ((message.Questions == null) || (message.Questions.Count == 0))
 				throw new ArgumentException("At least one question must be provided", "message");
 
-			byte[] messageData;
-			int messageLength = message.Encode(out messageData);
+			return SendMessage<DnsMessage>(message);
+		}
 
-			foreach (IPAddress nameServer in _dnsServers)
+		/// <summary>
+		/// Send an dynamic update to the dns server and returns the answer.
+		/// </summary>
+		/// <param name="message">Update, that should be send to the dns server</param>
+		/// <returns>The complete response of the dns server</returns>
+		public DnsUpdateMessage SendUpdate(DnsUpdateMessage message)
+		{
+			if (message == null)
+				throw new ArgumentNullException("message");
+
+			if (String.IsNullOrEmpty(message.ZoneName))
+				throw new ArgumentException("Zone name must be provided", "message");
+
+			return SendMessage<DnsUpdateMessage>(message);
+		}
+
+		private TMessage SendMessage<TMessage>(TMessage message)
+			where TMessage: DnsMessageBase, new()
+		{
+			if (message.TransactionID == 0)
 			{
-				bool sendByTcp = ((messageLength > 512) || (message.Questions[0].RecordType == RecordType.Axfr) || (message.Questions[0].RecordType == RecordType.Ixfr));
-				byte[] resultData = resultData = sendByTcp ? QueryByTcp(nameServer, messageData, messageLength) : QueryByUdp(nameServer, messageData, messageLength);
+				message.TransactionID = (ushort) new Random().Next(0xffff);
+			}
+
+			byte[] messageData;
+			int messageLength = message.Encode(out messageData, true);
+
+			bool sendByTcp = ((messageLength > 512) || message.IsForcingTcp);
+
+			for (int i = 0; i < _dnsServers.Count; i++)
+			{
+				IPAddress nameServer = _dnsServers[i];
+
+				byte[] resultData = sendByTcp ? QueryByTcp(nameServer, messageData, messageLength) : QueryByUdp(nameServer, messageData, messageLength);
 
 				if (resultData != null)
 				{
-					DnsMessage result = new DnsMessage();
-					result.Parse(resultData);
+					DnsServer.SelectTsigKey tsigKeySelector;
+					byte[] tsigOriginalMac;
 
-					if (result.IsTruncated)
+					if (message.TSigOptions != null)
+					{
+						tsigKeySelector = (n, a) => message.TSigOptions.KeyData;
+						tsigOriginalMac = message.TSigOptions.OriginalMac;
+					}
+					else
+					{
+						tsigKeySelector = null;
+						tsigOriginalMac = null;
+					}
+
+					TMessage result = new TMessage();
+					result.Parse(resultData, false, tsigKeySelector, tsigOriginalMac);
+
+					if ((result.ReturnCode == ReturnCode.ServerFailure) && (i != _dnsServers.Count - 1))
+					{
+						continue;
+					}
+
+					if (result.IsForcingTcp)
 					{
 						resultData = QueryByTcp(nameServer, messageData, messageLength);
 						if (resultData != null)
 						{
-							result = new DnsMessage();
-							result.Parse(resultData);
-							return result;
+							TMessage tcpResult = new TMessage();
+							tcpResult.Parse(resultData, false, tsigKeySelector, tsigOriginalMac);
+
+							if (tcpResult.ReturnCode == ReturnCode.ServerFailure)
+							{
+								if (i != _dnsServers.Count - 1)
+								{
+									continue;
+								}
+							}
+							else
+							{
+								result = tcpResult;
+							}
 						}
 					}
-					else
-					{
-						return result;
-					}
+
+					return result;
 				}
 			}
 
@@ -200,7 +275,6 @@ namespace ARSoft.Tools.Net.Dns
 		private byte[] QueryByUdp(IPAddress nameServer, byte[] messageData, int messageLength)
 		{
 			IPEndPoint endPoint = new IPEndPoint(nameServer, _DNS_PORT);
-			byte[] resultData;
 
 			using (UdpClient udpClient = new UdpClient(nameServer.AddressFamily))
 			{
@@ -209,9 +283,7 @@ namespace ARSoft.Tools.Net.Dns
 					udpClient.Client.ReceiveTimeout = QueryTimeout;
 					udpClient.Connect(endPoint);
 					udpClient.Send(messageData, messageLength);
-					resultData = udpClient.Receive(ref endPoint);
-
-					return resultData;
+					return udpClient.Receive(ref endPoint);
 				}
 				catch (Exception e)
 				{
@@ -225,8 +297,6 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			IPEndPoint endPoint = new IPEndPoint(nameServer, _DNS_PORT);
 
-			byte[] resultData;
-
 			using (TcpClient tcpClient = new TcpClient(nameServer.AddressFamily))
 			{
 				try
@@ -235,21 +305,22 @@ namespace ARSoft.Tools.Net.Dns
 					tcpClient.SendTimeout = QueryTimeout;
 					tcpClient.Connect(endPoint);
 
+					byte[] resultData;
 					using (NetworkStream tcpStream = tcpClient.GetStream())
 					{
 						int tmp = 0;
 
 						byte[] lengthBuffer = new byte[2];
-						DnsMessage.EncodeUShort(lengthBuffer, ref tmp, (ushort)messageLength);
+						DnsMessageBase.EncodeUShort(lengthBuffer, ref tmp, (ushort) messageLength);
 
 						tcpStream.Write(lengthBuffer, 0, 2);
 						tcpStream.Write(messageData, 0, messageLength);
 
-						lengthBuffer[0] = (byte)tcpStream.ReadByte();
-						lengthBuffer[1] = (byte)tcpStream.ReadByte();
+						lengthBuffer[0] = (byte) tcpStream.ReadByte();
+						lengthBuffer[1] = (byte) tcpStream.ReadByte();
 
 						tmp = 0;
-						int length = DnsMessage.ParseUShort(lengthBuffer, ref tmp);
+						int length = DnsMessageBase.ParseUShort(lengthBuffer, ref tmp);
 
 						resultData = new byte[length];
 						tcpStream.Read(resultData, 0, length);
@@ -282,13 +353,18 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (message.TransactionID == 0)
 			{
-				message.TransactionID = (ushort)new Random().Next(0xffff);
+				message.TransactionID = (ushort) new Random().Next(0xffff);
 			}
 
 			byte[] queryData;
-			int queryLength = message.Encode(out queryData);
+			int queryLength = message.Encode(out queryData, true);
 
-			DnsAsyncState asyncResult = new DnsAsyncState() { QueryData = queryData, QueryLength = queryLength, UserCallback = requestCallback, AsyncState = state, ServerEnumerator = _dnsServers.GetEnumerator() };
+			DnsAsyncState asyncResult = new DnsAsyncState() { QueryData = queryData, QueryLength = queryLength, UserCallback = requestCallback, AsyncState = state, Servers = _dnsServers, ServerIndex = 0 };
+			if (message.TSigOptions != null)
+			{
+				asyncResult.TSigKeySelector = (a, n) => message.TSigOptions.KeyData;
+				asyncResult.TSigOriginalMac = message.TSigOptions.OriginalMac;
+			}
 
 			bool sendByTcp = ((queryLength > 512) || (message.Questions[0].RecordType == RecordType.Axfr) || (message.Questions[0].RecordType == RecordType.Ixfr));
 
@@ -311,14 +387,14 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns>The complete response of the dns server</returns>
 		public DnsMessage EndSendMessage(IAsyncResult ar)
 		{
-			DnsAsyncState state = (DnsAsyncState)ar;
+			DnsAsyncState state = (DnsAsyncState) ar;
 			return state.Response;
 		}
 
 		#region Event handling async udp query
 		private void UdpBeginSend(DnsAsyncState state)
 		{
-			if (!state.ServerEnumerator.MoveNext())
+			if (state.ServerIndex == state.Servers.Count)
 			{
 				state.Response = null;
 				state.UdpClient = null;
@@ -327,7 +403,7 @@ namespace ARSoft.Tools.Net.Dns
 				return;
 			}
 
-			state.UdpEndpoint = new IPEndPoint(state.ServerEnumerator.Current, _DNS_PORT);
+			state.UdpEndpoint = new IPEndPoint(state.Servers[state.ServerIndex], _DNS_PORT);
 
 			state.UdpClient = new UdpClient(state.UdpEndpoint.AddressFamily);
 			state.UdpClient.Connect(state.UdpEndpoint);
@@ -337,13 +413,13 @@ namespace ARSoft.Tools.Net.Dns
 			state.Timer = new Timer(UdpTimedOut, asyncResult, QueryTimeout, Timeout.Infinite);
 		}
 
-		private void UdpTimedOut(object ar)
+		private static void UdpTimedOut(object ar)
 		{
-			IAsyncResult asyncResult = (IAsyncResult)ar;
+			IAsyncResult asyncResult = (IAsyncResult) ar;
 
 			if (!asyncResult.IsCompleted)
 			{
-				DnsAsyncState state = (DnsAsyncState)asyncResult.AsyncState;
+				DnsAsyncState state = (DnsAsyncState) asyncResult.AsyncState;
 				state.TimedOut = true;
 				state.UdpClient.Close();
 			}
@@ -351,13 +427,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void UdpSendCompleted(IAsyncResult ar)
 		{
-			DnsAsyncState state = (DnsAsyncState)ar.AsyncState;
+			DnsAsyncState state = (DnsAsyncState) ar.AsyncState;
 
 			if (state.Timer != null)
 				state.Timer.Dispose();
 
 			if (state.TimedOut)
 			{
+				state.ServerIndex++;
 				UdpBeginSend(state);
 			}
 			else
@@ -371,13 +448,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void UdpReceiveCompleted(IAsyncResult ar)
 		{
-			DnsAsyncState state = (DnsAsyncState)ar.AsyncState;
+			DnsAsyncState state = (DnsAsyncState) ar.AsyncState;
 
 			if (state.Timer != null)
 				state.Timer.Dispose();
 
 			if (state.TimedOut)
 			{
+				state.ServerIndex++;
 				UdpBeginSend(state);
 			}
 			else
@@ -389,15 +467,32 @@ namespace ARSoft.Tools.Net.Dns
 				state.UdpEndpoint = null;
 
 				state.Response = new DnsMessage();
-				state.Response.Parse(responseData);
+				state.Response.Parse(responseData, false, state.TSigKeySelector, state.TSigOriginalMac);
 
-				if (state.Response.IsTruncated)
+				if (state.Response.ReturnCode == ReturnCode.ServerFailure)
 				{
-					TcpBeginConnect(state);
-					return;
+					if (state.ServerIndex++ < state.Servers.Count)
+					{
+						UdpBeginSend(state);
+						return;
+					}
+					else
+					{
+						state.SetCompleted();
+					}
 				}
-
-				state.SetCompleted();
+				else
+				{
+					if (state.Response.IsTruncated)
+					{
+						TcpBeginConnect(state);
+						return;
+					}
+					else
+					{
+						state.SetCompleted();
+					}
+				}
 			}
 		}
 		#endregion
@@ -405,7 +500,7 @@ namespace ARSoft.Tools.Net.Dns
 		#region Event handling async tcp query
 		private void TcpBeginConnect(DnsAsyncState state)
 		{
-			if (!state.ServerEnumerator.MoveNext())
+			if (state.ServerIndex == state.Servers.Count)
 			{
 				state.Response = null;
 				state.TcpStream = null;
@@ -414,22 +509,22 @@ namespace ARSoft.Tools.Net.Dns
 				return;
 			}
 
-			state.UdpEndpoint = new IPEndPoint(state.ServerEnumerator.Current, _DNS_PORT);
+			IPAddress server = state.Servers[state.ServerIndex];
 
-			state.TcpClient = new TcpClient(state.ServerEnumerator.Current.AddressFamily);
+			state.TcpClient = new TcpClient(server.AddressFamily);
 			state.TimedOut = false;
 
-			IAsyncResult asyncResult = state.TcpClient.BeginConnect(state.ServerEnumerator.Current, _DNS_PORT, TcpConnectCompleted, state);
+			IAsyncResult asyncResult = state.TcpClient.BeginConnect(server, _DNS_PORT, TcpConnectCompleted, state);
 			state.Timer = new Timer(TcpTimedOut, asyncResult, QueryTimeout, Timeout.Infinite);
 		}
 
-		private void TcpTimedOut(object ar)
+		private static void TcpTimedOut(object ar)
 		{
-			IAsyncResult asyncResult = (IAsyncResult)ar;
+			IAsyncResult asyncResult = (IAsyncResult) ar;
 
 			if (!asyncResult.IsCompleted)
 			{
-				DnsAsyncState state = (DnsAsyncState)asyncResult.AsyncState;
+				DnsAsyncState state = (DnsAsyncState) asyncResult.AsyncState;
 				state.TimedOut = true;
 				if (state.TcpStream != null)
 					state.TcpStream.Close();
@@ -439,13 +534,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void TcpConnectCompleted(IAsyncResult ar)
 		{
-			DnsAsyncState state = (DnsAsyncState)ar.AsyncState;
+			DnsAsyncState state = (DnsAsyncState) ar.AsyncState;
 
 			if (state.Timer != null)
 				state.Timer.Dispose();
 
 			if (state.TimedOut)
 			{
+				state.ServerIndex++;
 				TcpBeginConnect(state);
 			}
 			else
@@ -457,7 +553,7 @@ namespace ARSoft.Tools.Net.Dns
 				int tmp = 0;
 
 				state.TcpBuffer = new byte[2];
-				DnsMessage.EncodeUShort(state.TcpBuffer, ref tmp, (ushort)state.QueryLength);
+				DnsMessageBase.EncodeUShort(state.TcpBuffer, ref tmp, (ushort) state.QueryLength);
 
 				IAsyncResult asyncResult = state.TcpStream.BeginWrite(state.TcpBuffer, 0, 2, TcpSendLengthCompleted, state);
 				state.Timer = new Timer(TcpTimedOut, asyncResult, QueryTimeout, Timeout.Infinite);
@@ -466,13 +562,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void TcpSendLengthCompleted(IAsyncResult ar)
 		{
-			DnsAsyncState state = (DnsAsyncState)ar.AsyncState;
+			DnsAsyncState state = (DnsAsyncState) ar.AsyncState;
 
 			if (state.Timer != null)
 				state.Timer.Dispose();
 
 			if (state.TimedOut)
 			{
+				state.ServerIndex++;
 				TcpBeginConnect(state);
 			}
 			else
@@ -486,13 +583,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void TcpSendCompleted(IAsyncResult ar)
 		{
-			DnsAsyncState state = (DnsAsyncState)ar.AsyncState;
+			DnsAsyncState state = (DnsAsyncState) ar.AsyncState;
 
 			if (state.Timer != null)
 				state.Timer.Dispose();
 
 			if (state.TimedOut)
 			{
+				state.ServerIndex++;
 				TcpBeginConnect(state);
 			}
 			else
@@ -506,13 +604,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void TcpReceiveLengthCompleted(IAsyncResult ar)
 		{
-			DnsAsyncState state = (DnsAsyncState)ar.AsyncState;
+			DnsAsyncState state = (DnsAsyncState) ar.AsyncState;
 
 			if (state.Timer != null)
 				state.Timer.Dispose();
 
 			if (state.TimedOut)
 			{
+				state.ServerIndex++;
 				TcpBeginConnect(state);
 			}
 			else
@@ -520,7 +619,7 @@ namespace ARSoft.Tools.Net.Dns
 				state.TcpStream.EndRead(ar);
 
 				int tmp = 0;
-				int responseLength = DnsMessage.ParseUShort(state.TcpBuffer, ref tmp);
+				int responseLength = DnsMessageBase.ParseUShort(state.TcpBuffer, ref tmp);
 
 				state.TcpBuffer = new byte[responseLength];
 
@@ -531,21 +630,19 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void TcpReceiveCompleted(IAsyncResult ar)
 		{
-			DnsAsyncState state = (DnsAsyncState)ar.AsyncState;
+			DnsAsyncState state = (DnsAsyncState) ar.AsyncState;
 
 			if (state.Timer != null)
 				state.Timer.Dispose();
 
 			if (state.TimedOut)
 			{
+				state.ServerIndex++;
 				TcpBeginConnect(state);
 			}
 			else
 			{
 				state.TcpStream.EndRead(ar);
-
-				state.Response = new DnsMessage();
-				state.Response.Parse(state.TcpBuffer);
 
 				state.TcpStream.Close();
 				state.TcpClient.Close();
@@ -553,7 +650,19 @@ namespace ARSoft.Tools.Net.Dns
 				state.TcpClient = null;
 
 				state.TcpBuffer = null;
-				state.SetCompleted();
+
+				state.Response = new DnsMessage();
+				state.Response.Parse(state.TcpBuffer, false, state.TSigKeySelector, state.TSigOriginalMac);
+
+				if ((state.Response.ReturnCode == ReturnCode.ServerFailure) && (state.ServerIndex++ < state.Servers.Count))
+				{
+					TcpBeginConnect(state);
+					return;
+				}
+				else
+				{
+					state.SetCompleted();
+				}
 			}
 		}
 		#endregion
@@ -581,10 +690,9 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					using (StreamReader reader = File.OpenText("/etc/resolv.conf"))
 					{
-						while (!reader.EndOfStream)
+						string line;
+						while ((line = reader.ReadLine()) != null)
 						{
-							string line = reader.ReadLine();
-
 							int commentStart = line.IndexOf('#');
 							if (commentStart != -1)
 							{

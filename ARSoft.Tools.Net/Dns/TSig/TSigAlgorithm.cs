@@ -19,22 +19,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ARSoft.Tools.Net.Spf
+namespace ARSoft.Tools.Net.Dns
 {
-	public class SpfModifier : SpfTerm
+	public enum TSigAlgorithm
 	{
-		public SpfModifierType Type { get; set; }
-		public string Domain { get; set; }
+		Unknown,
 
-		public override string ToString()
-		{
-			StringBuilder res = new StringBuilder();
-
-			res.Append(EnumHelper<SpfModifierType>.ToString(Type).ToLower());
-			res.Append("=");
-			res.Append(Domain);
-
-			return res.ToString();
-		}
+		Md5,
+		Sha1,
+		Sha256,
+		Sha384,
+		Sha512,
 	}
 }

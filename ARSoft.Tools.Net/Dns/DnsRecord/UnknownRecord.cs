@@ -1,4 +1,20 @@
-﻿using System;
+﻿#region Copyright and License
+// Copyright 2010 Alexander Reinert
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//   http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +25,7 @@ namespace ARSoft.Tools.Net.Dns
 	{
 		public byte[] RecordData { get; private set; }
 
-		internal UnknownRecord() { }
+		internal UnknownRecord() {}
 
 		public UnknownRecord(string name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] recordData)
 			: base(name, recordType, recordClass, timeToLive)
@@ -19,8 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
 		{
-			RecordData = new byte[length];
-			Buffer.BlockCopy(resultData, startPosition, RecordData, 0, length);
+			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
 
 		public override string ToString()
@@ -28,18 +43,14 @@ namespace ARSoft.Tools.Net.Dns
 			return base.ToString() + " " + Encoding.ASCII.GetString(RecordData);
 		}
 
-		protected override int MaximumRecordDataLength
+		protected internal override int MaximumRecordDataLength
 		{
 			get { return RecordData.Length; }
 		}
 
-		protected override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
-			if (RecordData.Length != 0)
-			{
-				Buffer.BlockCopy(RecordData, 0, messageData, currentPosition, RecordData.Length);
-				currentPosition += RecordData.Length;
-			}
+			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, RecordData);
 		}
 	}
 }

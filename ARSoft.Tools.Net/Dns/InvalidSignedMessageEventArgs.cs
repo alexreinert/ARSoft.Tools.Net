@@ -19,22 +19,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ARSoft.Tools.Net.Spf
+namespace ARSoft.Tools.Net.Dns
 {
-	public class SpfModifier : SpfTerm
+	public class InvalidSignedMessageEventArgs : EventArgs
 	{
-		public SpfModifierType Type { get; set; }
-		public string Domain { get; set; }
+		public DnsMessageBase Message { get; set; }
 
-		public override string ToString()
+		public InvalidSignedMessageEventArgs(DnsMessageBase message)
 		{
-			StringBuilder res = new StringBuilder();
-
-			res.Append(EnumHelper<SpfModifierType>.ToString(Type).ToLower());
-			res.Append("=");
-			res.Append(Domain);
-
-			return res.ToString();
+			Message = message;
 		}
 	}
 }

@@ -19,22 +19,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ARSoft.Tools.Net.Spf
+namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
-	public class SpfModifier : SpfTerm
+	public abstract class UpdateBase : DnsRecordBase
 	{
-		public SpfModifierType Type { get; set; }
-		public string Domain { get; set; }
+		internal UpdateBase() {}
 
-		public override string ToString()
-		{
-			StringBuilder res = new StringBuilder();
-
-			res.Append(EnumHelper<SpfModifierType>.ToString(Type).ToLower());
-			res.Append("=");
-			res.Append(Domain);
-
-			return res.ToString();
-		}
+		protected UpdateBase(string name, RecordType recordType, RecordClass recordClass, int timeToLive)
+			: base(name, recordType, recordClass, timeToLive) {}
 	}
 }

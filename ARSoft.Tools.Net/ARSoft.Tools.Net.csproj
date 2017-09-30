@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -12,6 +12,10 @@
     <AssemblyName>ARSoft.Tools.Net</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -53,6 +57,7 @@
     <Compile Include="Dns\DnsAsyncState.cs" />
     <Compile Include="Dns\DnsClient.cs" />
     <Compile Include="Dns\DnsMessage.cs" />
+    <Compile Include="Dns\DnsMessageBase.cs" />
     <Compile Include="Dns\DnsMessageEntryBase.cs" />
     <Compile Include="Dns\DnsQuestion.cs" />
     <Compile Include="Dns\DnsRecord\AaaaRecord.cs" />
@@ -64,6 +69,19 @@
     <Compile Include="Dns\DnsRecord\MxRecord.cs" />
     <Compile Include="Dns\DnsRecord\NaptrRecord.cs" />
     <Compile Include="Dns\DnsRecord\NsRecord.cs" />
+    <Compile Include="Dns\DynamicUpdate\AddRecordUpdate.cs" />
+    <Compile Include="Dns\DynamicUpdate\DeleteAllRecordsUpdate.cs" />
+    <Compile Include="Dns\DynamicUpdate\DeleteRecordUpdate.cs" />
+    <Compile Include="Dns\DynamicUpdate\DnsUpdateMessage.cs" />
+    <Compile Include="Dns\DynamicUpdate\NameIsInUsePrequisite.cs" />
+    <Compile Include="Dns\DynamicUpdate\NameIsNotInUsePrequisite.cs" />
+    <Compile Include="Dns\DynamicUpdate\PrequisiteBase.cs" />
+    <Compile Include="Dns\DynamicUpdate\RecordExistsPrequisite.cs" />
+    <Compile Include="Dns\DynamicUpdate\RecordNotExistsPrequisite.cs" />
+    <Compile Include="Dns\DynamicUpdate\UpdateBase.cs" />
+    <Compile Include="Dns\TSig\TSigAlgorithm.cs" />
+    <Compile Include="Dns\TSig\TSigAlgorithmHelper.cs" />
+    <Compile Include="Dns\TSig\TSigRecord.cs" />
     <Compile Include="Dns\DnsServer.cs" />
     <Compile Include="Dns\EDns\EDnsOptionBase.cs" />
     <Compile Include="Dns\EDns\EDnsOptionType.cs" />
@@ -82,6 +100,7 @@
     <Compile Include="Dns\RecordType.cs" />
     <Compile Include="Dns\ReturnCode.cs" />
     <Compile Include="EnumHelper.cs" />
+    <Compile Include="Dns\InvalidSignedMessageEventArgs.cs" />
     <Compile Include="IPAddressExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spf\SpfCheckHostParameter.cs" />
@@ -92,6 +111,14 @@
     <Compile Include="Spf\SpfQualifier.cs" />
     <Compile Include="Spf\SpfRecord.cs" />
     <Compile Include="Spf\SpfTerm.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NOTICE">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
