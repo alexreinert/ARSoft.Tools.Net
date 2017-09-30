@@ -332,7 +332,7 @@ namespace ARSoft.Tools.Net.Spf
 						return SpfQualifier.PermError;
 
 					string includeDomain = await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, dnsCache, token);
-					var includeResult = await CheckHostInternalAsync(ip, sender, includeDomain, false, dnsCache, token);
+					var includeResult = await CheckHostInternalAsync(ip, includeDomain, sender, false, dnsCache, token);
 					switch (includeResult.Result)
 					{
 						case SpfQualifier.Pass:
