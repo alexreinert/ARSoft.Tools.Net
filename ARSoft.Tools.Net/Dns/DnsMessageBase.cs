@@ -484,7 +484,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else if (currentByte == 65)
 				{
-					// binary EDNS label, RFC2671
+					// binary EDNS label, RFC2673
 					int length = resultData[currentPosition++];
 					if (length == 0)
 						length = 256;

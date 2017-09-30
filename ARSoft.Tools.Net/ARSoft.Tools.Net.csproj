@@ -74,6 +74,7 @@
     <Compile Include="Dns\DnsRecord\DnsRecordBase.cs" />
     <Compile Include="Dns\DnsRecord\GPosRecord.cs" />
     <Compile Include="Dns\DnsRecord\HInfoRecord.cs" />
+    <Compile Include="Dns\DnsRecord\IAddressRecord.cs" />
     <Compile Include="Dns\DnsRecord\IpSecKeyRecord.cs" />
     <Compile Include="Dns\DnsRecord\IsdnRecord.cs" />
     <Compile Include="Dns\DnsRecord\HipRecord.cs" />
@@ -139,7 +140,10 @@
     <Compile Include="IPAddressExtension.cs" />
     <Compile Include="Socket\UdpListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Spf\SpfCheckHostParameter.cs" />
+    <Compile Include="Spf\SenderIDScope.cs" />
+    <Compile Include="Spf\SenderIDValidator.cs" />
+    <Compile Include="Spf\SpfRecordBase.cs" />
+    <Compile Include="Spf\SenderIDRecord.cs" />
     <Compile Include="Spf\SpfMechanism.cs" />
     <Compile Include="Spf\SpfMechanismType.cs" />
     <Compile Include="Spf\SpfModifier.cs" />
@@ -147,6 +151,8 @@
     <Compile Include="Spf\SpfQualifier.cs" />
     <Compile Include="Spf\SpfRecord.cs" />
     <Compile Include="Spf\SpfTerm.cs" />
+    <Compile Include="Spf\SpfValidator.cs" />
+    <Compile Include="Spf\ValidatorBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE">

@@ -160,7 +160,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		/// Ends a pending asynchronous operation.
 		/// </summary>
-		/// <param name="ar">An <see cref="System.IAsyncResult"/> object returned by a call to <see cref="ARSoft.Tools.Net.Dns.DnsClient.BeginResolve"/>.</param>
+		/// <param name="ar">An <see cref="System.IAsyncResult"/> object returned by a call to <see cref="ARSoft.Tools.Net.Dns.DnsClient.BeginResolve" />.</param>
 		/// <returns>The complete response of the dns server</returns>
 		public DnsMessage EndResolve(IAsyncResult ar)
 		{
@@ -197,7 +197,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (String.IsNullOrEmpty(message.ZoneName))
 				throw new ArgumentException("Zone name must be provided", "message");
 
-			return SendMessage<DnsUpdateMessage>(message);
+			return SendMessage(message);
 		}
 
 		private TMessage SendMessage<TMessage>(TMessage message)
@@ -699,7 +699,7 @@ namespace ARSoft.Tools.Net.Dns
 								line = line.Substring(0, commentStart);
 							}
 
-							string[] lineData = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+							string[] lineData = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
 							IPAddress dns;
 							if ((lineData.Length == 2) && (lineData[0] == "nameserver") && (IPAddress.TryParse(lineData[1], out dns)))
 							{

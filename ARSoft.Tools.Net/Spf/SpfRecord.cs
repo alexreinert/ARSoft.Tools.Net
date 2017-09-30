@@ -19,14 +19,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
-using ARSoft.Tools.Net.Dns;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	public class SpfRecord
+	/// <summary>
+	/// Parsed instance of the textual representation of a SPF record
+	/// </summary>
+	public class SpfRecord : SpfRecordBase
 	{
-		public List<SpfTerm> Terms { get; set; }
-
 		public override string ToString()
 		{
 			StringBuilder res = new StringBuilder();
@@ -48,123 +48,58 @@ namespace ARSoft.Tools.Net.Spf
 			return res.ToString();
 		}
 
+		/// <summary>
+		/// Checks, whether a given string starts with a correct SPF prefix
+		/// </summary>
+		/// <param name="s">Textual representation to check</param>
+		/// <returns>true in case of correct prefix</returns>
+		public static bool IsSpfRecord(string s)
+		{
+			return !String.IsNullOrEmpty(s) && s.StartsWith("v=spf1 ");
+		}
+
+		/// <summary>
+		/// Tries to parse the textual representation of a SPF string
+		/// </summary>
+		/// <param name="s">Textual representation to check</param>
+		/// <param name="value">Parsed spf record in case of successful parsing</param>
+		/// <returns>true in case of successful parsing</returns>
 		public static bool TryParse(string s, out SpfRecord value)
 		{
-			if (String.IsNullOrEmpty(s) || !s.StartsWith("v=spf1 "))
+			if (!IsSpfRecord(s))
 			{
 				value = null;
 				return false;
 			}
 
-			string[] terms = s.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+			string[] terms = s.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-			value = new SpfRecord { Terms = new List<SpfTerm>() };
-
-			for (int i = 1; i < terms.Length; i++)
+			List<SpfTerm> parsedTerms;
+			if (TryParseTerms(terms, out parsedTerms))
 			{
-				SpfTerm term;
-				if (SpfTerm.TryParse(terms[i], out term))
-				{
-					value.Terms.Add(term);
-				}
-				else
-				{
-					value = null;
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		public static SpfQualifier CheckHost(IPAddress clientAddress, string clientName, string heloName, string domain, string sender)
-		{
-			return String.IsNullOrEmpty(domain) ? SpfQualifier.None : CheckHost(domain, new SpfCheckHostParameter(clientAddress, clientName, heloName, domain, sender));
-		}
-
-		internal static SpfQualifier CheckHost(string spfDomain, SpfCheckHostParameter parameters)
-		{
-			#region First try "real" spf records
-			List<SpfRecord> spfRecords = GetValidSpfRecords<Dns.SpfRecord>(spfDomain, RecordType.Spf);
-			if (spfRecords == null)
-			{
-				return SpfQualifier.TempError;
-			}
-			else if (spfRecords.Count > 1)
-			{
-				return SpfQualifier.PermError;
-			}
-			else if (spfRecords.Count == 1)
-			{
-				return spfRecords[0].CheckHost(parameters);
-			}
-			#endregion
-
-			#region Then fallback to TXT records
-			spfRecords = GetValidSpfRecords<TxtRecord>(spfDomain, RecordType.Txt);
-			if (spfRecords == null)
-			{
-				return SpfQualifier.TempError;
-			}
-			else if (spfRecords.Count > 1)
-			{
-				return SpfQualifier.PermError;
-			}
-			else if (spfRecords.Count == 1)
-			{
-				return spfRecords[0].CheckHost(parameters);
+				value = new SpfRecord { Terms = parsedTerms };
+				return true;
 			}
 			else
 			{
-				return SpfQualifier.None;
+				value = null;
+				return false;
 			}
-			#endregion
 		}
 
-		private static List<SpfRecord> GetValidSpfRecords<T>(string spfDomain, RecordType recordType)
-			where T: ITextRecord
+		/// <summary>
+		/// Validates the SPF records
+		/// </summary>
+		/// <param name="clientAddress">The IP address of the SMTP client that is emitting the mail</param>
+		/// <param name="clientName">Parameter is not more in use, only for signature compability</param>
+		/// <param name="heloName">Domain name which was used in HELO/EHLO</param>
+		/// <param name="domain">The domain portion of the "MAIL FROM" or "HELO" identity</param>
+		/// <param name="sender">The "MAIL FROM" or "HELO" identity</param>
+		/// <returns>Result of the evaluation</returns>
+		[Obsolete("Will be removed in further versions, please use SpfValidator class instead")]
+		public static SpfQualifier CheckHost(IPAddress clientAddress, string clientName, string heloName, string domain, string sender)
 		{
-			List<SpfRecord> res = new List<SpfRecord>();
-
-			DnsMessage dnsMessage = DnsClient.Default.Resolve(spfDomain, recordType);
-			if ((dnsMessage == null) || ((dnsMessage.ReturnCode != ReturnCode.NoError) && (dnsMessage.ReturnCode != ReturnCode.NxDomain)))
-			{
-				return null;
-			}
-
-			foreach (T txtRecord in dnsMessage.AnswerRecords.Where(record => record.RecordType == recordType).Cast<T>())
-			{
-				SpfRecord spfRecord;
-				if (TryParse(txtRecord.TextData, out spfRecord))
-					res.Add(spfRecord);
-			}
-
-			return res;
-		}
-
-		internal SpfQualifier CheckHost(SpfCheckHostParameter parameters)
-		{
-			if (String.IsNullOrEmpty(parameters.Sender))
-				return SpfQualifier.PermError;
-
-			if (!parameters.Sender.Contains('@'))
-				parameters.Sender = "postmaster@" + parameters.Sender;
-
-			if (parameters.LoopCount > 15)
-				return SpfQualifier.PermError;
-
-			if ((Terms == null) || (Terms.Count == 0))
-				return SpfQualifier.Neutral;
-
-			foreach (SpfTerm term in Terms)
-			{
-				SpfQualifier qualifier = term.CheckHost(parameters);
-
-				if (qualifier != SpfQualifier.None)
-					return qualifier;
-			}
-
-			return SpfQualifier.Neutral;
+			return new SpfValidator() { HeloDomain = heloName }.CheckHost(clientAddress, domain, sender);
 		}
 	}
 }

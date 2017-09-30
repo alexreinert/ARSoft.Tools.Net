@@ -20,6 +20,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace ARSoft.Tools.Net.Socket
 {
@@ -41,7 +42,7 @@ namespace ARSoft.Tools.Net.Socket
 				get { return State; }
 			}
 
-			public System.Threading.WaitHandle AsyncWaitHandle
+			public WaitHandle AsyncWaitHandle
 			{
 				get { return AsyncResult.AsyncWaitHandle; }
 			}
@@ -91,6 +92,7 @@ namespace ARSoft.Tools.Net.Socket
 			MyAsyncResult receiveAsyncResult = asyncResult.AsyncState as MyAsyncResult;
 			if ((receiveAsyncResult != null) && (receiveAsyncResult.Callback != null))
 			{
+				receiveAsyncResult.AsyncResult = asyncResult;
 				receiveAsyncResult.Callback(receiveAsyncResult);
 			}
 		}

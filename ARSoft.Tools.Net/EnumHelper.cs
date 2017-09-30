@@ -64,5 +64,11 @@ namespace ARSoft.Tools.Net
 		{
 			get { return _names; }
 		}
+
+		internal static T Parse(string s, bool ignoreCase, T defaultValue)
+		{
+			T res;
+			return TryParse(s, ignoreCase, out res) ? res : defaultValue;
+		}
 	}
 }

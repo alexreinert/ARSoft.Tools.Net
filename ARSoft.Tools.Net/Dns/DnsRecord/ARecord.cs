@@ -22,7 +22,7 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	public class ARecord : DnsRecordBase
+	public class ARecord : DnsRecordBase, IAddressRecord
 	{
 		public IPAddress Address { get; private set; }
 
