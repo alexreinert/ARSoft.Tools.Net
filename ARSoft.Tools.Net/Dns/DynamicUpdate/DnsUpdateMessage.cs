@@ -59,7 +59,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		public string ZoneName
 		{
 			get { return Questions.Count > 0 ? Questions[0].Name : null; }
-			set { Questions = new List<DnsQuestion>() { new DnsQuestion(value, RecordType.Soa, RecordClass.Any) }; }
+			set { Questions = new List<DnsQuestion>() { new DnsQuestion(value, RecordType.Soa, RecordClass.INet) }; }
 		}
 
 		/// <summary>

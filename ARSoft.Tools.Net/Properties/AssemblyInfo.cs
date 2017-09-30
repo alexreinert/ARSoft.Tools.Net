@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -28,10 +28,10 @@ using System.Text;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Alexander Reinert")]
 [assembly: AssemblyProduct("ARSoft.Tools.Net")]
-[assembly: AssemblyCopyright("Copyright © Alexander Reinert 2010..2014")]
+[assembly: AssemblyCopyright("Copyright © Alexander Reinert 2010..2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 [assembly: Guid("7c85a543-2ba0-477d-8e77-0d080cc03c5d")]
-[assembly: AssemblyVersion("1.8.1.0")]
-[assembly: AssemblyFileVersion("1.8.1.0")]
+[assembly: AssemblyVersion("1.8.2.0")]
+[assembly: AssemblyFileVersion("1.8.2.0")]
