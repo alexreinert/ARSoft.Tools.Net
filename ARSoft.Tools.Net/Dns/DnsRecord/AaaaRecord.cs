@@ -31,13 +31,8 @@ namespace ARSoft.Tools.Net.Dns
 	///     <see cref="!:http://tools.ietf.org/html/rfc3596">RFC 3596</see>
 	///   </para>
 	/// </summary>
-	public class AaaaRecord : DnsRecordBase, IAddressRecord
+	public class AaaaRecord : AddressRecordBase
 	{
-		/// <summary>
-		///   IP address of the host
-		/// </summary>
-		public IPAddress Address { get; private set; }
-
 		internal AaaaRecord() {}
 
 		/// <summary>
@@ -47,29 +42,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="address"> IP address of the host </param>
 		public AaaaRecord(string name, int timeToLive, IPAddress address)
-			: base(name, RecordType.Aaaa, RecordClass.INet, timeToLive)
-		{
-			Address = address ?? IPAddress.IPv6None;
-		}
-
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Address = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref startPosition, 16));
-		}
-
-		internal override string RecordDataToString()
-		{
-			return Address.ToString();
-		}
-
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 16; }
-		}
-
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
-		{
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
-		}
+			: base(name, RecordType.Aaaa, timeToLive, address ?? IPAddress.IPv6None) {}
 	}
 }

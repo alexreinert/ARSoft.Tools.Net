@@ -56,9 +56,17 @@ namespace ARSoft.Tools.Net.Dns
 			PointerDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new FormatException();
+
+			PointerDomainName = ParseDomainName(origin, stringRepresentation[0]);
+		}
+
 		internal override string RecordDataToString()
 		{
-			return PointerDomainName;
+			return PointerDomainName + ".";
 		}
 
 		protected internal override int MaximumRecordDataLength

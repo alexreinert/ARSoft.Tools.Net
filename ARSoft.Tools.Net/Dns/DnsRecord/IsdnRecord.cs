@@ -75,6 +75,17 @@ namespace ARSoft.Tools.Net.Dns
 			SubAddress = (currentPosition < endPosition) ? DnsMessageBase.ParseText(resultData, ref currentPosition) : String.Empty;
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length > 2)
+				throw new FormatException();
+
+			IsdnAddress = stringRepresentation[0];
+
+			if (stringRepresentation.Length > 1)
+				SubAddress = stringRepresentation[1];
+		}
+
 		internal override string RecordDataToString()
 		{
 			return IsdnAddress

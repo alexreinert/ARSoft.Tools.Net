@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
@@ -98,8 +99,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="name"> Name, that should be queried </param>
 		/// <param name="recordType"> Type the should be queried </param>
+		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> All available responses on the local network </returns>
-		public async Task<List<MulticastDnsMessage>> ResolveAsync(string name, RecordType recordType = RecordType.Any)
+		public Task<List<MulticastDnsMessage>> ResolveAsync(string name, RecordType recordType = RecordType.Any, CancellationToken token = default(CancellationToken))
 		{
 			if (String.IsNullOrEmpty(name))
 			{
@@ -109,7 +111,7 @@ namespace ARSoft.Tools.Net.Dns
 			MulticastDnsMessage message = new MulticastDnsMessage { IsQuery = true, OperationCode = OperationCode.Query };
 			message.Questions.Add(new DnsQuestion(name, recordType, RecordClass.INet));
 
-			return await SendMessageParallelAsync(message);
+			return SendMessageParallelAsync(message, token);
 		}
 	}
 }

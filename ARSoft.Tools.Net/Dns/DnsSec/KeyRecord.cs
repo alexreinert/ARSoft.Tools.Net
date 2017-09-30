@@ -66,6 +66,14 @@ namespace ARSoft.Tools.Net.Dns
 			PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 1)
+				throw new FormatException();
+
+			PublicKey = String.Join(String.Empty, stringRepresentation).FromBase64String();
+		}
+
 		protected override string PublicKeyToString()
 		{
 			return PublicKey.ToBase64String();

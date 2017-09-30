@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -133,16 +134,32 @@ namespace ARSoft.Tools.Net.Dns
 			Signature = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length + startPosition - currentPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 9)
+				throw new FormatException();
+
+			TypeCovered = RecordTypeHelper.ParseShortString(stringRepresentation[0]);
+			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
+			Labels = Byte.Parse(stringRepresentation[2]);
+			OriginalTimeToLive = Int32.Parse(stringRepresentation[3]);
+			SignatureExpiration = DateTime.ParseExact(stringRepresentation[4], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+			SignatureInception = DateTime.ParseExact(stringRepresentation[5], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+			KeyTag = UInt16.Parse(stringRepresentation[6]);
+			SignersName = ParseDomainName(origin, stringRepresentation[7]);
+			Signature = String.Join(String.Empty, stringRepresentation.Skip(8)).FromBase64String();
+		}
+
 		internal override string RecordDataToString()
 		{
-			return ToString(TypeCovered)
+			return TypeCovered.ToShortString()
 			       + " " + (byte) Algorithm
 			       + " " + Labels
 			       + " " + OriginalTimeToLive
 			       + " " + SignatureExpiration.ToString("yyyyMMddHHmmss")
 			       + " " + SignatureInception.ToString("yyyyMMddHHmmss")
 			       + " " + KeyTag
-			       + " " + SignersName
+			       + " " + SignersName + "."
 			       + " " + Signature.ToBase64String();
 		}
 

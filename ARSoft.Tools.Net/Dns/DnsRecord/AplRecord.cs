@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -59,6 +60,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public class AddressPrefix
 		{
+			private static Regex _parserRegex = new Regex(@"^(?<isneg>!?)(?<fam>(1|2)):(?<addr>[^/]+)/(?<pref>\d+)$", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+
 			/// <summary>
 			///   Is negated prefix
 			/// </summary>
@@ -103,6 +106,18 @@ namespace ARSoft.Tools.Net.Dns
 				       + (ushort) AddressFamily
 				       + ":" + Address
 				       + "/" + Prefix;
+			}
+
+			internal static AddressPrefix Parse(string s)
+			{
+				var groups = _parserRegex.Match(s).Groups;
+
+				IPAddress address = IPAddress.Parse(groups["addr"].Value);
+
+				if ((address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) && (groups["fam"].Value != "1"))
+					throw new FormatException();
+
+				return new AddressPrefix(groups["isneg"].Success, address, Byte.Parse(groups["pref"].Value));
 			}
 		}
 
@@ -149,6 +164,14 @@ namespace ARSoft.Tools.Net.Dns
 
 				Prefixes.Add(new AddressPrefix(isNegated, new IPAddress(addressData), prefix));
 			}
+		}
+
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length == 0)
+				throw new FormatException();
+
+			Prefixes = stringRepresentation.Select(x => AddressPrefix.Parse(x)).ToList();
 		}
 
 		internal override string RecordDataToString()

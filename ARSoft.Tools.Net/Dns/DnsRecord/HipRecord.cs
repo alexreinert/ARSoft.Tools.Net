@@ -88,12 +88,23 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 3)
+				throw new FormatException();
+
+			Algorithm = (IpSecKeyRecord.IpSecAlgorithm) Byte.Parse(stringRepresentation[0]);
+			Hit = stringRepresentation[1].FromBase16String();
+			PublicKey = stringRepresentation[2].FromBase64String();
+			RendezvousServers = stringRepresentation.Skip(3).ToList();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return (byte) Algorithm
 			       + " " + Hit.ToBase16String()
 			       + " " + PublicKey.ToBase64String()
-			       + String.Join("", RendezvousServers.Select(s => " " + s).ToArray());
+			       + String.Join("", RendezvousServers.Select(s => " " + s + ".").ToArray());
 		}
 
 		protected internal override int MaximumRecordDataLength

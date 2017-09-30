@@ -181,6 +181,17 @@ namespace ARSoft.Tools.Net.Dns
 			Certificate = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 5);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 4)
+				throw new FormatException();
+
+			Type = (CertType) UInt16.Parse(stringRepresentation[0]);
+			KeyTag = UInt16.Parse(stringRepresentation[1]);
+			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
+			Certificate = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return (ushort) Type

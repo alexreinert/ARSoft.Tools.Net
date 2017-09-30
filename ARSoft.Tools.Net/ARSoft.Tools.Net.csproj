@@ -74,6 +74,7 @@
     <Compile Include="Dns\DnsMessageEntryBase.cs" />
     <Compile Include="Dns\DnsQuestion.cs" />
     <Compile Include="Dns\DnsRecord\AaaaRecord.cs" />
+    <Compile Include="Dns\DnsRecord\AddressRecordBase.cs" />
     <Compile Include="Dns\DnsRecord\AfsdbRecord.cs" />
     <Compile Include="Dns\DnsRecord\AplRecord.cs" />
     <Compile Include="Dns\DnsRecord\ARecord.cs" />
@@ -166,6 +167,7 @@
     <Compile Include="Dns\RecordClass.cs" />
     <Compile Include="Dns\RecordType.cs" />
     <Compile Include="Dns\ReturnCode.cs" />
+    <Compile Include="Dns\Zone.cs" />
     <Compile Include="EnumHelper.cs" />
     <Compile Include="Dns\InvalidSignedMessageEventArgs.cs" />
     <Compile Include="EventHandlerExtensions.cs" />

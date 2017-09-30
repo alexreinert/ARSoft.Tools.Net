@@ -61,6 +61,17 @@ namespace ARSoft.Tools.Net.Dns
 			return String.Join("-", Address.Select(x => x.ToString("x2")).ToArray());
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new NotSupportedException();
+
+			Address = stringRepresentation[0].Split('-').Select(x => Convert.ToByte(x, 16)).ToArray();
+
+			if (Address.Length != 8)
+				throw new NotSupportedException();
+		}
+
 		protected internal override int MaximumRecordDataLength
 		{
 			get { return 8; }

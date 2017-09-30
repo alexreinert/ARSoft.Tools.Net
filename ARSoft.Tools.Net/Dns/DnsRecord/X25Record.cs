@@ -56,6 +56,14 @@ namespace ARSoft.Tools.Net.Dns
 			X25Address += DnsMessageBase.ParseText(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new FormatException();
+
+			X25Address = stringRepresentation[0];
+		}
+
 		internal override string RecordDataToString()
 		{
 			return X25Address;

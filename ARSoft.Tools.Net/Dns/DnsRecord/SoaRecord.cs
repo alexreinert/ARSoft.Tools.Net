@@ -115,10 +115,22 @@ namespace ARSoft.Tools.Net.Dns
 			NegativeCachingTTL = DnsMessageBase.ParseInt(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			MasterName = ParseDomainName(origin, stringRepresentation[0]);
+			ResponsibleName = ParseDomainName(origin, stringRepresentation[1]);
+
+			SerialNumber = UInt32.Parse(stringRepresentation[2]);
+			RefreshInterval = Int32.Parse(stringRepresentation[3]);
+			RetryInterval = Int32.Parse(stringRepresentation[4]);
+			ExpireInterval = Int32.Parse(stringRepresentation[5]);
+			NegativeCachingTTL = Int32.Parse(stringRepresentation[6]);
+		}
+
 		internal override string RecordDataToString()
 		{
-			return MasterName
-			       + " " + ResponsibleName
+			return MasterName + "."
+			       + " " + ResponsibleName + "."
 			       + " " + SerialNumber
 			       + " " + RefreshInterval
 			       + " " + RetryInterval

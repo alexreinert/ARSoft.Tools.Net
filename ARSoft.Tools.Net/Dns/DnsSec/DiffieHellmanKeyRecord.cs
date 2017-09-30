@@ -84,6 +84,11 @@ namespace ARSoft.Tools.Net.Dns
 			PublicValue = DnsMessageBase.ParseByteData(resultData, ref startPosition, publicValueLength);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			throw new NotSupportedException();
+		}
+
 		protected override string PublicKeyToString()
 		{
 			byte[] publicKey = new byte[MaximumPublicKeyLength];

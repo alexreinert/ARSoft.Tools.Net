@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -33,6 +34,8 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public class LocRecord : DnsRecordBase
 	{
+		private static Regex _parserRegex = new Regex(@"^(?<latd>\d{1,2})( (?<latm>\d{1,2})( (?<lats>\d{1,2})(\.(?<latms>\d{1,3}))?)?)? (?<lat>(N|S)) (?<longd>\d{1,2})( (?<longm>\d{1,2})( (?<longs>\d{1,2})(\.(?<longms>\d{1,3}))?)?)? (?<long>(W|E)) (?<alt>-?\d{1,2}(\.\d+)?)m?( (?<size>\d+(\.\d+)?)m?( (?<hp>\d+(\.\d+)?)m?( (?<vp>\d+(\.\d+)?)m?)?)?)?$", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+
 		/// <summary>
 		///   Represents a geopgraphical degree
 		/// </summary>
@@ -88,6 +91,16 @@ namespace ARSoft.Tools.Net.Dns
 				Milliseconds = milliseconds;
 			}
 
+			internal Degree(bool isNegative, string degrees, string minutes, string seconds, string milliseconds)
+			{
+				IsNegative = isNegative;
+
+				Degrees = Int32.Parse(degrees);
+				Minutes = Int32.Parse(minutes.PadLeft(1, '0'));
+				Seconds = Int32.Parse(seconds.PadLeft(1, '0'));
+				Milliseconds = Int32.Parse(milliseconds.PadRight(3, '0'));
+			}
+
 			/// <summary>
 			///   Creates a new instance of the Degree class
 			/// </summary>
@@ -110,6 +123,34 @@ namespace ARSoft.Tools.Net.Dns
 				decimalDegrees -= Seconds;
 				decimalDegrees *= 1000;
 				Milliseconds = (int) decimalDegrees;
+			}
+
+			private string ToDegreeString()
+			{
+				string res = String.Empty;
+
+				if (Milliseconds != 0)
+					res = "." + Milliseconds.ToString().PadLeft(3, '0').TrimEnd('0');
+
+				if ((res.Length > 0) || (Seconds != 0))
+					res = " " + Seconds + res;
+
+				if ((res.Length > 0) || (Minutes != 0))
+					res = " " + Minutes + res;
+
+				res = Degrees + res;
+
+				return res;
+			}
+
+			internal string ToLatitudeString()
+			{
+				return ToDegreeString() + " " + (IsNegative ? "S" : "N");
+			}
+
+			internal string ToLongitudeString()
+			{
+				return ToDegreeString() + " " + (IsNegative ? "W" : "E");
 			}
 		}
 
@@ -185,18 +226,29 @@ namespace ARSoft.Tools.Net.Dns
 			Altitude = ConvertAltitude(DnsMessageBase.ParseInt(resultData, ref currentPosition));
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			var groups = _parserRegex
+				.Match(String.Join(" ", stringRepresentation))
+				.Groups;
+
+			bool latNegative = groups["lat"].Value.Equals("S", StringComparison.InvariantCultureIgnoreCase);
+			Latitude = new Degree(latNegative, groups["latd"].Value, groups["latm"].Value, groups["lats"].Value, groups["latms"].Value);
+
+			bool longNegative = groups["long"].Value.Equals("W", StringComparison.InvariantCultureIgnoreCase);
+			Longitude = new Degree(longNegative, groups["longd"].Value, groups["longm"].Value, groups["longs"].Value, groups["longms"].Value);
+
+			Altitude = Double.Parse(groups["alt"].Value, CultureInfo.InvariantCulture);
+			Size = String.IsNullOrEmpty(groups["size"].Value) ? 1 : Double.Parse(groups["size"].Value, CultureInfo.InvariantCulture);
+			HorizontalPrecision = String.IsNullOrEmpty(groups["hp"].Value) ? 10000 : Double.Parse(groups["hp"].Value, CultureInfo.InvariantCulture);
+			VerticalPrecision = String.IsNullOrEmpty(groups["vp"].Value) ? 10 : Double.Parse(groups["vp"].Value, CultureInfo.InvariantCulture);
+		}
+
 		internal override string RecordDataToString()
 		{
-			return Latitude.Degrees
-			       + (((Latitude.Minutes != 0) || (Latitude.Seconds != 0) || (Latitude.Milliseconds != 0)) ? " " + Latitude.Minutes : "")
-			       + (((Latitude.Seconds != 0) || (Latitude.Milliseconds != 0)) ? " " + Latitude.Seconds : "")
-			       + ((Latitude.Milliseconds != 0) ? "." + Latitude.Milliseconds : "")
-			       + " " + (Latitude.IsNegative ? "S" : "N")
-			       + " " + Longitude.Degrees
-			       + (((Longitude.Minutes != 0) || (Longitude.Seconds != 0) || (Longitude.Milliseconds != 0)) ? " " + Longitude.Minutes : "")
-			       + (((Longitude.Seconds != 0) || (Longitude.Milliseconds != 0)) ? " " + Longitude.Seconds : "")
-			       + ((Longitude.Milliseconds != 0) ? "." + Longitude.Milliseconds : "")
-			       + " " + (Longitude.IsNegative ? "W" : "E")
+			return Latitude.ToLatitudeString()
+			       + " "
+			       + Longitude.ToLongitudeString()
 			       + " " + Altitude.ToString(CultureInfo.InvariantCulture) + "m"
 			       + (((Size != 1) || (HorizontalPrecision != 10000) || (VerticalPrecision != 10)) ? " " + Size + "m" : "")
 			       + (((HorizontalPrecision != 10000) || (VerticalPrecision != 10)) ? " " + HorizontalPrecision + "m" : "")

@@ -72,11 +72,21 @@ namespace ARSoft.Tools.Net.Dns
 			MapX400 = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 3)
+				throw new FormatException();
+
+			Preference = UInt16.Parse(stringRepresentation[0]);
+			Map822 = ParseDomainName(origin, stringRepresentation[1]);
+			MapX400 = ParseDomainName(origin, stringRepresentation[2]);
+		}
+
 		internal override string RecordDataToString()
 		{
 			return Preference
-			       + " " + Map822
-			       + " " + MapX400;
+			       + " " + Map822 + "."
+			       + " " + MapX400 + ".";
 		}
 
 		protected internal override int MaximumRecordDataLength

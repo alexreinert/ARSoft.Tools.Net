@@ -83,6 +83,17 @@ namespace ARSoft.Tools.Net.Dns
 			Digest = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 4);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 4)
+				throw new FormatException();
+
+			KeyTag = UInt16.Parse(stringRepresentation[0]);
+			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
+			DigestType = (DnsSecDigestType) Byte.Parse(stringRepresentation[2]);
+			Digest = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return KeyTag

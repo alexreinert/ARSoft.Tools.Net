@@ -72,6 +72,16 @@ namespace ARSoft.Tools.Net.Dns
 			Value = DnsMessageBase.ParseText(resultData, ref startPosition, length - (2 + Tag.Length));
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 3)
+				throw new FormatException();
+
+			Flags = Byte.Parse(stringRepresentation[0]);
+			Tag = stringRepresentation[1];
+			Value = stringRepresentation[2];
+		}
+
 		internal override string RecordDataToString()
 		{
 			return Flags + " " + Tag + " " + Value;

@@ -25,6 +25,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns.DynamicUpdate;
 
@@ -114,8 +115,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain, that should be queried </param>
 		/// <param name="recordType"> Type the should be queried </param>
 		/// <param name="recordClass"> Class the should be queried </param>
+		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> The complete response of the dns server </returns>
-		public async Task<DnsMessage> ResolveAsync(string name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet)
+		public Task<DnsMessage> ResolveAsync(string name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, CancellationToken token = default(CancellationToken))
 		{
 			if (String.IsNullOrEmpty(name))
 			{
@@ -125,7 +127,7 @@ namespace ARSoft.Tools.Net.Dns
 			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
 			message.Questions.Add(new DnsQuestion(name, recordType, recordClass));
 
-			return await SendMessageAsync(message);
+			return SendMessageAsync(message, token);
 		}
 
 		/// <summary>
@@ -148,8 +150,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   Send a custom message to the dns server and returns the answer as an asynchronous operation.
 		/// </summary>
 		/// <param name="message"> Message, that should be send to the dns server </param>
+		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> The complete response of the dns server </returns>
-		public async Task<DnsMessage> SendMessageAsync(DnsMessage message)
+		public Task<DnsMessage> SendMessageAsync(DnsMessage message, CancellationToken token = default(CancellationToken))
 		{
 			if (message == null)
 				throw new ArgumentNullException("message");
@@ -157,7 +160,7 @@ namespace ARSoft.Tools.Net.Dns
 			if ((message.Questions == null) || (message.Questions.Count == 0))
 				throw new ArgumentException("At least one question must be provided", "message");
 
-			return await SendMessageAsync<DnsMessage>(message);
+			return SendMessageAsync<DnsMessage>(message, token);
 		}
 
 		/// <summary>
@@ -180,8 +183,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   Send an dynamic update to the dns server and returns the answer as an asynchronous operation.
 		/// </summary>
 		/// <param name="message"> Update, that should be send to the dns server </param>
+		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> The complete response of the dns server </returns>
-		public async Task<DnsUpdateMessage> SendUpdateAsync(DnsUpdateMessage message)
+		public Task<DnsUpdateMessage> SendUpdateAsync(DnsUpdateMessage message, CancellationToken token = default(CancellationToken))
 		{
 			if (message == null)
 				throw new ArgumentNullException("message");
@@ -189,7 +193,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (String.IsNullOrEmpty(message.ZoneName))
 				throw new ArgumentException("Zone name must be provided", "message");
 
-			return await SendMessageAsync(message);
+			return SendMessageAsync(message, token);
 		}
 
 		/// <summary>

@@ -66,10 +66,19 @@ namespace ARSoft.Tools.Net.Dns
 			TxtDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 2)
+				throw new FormatException();
+
+			MailBox = ParseDomainName(origin, stringRepresentation[0]);
+			TxtDomainName = ParseDomainName(origin, stringRepresentation[1]);
+		}
+
 		internal override string RecordDataToString()
 		{
-			return MailBox
-			       + " " + TxtDomainName;
+			return MailBox + "."
+			       + " " + TxtDomainName + ".";
 		}
 
 		protected internal override int MaximumRecordDataLength

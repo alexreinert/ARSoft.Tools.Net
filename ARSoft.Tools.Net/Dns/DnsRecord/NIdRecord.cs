@@ -64,6 +64,28 @@ namespace ARSoft.Tools.Net.Dns
 			NodeID = DnsMessageBase.ParseULong(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 2)
+				throw new FormatException();
+
+			Preference = UInt16.Parse(stringRepresentation[0]);
+
+			string[] nodeIDParts = stringRepresentation[1].Split(':');
+
+			if (nodeIDParts.Length != 4)
+				throw new FormatException();
+
+			for (int i = 0; i < 4; i++)
+			{
+				if (nodeIDParts[i].Length != 4)
+					throw new FormatException();
+
+				NodeID = NodeID << 16;
+				NodeID |= Convert.ToUInt16(nodeIDParts[i], 16);
+			}
+		}
+
 		internal override string RecordDataToString()
 		{
 			string nodeID = NodeID.ToString("x16");

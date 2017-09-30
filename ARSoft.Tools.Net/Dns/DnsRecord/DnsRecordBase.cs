@@ -48,6 +48,18 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static DnsRecordBase Create(RecordType type, byte[] resultData, int recordDataPosition)
 		{
+			if ((type == RecordType.Key) && (resultData[recordDataPosition + 3] == (byte) DnsSecAlgorithm.DiffieHellman))
+			{
+				return new DiffieHellmanKeyRecord();
+			}
+			else
+			{
+				return Create(type);
+			}
+		}
+
+		internal static DnsRecordBase Create(RecordType type)
+		{
 			switch (type)
 			{
 				case RecordType.A:
@@ -83,14 +95,7 @@ namespace ARSoft.Tools.Net.Dns
 				case RecordType.Sig:
 					return new SigRecord();
 				case RecordType.Key:
-					if (resultData[recordDataPosition + 3] == (byte) DnsSecAlgorithm.DiffieHellman)
-					{
-						return new DiffieHellmanKeyRecord();
-					}
-					else
-					{
-						return new KeyRecord();
-					}
+					return new KeyRecord();
 				case RecordType.Px:
 					return new PxRecord();
 				case RecordType.GPos:
@@ -174,45 +179,38 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
-			string recordData = (RecordDataLength != 0) ? RecordDataToString() : null;
-
-			return Name + " " + TimeToLive + " " + ToString(RecordClass) + " " + ToString(RecordType) + (String.IsNullOrEmpty(recordData) ? "" : " " + recordData);
-		}
-
-		protected static string ToString(RecordClass recordClass)
-		{
-			switch (recordClass)
-			{
-				case RecordClass.INet:
-					return "IN";
-				case RecordClass.Chaos:
-					return "CH";
-				case RecordClass.Hesiod:
-					return "HS";
-				case RecordClass.None:
-					return "NONE";
-				case RecordClass.Any:
-					return "*";
-				default:
-					return "CLASS" + (int) recordClass;
-			}
-		}
-
-		protected static string ToString(RecordType recordType)
-		{
-			string res;
-			if (!EnumHelper<RecordType>.Names.TryGetValue(recordType, out res))
-			{
-				return "TYPE" + (int) recordType;
-			}
-			return res.ToUpper();
+			string recordData = RecordDataToString();
+			return Name + ". " + TimeToLive + " " + RecordClass.ToShortString() + " " + RecordType.ToShortString() + (String.IsNullOrEmpty(recordData) ? "" : " " + recordData);
 		}
 		#endregion
 
 		#region Parsing
 		internal abstract void ParseRecordData(byte[] resultData, int startPosition, int length);
 
-		internal virtual void ParseRecordData(string[] stringRepresentation) {}
+		internal abstract void ParseRecordData(string origin, string[] stringRepresentation);
+
+		internal void ParseUnknownRecordData(string[] stringRepresentation)
+		{
+			int length = Int32.Parse(stringRepresentation[0].Substring(2));
+
+			byte[] byteData = String.Join("", stringRepresentation.Skip(1)).FromBase16String();
+
+			if (length != byteData.Length)
+				throw new FormatException();
+
+			ParseRecordData(byteData, 0, length);
+		}
+
+		protected string ParseDomainName(string origin, string name)
+		{
+			if (String.IsNullOrEmpty(name))
+				return String.Empty;
+
+			if (name.EndsWith("."))
+				return name.Substring(0, name.Length - 1);
+
+			return name + "." + origin;
+		}
 		#endregion
 
 		#region Encoding

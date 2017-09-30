@@ -121,6 +121,16 @@ namespace ARSoft.Tools.Net.Dns
 			FingerPrint = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 2);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 3)
+				throw new FormatException();
+
+			Algorithm = (SshFpAlgorithm) Byte.Parse(stringRepresentation[0]);
+			FingerPrintType = (SshFpFingerPrintType) Byte.Parse(stringRepresentation[1]);
+			FingerPrint = String.Join("", stringRepresentation.Skip(2)).FromBase16String();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return (byte) Algorithm

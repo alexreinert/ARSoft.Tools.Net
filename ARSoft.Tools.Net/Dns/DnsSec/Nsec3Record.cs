@@ -110,6 +110,19 @@ namespace ARSoft.Tools.Net.Dns
 			Types = NSecRecord.ParseTypeBitMap(resultData, ref currentPosition, endPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 5)
+				throw new FormatException();
+
+			HashAlgorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[0]);
+			Flags = Byte.Parse(stringRepresentation[1]);
+			Iterations = UInt16.Parse(stringRepresentation[2]);
+			Salt = (stringRepresentation[3] == "-") ? new byte[] { } : stringRepresentation[3].FromBase16String();
+			NextHashedOwnerName = stringRepresentation[4].FromBase32HexString();
+			Types = stringRepresentation.Skip(5).Select(RecordTypeHelper.ParseShortString).ToList();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return (byte) HashAlgorithm
@@ -117,7 +130,7 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + Iterations
 			       + " " + ((Salt.Length == 0) ? "-" : Salt.ToBase16String())
 			       + " " + NextHashedOwnerName.ToBase32HexString()
-			       + " " + String.Join(" ", Types.ConvertAll<String>(ToString).ToArray());
+			       + " " + String.Join(" ", Types.ConvertAll<String>(RecordTypeHelper.ToShortString).ToArray());
 		}
 
 		protected internal override int MaximumRecordDataLength

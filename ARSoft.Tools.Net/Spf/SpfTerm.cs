@@ -29,6 +29,9 @@ namespace ARSoft.Tools.Net.Spf
 	/// </summary>
 	public class SpfTerm
 	{
+		private static Regex _parseMechanismRegex = new Regex(@"^(\s)*(?<qualifier>[~+?-]?)(?<type>[a-z0-9]+)(:(?<domain>[^/]+))?(/(?<prefix>[0-9]+)(/(?<prefix6>[0-9]+))?)?(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static Regex _parseModifierRegex = new Regex(@"^(\s)*(?<type>[a-z]+)=(?<domain>[^\s]+)(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
 		internal static bool TryParse(string s, out SpfTerm value)
 		{
 			if (String.IsNullOrEmpty(s))
@@ -38,8 +41,7 @@ namespace ARSoft.Tools.Net.Spf
 			}
 
 			#region Parse Mechanism
-			Regex regex = new Regex(@"^(\s)*(?<qualifier>[~+?-]?)(?<type>[a-z0-9]+)(:(?<domain>[^/]+))?(/(?<prefix>[0-9]+)(/(?<prefix6>[0-9]+))?)?(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-			Match match = regex.Match(s);
+			Match match = _parseMechanismRegex.Match(s);
 			if (match.Success)
 			{
 				SpfMechanism mechanism = new SpfMechanism();
@@ -88,8 +90,7 @@ namespace ARSoft.Tools.Net.Spf
 			#endregion
 
 			#region Parse Modifier
-			regex = new Regex(@"^(\s)*(?<type>[a-z]+)=(?<domain>[^\s]+)(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-			match = regex.Match(s);
+			match = _parseModifierRegex.Match(s);
 			if (match.Success)
 			{
 				SpfModifier modifier = new SpfModifier();

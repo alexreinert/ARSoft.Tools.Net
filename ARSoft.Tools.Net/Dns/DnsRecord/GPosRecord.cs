@@ -73,6 +73,16 @@ namespace ARSoft.Tools.Net.Dns
 			Altitude = Double.Parse(DnsMessageBase.ParseText(resultData, ref currentPosition), CultureInfo.InvariantCulture);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 3)
+				throw new FormatException();
+
+			Longitude = Double.Parse(stringRepresentation[0], CultureInfo.InvariantCulture);
+			Latitude = Double.Parse(stringRepresentation[1], CultureInfo.InvariantCulture);
+			Altitude = Double.Parse(stringRepresentation[2], CultureInfo.InvariantCulture);
+		}
+
 		internal override string RecordDataToString()
 		{
 			return Longitude.ToString(CultureInfo.InvariantCulture)

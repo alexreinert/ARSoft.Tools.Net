@@ -22,6 +22,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net
@@ -49,10 +50,10 @@ namespace ARSoft.Tools.Net
 			}
 		}
 
-		public static async Task<bool> TryConnectAsync(this TcpClient tcpClient, IPAddress address, int port, int timeout)
+		public static async Task<bool> TryConnectAsync(this TcpClient tcpClient, IPAddress address, int port, int timeout, CancellationToken token)
 		{
 			var connectTask = tcpClient.ConnectAsync(address, port);
-			var timeoutTask = Task.Delay(timeout);
+			var timeoutTask = Task.Delay(timeout, token);
 
 			await Task.WhenAny(connectTask, timeoutTask);
 

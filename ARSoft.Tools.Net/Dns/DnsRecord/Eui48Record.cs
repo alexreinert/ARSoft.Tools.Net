@@ -56,6 +56,17 @@ namespace ARSoft.Tools.Net.Dns
 			Address = DnsMessageBase.ParseByteData(resultData, ref startPosition, 6);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new NotSupportedException();
+
+			Address = stringRepresentation[0].Split('-').Select(x => Convert.ToByte(x, 16)).ToArray();
+
+			if (Address.Length != 6)
+				throw new NotSupportedException();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return String.Join("-", Address.Select(x => x.ToString("x2")).ToArray());

@@ -92,6 +92,15 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 2)
+				throw new FormatException();
+
+			Address = IPAddress.Parse(stringRepresentation[0]);
+			Ports = stringRepresentation.Skip(1).Select(x => UInt16.Parse(x)).ToList();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return Address

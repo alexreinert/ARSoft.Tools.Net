@@ -103,10 +103,19 @@ namespace ARSoft.Tools.Net.Dns
 			return types;
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 2)
+				throw new FormatException();
+
+			NextDomainName = ParseDomainName(origin, stringRepresentation[0]);
+			Types = stringRepresentation.Skip(1).Select(RecordTypeHelper.ParseShortString).ToList();
+		}
+
 		internal override string RecordDataToString()
 		{
-			return NextDomainName
-			       + " " + String.Join(" ", Types.ConvertAll<String>(ToString).ToArray());
+			return NextDomainName + "."
+			       + " " + String.Join(" ", Types.ConvertAll<String>(RecordTypeHelper.ToShortString).ToArray());
 		}
 
 		protected internal override int MaximumRecordDataLength

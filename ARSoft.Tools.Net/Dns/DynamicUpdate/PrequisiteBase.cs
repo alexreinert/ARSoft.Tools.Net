@@ -37,5 +37,10 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		{
 			return null;
 		}
+
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			throw new NotSupportedException();
+		}
 	}
 }

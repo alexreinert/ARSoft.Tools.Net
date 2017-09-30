@@ -21,16 +21,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net
 {
 	internal static class UdpClientExtensions
 	{
-		public static async Task<UdpReceiveResult> ReceiveAsync(this UdpClient udpClient, int timeout)
+		public static async Task<UdpReceiveResult> ReceiveAsync(this UdpClient udpClient, int timeout, CancellationToken token)
 		{
 			var connectTask = udpClient.ReceiveAsync();
-			var timeoutTask = Task.Delay(timeout);
+			var timeoutTask = Task.Delay(timeout, token);
 
 			await Task.WhenAny(connectTask, timeoutTask);
 

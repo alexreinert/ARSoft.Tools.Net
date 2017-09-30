@@ -64,6 +64,15 @@ namespace ARSoft.Tools.Net.Dns
 			OperatingSystem = DnsMessageBase.ParseText(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 2)
+				throw new FormatException();
+
+			Cpu = stringRepresentation[0];
+			OperatingSystem = stringRepresentation[1];
+		}
+
 		internal override string RecordDataToString()
 		{
 			return "\"" + Cpu + "\""

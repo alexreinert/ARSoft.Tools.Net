@@ -82,6 +82,17 @@ namespace ARSoft.Tools.Net.Dns
 			Salt = DnsMessageBase.ParseByteData(resultData, ref currentPosition, saltLength);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 4)
+				throw new FormatException();
+
+			HashAlgorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[0]);
+			Flags = Byte.Parse(stringRepresentation[1]);
+			Iterations = UInt16.Parse(stringRepresentation[2]);
+			Salt = (stringRepresentation[3] == "-") ? new byte[] { } : stringRepresentation[3].FromBase16String();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return (byte) HashAlgorithm

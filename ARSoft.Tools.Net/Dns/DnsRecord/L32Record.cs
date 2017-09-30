@@ -65,6 +65,15 @@ namespace ARSoft.Tools.Net.Dns
 			Locator32 = DnsMessageBase.ParseUInt(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 2)
+				throw new FormatException();
+
+			Preference = UInt16.Parse(stringRepresentation[0]);
+			Locator32 = UInt32.Parse(stringRepresentation[1]);
+		}
+
 		internal override string RecordDataToString()
 		{
 			return Preference + " " + new IPAddress(Locator32);

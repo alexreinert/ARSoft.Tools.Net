@@ -33,6 +33,8 @@ namespace ARSoft.Tools.Net.Spf
 	/// </summary>
 	public class SenderIDRecord : SpfRecordBase
 	{
+		private static Regex _prefixRegex = new Regex(@"^v=spf((?<version>1)|(?<version>2)\.(?<minor>\d)/(?<scopes>(([a-z0-9]+,)*[a-z0-9]+)))$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
 		/// <summary>
 		///   Version of the SenderID record.
 		/// </summary>
@@ -122,8 +124,7 @@ namespace ARSoft.Tools.Net.Spf
 
 		private static bool TryParsePrefix(string prefix, out int version, out int minor, out List<SenderIDScope> scopes)
 		{
-			Regex regex = new Regex(@"^v=spf((?<version>1)|(?<version>2)\.(?<minor>\d)/(?<scopes>(([a-z0-9]+,)*[a-z0-9]+)))$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-			Match match = regex.Match(prefix);
+			Match match = _prefixRegex.Match(prefix);
 			if (!match.Success)
 			{
 				version = 0;

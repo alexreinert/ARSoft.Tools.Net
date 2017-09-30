@@ -84,9 +84,17 @@ namespace ARSoft.Tools.Net.Dns
 			TextData = String.Join(String.Empty, textParts.ToArray());
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new FormatException();
+
+			TextData = stringRepresentation[0];
+		}
+
 		internal override string RecordDataToString()
 		{
-			return " \"" + TextData + "\"";
+			return "\"" + TextData.Replace("\"", "\\\"") + "\"";
 		}
 
 		protected internal override int MaximumRecordDataLength

@@ -116,6 +116,11 @@ namespace ARSoft.Tools.Net.Dns
 			OtherData = DnsMessageBase.ParseByteData(resultData, ref startPosition, otherDataSize);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			throw new NotSupportedException();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return TSigAlgorithmHelper.GetDomainName(Algorithm)

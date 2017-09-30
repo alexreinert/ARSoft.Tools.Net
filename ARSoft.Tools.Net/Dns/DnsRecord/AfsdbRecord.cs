@@ -90,10 +90,19 @@ namespace ARSoft.Tools.Net.Dns
 			Hostname = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 2)
+				throw new FormatException();
+
+			SubType = (AfsSubType) Byte.Parse(stringRepresentation[0]);
+			Hostname = ParseDomainName(origin, stringRepresentation[1]);
+		}
+
 		internal override string RecordDataToString()
 		{
 			return (byte) SubType
-			       + " " + Hostname;
+			       + " " + Hostname + ".";
 		}
 
 		protected internal override int MaximumRecordDataLength

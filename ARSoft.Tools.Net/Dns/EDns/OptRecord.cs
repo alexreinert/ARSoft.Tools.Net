@@ -168,6 +168,11 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			throw new NotSupportedException();
+		}
+
 		/// <summary>
 		///   Returns the textual representation of the OptRecord
 		/// </summary>

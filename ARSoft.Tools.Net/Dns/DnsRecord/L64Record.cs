@@ -64,6 +64,15 @@ namespace ARSoft.Tools.Net.Dns
 			Locator64 = DnsMessageBase.ParseULong(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 2)
+				throw new FormatException();
+
+			Preference = UInt16.Parse(stringRepresentation[0]);
+			Locator64 = UInt64.Parse(stringRepresentation[1]);
+		}
+
 		internal override string RecordDataToString()
 		{
 			string locator = Locator64.ToString("x16");

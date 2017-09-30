@@ -64,10 +64,19 @@ namespace ARSoft.Tools.Net.Dns
 			ExchangeDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 2)
+				throw new FormatException();
+
+			Preference = UInt16.Parse(stringRepresentation[0]);
+			ExchangeDomainName = ParseDomainName(origin, stringRepresentation[1]);
+		}
+
 		internal override string RecordDataToString()
 		{
 			return Preference
-			       + " " + ExchangeDomainName;
+			       + " " + ExchangeDomainName + ".";
 		}
 
 		protected internal override int MaximumRecordDataLength

@@ -56,9 +56,17 @@ namespace ARSoft.Tools.Net.Dns
 			NameServer = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new FormatException();
+
+			NameServer = ParseDomainName(origin, stringRepresentation[0]);
+		}
+
 		internal override string RecordDataToString()
 		{
-			return NameServer;
+			return NameServer + ".";
 		}
 
 		protected internal override int MaximumRecordDataLength

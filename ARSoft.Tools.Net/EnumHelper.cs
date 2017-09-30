@@ -72,5 +72,15 @@ namespace ARSoft.Tools.Net
 			T res;
 			return TryParse(s, ignoreCase, out res) ? res : defaultValue;
 		}
+
+		internal static T Parse(string s, bool ignoreCase)
+		{
+			T res;
+
+			if (TryParse(s, ignoreCase, out res))
+				return res;
+
+			throw new ArgumentOutOfRangeException("s");
+		}
 	}
 }

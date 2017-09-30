@@ -172,13 +172,41 @@ namespace ARSoft.Tools.Net.Dns
 			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length + startPosition - currentPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 5)
+				throw new FormatException();
+
+			Precedence = Byte.Parse(stringRepresentation[0]);
+			GatewayType = (IpSecGatewayType) Byte.Parse(stringRepresentation[1]);
+			Algorithm = (IpSecAlgorithm) Byte.Parse(stringRepresentation[2]);
+			Gateway = stringRepresentation[3];
+			PublicKey = String.Join(String.Empty, stringRepresentation.Skip(4)).FromBase64String();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return Precedence
 			       + " " + (byte) GatewayType
 			       + " " + (byte) Algorithm
-			       + " " + ((GatewayType == IpSecGatewayType.None) ? "." : Gateway)
+			       + " " + GatewayToString()
 			       + " " + PublicKey.ToBase64String();
+		}
+
+		private string GatewayToString()
+		{
+			switch (GatewayType)
+			{
+				case IpSecGatewayType.Domain:
+					return Gateway + ".";
+
+				case IpSecGatewayType.IpV4:
+				case IpSecGatewayType.IpV6:
+					return Gateway;
+
+				default:
+					return ".";
+			}
 		}
 
 		protected internal override int MaximumRecordDataLength

@@ -19,41 +19,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Canonical name for an alias</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-	///   </para>
-	/// </summary>
-	public class CNameRecord : DnsRecordBase
+	public abstract class AddressRecordBase : DnsRecordBase, IAddressRecord
 	{
 		/// <summary>
-		///   Canonical name
+		///   IP address of the host
 		/// </summary>
-		public string CanonicalName { get; private set; }
+		public IPAddress Address { get; private set; }
 
-		internal CNameRecord() {}
+		protected AddressRecordBase() {}
 
-		/// <summary>
-		///   Creates a new instance of the CNameRecord class
-		/// </summary>
-		/// <param name="name"> Domain name the host </param>
-		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="canonicalName"> Canocical name for the alias of the host </param>
-		public CNameRecord(string name, int timeToLive, string canonicalName)
-			: base(name, RecordType.CName, RecordClass.INet, timeToLive)
+		protected AddressRecordBase(string name, RecordType recordType, int timeToLive, IPAddress address)
+			: base(name, recordType, RecordClass.INet, timeToLive)
 		{
-			CanonicalName = canonicalName ?? String.Empty;
+			Address = address;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
-			CanonicalName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
+			Address = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref startPosition, 16));
 		}
 
 		internal override void ParseRecordData(string origin, string[] stringRepresentation)
@@ -61,22 +49,22 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 1)
 				throw new FormatException();
 
-			CanonicalName = ParseDomainName(origin, stringRepresentation[0]);
+			Address = IPAddress.Parse(stringRepresentation[0]);
 		}
 
 		internal override string RecordDataToString()
 		{
-			return CanonicalName + ".";
+			return Address.ToString();
 		}
 
 		protected internal override int MaximumRecordDataLength
 		{
-			get { return CanonicalName.Length + 2; }
+			get { return 16; }
 		}
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, CanonicalName, true, domainNames);
+			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
 		}
 	}
 }

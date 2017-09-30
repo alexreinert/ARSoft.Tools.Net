@@ -183,7 +183,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			lock (_udpListener)
 			{
-				if (!_udpListener.Client.IsBound) // server is stopped
+				if ((_udpListener.Client == null) || !_udpListener.Client.IsBound) // server is stopped
 					return;
 
 				if ((_availableUdpListener > 0) && !_hasActiveUdpListener)
@@ -204,9 +204,13 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					receiveResult = await _udpListener.ReceiveAsync();
 				}
+				catch (ObjectDisposedException)
+				{
+					return;
+				}
 				finally
 				{
-					lock (_tcpListener)
+					lock (_udpListener)
 					{
 						_hasActiveUdpListener = false;
 					}

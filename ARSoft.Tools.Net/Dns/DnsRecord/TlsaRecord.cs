@@ -179,9 +179,23 @@ namespace ARSoft.Tools.Net.Dns
 			CertificateAssociation = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 3);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length < 4)
+				throw new FormatException();
+
+			CertificateUsage = (TlsaCertificateUsage) Byte.Parse(stringRepresentation[0]);
+			Selector = (TlsaSelector) Byte.Parse(stringRepresentation[1]);
+			MatchingType = (TlsaMatchingType) Byte.Parse(stringRepresentation[2]);
+			CertificateAssociation = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase16String();
+		}
+
 		internal override string RecordDataToString()
 		{
-			return (byte) CertificateUsage + " " + (byte) Selector + " " + (byte) MatchingType + " " + String.Join(String.Empty, CertificateAssociation.Select(x => x.ToString("X2")).ToArray());
+			return (byte) CertificateUsage
+			       + " " + (byte) Selector
+			       + " " + (byte) MatchingType
+			       + " " + String.Join(String.Empty, CertificateAssociation.ToBase16String());
 		}
 
 		protected internal override int MaximumRecordDataLength

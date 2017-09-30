@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns;
 
@@ -43,9 +44,9 @@ namespace ARSoft.Tools.Net.Spf
 			Scope = SenderIDScope.MFrom;
 		}
 
-		protected override async Task<LoadRecordResult> LoadRecordsAsync(string domain, Dictionary<string, DnsMessage> dnsCache)
+		protected override async Task<LoadRecordResult> LoadRecordsAsync(string domain, Dictionary<string, DnsMessage> dnsCache, CancellationToken token)
 		{
-			DnsResolveResult<TxtRecord> dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, dnsCache);
+			DnsResolveResult<TxtRecord> dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, dnsCache, token);
 			if ((dnsResult == null) || ((dnsResult.ReturnCode != ReturnCode.NoError) && (dnsResult.ReturnCode != ReturnCode.NxDomain)))
 			{
 				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError };

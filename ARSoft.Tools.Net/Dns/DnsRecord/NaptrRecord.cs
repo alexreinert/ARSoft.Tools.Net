@@ -100,6 +100,19 @@ namespace ARSoft.Tools.Net.Dns
 			Replacement = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 6)
+				throw new NotSupportedException();
+
+			Order = UInt16.Parse(stringRepresentation[0]);
+			Preference = UInt16.Parse(stringRepresentation[1]);
+			Flags = stringRepresentation[2];
+			Services = stringRepresentation[3];
+			RegExp = stringRepresentation[4];
+			Replacement = ParseDomainName(origin, stringRepresentation[5]);
+		}
+
 		internal override string RecordDataToString()
 		{
 			return Order
@@ -107,7 +120,7 @@ namespace ARSoft.Tools.Net.Dns
 			       + " \"" + Flags + "\""
 			       + " \"" + Services + "\""
 			       + " \"" + RegExp + "\""
-			       + " \"" + Replacement + "\"";
+			       + " " + Replacement + ".";
 		}
 
 		protected internal override int MaximumRecordDataLength

@@ -64,9 +64,18 @@ namespace ARSoft.Tools.Net.Dns
 			FQDN = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 2)
+				throw new FormatException();
+
+			Preference = UInt16.Parse(stringRepresentation[0]);
+			FQDN = ParseDomainName(origin, stringRepresentation[1]);
+		}
+
 		internal override string RecordDataToString()
 		{
-			return Preference + " " + FQDN;
+			return Preference + " " + FQDN + ".";
 		}
 
 		protected internal override int MaximumRecordDataLength

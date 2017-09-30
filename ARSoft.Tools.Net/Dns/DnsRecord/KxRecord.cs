@@ -58,6 +58,15 @@ namespace ARSoft.Tools.Net.Dns
 			Exchanger = exchanger ?? String.Empty;
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 2)
+				throw new FormatException();
+
+			Preference = UInt16.Parse(stringRepresentation[0]);
+			Exchanger = ParseDomainName(origin, stringRepresentation[1]);
+		}
+
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			Preference = DnsMessageBase.ParseUShort(resultData, ref startPosition);
@@ -67,7 +76,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return Preference
-			       + " " + Exchanger;
+			       + " " + Exchanger + ".";
 		}
 
 		protected internal override int MaximumRecordDataLength

@@ -58,6 +58,17 @@ namespace ARSoft.Tools.Net.Dns
 			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
 
+		internal override void ParseRecordData(string origin, string[] stringRepresentation)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new FormatException();
+
+			if (!stringRepresentation[0].StartsWith("0x", StringComparison.InvariantCultureIgnoreCase))
+				throw new FormatException();
+
+			RecordData = stringRepresentation[0].Substring(2).Replace(".", String.Empty).FromBase16String();
+		}
+
 		internal override string RecordDataToString()
 		{
 			return "0x" + RecordData.ToBase16String();
