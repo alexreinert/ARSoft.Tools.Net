@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,10 +21,24 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Spf
 {
+	/// <summary>
+	///   Scope of a SenderID record
+	/// </summary>
 	public enum SenderIDScope
 	{
+		/// <summary>
+		///   Unknown scope
+		/// </summary>
 		Unknown,
+
+		/// <summary>
+		///   MFrom scope, used for lookups of SMTP MAIL FROM address
+		/// </summary>
 		MFrom,
+
+		/// <summary>
+		///   PRA scope, used for lookups of the Purported Responsible Address
+		/// </summary>
 		Pra,
 	}
 }

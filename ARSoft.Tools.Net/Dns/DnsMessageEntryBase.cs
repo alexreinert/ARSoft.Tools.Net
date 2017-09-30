@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,15 +21,33 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Base class for a dns name identity
+	/// </summary>
 	public abstract class DnsMessageEntryBase
 	{
+		/// <summary>
+		///   Domain name
+		/// </summary>
 		public string Name { get; internal set; }
+
+		/// <summary>
+		///   Type of the record
+		/// </summary>
 		public RecordType RecordType { get; internal set; }
+
+		/// <summary>
+		///   Class of the record
+		/// </summary>
 		public RecordClass RecordClass { get; internal set; }
 
 		internal abstract int MaximumLength { get; }
 		internal abstract void Encode(byte[] destination, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames);
 
+		/// <summary>
+		///   Returns the textual representation
+		/// </summary>
+		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
 			return Name + " " + RecordType + " " + RecordClass;

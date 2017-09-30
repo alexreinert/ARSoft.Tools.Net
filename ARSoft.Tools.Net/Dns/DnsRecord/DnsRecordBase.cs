@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,11 +21,17 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Base class representing a dns record
+	/// </summary>
 	public abstract class DnsRecordBase : DnsMessageEntryBase
 	{
 		internal int StartPosition { get; set; }
 		internal ushort RecordDataLength { get; set; }
 
+		/// <summary>
+		///   Seconds which a record should be cached at most
+		/// </summary>
 		public int TimeToLive { get; internal set; }
 
 		protected DnsRecordBase() {}
@@ -117,8 +123,8 @@ namespace ARSoft.Tools.Net.Dns
 					return new NSecRecord();
 				case RecordType.DnsKey:
 					return new DnsKeyRecord();
-				case RecordType.DhcpI:
-					return new DhcpIRecord();
+				case RecordType.Dhcid:
+					return new DhcidRecord();
 				case RecordType.NSec3:
 					return new NSec3Record();
 				case RecordType.NSec3Param:
@@ -142,6 +148,10 @@ namespace ARSoft.Tools.Net.Dns
 		#region ToString
 		internal abstract string RecordDataToString();
 
+		/// <summary>
+		///   Returns the textual representation of a record
+		/// </summary>
+		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
 			string recordData = (RecordDataLength != 0) ? RecordDataToString() : null;

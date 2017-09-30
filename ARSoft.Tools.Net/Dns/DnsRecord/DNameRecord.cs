@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,26 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>DNS Name Redirection record</para> <para>Defined in
+	///                                              <see cref="!:http://tools.ietf.org/html/rfc2672">RFC 2672</see>
+	///                                            </para>
+	/// </summary>
 	public class DNameRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Target of the redirection
+		/// </summary>
 		public string Target { get; private set; }
 
 		internal DNameRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the DNameRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="target"> Target of the redirection </param>
 		public DNameRecord(string name, int timeToLive, string target)
 			: base(name, RecordType.DName, RecordClass.INet, timeToLive)
 		{

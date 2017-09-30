@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,16 +29,20 @@ using ARSoft.Tools.Net.Dns.DynamicUpdate;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	/// Provides a client for querying dns records
+	///   Provides a client for querying dns records
 	/// </summary>
 	public class DnsClient
 	{
 		private const int _DNS_PORT = 53;
 		private readonly List<IPAddress> _dnsServers;
+
+		/// <summary>
+		///   Milliseconds after which a query times out.
+		/// </summary>
 		public int QueryTimeout { get; set; }
 
 		/// <summary>
-		/// Returns a default instance of the DnsClient, which uses the configured dns servers of the executing computer and a query timeout of 10 seconds.
+		///   Returns a default instance of the DnsClient, which uses the configured dns servers of the executing computer and a query timeout of 10 seconds.
 		/// </summary>
 		public static DnsClient Default { get; private set; }
 
@@ -48,10 +52,10 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Provides a new instance with custom dns server and query timeout
+		///   Provides a new instance with custom dns server and query timeout
 		/// </summary>
-		/// <param name="dnsServers">The IPAddress of the dns server to use</param>
-		/// <param name="queryTimeout">Query timeout in milliseconds</param>
+		/// <param name="dnsServers"> The IPAddress of the dns server to use </param>
+		/// <param name="queryTimeout"> Query timeout in milliseconds </param>
 		public DnsClient(IPAddress dnsServers, int queryTimeout)
 		{
 			_dnsServers = new List<IPAddress>() { dnsServers };
@@ -59,10 +63,10 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Provides a new instance with custom dns servers and query timeout
+		///   Provides a new instance with custom dns servers and query timeout
 		/// </summary>
-		/// <param name="dnsServers">The IPAddresses of the dns servers to use</param>
-		/// <param name="queryTimeout">Query timeout in milliseconds</param>
+		/// <param name="dnsServers"> The IPAddresses of the dns servers to use </param>
+		/// <param name="queryTimeout"> Query timeout in milliseconds </param>
 		public DnsClient(List<IPAddress> dnsServers, int queryTimeout)
 		{
 			_dnsServers = dnsServers;
@@ -70,33 +74,33 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Queries a dns server for address records.
+		///   Queries a dns server for address records.
 		/// </summary>
-		/// <param name="name">Domain, that should be queried</param>
-		/// <returns>The complete response of the dns server</returns>
+		/// <param name="name"> Domain, that should be queried </param>
+		/// <returns> The complete response of the dns server </returns>
 		public DnsMessage Resolve(string name)
 		{
 			return Resolve(name, RecordType.A, RecordClass.INet);
 		}
 
 		/// <summary>
-		/// Queries a dns server for specified records.
+		///   Queries a dns server for specified records.
 		/// </summary>
-		/// <param name="name">Domain, that should be queried</param>
-		/// <param name="recordType">Recordtype the should be queried</param>
-		/// <returns>The complete response of the dns server</returns>
+		/// <param name="name"> Domain, that should be queried </param>
+		/// <param name="recordType"> Recordtype the should be queried </param>
+		/// <returns> The complete response of the dns server </returns>
 		public DnsMessage Resolve(string name, RecordType recordType)
 		{
 			return Resolve(name, recordType, RecordClass.INet);
 		}
 
 		/// <summary>
-		/// Queries a dns server for specified records.
+		///   Queries a dns server for specified records.
 		/// </summary>
-		/// <param name="name">Domain, that should be queried</param>
-		/// <param name="recordType">Type the should be queried</param>
-		/// <param name="recordClass">Class the should be queried</param>
-		/// <returns>The complete response of the dns server</returns>
+		/// <param name="name"> Domain, that should be queried </param>
+		/// <param name="recordType"> Type the should be queried </param>
+		/// <param name="recordClass"> Class the should be queried </param>
+		/// <returns> The complete response of the dns server </returns>
 		public DnsMessage Resolve(string name, RecordType recordType, RecordClass recordClass)
 		{
 			if (String.IsNullOrEmpty(name))
@@ -111,39 +115,42 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Queries a dns server for specified records asynchronously.
+		///   Queries a dns server for specified records asynchronously.
 		/// </summary>
-		/// <param name="name">Domain, that should be queried</param>
-		/// <param name="requestCallback">An <see cref="System.AsyncCallback"/> delegate that references the method to invoked then the operation is complete.</param>
-		/// <param name="state">A user-defined object that contains information about the receive operation. This object is passed to the <paramref name="requestCallback"/> delegate when the operation is complete.</param>
-		/// <returns>An <see cref="System.IAsyncResult"/> IAsyncResult object that references the asynchronous receive.</returns>
+		/// <param name="name"> Domain, that should be queried </param>
+		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
+		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
+		///    name="requestCallback" /> delegate when the operation is complete. </param>
+		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
 		public IAsyncResult BeginResolve(string name, AsyncCallback requestCallback, object state)
 		{
 			return BeginResolve(name, RecordType.A, RecordClass.INet, requestCallback, state);
 		}
 
 		/// <summary>
-		/// Queries a dns server for specified records asynchronously.
+		///   Queries a dns server for specified records asynchronously.
 		/// </summary>
-		/// <param name="name">Domain, that should be queried</param>
-		/// <param name="recordType">Type the should be queried</param>
-		/// <param name="requestCallback">An <see cref="System.AsyncCallback"/> delegate that references the method to invoked then the operation is complete.</param>
-		/// <param name="state">A user-defined object that contains information about the receive operation. This object is passed to the <paramref name="requestCallback"/> delegate when the operation is complete.</param>
-		/// <returns>An <see cref="System.IAsyncResult"/> IAsyncResult object that references the asynchronous receive.</returns>
+		/// <param name="name"> Domain, that should be queried </param>
+		/// <param name="recordType"> Type the should be queried </param>
+		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
+		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
+		///    name="requestCallback" /> delegate when the operation is complete. </param>
+		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
 		public IAsyncResult BeginResolve(string name, RecordType recordType, AsyncCallback requestCallback, object state)
 		{
 			return BeginResolve(name, recordType, RecordClass.INet, requestCallback, state);
 		}
 
 		/// <summary>
-		/// Queries a dns server for specified records asynchronously.
+		///   Queries a dns server for specified records asynchronously.
 		/// </summary>
-		/// <param name="name">Domain, that should be queried</param>
-		/// <param name="recordType">Type the should be queried</param>
-		/// <param name="recordClass">Class the should be queried</param>
-		/// <param name="requestCallback">An <see cref="System.AsyncCallback"/> delegate that references the method to invoked then the operation is complete.</param>
-		/// <param name="state">A user-defined object that contains information about the receive operation. This object is passed to the <paramref name="requestCallback"/> delegate when the operation is complete.</param>
-		/// <returns>An <see cref="System.IAsyncResult"/> IAsyncResult object that references the asynchronous receive.</returns>
+		/// <param name="name"> Domain, that should be queried </param>
+		/// <param name="recordType"> Type the should be queried </param>
+		/// <param name="recordClass"> Class the should be queried </param>
+		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
+		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
+		///    name="requestCallback" /> delegate when the operation is complete. </param>
+		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
 		public IAsyncResult BeginResolve(string name, RecordType recordType, RecordClass recordClass, AsyncCallback requestCallback, object state)
 		{
 			if (String.IsNullOrEmpty(name))
@@ -158,10 +165,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Ends a pending asynchronous operation.
+		///   Ends a pending asynchronous operation.
 		/// </summary>
-		/// <param name="ar">An <see cref="System.IAsyncResult"/> object returned by a call to <see cref="ARSoft.Tools.Net.Dns.DnsClient.BeginResolve" />.</param>
-		/// <returns>The complete response of the dns server</returns>
+		/// <param name="ar"> An <see cref="System.IAsyncResult" /> object returned by a call to <see
+		///    cref="ARSoft.Tools.Net.Dns.DnsClient.BeginResolve" /> . </param>
+		/// <returns> The complete response of the dns server </returns>
 		public DnsMessage EndResolve(IAsyncResult ar)
 		{
 			DnsAsyncState state = (DnsAsyncState) ar;
@@ -169,10 +177,10 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Send a custom message to the dns server and returns the answer.
+		///   Send a custom message to the dns server and returns the answer.
 		/// </summary>
-		/// <param name="message">Message, that should be send to the dns server</param>
-		/// <returns>The complete response of the dns server</returns>
+		/// <param name="message"> Message, that should be send to the dns server </param>
+		/// <returns> The complete response of the dns server </returns>
 		public DnsMessage SendMessage(DnsMessage message)
 		{
 			if (message == null)
@@ -185,10 +193,10 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Send an dynamic update to the dns server and returns the answer.
+		///   Send an dynamic update to the dns server and returns the answer.
 		/// </summary>
-		/// <param name="message">Update, that should be send to the dns server</param>
-		/// <returns>The complete response of the dns server</returns>
+		/// <param name="message"> Update, that should be send to the dns server </param>
+		/// <returns> The complete response of the dns server </returns>
 		public DnsUpdateMessage SendUpdate(DnsUpdateMessage message)
 		{
 			if (message == null)
@@ -201,7 +209,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		private TMessage SendMessage<TMessage>(TMessage message)
-			where TMessage: DnsMessageBase, new()
+			where TMessage : DnsMessageBase, new()
 		{
 			if (message.TransactionID == 0)
 			{
@@ -227,7 +235,7 @@ namespace ARSoft.Tools.Net.Dns
 					if (message.TSigOptions != null)
 					{
 						tsigKeySelector = (n, a) => message.TSigOptions.KeyData;
-						tsigOriginalMac = message.TSigOptions.OriginalMac;
+						tsigOriginalMac = message.TSigOptions.Mac;
 					}
 					else
 					{
@@ -323,7 +331,13 @@ namespace ARSoft.Tools.Net.Dns
 						int length = DnsMessageBase.ParseUShort(lengthBuffer, ref tmp);
 
 						resultData = new byte[length];
-						tcpStream.Read(resultData, 0, length);
+
+						int readBytes = 0;
+
+						while (readBytes < length)
+						{
+							readBytes += tcpStream.Read(resultData, readBytes, length - readBytes);
+						}
 					}
 
 					return resultData;
@@ -337,12 +351,13 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Send a custom message to the dns server and returns the answer asynchronously.
+		///   Send a custom message to the dns server and returns the answer asynchronously.
 		/// </summary>
-		/// <param name="message">Message, that should be send to the dns server</param>
-		/// <param name="requestCallback">An <see cref="System.AsyncCallback"/> delegate that references the method to invoked then the operation is complete.</param>
-		/// <param name="state">A user-defined object that contains information about the receive operation. This object is passed to the <paramref name="requestCallback"/> delegate when the operation is complete.</param>
-		/// <returns>An <see cref="System.IAsyncResult"/> IAsyncResult object that references the asynchronous receive.</returns>
+		/// <param name="message"> Message, that should be send to the dns server </param>
+		/// <param name="requestCallback"> An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete. </param>
+		/// <param name="state"> A user-defined object that contains information about the receive operation. This object is passed to the <paramref
+		///    name="requestCallback" /> delegate when the operation is complete. </param>
+		/// <returns> An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive. </returns>
 		public IAsyncResult BeginSendMessage(DnsMessage message, AsyncCallback requestCallback, object state)
 		{
 			if (message == null)
@@ -363,7 +378,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (message.TSigOptions != null)
 			{
 				asyncResult.TSigKeySelector = (a, n) => message.TSigOptions.KeyData;
-				asyncResult.TSigOriginalMac = message.TSigOptions.OriginalMac;
+				asyncResult.TSigOriginalMac = message.TSigOptions.Mac;
 			}
 
 			bool sendByTcp = ((queryLength > 512) || (message.Questions[0].RecordType == RecordType.Axfr) || (message.Questions[0].RecordType == RecordType.Ixfr));
@@ -381,10 +396,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Ends a pending asynchronous operation.
+		///   Ends a pending asynchronous operation.
 		/// </summary>
-		/// <param name="ar">An <see cref="System.IAsyncResult"/> object returned by a call to <see cref="ARSoft.Tools.Net.Dns.DnsClient.BeginSendMessage"/>.</param>
-		/// <returns>The complete response of the dns server</returns>
+		/// <param name="ar"> An <see cref="System.IAsyncResult" /> object returned by a call to <see
+		///    cref="ARSoft.Tools.Net.Dns.DnsClient.BeginSendMessage" /> . </param>
+		/// <returns> The complete response of the dns server </returns>
 		public DnsMessage EndSendMessage(IAsyncResult ar)
 		{
 			DnsAsyncState state = (DnsAsyncState) ar;
@@ -408,9 +424,10 @@ namespace ARSoft.Tools.Net.Dns
 			state.UdpClient = new UdpClient(state.UdpEndpoint.AddressFamily);
 			state.UdpClient.Connect(state.UdpEndpoint);
 			state.TimedOut = false;
+			state.TimeRemaining = QueryTimeout;
 
 			IAsyncResult asyncResult = state.UdpClient.BeginSend(state.QueryData, state.QueryLength, UdpSendCompleted, state);
-			state.Timer = new Timer(UdpTimedOut, asyncResult, QueryTimeout, Timeout.Infinite);
+			state.Timer = new Timer(UdpTimedOut, asyncResult, state.TimeRemaining, Timeout.Infinite);
 		}
 
 		private static void UdpTimedOut(object ar)
@@ -442,7 +459,7 @@ namespace ARSoft.Tools.Net.Dns
 				state.UdpClient.EndSend(ar);
 
 				IAsyncResult asyncResult = state.UdpClient.BeginReceive(UdpReceiveCompleted, state);
-				state.Timer = new Timer(UdpTimedOut, asyncResult, QueryTimeout, Timeout.Infinite);
+				state.Timer = new Timer(UdpTimedOut, asyncResult, state.TimeRemaining, Timeout.Infinite);
 			}
 		}
 
@@ -513,9 +530,10 @@ namespace ARSoft.Tools.Net.Dns
 
 			state.TcpClient = new TcpClient(server.AddressFamily);
 			state.TimedOut = false;
+			state.TimeRemaining = QueryTimeout;
 
 			IAsyncResult asyncResult = state.TcpClient.BeginConnect(server, _DNS_PORT, TcpConnectCompleted, state);
-			state.Timer = new Timer(TcpTimedOut, asyncResult, QueryTimeout, Timeout.Infinite);
+			state.Timer = new Timer(TcpTimedOut, asyncResult, state.TimeRemaining, Timeout.Infinite);
 		}
 
 		private static void TcpTimedOut(object ar)
@@ -556,7 +574,7 @@ namespace ARSoft.Tools.Net.Dns
 				DnsMessageBase.EncodeUShort(state.TcpBuffer, ref tmp, (ushort) state.QueryLength);
 
 				IAsyncResult asyncResult = state.TcpStream.BeginWrite(state.TcpBuffer, 0, 2, TcpSendLengthCompleted, state);
-				state.Timer = new Timer(TcpTimedOut, asyncResult, QueryTimeout, Timeout.Infinite);
+				state.Timer = new Timer(TcpTimedOut, asyncResult, state.TimeRemaining, Timeout.Infinite);
 			}
 		}
 
@@ -577,7 +595,7 @@ namespace ARSoft.Tools.Net.Dns
 				state.TcpStream.EndWrite(ar);
 
 				IAsyncResult asyncResult = state.TcpStream.BeginWrite(state.QueryData, 0, state.QueryLength, TcpSendCompleted, state);
-				state.Timer = new Timer(TcpTimedOut, asyncResult, QueryTimeout, Timeout.Infinite);
+				state.Timer = new Timer(TcpTimedOut, asyncResult, state.TimeRemaining, Timeout.Infinite);
 			}
 		}
 
@@ -597,8 +615,10 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				state.TcpStream.EndWrite(ar);
 
+				state.TcpBytesToReceive = 2;
+
 				IAsyncResult asyncResult = state.TcpStream.BeginRead(state.TcpBuffer, 0, 2, TcpReceiveLengthCompleted, state);
-				state.Timer = new Timer(TcpTimedOut, asyncResult, QueryTimeout, Timeout.Infinite);
+				state.Timer = new Timer(TcpTimedOut, asyncResult, state.TimeRemaining, Timeout.Infinite);
 			}
 		}
 
@@ -616,15 +636,24 @@ namespace ARSoft.Tools.Net.Dns
 			}
 			else
 			{
-				state.TcpStream.EndRead(ar);
+				state.TcpBytesToReceive -= state.TcpStream.EndRead(ar);
 
-				int tmp = 0;
-				int responseLength = DnsMessageBase.ParseUShort(state.TcpBuffer, ref tmp);
+				if (state.TcpBytesToReceive > 0)
+				{
+					IAsyncResult asyncResult = state.TcpStream.BeginRead(state.TcpBuffer, 2 - state.TcpBytesToReceive, state.TcpBytesToReceive, TcpReceiveLengthCompleted, state);
+					state.Timer = new Timer(TcpTimedOut, asyncResult, state.TimeRemaining, Timeout.Infinite);
+				}
+				else
+				{
+					int tmp = 0;
+					int responseLength = DnsMessageBase.ParseUShort(state.TcpBuffer, ref tmp);
 
-				state.TcpBuffer = new byte[responseLength];
+					state.TcpBuffer = new byte[responseLength];
+					state.TcpBytesToReceive = responseLength;
 
-				IAsyncResult asyncResult = state.TcpStream.BeginRead(state.TcpBuffer, 0, responseLength, TcpReceiveCompleted, state);
-				state.Timer = new Timer(TcpTimedOut, asyncResult, QueryTimeout, Timeout.Infinite);
+					IAsyncResult asyncResult = state.TcpStream.BeginRead(state.TcpBuffer, 0, responseLength, TcpReceiveCompleted, state);
+					state.Timer = new Timer(TcpTimedOut, asyncResult, state.TimeRemaining, Timeout.Infinite);
+				}
 			}
 		}
 
@@ -642,26 +671,35 @@ namespace ARSoft.Tools.Net.Dns
 			}
 			else
 			{
-				state.TcpStream.EndRead(ar);
+				state.TcpBytesToReceive -= state.TcpStream.EndRead(ar);
 
-				state.TcpStream.Close();
-				state.TcpClient.Close();
-				state.TcpStream = null;
-				state.TcpClient = null;
-
-				state.TcpBuffer = null;
-
-				state.Response = new DnsMessage();
-				state.Response.Parse(state.TcpBuffer, false, state.TSigKeySelector, state.TSigOriginalMac);
-
-				if ((state.Response.ReturnCode == ReturnCode.ServerFailure) && (state.ServerIndex++ < state.Servers.Count))
+				if (state.TcpBytesToReceive > 0)
 				{
-					TcpBeginConnect(state);
-					return;
+					IAsyncResult asyncResult = state.TcpStream.BeginRead(state.TcpBuffer, state.TcpBuffer.Length - state.TcpBytesToReceive, state.TcpBytesToReceive, TcpReceiveCompleted, state);
+					state.Timer = new Timer(TcpTimedOut, asyncResult, state.TimeRemaining, Timeout.Infinite);
 				}
 				else
 				{
-					state.SetCompleted();
+					state.TcpStream.Close();
+					state.TcpClient.Close();
+					state.TcpStream = null;
+					state.TcpClient = null;
+
+					byte[] buffer = state.TcpBuffer;
+					state.TcpBuffer = null;
+
+					state.Response = new DnsMessage();
+					state.Response.Parse(buffer, false, state.TSigKeySelector, state.TSigOriginalMac);
+
+					if ((state.Response.ReturnCode == ReturnCode.ServerFailure) && (state.ServerIndex++ < state.Servers.Count))
+					{
+						TcpBeginConnect(state);
+						return;
+					}
+					else
+					{
+						state.SetCompleted();
+					}
 				}
 			}
 		}
@@ -671,16 +709,23 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			List<IPAddress> res = new List<IPAddress>();
 
-			foreach (NetworkInterface nic in NetworkInterface.GetAllNetworkInterfaces())
+			try
 			{
-				if ((nic.OperationalStatus == OperationalStatus.Up) && (nic.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+				foreach (NetworkInterface nic in NetworkInterface.GetAllNetworkInterfaces())
 				{
-					foreach (IPAddress dns in nic.GetIPProperties().DnsAddresses)
+					if ((nic.OperationalStatus == OperationalStatus.Up) && (nic.NetworkInterfaceType != NetworkInterfaceType.Loopback))
 					{
-						if (!res.Contains(dns))
-							res.Add(dns);
+						foreach (IPAddress dns in nic.GetIPProperties().DnsAddresses)
+						{
+							if (!res.Contains(dns))
+								res.Add(dns);
+						}
 					}
 				}
+			}
+			catch (Exception e)
+			{
+				Trace.TraceError("Configured nameserver couldn't be determined: " + e);
 			}
 
 			// try parsing resolv.conf since getting data by NetworkInterface is not supported on non-windows mono
@@ -721,7 +766,7 @@ namespace ARSoft.Tools.Net.Dns
 				res.Add(IPAddress.Parse("8.8.8.8"));
 			}
 
-			return res;
+			return res.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 1 : 0).ToList();
 		}
 	}
 }

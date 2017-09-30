@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,35 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Next owner</para> <para>Defined in
+	///                             <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+	///                             and
+	///                             <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+	///                           </para>
+	/// </summary>
 	public class NSecRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Name of next owner
+		/// </summary>
 		public string NextDomainName { get; private set; }
+
+		/// <summary>
+		///   Record types of the next owner
+		/// </summary>
 		public List<RecordType> Types { get; private set; }
 
 		internal NSecRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the NSecRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="recordClass"> Class of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="nextDomainName"> Name of next owner </param>
+		/// <param name="types"> Record types of the next owner </param>
 		public NSecRecord(string name, RecordClass recordClass, int timeToLive, string nextDomainName, List<RecordType> types)
 			: base(name, RecordType.NSec, recordClass, timeToLive)
 		{
@@ -80,7 +102,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return NextDomainName
-			       + " " + String.Join(" ", Types.ConvertAll(ToString).ToArray());
+			       + " " + String.Join(" ", Types.ConvertAll<String>(ToString).ToArray());
 		}
 
 		protected internal override int MaximumRecordDataLength

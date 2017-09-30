@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,30 +27,38 @@ using ARSoft.Tools.Net.Dns;
 namespace ARSoft.Tools.Net.Spf
 {
 	/// <summary>
-	/// Base implementation of a validator for SPF and SenderID records
+	///   Base implementation of a validator for SPF and SenderID records
 	/// </summary>
-	/// <typeparam name="T">Type of the record</typeparam>
+	/// <typeparam name="T"> Type of the record </typeparam>
 	public abstract class ValidatorBase<T>
-		where T: SpfRecordBase
+		where T : SpfRecordBase
 	{
 		/// <summary>
-		/// Domain name which was used in HELO/EHLO
+		///   Domain name which was used in HELO/EHLO
 		/// </summary>
 		public string HeloDomain { get; set; }
 
 		/// <summary>
-		/// IP address of the computer validating the record
-		/// <remarks>Default is the first IP the computer</remarks>
+		///   IP address of the computer validating the record <para>Default is the first IP the computer</para>
 		/// </summary>
 		public IPAddress LocalIP { get; set; }
 
 		/// <summary>
-		/// Name of the computer validating the record
-		/// <remarks>Default is the computer name</remarks>
+		///   Name of the computer validating the record <para>Default is the computer name</para>
 		/// </summary>
 		public string LocalDomain { get; set; }
 
-		private const int _MAX_LOOKUP_LIMIT = 10;
+		private int _dnsLookupLimit = 20;
+
+		/// <summary>
+		///   The maximum number of DNS lookups allowed <para>Default is 20</para>
+		/// </summary>
+		public int DnsLookupLimit
+		{
+			get { return _dnsLookupLimit; }
+			set { _dnsLookupLimit = value; }
+		}
+
 		private readonly Dictionary<string, DnsMessage> _dnsCache = new Dictionary<string, DnsMessage>();
 
 		private int LookupCount
@@ -61,12 +69,12 @@ namespace ARSoft.Tools.Net.Spf
 		protected abstract bool TryLoadRecords(string domain, out T record, out SpfQualifier errorResult);
 
 		/// <summary>
-		/// Validates the record(s)
+		///   Validates the record(s)
 		/// </summary>
-		/// <param name="ip">The IP address of the SMTP client that is emitting the mail</param>
-		/// <param name="domain">The domain portion of the "MAIL FROM" or "HELO" identity</param>
-		/// <param name="sender">The "MAIL FROM" or "HELO" identity</param>
-		/// <returns>The result of the evaluation</returns>
+		/// <param name="ip"> The IP address of the SMTP client that is emitting the mail </param>
+		/// <param name="domain"> The domain portion of the "MAIL FROM" or "HELO" identity </param>
+		/// <param name="sender"> The "MAIL FROM" or "HELO" identity </param>
+		/// <returns> The result of the evaluation </returns>
 		public SpfQualifier CheckHost(IPAddress ip, string domain, string sender)
 		{
 			string explanation;
@@ -74,13 +82,13 @@ namespace ARSoft.Tools.Net.Spf
 		}
 
 		/// <summary>
-		/// Validates the record(s)
+		///   Validates the record(s)
 		/// </summary>
-		/// <param name="ip">The IP address of the SMTP client that is emitting the mail</param>
-		/// <param name="domain">The domain portion of the "MAIL FROM" or "HELO" identity</param>
-		/// <param name="sender">The "MAIL FROM" or "HELO" identity</param>
-		/// <param name="explanation">A explanation in case of result Fail</param>
-		/// <returns>The result of the evaluation</returns>
+		/// <param name="ip"> The IP address of the SMTP client that is emitting the mail </param>
+		/// <param name="domain"> The domain portion of the "MAIL FROM" or "HELO" identity </param>
+		/// <param name="sender"> The "MAIL FROM" or "HELO" identity </param>
+		/// <param name="explanation"> A explanation in case of result Fail </param>
+		/// <returns> The result of the evaluation </returns>
 		public SpfQualifier CheckHost(IPAddress ip, string sender, string domain, out string explanation)
 		{
 			return CheckHostInternal(ip, sender, domain, true, out explanation);
@@ -120,7 +128,7 @@ namespace ARSoft.Tools.Net.Spf
 			#region Evaluate mechanism
 			foreach (SpfMechanism mechanism in record.Terms.OfType<SpfMechanism>())
 			{
-				if (LookupCount > _MAX_LOOKUP_LIMIT)
+				if (LookupCount > DnsLookupLimit)
 					return SpfQualifier.PermError;
 
 				SpfQualifier qualifier = CheckMechanism(mechanism, ip, sender, domain);
@@ -228,8 +236,14 @@ namespace ARSoft.Tools.Net.Spf
 					IPAddress compareAddress;
 					if (IPAddress.TryParse(mechanism.Domain, out compareAddress))
 					{
+						if (ip.AddressFamily != compareAddress.AddressFamily)
+							return SpfQualifier.None;
+
 						if (mechanism.Prefix.HasValue)
 						{
+							if ((mechanism.Prefix.Value < 0) || (mechanism.Prefix.Value > (compareAddress.AddressFamily == AddressFamily.InterNetworkV6 ? 128 : 32)))
+								return SpfQualifier.PermError;
+
 							if (ip.GetNetworkAddress(mechanism.Prefix.Value).Equals(compareAddress.GetNetworkAddress(mechanism.Prefix.Value)))
 							{
 								return mechanism.Qualifier;
@@ -334,16 +348,16 @@ namespace ARSoft.Tools.Net.Spf
 				recordType = RecordType.A;
 			}
 
-			if (prefix4.HasValue)
+			if (prefix.HasValue)
 			{
-				ipAddress = ipAddress.GetNetworkAddress(prefix4.Value);
+				ipAddress = ipAddress.GetNetworkAddress(prefix.Value);
 			}
 
 			DnsMessage dnsMessage = ResolveDns(domain, recordType);
 			if ((dnsMessage == null) || ((dnsMessage.ReturnCode != ReturnCode.NoError) && (dnsMessage.ReturnCode != ReturnCode.NxDomain)))
 				return null;
 
-			foreach (ARecord dnsRecord in dnsMessage.AnswerRecords.Where(record => record.RecordType == recordType).Cast<IAddressRecord>())
+			foreach (var dnsRecord in dnsMessage.AnswerRecords.Where(record => record.RecordType == recordType).Cast<IAddressRecord>())
 			{
 				if (prefix.HasValue)
 				{
@@ -360,7 +374,7 @@ namespace ARSoft.Tools.Net.Spf
 			return false;
 		}
 
-		private DnsMessage ResolveDns(string domain, RecordType recordType)
+		protected DnsMessage ResolveDns(string domain, RecordType recordType)
 		{
 			string key = EnumHelper<RecordType>.ToString(recordType) + "|" + domain;
 

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,10 +23,16 @@ using System.Text;
 namespace ARSoft.Tools.Net.Spf
 {
 	/// <summary>
-	/// Parsed instance of the textual representation of a SPF record
+	///   <para>Parsed instance of the textual representation of a SPF record</para> <para>Defined in
+	///                                                                                <see cref="!:http://tools.ietf.org/html/rfc4408">RFC 4408</see>
+	///                                                                              </para>
 	/// </summary>
 	public class SpfRecord : SpfRecordBase
 	{
+		/// <summary>
+		///   Returns the textual representation of a SPF record
+		/// </summary>
+		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
 			StringBuilder res = new StringBuilder();
@@ -49,21 +55,21 @@ namespace ARSoft.Tools.Net.Spf
 		}
 
 		/// <summary>
-		/// Checks, whether a given string starts with a correct SPF prefix
+		///   Checks, whether a given string starts with a correct SPF prefix
 		/// </summary>
-		/// <param name="s">Textual representation to check</param>
-		/// <returns>true in case of correct prefix</returns>
+		/// <param name="s"> Textual representation to check </param>
+		/// <returns> true in case of correct prefix </returns>
 		public static bool IsSpfRecord(string s)
 		{
 			return !String.IsNullOrEmpty(s) && s.StartsWith("v=spf1 ");
 		}
 
 		/// <summary>
-		/// Tries to parse the textual representation of a SPF string
+		///   Tries to parse the textual representation of a SPF string
 		/// </summary>
-		/// <param name="s">Textual representation to check</param>
-		/// <param name="value">Parsed spf record in case of successful parsing</param>
-		/// <returns>true in case of successful parsing</returns>
+		/// <param name="s"> Textual representation to check </param>
+		/// <param name="value"> Parsed spf record in case of successful parsing </param>
+		/// <returns> true in case of successful parsing </returns>
 		public static bool TryParse(string s, out SpfRecord value)
 		{
 			if (!IsSpfRecord(s))
@@ -88,14 +94,14 @@ namespace ARSoft.Tools.Net.Spf
 		}
 
 		/// <summary>
-		/// Validates the SPF records
+		///   Validates the SPF records
 		/// </summary>
-		/// <param name="clientAddress">The IP address of the SMTP client that is emitting the mail</param>
-		/// <param name="clientName">Parameter is not more in use, only for signature compability</param>
-		/// <param name="heloName">Domain name which was used in HELO/EHLO</param>
-		/// <param name="domain">The domain portion of the "MAIL FROM" or "HELO" identity</param>
-		/// <param name="sender">The "MAIL FROM" or "HELO" identity</param>
-		/// <returns>Result of the evaluation</returns>
+		/// <param name="clientAddress"> The IP address of the SMTP client that is emitting the mail </param>
+		/// <param name="clientName"> Parameter is not more in use, only for signature compability </param>
+		/// <param name="heloName"> Domain name which was used in HELO/EHLO </param>
+		/// <param name="domain"> The domain portion of the "MAIL FROM" or "HELO" identity </param>
+		/// <param name="sender"> The "MAIL FROM" or "HELO" identity </param>
+		/// <returns> Result of the evaluation </returns>
 		[Obsolete("Will be removed in further versions, please use SpfValidator class instead")]
 		public static SpfQualifier CheckHost(IPAddress clientAddress, string clientName, string heloName, string domain, string sender)
 		{

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,11 @@ using System.Text;
 
 namespace ARSoft.Tools.Net
 {
+	/// <summary>
+	///   <para>Extension class for encoding and decoding Base16, Base32 and Base64</para> <para>Defined in
+	///                                                                                      <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see>
+	///                                                                                    </para>
+	/// </summary>
 	public static class BaseEncoding
 	{
 		#region Helper
@@ -52,20 +57,22 @@ namespace ARSoft.Tools.Net
 		private static readonly Dictionary<char, byte> _base16ReverseAlphabet = GetAlphabet(_BASE16_ALPHABET, true);
 
 		/// <summary>
-		/// Decodes a Base16 string as described in RFC4648.
+		///   Decodes a Base16 string as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inData">An Base16 encoded string.</param>
+		/// <param name="inData"> An Base16 encoded string. </param>
+		/// <returns> Decoded data </returns>
 		public static byte[] FromBase16String(this string inData)
 		{
 			return inData.ToCharArray().FromBase16CharArray(0, inData.Length);
 		}
 
 		/// <summary>
-		/// Decodes a Base16 char array as described in RFC4648.
+		///   Decodes a Base16 char array as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inData">An Base16 encoded char array.</param>
-		/// <param name="offset">An offset in inData.</param>
-		/// <param name="length">The number of elements of inData to decode.</param>
+		/// <param name="inData"> An Base16 encoded char array. </param>
+		/// <param name="offset"> An offset in inData. </param>
+		/// <param name="length"> The number of elements of inData to decode. </param>
+		/// <returns> Decoded data </returns>
 		public static byte[] FromBase16CharArray(this char[] inData, int offset, int length)
 		{
 			byte[] res = new byte[length / 2];
@@ -82,20 +89,22 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		/// Converts a byte array to its corresponding Base16 encoding described in RFC4648.
+		///   Converts a byte array to its corresponding Base16 encoding described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inArray">An array of 8-bit unsigned integers.</param>
+		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
+		/// <returns> Encoded string </returns>
 		public static string ToBase16String(this byte[] inArray)
 		{
 			return inArray.ToBase16String(0, inArray.Length);
 		}
 
 		/// <summary>
-		/// Converts a byte array to its corresponding Base16 encoding described in RFC4648.
+		///   Converts a byte array to its corresponding Base16 encoding described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inArray">An array of 8-bit unsigned integers.</param>
-		/// <param name="offset">An offset in inArray.</param>
-		/// <param name="length">The number of elements of inArray to convert.</param>
+		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
+		/// <param name="offset"> An offset in inArray. </param>
+		/// <param name="length"> The number of elements of inArray to convert. </param>
+		/// <returns> Encoded string </returns>
 		public static string ToBase16String(this byte[] inArray, int offset, int length)
 		{
 			char[] outData = new char[length * 2];
@@ -120,40 +129,44 @@ namespace ARSoft.Tools.Net
 		private static readonly Dictionary<char, byte> _base32ReverseAlphabet = GetAlphabet(_BASE32_ALPHABET, true);
 
 		/// <summary>
-		/// Decodes a Base32 string as described in RFC4648.
+		///   Decodes a Base32 string as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inData">An Base32 encoded string.</param>
+		/// <param name="inData"> An Base32 encoded string. </param>
+		/// <returns> Decoded data </returns>
 		public static byte[] FromBase32String(this string inData)
 		{
 			return inData.ToCharArray().FromBase32CharArray(0, inData.Length);
 		}
 
 		/// <summary>
-		/// Decodes a Base32 char array as described in RFC4648.
+		///   Decodes a Base32 char array as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inData">An Base32 encoded char array.</param>
-		/// <param name="offset">An offset in inData.</param>
-		/// <param name="length">The number of elements of inData to decode.</param>
+		/// <param name="inData"> An Base32 encoded char array. </param>
+		/// <param name="offset"> An offset in inData. </param>
+		/// <param name="length"> The number of elements of inData to decode. </param>
+		/// <returns> Decoded data </returns>
 		public static byte[] FromBase32CharArray(this char[] inData, int offset, int length)
 		{
 			return inData.FromBase32CharArray(offset, length, _base32ReverseAlphabet);
 		}
 
 		/// <summary>
-		/// Converts a byte array to its corresponding Base32 encoding described in RFC4648.
+		///   Converts a byte array to its corresponding Base32 encoding described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inArray">An array of 8-bit unsigned integers.</param>
+		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
+		/// <returns> Encoded string </returns>
 		public static string ToBase32String(this byte[] inArray)
 		{
 			return inArray.ToBase32String(0, inArray.Length);
 		}
 
 		/// <summary>
-		/// Converts a byte array to its corresponding Base32 encoding described in RFC4648.
+		///   Converts a byte array to its corresponding Base32 encoding described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inArray">An array of 8-bit unsigned integers.</param>
-		/// <param name="offset">An offset in inArray.</param>
-		/// <param name="length">The number of elements of inArray to convert.</param>
+		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
+		/// <param name="offset"> An offset in inArray. </param>
+		/// <param name="length"> The number of elements of inArray to convert. </param>
+		/// <returns> Encoded string </returns>
 		public static string ToBase32String(this byte[] inArray, int offset, int length)
 		{
 			return inArray.ToBase32String(offset, length, _base32Alphabet);
@@ -164,40 +177,46 @@ namespace ARSoft.Tools.Net
 		private static readonly Dictionary<char, byte> _base32HexReverseAlphabet = GetAlphabet(_BASE32_HEX_ALPHABET, true);
 
 		/// <summary>
-		/// Decodes a Base32Hex string as described in RFC4648.
+		///   Decodes a Base32Hex string as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inData">An Base32Hex encoded string.</param>
+		/// <param name="inData"> An Base32Hex encoded string. </param>
+		/// <returns> Decoded data </returns>
 		public static byte[] FromBase32HexString(this string inData)
 		{
 			return inData.ToCharArray().FromBase32HexCharArray(0, inData.Length);
 		}
 
 		/// <summary>
-		/// Decodes a Base32Hex char array as described in RFC4648.
+		///   Decodes a Base32Hex char array as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inData">An Base32Hex encoded char array.</param>
-		/// <param name="offset">An offset in inData.</param>
-		/// <param name="length">The number of elements of inData to decode.</param>
+		/// <param name="inData"> An Base32Hex encoded char array. </param>
+		/// <param name="offset"> An offset in inData. </param>
+		/// <param name="length"> The number of elements of inData to decode. </param>
+		/// <returns> Decoded data </returns>
 		public static byte[] FromBase32HexCharArray(this char[] inData, int offset, int length)
 		{
 			return inData.FromBase32CharArray(offset, length, _base32HexReverseAlphabet);
 		}
 
 		/// <summary>
-		/// Converts a byte array to its corresponding Base32Hex encoding described in RFC4648.
+		///   Converts a byte array to its corresponding Base32Hex encoding described in <see
+		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inArray">An array of 8-bit unsigned integers.</param>
+		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
+		/// <returns> Encoded string </returns>
 		public static string ToBase32HexString(this byte[] inArray)
 		{
 			return inArray.ToBase32HexString(0, inArray.Length);
 		}
 
 		/// <summary>
-		/// Converts a byte array to its corresponding Base32Hex encoding described in RFC4648.
+		///   Converts a byte array to its corresponding Base32Hex encoding described in <see
+		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inArray">An array of 8-bit unsigned integers.</param>
-		/// <param name="offset">An offset in inArray.</param>
-		/// <param name="length">The number of elements of inArray to convert.</param>
+		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
+		/// <param name="offset"> An offset in inArray. </param>
+		/// <param name="length"> The number of elements of inArray to convert. </param>
+		/// <returns> Encoded string </returns>
 		public static string ToBase32HexString(this byte[] inArray, int offset, int length)
 		{
 			return inArray.ToBase32String(offset, length, _base32HexAlphabet);
@@ -367,40 +386,44 @@ namespace ARSoft.Tools.Net
 		private static readonly Dictionary<char, byte> _base64ReverseAlphabet = GetAlphabet(_BASE64_ALPHABET, false);
 
 		/// <summary>
-		/// Decodes a Base64 string as described in RFC4648.
+		///   Decodes a Base64 string as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inData">An Base64 encoded string.</param>
+		/// <param name="inData"> An Base64 encoded string. </param>
+		/// <returns> Decoded data </returns>
 		public static byte[] FromBase64String(this string inData)
 		{
 			return inData.ToCharArray().FromBase64CharArray(0, inData.Length);
 		}
 
 		/// <summary>
-		/// Decodes a Base64 char array as described in RFC4648.
+		///   Decodes a Base64 char array as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inData">An Base64 encoded char array.</param>
-		/// <param name="offset">An offset in inData.</param>
-		/// <param name="length">The number of elements of inData to decode.</param>
+		/// <param name="inData"> An Base64 encoded char array. </param>
+		/// <param name="offset"> An offset in inData. </param>
+		/// <param name="length"> The number of elements of inData to decode. </param>
+		/// <returns> Decoded data </returns>
 		public static byte[] FromBase64CharArray(this char[] inData, int offset, int length)
 		{
 			return inData.FromBase64CharArray(offset, length, _base64ReverseAlphabet);
 		}
 
 		/// <summary>
-		/// Converts a byte array to its corresponding Base64 encoding described in RFC4648.
+		///   Converts a byte array to its corresponding Base64 encoding described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inArray">An array of 8-bit unsigned integers.</param>
+		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
+		/// <returns> Encoded string </returns>
 		public static string ToBase64String(this byte[] inArray)
 		{
 			return inArray.ToBase64String(0, inArray.Length);
 		}
 
 		/// <summary>
-		/// Converts a byte array to its corresponding Base64 encoding described in RFC4648.
+		///   Converts a byte array to its corresponding Base64 encoding described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inArray">An array of 8-bit unsigned integers.</param>
-		/// <param name="offset">An offset in inArray.</param>
-		/// <param name="length">The number of elements of inArray to convert.</param>
+		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
+		/// <param name="offset"> An offset in inArray. </param>
+		/// <param name="length"> The number of elements of inArray to convert. </param>
+		/// <returns> Encoded string </returns>
 		public static string ToBase64String(this byte[] inArray, int offset, int length)
 		{
 			return inArray.ToBase64String(offset, length, _base64Alphabet);
@@ -411,40 +434,46 @@ namespace ARSoft.Tools.Net
 		private static readonly Dictionary<char, byte> _base64UrlReverseAlphabet = GetAlphabet(_BASE64_URL_ALPHABET, false);
 
 		/// <summary>
-		/// Decodes a Base64Url string as described in RFC4648.
+		///   Decodes a Base64Url string as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inData">An Base64Url encoded string.</param>
+		/// <param name="inData"> An Base64Url encoded string. </param>
+		/// <returns> Decoded data </returns>
 		public static byte[] FromBase64UrlString(this string inData)
 		{
 			return inData.ToCharArray().FromBase64UrlCharArray(0, inData.Length);
 		}
 
 		/// <summary>
-		/// Decodes a Base64Url char array as described in RFC4648.
+		///   Decodes a Base64Url char array as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inData">An Base64Url encoded char array.</param>
-		/// <param name="offset">An offset in inData.</param>
-		/// <param name="length">The number of elements of inData to decode.</param>
+		/// <param name="inData"> An Base64Url encoded char array. </param>
+		/// <param name="offset"> An offset in inData. </param>
+		/// <param name="length"> The number of elements of inData to decode. </param>
+		/// <returns> Decoded data </returns>
 		public static byte[] FromBase64UrlCharArray(this char[] inData, int offset, int length)
 		{
 			return inData.FromBase64CharArray(offset, length, _base64UrlReverseAlphabet);
 		}
 
 		/// <summary>
-		/// Converts a byte array to its corresponding Base64Url encoding described in RFC4648.
+		///   Converts a byte array to its corresponding Base64Url encoding described in <see
+		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inArray">An array of 8-bit unsigned integers.</param>
+		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
+		/// <returns> Encoded string </returns>
 		public static string ToBase64UrlString(this byte[] inArray)
 		{
 			return inArray.ToBase64UrlString(0, inArray.Length);
 		}
 
 		/// <summary>
-		/// Converts a byte array to its corresponding Base64Url encoding described in RFC4648.
+		///   Converts a byte array to its corresponding Base64Url encoding described in <see
+		///    cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
-		/// <param name="inArray">An array of 8-bit unsigned integers.</param>
-		/// <param name="offset">An offset in inArray.</param>
-		/// <param name="length">The number of elements of inArray to convert.</param>
+		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
+		/// <param name="offset"> An offset in inArray. </param>
+		/// <param name="length"> The number of elements of inArray to convert. </param>
+		/// <returns> Encoded string </returns>
 		public static string ToBase64UrlString(this byte[] inArray, int offset, int length)
 		{
 			return inArray.ToBase64String(offset, length, _base64UrlAlphabet);

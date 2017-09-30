@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,11 +21,16 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Message returned as result to a dns query
+	/// </summary>
 	public class DnsMessage : DnsMessageBase
 	{
 		#region Header
 		/// <summary>
-		/// Gets or sets the autoritive answer (AA) flag
+		///   <para>Gets or sets the autoritive answer (AA) flag</para> <para>Defined in
+		///                                                               <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///                                                             </para>
 		/// </summary>
 		public bool IsAuthoritiveAnswer
 		{
@@ -44,7 +49,9 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the truncated (TC) flag
+		///   <para>Gets or sets the truncated response (TC) flag</para> <para>Defined in
+		///                                                                <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///                                                              </para>
 		/// </summary>
 		public bool IsTruncated
 		{
@@ -63,7 +70,9 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the recursion desired (RD) flag
+		///   <para>Gets or sets the recursion desired (RD) flag</para> <para>Defined in
+		///                                                               <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///                                                             </para>
 		/// </summary>
 		public bool IsRecursionDesired
 		{
@@ -82,7 +91,9 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the recursion allowed (RA) flag
+		///   <para>Gets or sets the recursion allowed (RA) flag</para> <para>Defined in
+		///                                                               <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///                                                             </para>
 		/// </summary>
 		public bool IsRecursionAllowed
 		{
@@ -101,7 +112,9 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the authentic data (AD) flag
+		///   <para>Gets or sets the authentic data (AD) flag</para> <para>Defined in
+		///                                                            <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///                                                          </para>
 		/// </summary>
 		public bool IsAuthenticData
 		{
@@ -120,7 +133,9 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the checking disabled (CD) flag
+		///   <para>Gets or sets the checking disabled (CD) flag</para> <para>Defined in
+		///                                                               <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///                                                             </para>
 		/// </summary>
 		public bool IsCheckingDisabled
 		{
@@ -140,7 +155,7 @@ namespace ARSoft.Tools.Net.Dns
 		#endregion
 
 		/// <summary>
-		/// Gets or sets the entries in the question section
+		///   Gets or sets the entries in the question section
 		/// </summary>
 		public List<DnsQuestion> Questions
 		{
@@ -149,7 +164,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the entries in the answer records section
+		///   Gets or sets the entries in the answer records section
 		/// </summary>
 		public List<DnsRecordBase> AnswerRecords
 		{
@@ -158,7 +173,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the entries in the authority records section
+		///   Gets or sets the entries in the authority records section
 		/// </summary>
 		public List<DnsRecordBase> AuthorityRecords
 		{

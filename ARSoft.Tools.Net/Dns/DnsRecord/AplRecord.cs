@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,21 +22,61 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Address prefixes record</para> <para>Defined in
+	///                                          <see cref="!:http://tools.ietf.org/html/rfc3123">RFC 3123</see>
+	///                                        </para>
+	/// </summary>
 	public class AplRecord : DnsRecordBase
 	{
 		internal enum Family : ushort
 		{
-			IpV4 = 1, // RFC3123
-			IpV6 = 2, // RFC3123
+			/// <summary>
+			///   <para>IPv4</para> <para>Defined in
+			///                       <see cref="!:http://tools.ietf.org/html/rfc3123">RFC 3123</see>
+			///                     </para>
+			/// </summary>
+			IpV4 = 1,
+
+			/// <summary>
+			///   <para>IPv6</para> <para>Defined in
+			///                       <see cref="!:http://tools.ietf.org/html/rfc3123">RFC 3123</see>
+			///                     </para>
+			/// </summary>
+			IpV6 = 2,
 		}
 
+		/// <summary>
+		///   Represents an address prefix
+		/// </summary>
 		public class AddressPrefix
 		{
+			/// <summary>
+			///   Is negated prefix
+			/// </summary>
 			public bool IsNegated { get; private set; }
+
+			/// <summary>
+			///   Address familiy
+			/// </summary>
 			internal Family AddressFamily { get; private set; }
+
+			/// <summary>
+			///   Network address
+			/// </summary>
 			public IPAddress Address { get; private set; }
+
+			/// <summary>
+			///   Prefix of the network
+			/// </summary>
 			public byte Prefix { get; private set; }
 
+			/// <summary>
+			///   Creates a new instance of the AddressPrefix class
+			/// </summary>
+			/// <param name="isNegated"> Is negated prefix </param>
+			/// <param name="address"> Network address </param>
+			/// <param name="prefix"> Prefix of the network </param>
 			public AddressPrefix(bool isNegated, IPAddress address, byte prefix)
 			{
 				IsNegated = isNegated;
@@ -45,6 +85,10 @@ namespace ARSoft.Tools.Net.Dns
 				Prefix = prefix;
 			}
 
+			/// <summary>
+			///   Returns the textual representation of an address prefix
+			/// </summary>
+			/// <returns> The textual representation </returns>
 			public override string ToString()
 			{
 				return (IsNegated ? "!" : "")
@@ -54,10 +98,19 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		///   List of address prefixes covered by this record
+		/// </summary>
 		public List<AddressPrefix> Prefixes { get; private set; }
 
 		internal AplRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the AplRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="prefixes"> List of address prefixes covered by this record </param>
 		public AplRecord(string name, int timeToLive, List<AddressPrefix> prefixes)
 			: base(name, RecordType.Apl, RecordClass.INet, timeToLive)
 		{

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,26 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Represent a dns record, which is not directly supported by this library
+	/// </summary>
 	public class UnknownRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Binary data of the RDATA section of the record
+		/// </summary>
 		public byte[] RecordData { get; private set; }
 
 		internal UnknownRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the UnknownRecord class
+		/// </summary>
+		/// <param name="name"> Domain name of the record </param>
+		/// <param name="recordType"> Record type </param>
+		/// <param name="recordClass"> Record class </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="recordData"> Binary data of the RDATA section of the record </param>
 		public UnknownRecord(string name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] recordData)
 			: base(name, recordType, recordClass, timeToLive)
 		{

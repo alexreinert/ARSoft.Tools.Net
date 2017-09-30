@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,19 +21,54 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>AFS data base location</para> <para>Defined in
+	///                                         <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+	///                                         and
+	///                                         <see cref="!:http://tools.ietf.org/html/rfc5864">RFC 5864</see>
+	///                                       </para>
+	/// </summary>
 	public class AfsdbRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   AFS database subtype
+		/// </summary>
 		public enum AfsSubType : ushort
 		{
-			Afs = 1, // RFC1183
-			Dce = 2, // RFC1183
+			/// <summary>
+			///   <para>Andrews File Service v3.0 Location service</para> <para>Defined in
+			///                                                             <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+			///                                                           </para>
+			/// </summary>
+			Afs = 1,
+
+			/// <summary>
+			///   <para>DCE/NCA root cell directory node</para> <para>Defined in
+			///                                                   <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+			///                                                 </para>
+			/// </summary>
+			Dce = 2,
 		}
 
+		/// <summary>
+		///   Subtype of the record
+		/// </summary>
 		public AfsSubType SubType { get; private set; }
+
+		/// <summary>
+		///   Hostname of the AFS database
+		/// </summary>
 		public string Hostname { get; private set; }
 
 		internal AfsdbRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the AfsdbRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="subType"> Subtype of the record </param>
+		/// <param name="hostname"> Hostname of the AFS database </param>
 		public AfsdbRecord(string name, int timeToLive, AfsSubType subType, string hostname)
 			: base(name, RecordType.Afsdb, RecordClass.INet, timeToLive)
 		{

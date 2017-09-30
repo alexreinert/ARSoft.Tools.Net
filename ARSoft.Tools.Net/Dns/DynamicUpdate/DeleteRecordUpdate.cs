@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,15 +21,30 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
+	/// <summary>
+	///   Delete record action
+	/// </summary>
 	public class DeleteRecordUpdate : UpdateBase
 	{
+		/// <summary>
+		///   Record that should be deleted
+		/// </summary>
 		public DnsRecordBase Record { get; private set; }
 
 		internal DeleteRecordUpdate() {}
 
+		/// <summary>
+		///   Creates a new instance of the DeleteRecordUpdate class
+		/// </summary>
+		/// <param name="name"> Name of the record that should be deleted </param>
+		/// <param name="recordType"> Type of the record that should be deleted </param>
 		public DeleteRecordUpdate(string name, RecordType recordType)
 			: base(name, recordType, RecordClass.Any, 0) {}
 
+		/// <summary>
+		///   Creates a new instance of the DeleteRecordUpdate class
+		/// </summary>
+		/// <param name="record"> Record that should be deleted </param>
 		public DeleteRecordUpdate(DnsRecordBase record)
 			: base(record.Name, record.RecordType, RecordClass.None, 0)
 		{

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ using ARSoft.Tools.Net.Socket;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	/// Provides a base dns server interface
+	///   Provides a base dns server interface
 	/// </summary>
 	public class DnsServer : IDisposable
 	{
@@ -37,24 +37,37 @@ namespace ARSoft.Tools.Net.Dns
 			public TcpClient Client;
 			public NetworkStream Stream;
 			public byte[] Buffer;
+			public int BytesToReceive;
 			public Timer Timer;
+
+			private long _timeOutUtcTicks;
+
+			public long TimeRemaining
+			{
+				get
+				{
+					long res = (_timeOutUtcTicks - DateTime.UtcNow.Ticks) / TimeSpan.TicksPerMillisecond;
+					return res > 0 ? res : 0;
+				}
+				set { _timeOutUtcTicks = DateTime.UtcNow.Ticks + value * TimeSpan.TicksPerMillisecond; }
+			}
 		}
 
 		/// <summary>
-		/// Represents the method, that will be called to get the response for a specific dns query
+		///   Represents the method, that will be called to get the response for a specific dns query
 		/// </summary>
-		/// <param name="query">The query, for that a response should be returned</param>
-		/// <param name="clientAddress">The ip address from which the queries comes</param>
-		/// <param name="protocolType">The protocol which was used for the query</param>
-		/// <returns>A DnsMessage with the response to the query</returns>
+		/// <param name="query"> The query, for that a response should be returned </param>
+		/// <param name="clientAddress"> The ip address from which the queries comes </param>
+		/// <param name="protocolType"> The protocol which was used for the query </param>
+		/// <returns> A DnsMessage with the response to the query </returns>
 		public delegate DnsMessageBase ProcessQuery(DnsMessageBase query, IPAddress clientAddress, ProtocolType protocolType);
 
 		/// <summary>
-		/// Represents the method, that will be called to get the keydata for processing a tsig signed message
+		///   Represents the method, that will be called to get the keydata for processing a tsig signed message
 		/// </summary>
-		/// <param name="algorithm">The algorithm which is used in the message</param>
-		/// <param name="keyName">The keyname which is used in the message</param>
-		/// <returns>Binary representation of the key</returns>
+		/// <param name="algorithm"> The algorithm which is used in the message </param>
+		/// <param name="keyName"> The keyname which is used in the message </param>
+		/// <returns> Binary representation of the key </returns>
 		public delegate byte[] SelectTsigKey(TSigAlgorithm algorithm, string keyName);
 
 		private const int _DNS_PORT = 53;
@@ -69,41 +82,41 @@ namespace ARSoft.Tools.Net.Dns
 		private readonly ProcessQuery _processQueryDelegate;
 
 		/// <summary>
-		/// Method that will be called to get the keydata for processing a tsig signed message
+		///   Method that will be called to get the keydata for processing a tsig signed message
 		/// </summary>
 		public SelectTsigKey TsigKeySelector;
 
 		/// <summary>
-		/// Gets or sets the timeout for sending and receiving data
+		///   Gets or sets the timeout for sending and receiving data
 		/// </summary>
 		public int Timeout { get; set; }
 
 		/// <summary>
-		/// Creates a new dns server instance which will listen on all available interfaces
+		///   Creates a new dns server instance which will listen on all available interfaces
 		/// </summary>
-		/// <param name="udpListenerCount">The count of threads listings on udp, 0 to deactivate udp</param>
-		/// <param name="tcpListenerCount">The count of threads listings on tcp, 0 to deactivate tcp</param>
-		/// <param name="processQuery">Method, which process the queries and returns the response</param>
+		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
+		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
+		/// <param name="processQuery"> Method, which process the queries and returns the response </param>
 		public DnsServer(int udpListenerCount, int tcpListenerCount, ProcessQuery processQuery)
 			: this(IPAddress.Any, udpListenerCount, tcpListenerCount, processQuery) {}
 
 		/// <summary>
-		/// Creates a new dns server instance
+		///   Creates a new dns server instance
 		/// </summary>
-		/// <param name="bindAddress">The address, on which should be listend</param>
-		/// <param name="udpListenerCount">The count of threads listings on udp, 0 to deactivate udp</param>
-		/// <param name="tcpListenerCount">The count of threads listings on tcp, 0 to deactivate tcp</param>
-		/// <param name="processQuery">Method, which process the queries and returns the response</param>
+		/// <param name="bindAddress"> The address, on which should be listend </param>
+		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
+		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
+		/// <param name="processQuery"> Method, which process the queries and returns the response </param>
 		public DnsServer(IPAddress bindAddress, int udpListenerCount, int tcpListenerCount, ProcessQuery processQuery)
 			: this(new IPEndPoint(bindAddress, _DNS_PORT), udpListenerCount, tcpListenerCount, processQuery) {}
 
 		/// <summary>
-		/// Creates a new dns server instance
+		///   Creates a new dns server instance
 		/// </summary>
-		/// <param name="bindEndPoint">The endpoint, on which should be listend</param>
-		/// <param name="udpListenerCount">The count of threads listings on udp, 0 to deactivate udp</param>
-		/// <param name="tcpListenerCount">The count of threads listings on tcp, 0 to deactivate tcp</param>
-		/// <param name="processQuery">Method, which process the queries and returns the response</param>
+		/// <param name="bindEndPoint"> The endpoint, on which should be listend </param>
+		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
+		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
+		/// <param name="processQuery"> Method, which process the queries and returns the response </param>
 		public DnsServer(IPEndPoint bindEndPoint, int udpListenerCount, int tcpListenerCount, ProcessQuery processQuery)
 		{
 			_bindEndPoint = bindEndPoint;
@@ -116,7 +129,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Starts the server
+		///   Starts the server
 		/// </summary>
 		public void Start()
 		{
@@ -141,7 +154,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Stops the server
+		///   Stops the server
 		/// </summary>
 		public void Stop()
 		{
@@ -377,10 +390,12 @@ namespace ARSoft.Tools.Net.Dns
 					{
 						Client = client,
 						Stream = stream,
-						Buffer = new byte[2]
+						Buffer = new byte[2],
+						BytesToReceive = 2,
+						TimeRemaining = Timeout
 					};
 
-				state.Timer = new Timer(TcpTimedOut, state, Timeout, System.Threading.Timeout.Infinite);
+				state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
 				state.AsyncResult = stream.BeginRead(state.Buffer, 0, 2, EndTcpReadLength, state);
 			}
 			catch (ObjectDisposedException)
@@ -452,17 +467,25 @@ namespace ARSoft.Tools.Net.Dns
 
 				state.Timer.Dispose();
 
-				stream.EndRead(ar);
+				state.BytesToReceive -= stream.EndRead(ar);
 
-				int tmp = 0;
-				int length = DnsMessageBase.ParseUShort(state.Buffer, ref tmp);
-
-				if (length > 0)
+				if (state.BytesToReceive > 0)
 				{
-					state.Buffer = new byte[length];
+					state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
+					state.AsyncResult = stream.BeginRead(state.Buffer, state.Buffer.Length - state.BytesToReceive, state.BytesToReceive, EndTcpReadLength, state);
+				}
+				else
+				{
+					int tmp = 0;
+					int length = DnsMessageBase.ParseUShort(state.Buffer, ref tmp);
 
-					state.Timer = new Timer(TcpTimedOut, state, Timeout, System.Threading.Timeout.Infinite);
-					state.AsyncResult = stream.BeginRead(state.Buffer, 0, length, EndTcpReadData, state);
+					if (length > 0)
+					{
+						state.Buffer = new byte[length];
+
+						state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
+						state.AsyncResult = stream.BeginRead(state.Buffer, 0, length, EndTcpReadData, state);
+					}
 				}
 			}
 			catch (ObjectDisposedException)
@@ -506,32 +529,40 @@ namespace ARSoft.Tools.Net.Dns
 
 				state.Timer.Dispose();
 
-				stream.EndRead(ar);
+				state.BytesToReceive -= stream.EndRead(ar);
 
-				DnsMessageBase query;
-
-				try
+				if (state.BytesToReceive > 0)
 				{
-					query = DnsMessageBase.Create(state.Buffer, true, TsigKeySelector, null);
+					state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
+					state.AsyncResult = stream.BeginRead(state.Buffer, state.Buffer.Length - state.BytesToReceive, state.BytesToReceive, EndTcpReadData, state);
 				}
-				catch (Exception e)
+				else
 				{
-					throw new Exception("Error parsing dns query", e);
+					DnsMessageBase query;
+
+					try
+					{
+						query = DnsMessageBase.Create(state.Buffer, true, TsigKeySelector, null);
+					}
+					catch (Exception e)
+					{
+						throw new Exception("Error parsing dns query", e);
+					}
+
+					DnsMessageBase response = ProcessMessage(query, ((IPEndPoint) client.Client.RemoteEndPoint).Address, ProtocolType.Tcp);
+
+					if (response == null)
+					{
+						response = query;
+						query.IsQuery = false;
+						query.ReturnCode = ReturnCode.ServerFailure;
+					}
+
+					int length = response.Encode(true, out state.Buffer);
+
+					state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
+					state.AsyncResult = stream.BeginWrite(state.Buffer, 0, length, EndTcpSendData, state);
 				}
-
-				DnsMessageBase response = ProcessMessage(query, ((IPEndPoint) client.Client.RemoteEndPoint).Address, ProtocolType.Tcp);
-
-				if (response == null)
-				{
-					response = query;
-					query.IsQuery = false;
-					query.ReturnCode = ReturnCode.ServerFailure;
-				}
-
-				int length = response.Encode(true, out state.Buffer);
-
-				state.Timer = new Timer(TcpTimedOut, state, Timeout, System.Threading.Timeout.Infinite);
-				state.AsyncResult = stream.BeginWrite(state.Buffer, 0, length, EndTcpSendData, state);
 			}
 			catch (ObjectDisposedException)
 			{
@@ -581,7 +612,7 @@ namespace ARSoft.Tools.Net.Dns
 
 				state.Buffer = new byte[2];
 
-				state.Timer = new Timer(TcpTimedOut, state, Timeout, System.Threading.Timeout.Infinite);
+				state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
 				state.AsyncResult = stream.BeginRead(state.Buffer, 0, 2, EndTcpReadLength, state);
 			}
 			catch (ObjectDisposedException)
@@ -625,12 +656,12 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// This event is fired on exceptions of the listeners. You can use it for custom logging.
+		///   This event is fired on exceptions of the listeners. You can use it for custom logging.
 		/// </summary>
 		public event EventHandler<ExceptionEventArgs> ExceptionThrown;
 
 		/// <summary>
-		/// This event is fired whenever a message is received, that is not correct signed
+		///   This event is fired whenever a message is received, that is not correct signed
 		/// </summary>
 		public event EventHandler<InvalidSignedMessageEventArgs> InvalidSignedMessageReceived;
 

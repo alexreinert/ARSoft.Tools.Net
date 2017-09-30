@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,15 +21,44 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Server selector</para> <para>Defined in
+	///                                  <see cref="!:http://tools.ietf.org/html/rfc2782">RFC 2782</see>
+	///                                </para>
+	/// </summary>
 	public class SrvRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Priority of the record
+		/// </summary>
 		public ushort Priority { get; private set; }
+
+		/// <summary>
+		///   Relative weight for records with the same priority
+		/// </summary>
 		public ushort Weight { get; private set; }
+
+		/// <summary>
+		///   The port of the service on the target
+		/// </summary>
 		public ushort Port { get; private set; }
+
+		/// <summary>
+		///   Domain name of the target host
+		/// </summary>
 		public string Target { get; private set; }
 
 		internal SrvRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the SrvRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="priority"> Priority of the record </param>
+		/// <param name="weight"> Relative weight for records with the same priority </param>
+		/// <param name="port"> The port of the service on the target </param>
+		/// <param name="target"> Domain name of the target host </param>
 		public SrvRecord(string name, int timeToLive, ushort priority, ushort weight, ushort port, string target)
 			: base(name, RecordType.Srv, RecordClass.INet, timeToLive)
 		{

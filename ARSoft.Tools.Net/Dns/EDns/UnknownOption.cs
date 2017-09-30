@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,10 +21,20 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Unknown EDNS option
+	/// </summary>
 	public class UnknownOption : EDnsOptionBase
 	{
+		/// <summary>
+		///   Binary data of the option
+		/// </summary>
 		public byte[] Data { get; set; }
 
+		/// <summary>
+		///   Creates a new instance of the UnknownOption class
+		/// </summary>
+		/// <param name="type"> Type of the option </param>
 		public UnknownOption(EDnsOptionType type)
 			: base(type) {}
 

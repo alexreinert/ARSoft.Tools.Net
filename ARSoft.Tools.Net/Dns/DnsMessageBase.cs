@@ -1,5 +1,5 @@
 #region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,9 @@ using ARSoft.Tools.Net.Dns.DynamicUpdate;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Base class for a dns answer
+	/// </summary>
 	public abstract class DnsMessageBase
 	{
 		protected ushort _flags;
@@ -32,7 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 		protected List<DnsRecordBase> _additionalRecords = new List<DnsRecordBase>();
 
 		/// <summary>
-		/// Gets or sets the entries in the additional records section
+		///   Gets or sets the entries in the additional records section
 		/// </summary>
 		public List<DnsRecordBase> AdditionalRecords
 		{
@@ -45,12 +48,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		#region Header
 		/// <summary>
-		/// Gets or sets the transaction identifier (ID) of the message
+		///   Gets or sets the transaction identifier (ID) of the message
 		/// </summary>
 		public ushort TransactionID { get; set; }
 
 		/// <summary>
-		/// Gets or sets the query (QR) flag
+		///   Gets or sets the query (QR) flag
 		/// </summary>
 		public bool IsQuery
 		{
@@ -69,7 +72,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the Operation Code (OPCODE)
+		///   Gets or sets the Operation Code (OPCODE)
 		/// </summary>
 		public OperationCode OperationCode
 		{
@@ -82,7 +85,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the return code (RCODE)
+		///   Gets or sets the return code (RCODE)
 		/// </summary>
 		public ReturnCode ReturnCode
 		{
@@ -131,7 +134,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		#region EDNS
 		/// <summary>
-		/// Enables or disables EDNS
+		///   Enables or disables EDNS
 		/// </summary>
 		public bool IsEDnsEnabled
 		{
@@ -139,7 +142,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				if (_additionalRecords != null)
 				{
-					return _additionalRecords.Where(record => (record.RecordType == RecordType.Opt)).Count() != 0;
+					return _additionalRecords.Any(record => (record.RecordType == RecordType.Opt));
 				}
 				else
 				{
@@ -164,7 +167,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or set the OptRecord for the EDNS options
+		///   Gets or set the OptRecord for the EDNS options
 		/// </summary>
 		public OptRecord EDnsOptions
 		{
@@ -202,7 +205,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the DNSSEC OK (DO) flag
+		///   <para>Gets or sets the DNSSEC answer OK (DO) flag</para> <para>Defined in
+		///                                                              <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///                                                              and
+		///                                                              <see cref="!:http://tools.ietf.org/html/rfc3225">RFC 3225</see>
+		///                                                            </para>
 		/// </summary>
 		public bool IsDnsSecOk
 		{
@@ -231,11 +238,11 @@ namespace ARSoft.Tools.Net.Dns
 
 		#region TSig
 		/// <summary>
-		/// Gets or set the TSigRecord for the tsig signed messages
+		///   Gets or set the TSigRecord for the tsig signed messages
 		/// </summary>
 		public TSigRecord TSigOptions { get; set; }
 
-		public static DnsMessageBase Create(byte[] resultData, bool isRequest, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
+		internal static DnsMessageBase Create(byte[] resultData, bool isRequest, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
 		{
 			int flagPosition = 2;
 			ushort flags = ParseUShort(resultData, ref flagPosition);
@@ -302,7 +309,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				return ReturnCode.BadTime;
 			}
-			else if ((TSigOptions.OriginalMac == null) || (TSigOptions.OriginalMac.Length == 0))
+			else if ((TSigOptions.Mac == null) || (TSigOptions.Mac.Length == 0))
 			{
 				return ReturnCode.BadSig;
 			}
@@ -352,7 +359,7 @@ namespace ARSoft.Tools.Net.Dns
 				// Validate MAC
 				KeyedHashAlgorithm hashAlgorithm = TSigAlgorithmHelper.GetHashAlgorithm(TSigOptions.Algorithm);
 				hashAlgorithm.Key = keyData;
-				return (hashAlgorithm.ComputeHash(validationBuffer, 0, currentPosition).SequenceEqual(TSigOptions.OriginalMac)) ? ReturnCode.NoError : ReturnCode.BadSig;
+				return (hashAlgorithm.ComputeHash(validationBuffer, 0, currentPosition).SequenceEqual(TSigOptions.Mac)) ? ReturnCode.NoError : ReturnCode.BadSig;
 			}
 		}
 		#endregion
@@ -455,6 +462,22 @@ namespace ARSoft.Tools.Net.Dns
 			return res;
 		}
 
+		internal static uint ParseUInt(byte[] resultData, ref int currentPosition)
+		{
+			uint res;
+
+			if (BitConverter.IsLittleEndian)
+			{
+				res = (((uint) resultData[currentPosition++] << 24) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 8) | resultData[currentPosition++]);
+			}
+			else
+			{
+				res = (resultData[currentPosition++] | ((uint) resultData[currentPosition++] << 8) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 24));
+			}
+
+			return res;
+		}
+
 		private static void ParseDomainName(byte[] resultData, ref int currentPosition, StringBuilder sb)
 		{
 			while (true)
@@ -484,7 +507,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else if (currentByte == 65)
 				{
-					// binary EDNS label, RFC2673
+					// binary EDNS label, RFC2673, RFC3363, RFC3364
 					int length = resultData[currentPosition++];
 					if (length == 0)
 						length = 256;
@@ -509,7 +532,8 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else if (currentByte >= 64)
 				{
-					// undefined EDNS label
+					// extended dns label RFC 2671
+					throw new NotSupportedException("Unsupported extended dns label");
 				}
 				else
 				{
@@ -554,8 +578,8 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				if (!IsQuery)
 				{
-					offset += 2 + TSigOptions.OriginalMac.Length;
-					maxLength += 2 + TSigOptions.OriginalMac.Length;
+					offset += 2 + TSigOptions.Mac.Length;
+					maxLength += 2 + TSigOptions.Mac.Length;
 				}
 
 				maxLength += TSigOptions.MaximumLength;
@@ -602,8 +626,8 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				if (!IsQuery)
 				{
-					EncodeUShort(messageData, messageOffset, (ushort) TSigOptions.OriginalMac.Length);
-					Buffer.BlockCopy(TSigOptions.OriginalMac, 0, messageData, messageOffset + 2, TSigOptions.OriginalMac.Length);
+					EncodeUShort(messageData, messageOffset, (ushort) TSigOptions.Mac.Length);
+					Buffer.BlockCopy(TSigOptions.Mac, 0, messageData, messageOffset + 2, TSigOptions.Mac.Length);
 				}
 
 				EncodeUShort(messageData, offset, TSigOptions.OriginalID);
@@ -624,11 +648,11 @@ namespace ARSoft.Tools.Net.Dns
 				if ((hashAlgorithm != null) && (TSigOptions.KeyData != null) && (TSigOptions.KeyData.Length > 0))
 				{
 					hashAlgorithm.Key = TSigOptions.KeyData;
-					TSigOptions.OriginalMac = hashAlgorithm.ComputeHash(messageData, messageOffset, tsigVariablesPosition);
+					TSigOptions.Mac = hashAlgorithm.ComputeHash(messageData, messageOffset, tsigVariablesPosition);
 				}
 				else
 				{
-					TSigOptions.OriginalMac = new byte[] { };
+					TSigOptions.Mac = new byte[] { };
 				}
 
 				EncodeUShort(messageData, offset, TransactionID);
@@ -640,7 +664,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					Buffer.BlockCopy(messageData, offset, messageData, messageOffset, (currentPosition - offset));
 					offset = messageOffset;
-					currentPosition -= (2 + TSigOptions.OriginalMac.Length);
+					currentPosition -= (2 + TSigOptions.Mac.Length);
 				}
 			}
 
@@ -672,6 +696,24 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		internal static void EncodeInt(byte[] buffer, ref int currentPosition, int value)
+		{
+			if (BitConverter.IsLittleEndian)
+			{
+				buffer[currentPosition++] = (byte) ((value >> 24) & 0xff);
+				buffer[currentPosition++] = (byte) ((value >> 16) & 0xff);
+				buffer[currentPosition++] = (byte) ((value >> 8) & 0xff);
+				buffer[currentPosition++] = (byte) (value & 0xff);
+			}
+			else
+			{
+				buffer[currentPosition++] = (byte) (value & 0xff);
+				buffer[currentPosition++] = (byte) ((value >> 8) & 0xff);
+				buffer[currentPosition++] = (byte) ((value >> 16) & 0xff);
+				buffer[currentPosition++] = (byte) ((value >> 24) & 0xff);
+			}
+		}
+
+		internal static void EncodeUInt(byte[] buffer, ref int currentPosition, uint value)
 		{
 			if (BitConverter.IsLittleEndian)
 			{

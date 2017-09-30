@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,16 +21,41 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>ISDN address</para> <para>Defined in
+	///                               <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+	///                             </para>
+	/// </summary>
 	public class IsdnRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   ISDN number
+		/// </summary>
 		public string IsdnAddress { get; private set; }
+
+		/// <summary>
+		///   Sub address
+		/// </summary>
 		public string SubAddress { get; private set; }
 
 		internal IsdnRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the IsdnRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="isdnAddress"> ISDN number </param>
 		public IsdnRecord(string name, int timeToLive, string isdnAddress)
 			: this(name, timeToLive, isdnAddress, String.Empty) {}
 
+		/// <summary>
+		///   Creates a new instance of the IsdnRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="isdnAddress"> ISDN number </param>
+		/// <param name="subAddress"> Sub address </param>
 		public IsdnRecord(string name, int timeToLive, string isdnAddress, string subAddress)
 			: base(name, RecordType.Isdn, RecordClass.INet, timeToLive)
 		{

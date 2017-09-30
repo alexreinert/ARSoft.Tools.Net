@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,14 +23,31 @@ using System.Text.RegularExpressions;
 namespace ARSoft.Tools.Net.Spf
 {
 	/// <summary>
-	/// Parsed instance of the textual representation of a SenderID record
+	///   <para>Parsed instance of the textual representation of a SenderID record</para> <para>Defined in
+	///                                                                                     <see cref="!:http://tools.ietf.org/html/rfc4406">RFC 4406</see>
+	///                                                                                   </para>
 	/// </summary>
 	public class SenderIDRecord : SpfRecordBase
 	{
+		/// <summary>
+		///   Version of the SenderID record.
+		/// </summary>
 		public int Version { get; set; }
+
+		/// <summary>
+		///   Minor version of the SenderID record
+		/// </summary>
 		public int MinorVersion { get; set; }
+
+		/// <summary>
+		///   List of Scopes of the SenderID record
+		/// </summary>
 		public List<SenderIDScope> Scopes { get; set; }
 
+		/// <summary>
+		///   Returns the textual representation of the SenderID record
+		/// </summary>
+		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
 			StringBuilder res = new StringBuilder();
@@ -66,11 +83,11 @@ namespace ARSoft.Tools.Net.Spf
 		}
 
 		/// <summary>
-		/// Checks, whether a given string starts with a correct SenderID prefix of a given scope
+		///   Checks, whether a given string starts with a correct SenderID prefix of a given scope
 		/// </summary>
-		/// <param name="s">Textual representation to check</param>
-		/// <param name="scope">Scope, which should be matched</param>
-		/// <returns>true in case of correct prefix</returns>
+		/// <param name="s"> Textual representation to check </param>
+		/// <param name="scope"> Scope, which should be matched </param>
+		/// <returns> true in case of correct prefix </returns>
 		public static bool IsSenderIDRecord(string s, SenderIDScope scope)
 		{
 			if (String.IsNullOrEmpty(s))
@@ -120,11 +137,11 @@ namespace ARSoft.Tools.Net.Spf
 		}
 
 		/// <summary>
-		/// Tries to parse the textual representation of a SenderID record
+		///   Tries to parse the textual representation of a SenderID record
 		/// </summary>
-		/// <param name="s">Textual representation to check</param>
-		/// <param name="value">Parsed SenderID record in case of successful parsing</param>
-		/// <returns>true in case of successful parsing</returns>
+		/// <param name="s"> Textual representation to check </param>
+		/// <param name="value"> Parsed SenderID record in case of successful parsing </param>
+		/// <returns> true in case of successful parsing </returns>
 		public static bool TryParse(string s, out SenderIDRecord value)
 		{
 			if (String.IsNullOrEmpty(s))

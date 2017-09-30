@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,20 +21,81 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Security signature record</para> <para>Defined in
+	///                                            <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+	///                                            ,
+	///                                            <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+	///                                            ,
+	///                                            <see cref="!:http://tools.ietf.org/html/rfc2535">RFC 2535</see>
+	///                                            and
+	///                                            <see cref="!:http://tools.ietf.org/html/rfc2931">RFC 2931</see>
+	///                                          </para>
+	/// </summary>
 	public class SigRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   <see cref="RecordType">Record type</see> that is covered by this record
+		/// </summary>
 		public RecordType TypeCovered { get; private set; }
+
+		/// <summary>
+		///   <see cref="DnsSecAlgorithm">Algorithm</see> that is used for signature
+		/// </summary>
 		public DnsSecAlgorithm Algorithm { get; private set; }
+
+		/// <summary>
+		///   Label count of original record that is covered by this record
+		/// </summary>
 		public byte Labels { get; private set; }
+
+		/// <summary>
+		///   Original time to live value of original record that is covered by this record
+		/// </summary>
 		public int OriginalTimeToLive { get; private set; }
+
+		/// <summary>
+		///   Signature is valid until this date
+		/// </summary>
 		public DateTime SignatureExpiration { get; private set; }
+
+		/// <summary>
+		///   Signature is valid from this date
+		/// </summary>
 		public DateTime SignatureInception { get; private set; }
+
+		/// <summary>
+		///   Key tag
+		/// </summary>
 		public ushort KeyTag { get; private set; }
+
+		/// <summary>
+		///   Domain name of generator of the signature
+		/// </summary>
 		public string SignersName { get; private set; }
+
+		/// <summary>
+		///   Binary data of the signature
+		/// </summary>
 		public byte[] Signature { get; private set; }
 
 		internal SigRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the SigRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="recordClass"> Class of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="typeCovered"> <see cref="RecordType">Record type</see> that is covered by this record </param>
+		/// <param name="algorithm"> <see cref="DnsSecAlgorithm">Algorithm</see> that is used for signature </param>
+		/// <param name="labels"> Label count of original record that is covered by this record </param>
+		/// <param name="originalTimeToLive"> Original time to live value of original record that is covered by this record </param>
+		/// <param name="signatureExpiration"> Signature is valid until this date </param>
+		/// <param name="signatureInception"> Signature is valid from this date </param>
+		/// <param name="keyTag"> Key tag </param>
+		/// <param name="signersName"> Domain name of generator of the signature </param>
+		/// <param name="signature"> Binary data of the signature </param>
 		public SigRecord(string name, RecordClass recordClass, int timeToLive, RecordType typeCovered, DnsSecAlgorithm algorithm, byte labels, int originalTimeToLive, DateTime signatureExpiration, DateTime signatureInception, ushort keyTag, string signersName, byte[] signature)
 			: base(name, RecordType.Sig, recordClass, timeToLive)
 		{

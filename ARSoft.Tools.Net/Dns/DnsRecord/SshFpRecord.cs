@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,27 +21,81 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>SSH key fingerprint record</para> <para>Defined in
+	///                                             <see cref="!:http://tools.ietf.org/html/rfc4255">RFC 4255</see>
+	///                                           </para>
+	/// </summary>
 	public class SshFpRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Algorithm of the fingerprint
+		/// </summary>
 		public enum SshFpAlgorithm : byte
 		{
+			/// <summary>
+			///   None
+			/// </summary>
 			None = 0,
-			Rsa = 1, // RFC4255
-			Dsa = 2, // RFC4255
+
+			/// <summary>
+			///   <para>RSA</para> <para>Defined in
+			///                      <see cref="!:http://tools.ietf.org/html/rfc4255">RFC 4255</see>
+			///                    </para>
+			/// </summary>
+			Rsa = 1,
+
+			/// <summary>
+			///   <para>DSA</para> <para>Defined in
+			///                      <see cref="!:http://tools.ietf.org/html/rfc4255">RFC 4255</see>
+			///                    </para>
+			/// </summary>
+			Dsa = 2,
 		}
 
+		/// <summary>
+		///   Type of the fingerprint
+		/// </summary>
 		public enum SshFpFingerPrintType : byte
 		{
+			/// <summary>
+			///   None
+			/// </summary>
 			None = 0,
-			Sha1 = 1, // RFC4255
+
+			/// <summary>
+			///   <para>SHA-1</para> <para>Defined in
+			///                        <see cref="!:http://tools.ietf.org/html/rfc4255">RFC 4255</see>
+			///                      </para>
+			/// </summary>
+			Sha1 = 1,
 		}
 
+		/// <summary>
+		///   Algorithm of fingerprint
+		/// </summary>
 		public SshFpAlgorithm Algorithm { get; private set; }
+
+		/// <summary>
+		///   Type of fingerprint
+		/// </summary>
 		public SshFpFingerPrintType FingerPrintType { get; private set; }
+
+		/// <summary>
+		///   Binary data of the fingerprint
+		/// </summary>
 		public byte[] FingerPrint { get; private set; }
 
 		internal SshFpRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the SshFpRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="algorithm"> Algorithm of fingerprint </param>
+		/// <param name="fingerPrintType"> Type of fingerprint </param>
+		/// <param name="fingerPrint"> Binary data of the fingerprint </param>
 		public SshFpRecord(string name, int timeToLive, SshFpAlgorithm algorithm, SshFpFingerPrintType fingerPrintType, byte[] fingerPrint)
 			: base(name, RecordType.SshFp, RecordClass.INet, timeToLive)
 		{

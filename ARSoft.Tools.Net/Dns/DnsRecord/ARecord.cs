@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,12 +22,26 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Host address record</para> <para>Defined in
+	///                                      <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///                                    </para>
+	/// </summary>
 	public class ARecord : DnsRecordBase, IAddressRecord
 	{
+		/// <summary>
+		///   IP address of the host
+		/// </summary>
 		public IPAddress Address { get; private set; }
 
 		internal ARecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the ARecord class
+		/// </summary>
+		/// <param name="name"> Domain name of the host </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="address"> IP address of the host </param>
 		public ARecord(string name, int timeToLive, IPAddress address)
 			: base(name, RecordType.A, RecordClass.INet, timeToLive)
 		{

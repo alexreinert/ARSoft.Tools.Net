@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,47 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Security Key record using Diffie Hellman algorithm</para> <para>Defined in
+	///                                                                     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+	///                                                                     ,
+	///                                                                     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+	///                                                                     ,
+	///                                                                     <see cref="!:http://tools.ietf.org/html/rfc2535">RFC 2535</see>
+	///                                                                     and
+	///                                                                     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+	///                                                                   </para>
+	/// </summary>
 	public class DiffieHellmanKeyRecord : KeyRecordBase
 	{
+		/// <summary>
+		///   Binary data of the prime of the key
+		/// </summary>
 		public byte[] Prime { get; private set; }
+
+		/// <summary>
+		///   Binary data of the generator of the key
+		/// </summary>
 		public byte[] Generator { get; private set; }
+
+		/// <summary>
+		///   Binary data of the public value
+		/// </summary>
 		public byte[] PublicValue { get; private set; }
 
 		internal DiffieHellmanKeyRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the DiffieHellmanKeyRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="recordClass"> Class of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="flags"> Flags of the key </param>
+		/// <param name="protocol"> Protocol for which the key is used </param>
+		/// <param name="prime"> Binary data of the prime of the key </param>
+		/// <param name="generator"> Binary data of the generator of the key </param>
+		/// <param name="publicValue"> Binary data of the public value </param>
 		public DiffieHellmanKeyRecord(string name, RecordClass recordClass, int timeToLive, ushort flags, ProtocolType protocol, byte[] prime, byte[] generator, byte[] publicValue)
 			: base(name, recordClass, timeToLive, flags, protocol, DnsSecAlgorithm.DiffieHellman)
 		{

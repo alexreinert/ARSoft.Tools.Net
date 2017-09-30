@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,26 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Domain name pointer</para> <para>Defined in
+	///                                      <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///                                    </para>
+	/// </summary>
 	public class PtrRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Domain name the address points to
+		/// </summary>
 		public string PointerDomainName { get; private set; }
 
 		internal PtrRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the PtrRecord class
+		/// </summary>
+		/// <param name="name"> Reverse name of the address </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="pointerDomainName"> Domain name the address points to </param>
 		public PtrRecord(string name, int timeToLive, string pointerDomainName)
 			: base(name, RecordType.Ptr, RecordClass.INet, timeToLive)
 		{

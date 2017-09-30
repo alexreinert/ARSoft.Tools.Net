@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,40 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Spf
 {
+	/// <summary>
+	///   Represents a single mechanism term in a SPF record
+	/// </summary>
 	public class SpfMechanism : SpfTerm
 	{
+		/// <summary>
+		///   Qualifier of the mechanism
+		/// </summary>
 		public SpfQualifier Qualifier { get; set; }
+
+		/// <summary>
+		///   Type of the mechanism
+		/// </summary>
 		public SpfMechanismType Type { get; set; }
+
+		/// <summary>
+		///   Domain part of the mechanism
+		/// </summary>
 		public string Domain { get; set; }
+
+		/// <summary>
+		///   IPv4 prefix of the mechanism
+		/// </summary>
 		public int? Prefix { get; set; }
+
+		/// <summary>
+		///   IPv6 prefix of the mechanism
+		/// </summary>
 		public int? Prefix6 { get; set; }
 
+		/// <summary>
+		///   Returns the textual representation of a mechanism term
+		/// </summary>
+		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
 			StringBuilder res = new StringBuilder();

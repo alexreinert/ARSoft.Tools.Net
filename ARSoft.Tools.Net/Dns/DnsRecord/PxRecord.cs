@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,38 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>X.400 mail mapping information record</para> <para>Defined in
+	///                                                        <see cref="!:http://tools.ietf.org/html/rfc2163">RFC 2163</see>
+	///                                                      </para>
+	/// </summary>
 	public class PxRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Preference of the record
+		/// </summary>
 		public ushort Preference { get; private set; }
+
+		/// <summary>
+		///   Domain name containing the RFC822 domain
+		/// </summary>
 		public string Map822 { get; private set; }
+
+		/// <summary>
+		///   Domain name containing the X.400 part
+		/// </summary>
 		public string MapX400 { get; private set; }
 
 		internal PxRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the PxRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="preference"> Preference of the record </param>
+		/// <param name="map822"> Domain name containing the RFC822 domain </param>
+		/// <param name="mapX400"> Domain name containing the X.400 part </param>
 		public PxRecord(string name, int timeToLive, ushort preference, string map822, string mapX400)
 			: base(name, RecordType.Px, RecordClass.INet, timeToLive)
 		{

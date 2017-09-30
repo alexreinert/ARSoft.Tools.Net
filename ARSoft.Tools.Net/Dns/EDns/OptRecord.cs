@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,10 +21,15 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>OPT record</para> <para>Defined in
+	///                             <see cref="!:http://tools.ietf.org/html/rfc2671">RFC 2671</see>
+	///                           </para>
+	/// </summary>
 	public class OptRecord : DnsRecordBase
 	{
 		/// <summary>
-		/// Gets or set the sender's UDP payload size
+		///   Gets or set the sender's UDP payload size
 		/// </summary>
 		public ushort UpdPayloadSize
 		{
@@ -33,7 +38,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the high bits of return code (EXTENDED-RCODE)
+		///   Gets or sets the high bits of return code (EXTENDED-RCODE)
 		/// </summary>
 		public ReturnCode ExtendedReturnCode
 		{
@@ -46,7 +51,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or set the EDNS version
+		///   Gets or set the EDNS version
 		/// </summary>
 		public byte Version
 		{
@@ -59,7 +64,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or sets the DNSSEC OK (DO) flag
+		///   <para>Gets or sets the DNSSEC OK (DO) flag</para> <para>Defined in
+		///                                                       <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///                                                       and
+		///                                                       <see cref="!:http://tools.ietf.org/html/rfc3225">RFC 3225</see>
+		///                                                     </para>
 		/// </summary>
 		public bool IsDnsSecOk
 		{
@@ -78,10 +87,13 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Gets or set additional EDNS options
+		///   Gets or set additional EDNS options
 		/// </summary>
 		public List<EDnsOptionBase> Options { get; set; }
 
+		/// <summary>
+		///   Creates a new instance of the OptRecord
+		/// </summary>
 		public OptRecord()
 			: base(".", RecordType.Opt, unchecked((RecordClass) 512), 0) {}
 
@@ -114,6 +126,10 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		///   Returns the textual representation of the OptRecord
+		/// </summary>
+		/// <returns> The textual representation </returns>
 		public override string ToString()
 		{
 			return RecordDataToString();

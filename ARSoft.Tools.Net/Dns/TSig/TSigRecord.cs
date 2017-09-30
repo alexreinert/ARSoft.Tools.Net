@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,28 +21,87 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Transaction signature record</para> <para>Defined in
+	///                                               <see cref="!:http://tools.ietf.org/html/rfc2845">RFC 2845</see>
+	///                                             </para>
+	/// </summary>
 	public class TSigRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Algorithm of the key
+		/// </summary>
 		public TSigAlgorithm Algorithm { get; private set; }
+
+		/// <summary>
+		///   Time when the data was signed
+		/// </summary>
 		public DateTime TimeSigned { get; internal set; }
+
+		/// <summary>
+		///   Timespan errors permitted
+		/// </summary>
 		public TimeSpan Fudge { get; private set; }
-		public byte[] OriginalMac { get; internal set; }
+
+		/// <summary>
+		///   MAC defined by algorithm
+		/// </summary>
+		[Obsolete("Use property Mac instead, will be removed in future release")]
+		public byte[] OriginalMac
+		{
+			get { return Mac; }
+		}
+
+		/// <summary>
+		///   MAC defined by algorithm
+		/// </summary>
+		public byte[] Mac { get; internal set; }
+
+		/// <summary>
+		///   Original ID of message
+		/// </summary>
 		public ushort OriginalID { get; private set; }
+
+		/// <summary>
+		///   Error field
+		/// </summary>
 		public ReturnCode Error { get; internal set; }
+
+		/// <summary>
+		///   Binary other data
+		/// </summary>
 		public byte[] OtherData { get; internal set; }
 
+		/// <summary>
+		///   Binary data of the key
+		/// </summary>
 		public byte[] KeyData { get; internal set; }
+
+		/// <summary>
+		///   Result of validation of record
+		/// </summary>
 		public ReturnCode ValidationResult { get; internal set; }
 
 		internal TSigRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the TSigRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="algorithm"> Algorithm of the key </param>
+		/// <param name="timeSigned"> Time when the data was signed </param>
+		/// <param name="fudge"> Timespan errors permitted </param>
+		/// <param name="originalID"> Original ID of message </param>
+		/// <param name="error"> Error field </param>
+		/// <param name="otherData"> Binary other data </param>
+		/// <param name="keyData"> Binary data of the key </param>
 		public TSigRecord(string name, TSigAlgorithm algorithm, DateTime timeSigned, TimeSpan fudge, ushort originalID, ReturnCode error, byte[] otherData, byte[] keyData)
 			: base(name, RecordType.TSig, RecordClass.Any, 0)
 		{
 			Algorithm = algorithm;
 			TimeSigned = timeSigned;
 			Fudge = fudge;
-			OriginalMac = new byte[] { };
+			Mac = new byte[] { };
 			OriginalID = originalID;
 			Error = error;
 			OtherData = otherData ?? new byte[] { };
@@ -55,7 +114,7 @@ namespace ARSoft.Tools.Net.Dns
 			TimeSigned = ParseDateTime(resultData, ref startPosition);
 			Fudge = TimeSpan.FromSeconds(DnsMessageBase.ParseUShort(resultData, ref startPosition));
 			int macSize = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			OriginalMac = DnsMessageBase.ParseByteData(resultData, ref startPosition, macSize);
+			Mac = DnsMessageBase.ParseByteData(resultData, ref startPosition, macSize);
 			OriginalID = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			Error = (ReturnCode) DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			int otherDataSize = DnsMessageBase.ParseUShort(resultData, ref startPosition);
@@ -67,8 +126,8 @@ namespace ARSoft.Tools.Net.Dns
 			return TSigAlgorithmHelper.GetDomainName(Algorithm)
 			       + " " + (int) (TimeSigned - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
 			       + " " + (ushort) Fudge.TotalSeconds
-			       + " " + OriginalMac.Length
-			       + " " + OriginalMac.ToBase64String()
+			       + " " + Mac.Length
+			       + " " + Mac.ToBase64String()
 			       + " " + OriginalID
 			       + " " + (ushort) Error
 			       + " " + OtherData.Length
@@ -85,8 +144,8 @@ namespace ARSoft.Tools.Net.Dns
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TSigAlgorithmHelper.GetDomainName(Algorithm), false, domainNames);
 			EncodeDateTime(messageData, ref currentPosition, TimeSigned);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Fudge.TotalSeconds);
-			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) OriginalMac.Length);
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, OriginalMac);
+			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Mac.Length);
+			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Mac);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, OriginalID);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Error);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) OtherData.Length);

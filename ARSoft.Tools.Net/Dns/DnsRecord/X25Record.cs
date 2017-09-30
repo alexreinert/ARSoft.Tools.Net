@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,16 +21,30 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>X.25 PSDN address record</para> <para>Defined in
+	///                                           <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+	///                                         </para>
+	/// </summary>
 	public class X25Record : DnsRecordBase
 	{
+		/// <summary>
+		///   PSDN (Public Switched Data Network) address
+		/// </summary>
 		public string X25Address { get; protected set; }
 
 		internal X25Record() {}
 
-		public X25Record(string name, int timeToLive, string textData)
+		/// <summary>
+		///   Creates a new instance of the X25Record class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="x25Address"> PSDN (Public Switched Data Network) address </param>
+		public X25Record(string name, int timeToLive, string x25Address)
 			: base(name, RecordType.X25, RecordClass.INet, timeToLive)
 		{
-			X25Address = textData ?? String.Empty;
+			X25Address = x25Address ?? String.Empty;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)

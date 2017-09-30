@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,21 +22,59 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Location information</para> <para>Defined in
+	///                                       <see cref="!:http://tools.ietf.org/html/rfc1876">RFC 1876</see>
+	///                                     </para>
+	/// </summary>
 	public class LocRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Represents a geopgraphical degree
+		/// </summary>
 		public class Degree
 		{
+			/// <summary>
+			///   Is negative value
+			/// </summary>
 			public bool IsNegative { get; private set; }
+
+			/// <summary>
+			///   Number of full degrees
+			/// </summary>
 			public int Degrees { get; private set; }
+
+			/// <summary>
+			///   Number of minutes
+			/// </summary>
 			public int Minutes { get; private set; }
+
+			/// <summary>
+			///   Number of seconds
+			/// </summary>
 			public int Seconds { get; private set; }
+
+			/// <summary>
+			///   Number of Milliseconds
+			/// </summary>
 			public int Milliseconds { get; private set; }
 
+			/// <summary>
+			///   Returns the decimal representation of the Degree instance
+			/// </summary>
 			public double DecimalDegrees
 			{
 				get { return (IsNegative ? -1d : 1d) * (Degrees + (double) Minutes / 6000 * 100 + (Seconds + (double) Milliseconds / 1000) / 360000 * 100); }
 			}
 
+			/// <summary>
+			///   Creates a new instance of the Degree class
+			/// </summary>
+			/// <param name="isNegative"> Is negative value </param>
+			/// <param name="degrees"> Number of full degrees </param>
+			/// <param name="minutes"> Number of minutes </param>
+			/// <param name="seconds"> Number of seconds </param>
+			/// <param name="milliseconds"> Number of Milliseconds </param>
 			public Degree(bool isNegative, int degrees, int minutes, int seconds, int milliseconds)
 			{
 				IsNegative = isNegative;
@@ -46,6 +84,10 @@ namespace ARSoft.Tools.Net.Dns
 				Milliseconds = milliseconds;
 			}
 
+			/// <summary>
+			///   Creates a new instance of the Degree class
+			/// </summary>
+			/// <param name="decimalDegrees"> Decimal representation of the Degree </param>
 			public Degree(double decimalDegrees)
 			{
 				if (decimalDegrees < 0)
@@ -67,16 +109,55 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		///   Version number of representation
+		/// </summary>
 		public byte Version { get; private set; }
+
+		/// <summary>
+		///   Size of location in centimeters
+		/// </summary>
 		public double Size { get; private set; }
+
+		/// <summary>
+		///   Horizontal precision in centimeters
+		/// </summary>
 		public double HorizontalPrecision { get; private set; }
+
+		/// <summary>
+		///   Vertical precision in centimeters
+		/// </summary>
 		public double VerticalPrecision { get; private set; }
+
+		/// <summary>
+		///   Latitude of the geographical position
+		/// </summary>
 		public Degree Latitude { get; private set; }
+
+		/// <summary>
+		///   Longitude of the geographical position
+		/// </summary>
 		public Degree Longitude { get; private set; }
+
+		/// <summary>
+		///   Altitude of the geographical position
+		/// </summary>
 		public double Altitude { get; private set; }
 
 		internal LocRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the LocRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="version"> Version number of representation </param>
+		/// <param name="size"> Size of location in centimeters </param>
+		/// <param name="horizontalPrecision"> Horizontal precision in centimeters </param>
+		/// <param name="verticalPrecision"> Vertical precision in centimeters </param>
+		/// <param name="latitude"> Latitude of the geographical position </param>
+		/// <param name="longitude"> Longitude of the geographical position </param>
+		/// <param name="altitude"> Altitude of the geographical position </param>
 		public LocRecord(string name, int timeToLive, byte version, double size, double horizontalPrecision, double verticalPrecision, Degree latitude, Degree longitude, double altitude)
 			: base(name, RecordType.Loc, RecordClass.INet, timeToLive)
 		{

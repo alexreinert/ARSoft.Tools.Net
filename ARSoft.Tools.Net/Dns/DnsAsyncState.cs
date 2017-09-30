@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,12 +39,25 @@ namespace ARSoft.Tools.Net.Dns
 		internal Timer Timer;
 		internal bool TimedOut;
 
+		private long _timeOutUtcTicks;
+
+		internal long TimeRemaining
+		{
+			get
+			{
+				long res = (_timeOutUtcTicks - DateTime.UtcNow.Ticks) / TimeSpan.TicksPerMillisecond;
+				return res > 0 ? res : 0;
+			}
+			set { _timeOutUtcTicks = DateTime.UtcNow.Ticks + value * TimeSpan.TicksPerMillisecond; }
+		}
+
 		internal UdpClient UdpClient;
 		internal IPEndPoint UdpEndpoint;
 
 		internal TcpClient TcpClient;
 		internal NetworkStream TcpStream;
 		internal byte[] TcpBuffer;
+		internal int TcpBytesToReceive;
 
 		internal AsyncCallback UserCallback;
 		public object AsyncState { get; internal set; }

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,21 +21,100 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   DNSSEC algorithm type
+	/// </summary>
 	public enum DnsSecAlgorithm : byte
 	{
-		RsaMd5 = 1, // RFC4034
-		DiffieHellman = 2, // RFC2539
-		DsaSha1 = 3, // RFC3755
-		EllipticCurve = 4,
-		RsaSha1 = 5, // RFC3755
-		DsaNsec3Sha1 = 6, // RFC5155
-		RsaSha1Nsec3Sha1 = 7, // RFC5155
-		RsaSha256 = 8, // RFC5702
-		RsaSha512 = 10, // RFC5702
-		EccGost = 12, // RFC5933
+		/// <summary>
+		///   <para>RSA MD5</para> <para>Defined in
+		///                          <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+		///                        </para>
+		/// </summary>
+		RsaMd5 = 1,
 
+		/// <summary>
+		///   <para>Diffie Hellman</para> <para>Defined in
+		///                                 <see cref="!:http://tools.ietf.org/html/rfc2539">RFC 2539</see>
+		///                               </para>
+		/// </summary>
+		DiffieHellman = 2,
+
+		/// <summary>
+		///   <para>DSA/SHA-1</para> <para>Defined in
+		///                            <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+		///                          </para>
+		/// </summary>
+		DsaSha1 = 3,
+
+		/// <summary>
+		///   <para>Elliptic curves</para> <para>Defined in
+		///                                  <see cref="!:http://tools.ietf.org/html/rfc">RFC</see>
+		///                                </para>
+		/// </summary>
+		EllipticCurve = 4,
+
+		/// <summary>
+		///   <para>RSA/SHA-1</para> <para>Defined in
+		///                            <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+		///                          </para>
+		/// </summary>
+		RsaSha1 = 5,
+
+		/// <summary>
+		///   <para>DSA/SHA-1 using NSEC3 hashs</para> <para>Defined in
+		///                                              <see cref="!:http://tools.ietf.org/html/rfc5155">RFC 5155</see>
+		///                                            </para>
+		/// </summary>
+		DsaNsec3Sha1 = 6,
+
+		/// <summary>
+		///   <para>RSA/SHA-1 using NSEC3 hashs</para> <para>Defined in
+		///                                              <see cref="!:http://tools.ietf.org/html/rfc5155">RFC 5155</see>
+		///                                            </para>
+		/// </summary>
+		RsaSha1Nsec3Sha1 = 7,
+
+		/// <summary>
+		///   <para>RSA/SHA-256</para> <para>Defined in
+		///                              <see cref="!:http://tools.ietf.org/html/rfc5702">RFC 5702</see>
+		///                            </para>
+		/// </summary>
+		RsaSha256 = 8,
+
+		/// <summary>
+		///   <para>RSA/SHA-512</para> <para>Defined in
+		///                              <see cref="!:http://tools.ietf.org/html/rfc5702">RFC 5702</see>
+		///                            </para>
+		/// </summary>
+		RsaSha512 = 10,
+
+		/// <summary>
+		///   <para>GOST Signature</para> <para>Defined in
+		///                                 <see cref="!:http://tools.ietf.org/html/rfc5933">RFC 5933</see>
+		///                               </para>
+		/// </summary>
+		EccGost = 12,
+
+		/// <summary>
+		///   <para>Indirect</para> <para>Defined in
+		///                           <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+		///                         </para>
+		/// </summary>
 		Indirect = 252, // RFC4034
-		PrivateDns = 253, // RFC3755
-		PrivateOid = 254, // RFC3755
+
+		/// <summary>
+		///   <para>Private key using named algorithm</para> <para>Defined in
+		///                                                    <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+		///                                                  </para>
+		/// </summary>
+		PrivateDns = 253,
+
+		/// <summary>
+		///   <para>Private key using algorithm object identifier</para> <para>Defined in
+		///                                                                <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+		///                                                              </para>
+		/// </summary>
+		PrivateOid = 254,
 	}
 }

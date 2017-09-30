@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,16 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
+	/// <summary>
+	///   <para>Dynamic DNS update message</para> <para>Defined in
+	///                                             <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+	///                                           </para>
+	/// </summary>
 	public class DnsUpdateMessage : DnsMessageBase
 	{
+		/// <summary>
+		///   Creates a new instance of the DnsUpdateMessage class
+		/// </summary>
 		public DnsUpdateMessage()
 		{
 			OperationCode = OperationCode.Update;
@@ -32,7 +40,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		private List<UpdateBase> _updates;
 
 		/// <summary>
-		/// Gets or sets the zone name
+		///   Gets or sets the zone name
 		/// </summary>
 		public string ZoneName
 		{
@@ -41,7 +49,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		}
 
 		/// <summary>
-		/// Gets or sets the entries in the prerequisites section
+		///   Gets or sets the entries in the prerequisites section
 		/// </summary>
 		public List<PrequisiteBase> Prequisites
 		{
@@ -50,7 +58,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		}
 
 		/// <summary>
-		/// Gets or sets the entries in the update section
+		///   Gets or sets the entries in the update section
 		/// </summary>
 		public List<UpdateBase> Updates
 		{
@@ -76,57 +84,61 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		protected override void FinishParsing()
 		{
-			Prequisites = _answerRecords.ConvertAll<PrequisiteBase>(record =>
-			                                                        {
-			                                                        	if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
-			                                                        	{
-			                                                        		return new RecordExistsPrequisite(record.Name, record.RecordType);
-			                                                        	}
-			                                                        	else if (record.RecordClass == RecordClass.Any)
-			                                                        	{
-			                                                        		return new RecordExistsPrequisite(record);
-			                                                        	}
-			                                                        	else if ((record.RecordClass == RecordClass.None) && (record.RecordDataLength == 0))
-			                                                        	{
-			                                                        		return new RecordNotExistsPrequisite(record.Name, record.RecordType);
-			                                                        	}
-			                                                        	else if ((record.RecordClass == RecordClass.Any) && (record.RecordType == RecordType.Any))
-			                                                        	{
-			                                                        		return new NameIsInUsePrequisite(record.Name);
-			                                                        	}
-			                                                        	else if ((record.RecordClass == RecordClass.None) && (record.RecordType == RecordType.Any))
-			                                                        	{
-			                                                        		return new NameIsNotInUsePrequisite(record.Name);
-			                                                        	}
-			                                                        	else
-			                                                        	{
-			                                                        		return null;
-			                                                        	}
-			                                                        }).Where(prequisite => (prequisite != null)).ToList();
+			Prequisites =
+				_answerRecords.ConvertAll<PrequisiteBase>(
+					record =>
+					{
+						if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
+						{
+							return new RecordExistsPrequisite(record.Name, record.RecordType);
+						}
+						else if (record.RecordClass == RecordClass.Any)
+						{
+							return new RecordExistsPrequisite(record);
+						}
+						else if ((record.RecordClass == RecordClass.None) && (record.RecordDataLength == 0))
+						{
+							return new RecordNotExistsPrequisite(record.Name, record.RecordType);
+						}
+						else if ((record.RecordClass == RecordClass.Any) && (record.RecordType == RecordType.Any))
+						{
+							return new NameIsInUsePrequisite(record.Name);
+						}
+						else if ((record.RecordClass == RecordClass.None) && (record.RecordType == RecordType.Any))
+						{
+							return new NameIsNotInUsePrequisite(record.Name);
+						}
+						else
+						{
+							return null;
+						}
+					}).Where(prequisite => (prequisite != null)).ToList();
 
-			Updates = _authorityRecords.ConvertAll<UpdateBase>(record =>
-			                                                   {
-			                                                   	if (record.TimeToLive != 0)
-			                                                   	{
-			                                                   		return new AddRecordUpdate(record);
-			                                                   	}
-			                                                   	else if ((record.RecordType == RecordType.Any) && (record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
-			                                                   	{
-			                                                   		return new DeleteAllRecordsUpdate(record.Name);
-			                                                   	}
-			                                                   	else if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
-			                                                   	{
-			                                                   		return new DeleteRecordUpdate(record.Name, record.RecordType);
-			                                                   	}
-			                                                   	else if (record.RecordClass == RecordClass.Any)
-			                                                   	{
-			                                                   		return new DeleteRecordUpdate(record);
-			                                                   	}
-			                                                   	else
-			                                                   	{
-			                                                   		return null;
-			                                                   	}
-			                                                   }).Where(update => (update != null)).ToList();
+			Updates =
+				_authorityRecords.ConvertAll<UpdateBase>(
+					record =>
+					{
+						if (record.TimeToLive != 0)
+						{
+							return new AddRecordUpdate(record);
+						}
+						else if ((record.RecordType == RecordType.Any) && (record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
+						{
+							return new DeleteAllRecordsUpdate(record.Name);
+						}
+						else if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
+						{
+							return new DeleteRecordUpdate(record.Name, record.RecordType);
+						}
+						else if (record.RecordClass == RecordClass.Any)
+						{
+							return new DeleteRecordUpdate(record);
+						}
+						else
+						{
+							return null;
+						}
+					}).Where(update => (update != null)).ToList();
 		}
 	}
 }

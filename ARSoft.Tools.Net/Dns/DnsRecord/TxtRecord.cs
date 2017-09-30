@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,26 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Text strings</para> <para>Defined in
+	///                               <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///                             </para>
+	/// </summary>
 	public class TxtRecord : DnsRecordBase, ITextRecord
 	{
+		/// <summary>
+		///   Text data
+		/// </summary>
 		public string TextData { get; protected set; }
 
 		internal TxtRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the TxtRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="textData"> Text data </param>
 		public TxtRecord(string name, int timeToLive, string textData)
 			: base(name, RecordType.Txt, RecordClass.INet, timeToLive)
 		{

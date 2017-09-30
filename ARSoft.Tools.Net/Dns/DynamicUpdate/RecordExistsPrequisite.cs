@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,15 +21,30 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
+	/// <summary>
+	///   Prequisite, that a record exists
+	/// </summary>
 	public class RecordExistsPrequisite : PrequisiteBase
 	{
+		/// <summary>
+		///   Record that should exist
+		/// </summary>
 		public DnsRecordBase Record { get; private set; }
 
 		internal RecordExistsPrequisite() {}
 
+		/// <summary>
+		///   Creates a new instance of the RecordExistsPrequisite class
+		/// </summary>
+		/// <param name="name"> Name of record that should be checked </param>
+		/// <param name="recordType"> Type of record that should be checked </param>
 		public RecordExistsPrequisite(string name, RecordType recordType)
 			: base(name, recordType, RecordClass.Any, 0) {}
 
+		/// <summary>
+		///   Creates a new instance of the RecordExistsPrequisite class
+		/// </summary>
+		/// <param name="record"> tecord that should be checked </param>
 		public RecordExistsPrequisite(DnsRecordBase record)
 			: base(record.Name, record.RecordType, record.RecordClass, 0)
 		{

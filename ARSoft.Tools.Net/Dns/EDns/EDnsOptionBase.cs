@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,14 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Base class of EDNS options
+	/// </summary>
 	public abstract class EDnsOptionBase
 	{
+		/// <summary>
+		///   Type of the option
+		/// </summary>
 		public EDnsOptionType Type { get; internal set; }
 
 		internal EDnsOptionBase(EDnsOptionType optionType)

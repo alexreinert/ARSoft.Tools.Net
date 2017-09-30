@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,15 +23,18 @@ using ARSoft.Tools.Net.Dns;
 namespace ARSoft.Tools.Net.Spf
 {
 	/// <summary>
-	/// Validator for SenderID records
+	///   Validator for SenderID records
 	/// </summary>
 	public class SenderIDValidator : ValidatorBase<SenderIDRecord>
 	{
 		/// <summary>
-		/// Scope to examin
+		///   Scope to examin
 		/// </summary>
 		public SenderIDScope Scope { get; set; }
 
+		/// <summary>
+		///   Initializes a new instance of the SenderIDValidator class.
+		/// </summary>
 		public SenderIDValidator()
 		{
 			Scope = SenderIDScope.MFrom;
@@ -51,7 +54,7 @@ namespace ARSoft.Tools.Net.Spf
 
 		private bool TryLoadRecords(string domain, RecordType recordType, out SenderIDRecord record, out SpfQualifier errorResult)
 		{
-			DnsMessage dnsMessage = DnsClient.Default.Resolve(domain, recordType);
+			DnsMessage dnsMessage = ResolveDns(domain, recordType);
 			if ((dnsMessage == null) || ((dnsMessage.ReturnCode != ReturnCode.NoError) && (dnsMessage.ReturnCode != ReturnCode.NxDomain)))
 			{
 				record = default(SenderIDRecord);

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,10 +21,21 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Name server ID option</para> <para>Defined in
+	///                                        <see cref="!:http://tools.ietf.org/html/rfc5001">RFC 5001</see>
+	///                                      </para>
+	/// </summary>
 	public class NsIdOption : EDnsOptionBase
 	{
+		/// <summary>
+		///   Binary data of the payload
+		/// </summary>
 		public byte[] Payload { get; set; }
 
+		/// <summary>
+		///   Creates a new instance of the NsIdOption class
+		/// </summary>
 		public NsIdOption()
 			: base(EDnsOptionType.NsId) {}
 

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,26 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Sender Policy Framework</para> <para>Defined in
+	///                                          <see cref="!:http://tools.ietf.org/html/rfc4408">RFC 4408</see>
+	///                                        </para>
+	/// </summary>
 	public class SpfRecord : DnsRecordBase, ITextRecord
 	{
+		/// <summary>
+		///   Text data of the record
+		/// </summary>
 		public string TextData { get; protected set; }
 
 		internal SpfRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the SpfRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="textData"> Text data of the record </param>
 		public SpfRecord(string name, int timeToLive, string textData)
 			: base(name, RecordType.Spf, RecordClass.INet, timeToLive)
 		{

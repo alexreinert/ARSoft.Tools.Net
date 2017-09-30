@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,17 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   A single entry of the Question section of a dns query
+	/// </summary>
 	public class DnsQuestion : DnsMessageEntryBase
 	{
+		/// <summary>
+		///   Creates a new instance of the DnsQuestion class
+		/// </summary>
+		/// <param name="name"> Domain name </param>
+		/// <param name="recordType"> Record type </param>
+		/// <param name="recordClass"> Record class </param>
 		public DnsQuestion(string name, RecordType recordType, RecordClass recordClass)
 		{
 			Name = name ?? String.Empty;

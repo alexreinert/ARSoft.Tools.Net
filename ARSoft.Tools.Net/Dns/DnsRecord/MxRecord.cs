@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,32 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Mail exchange</para> <para>Defined in
+	///                                <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///                              </para>
+	/// </summary>
 	public class MxRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Preference of the record
+		/// </summary>
 		public ushort Preference { get; private set; }
+
+		/// <summary>
+		///   Host name of the mail exchanger
+		/// </summary>
 		public string ExchangeDomainName { get; private set; }
 
 		internal MxRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the MxRecord class
+		/// </summary>
+		/// <param name="name"> Name of the zone </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="preference"> Preference of the record </param>
+		/// <param name="exchangeDomainName"> Host name of the mail exchanger </param>
 		public MxRecord(string name, int timeToLive, ushort preference, string exchangeDomainName)
 			: base(name, RecordType.Mx, RecordClass.INet, timeToLive)
 		{

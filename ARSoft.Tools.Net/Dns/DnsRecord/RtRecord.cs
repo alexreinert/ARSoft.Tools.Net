@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,18 +21,37 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Route through record</para> <para>Defined in
+	///                                       <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+	///                                     </para>
+	/// </summary>
 	public class RtRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Preference of the record
+		/// </summary>
 		public ushort Preference { get; private set; }
+
+		/// <summary>
+		///   Name of the intermediate host
+		/// </summary>
 		public string IntermediateHost { get; private set; }
 
 		internal RtRecord() {}
 
-		public RtRecord(string name, int timeToLive, ushort preference, string exchangeDomainName)
+		/// <summary>
+		///   Creates a new instance of the RtRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="preference"> Preference of the record </param>
+		/// <param name="intermediateHost"> Name of the intermediate host </param>
+		public RtRecord(string name, int timeToLive, ushort preference, string intermediateHost)
 			: base(name, RecordType.Rt, RecordClass.INet, timeToLive)
 		{
 			Preference = preference;
-			IntermediateHost = exchangeDomainName ?? String.Empty;
+			IntermediateHost = intermediateHost ?? String.Empty;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)

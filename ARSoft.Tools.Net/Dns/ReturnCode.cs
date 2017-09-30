@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,28 +21,142 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Result of a dns request
+	/// </summary>
 	public enum ReturnCode : ushort
 	{
-		NoError = 0, // RFC1035
-		FormatError = 1, // RFC1035
-		ServerFailure = 2, // RFC1035
-		NxDomain = 3, // RFC1035
-		NotImplemented = 4, // RFC1035
-		Refused = 5, // RFC1035
+		/// <summary>
+		///   <para>No error</para> <para>Defined in
+		///                           <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///                         </para>
+		/// </summary>
+		NoError = 0,
 
-		YXDomain = 6, // RFC2136
-		YXRRSet = 7, // RFC2136
-		NXRRSet = 8, // RFC2136
-		NotAuthoritive = 9, // RFC2136
-		NotZone = 10, // RFC2136
+		/// <summary>
+		///   <para>Format error</para> <para>Defined in
+		///                               <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///                             </para>
+		/// </summary>
+		FormatError = 1,
 
-		BadVersion = 16, // RFC2671
-		BadSig = 16, // RFC2845
-		BadKey = 17, // RFC2845
-		BadTime = 18, // RFC2845
-		BadMode = 19, // RFC2930
-		BadName = 20, // RFC2930
-		BadAlg = 21, // RFC2930
-		BadTrunc = 22, // RFC4635
+		/// <summary>
+		///   <para>Server failure</para> <para>Defined in
+		///                                 <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///                               </para>
+		/// </summary>
+		ServerFailure = 2,
+
+		/// <summary>
+		///   <para>Non-existent domain</para> <para>Defined in
+		///                                      <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///                                    </para>
+		/// </summary>
+		NxDomain = 3,
+
+		/// <summary>
+		///   <para>Not implemented</para> <para>Defined in
+		///                                  <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///                                </para>
+		/// </summary>
+		NotImplemented = 4,
+
+		/// <summary>
+		///   <para>Query refused</para> <para>Defined in
+		///                                <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///                              </para>
+		/// </summary>
+		Refused = 5,
+
+		/// <summary>
+		///   <para>Name exists when it should not</para> <para>Defined in
+		///                                                 <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+		///                                               </para>
+		/// </summary>
+		YXDomain = 6,
+
+		/// <summary>
+		///   <para>Record exists when it should not</para> <para>Defined in
+		///                                                   <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+		///                                                 </para>
+		/// </summary>
+		YXRRSet = 7,
+
+		/// <summary>
+		///   <para>Record that should exist does not</para> <para>Defined in
+		///                                                    <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+		///                                                  </para>
+		/// </summary>
+		NXRRSet = 8,
+
+		/// <summary>
+		///   <para>Server is not authoritative for zone</para> <para>Defined in
+		///                                                       <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+		///                                                     </para>
+		/// </summary>
+		NotAuthoritive = 9,
+
+		/// <summary>
+		///   <para>Name not contained in zone</para> <para>Defined in
+		///                                             <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+		///                                           </para>
+		/// </summary>
+		NotZone = 10,
+
+		/// <summary>
+		///   <para>EDNS version is not supported by responder</para> <para>Defined in
+		///                                                             <see cref="!:http://tools.ietf.org/html/rfc2671">RFC 2671</see>
+		///                                                           </para>
+		/// </summary>
+		BadVersion = 16,
+
+		/// <summary>
+		///   <para>TSIG signature failure</para> <para>Defined in
+		///                                         <see cref="!:http://tools.ietf.org/html/rfc2845">RFC 2845</see>
+		///                                       </para>
+		/// </summary>
+		BadSig = 16,
+
+		/// <summary>
+		///   <para>Key not recognized</para> <para>Defined in
+		///                                     <see cref="!:http://tools.ietf.org/html/rfc2845">RFC 2845</see>
+		///                                   </para>
+		/// </summary>
+		BadKey = 17,
+
+		/// <summary>
+		///   <para>Signature out of time window</para> <para>Defined in
+		///                                               <see cref="!:http://tools.ietf.org/html/rfc2845">RFC 2845</see>
+		///                                             </para>
+		/// </summary>
+		BadTime = 18,
+
+		/// <summary>
+		///   <para>Bad TKEY mode</para> <para>Defined in
+		///                                <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+		///                              </para>
+		/// </summary>
+		BadMode = 19,
+
+		/// <summary>
+		///   <para>Duplicate key name</para> <para>Defined in
+		///                                     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+		///                                   </para>
+		/// </summary>
+		BadName = 20,
+
+		/// <summary>
+		///   <para>Algorithm not supported</para> <para>Defined in
+		///                                          <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+		///                                        </para>
+		/// </summary>
+		BadAlg = 21,
+
+		/// <summary>
+		///   <para>Bad truncation of TSIG record</para> <para>Defined in
+		///                                                <see cref="!:http://tools.ietf.org/html/rfc4635">RFC 4635</see>
+		///                                              </para>
+		/// </summary>
+		BadTrunc = 22,
 	}
 }

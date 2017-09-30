@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,32 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Responsible person record</para> <para>Defined in
+	///                                            <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+	///                                          </para>
+	/// </summary>
 	public class RpRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Mail address of responsable person, the @ should be replaced by a dot
+		/// </summary>
 		public string MailBox { get; protected set; }
+
+		/// <summary>
+		///   Domain name of a <see cref="TxtRecord" /> with additional information
+		/// </summary>
 		public string TxtDomainName { get; protected set; }
 
 		internal RpRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the RpRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="mailBox"> Mail address of responsable person, the @ should be replaced by a dot </param>
+		/// <param name="txtDomainName"> Domain name of a <see cref="TxtRecord" /> with additional information </param>
 		public RpRecord(string name, int timeToLive, string mailBox, string txtDomainName)
 			: base(name, RecordType.Rp, RecordClass.INet, timeToLive)
 		{

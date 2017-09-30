@@ -22,49 +22,49 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>Authoritatitve name server record</para> <para>Defined in
-	///                                                    <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-	///                                                  </para>
+	///   <para>Dynamic Host Configuration Protocol (DHCP) Information record</para> <para>Defined in
+	///                                                                                <see cref="!:http://tools.ietf.org/html/rfc4701">RFC 4701</see>
+	///                                                                              </para>
 	/// </summary>
-	public class NsRecord : DnsRecordBase
+	public class DhcidRecord : DnsRecordBase
 	{
 		/// <summary>
-		///   Name of the authoritatitve nameserver for the zone
+		///   Record data
 		/// </summary>
-		public string NameServer { get; private set; }
+		public byte[] RecordData { get; private set; }
 
-		internal NsRecord() {}
+		internal DhcidRecord() {}
 
 		/// <summary>
-		///   Creates a new instance of the NsRecord class
+		///   Creates a new instance of the DhcidRecord class
 		/// </summary>
-		/// <param name="name"> Domain name of the zone </param>
+		/// <param name="name"> Name of the record </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="nameServer"> Name of the authoritative name server </param>
-		public NsRecord(string name, int timeToLive, string nameServer)
-			: base(name, RecordType.Ns, RecordClass.INet, timeToLive)
+		/// <param name="recordData"> Record data </param>
+		public DhcidRecord(string name, int timeToLive, byte[] recordData)
+			: base(name, RecordType.Dhcid, RecordClass.INet, timeToLive)
 		{
-			NameServer = nameServer ?? String.Empty;
+			RecordData = recordData ?? new byte[] { };
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
-			NameServer = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
+			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
 
 		internal override string RecordDataToString()
 		{
-			return NameServer;
+			return RecordData.ToBase64String();
 		}
 
 		protected internal override int MaximumRecordDataLength
 		{
-			get { return NameServer.Length + 2; }
+			get { return RecordData.Length; }
 		}
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, NameServer, true, domainNames);
+			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, RecordData);
 		}
 	}
 }

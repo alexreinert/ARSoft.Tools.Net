@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,31 +22,107 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>IPsec key storage</para> <para>Defined in
+	///                                    <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+	///                                  </para>
+	/// </summary>
 	public class IpSecKeyRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Algorithm of key
+		/// </summary>
 		public enum IpSecAlgorithm : byte
 		{
+			/// <summary>
+			///   None
+			/// </summary>
 			None = 0,
-			Rsa = 1, // RFC4025
-			Dsa = 2, // RFC4025
+
+			/// <summary>
+			///   <para>RSA</para> <para>Defined in
+			///                      <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+			///                    </para>
+			/// </summary>
+			Rsa = 1,
+
+			/// <summary>
+			///   <para>DSA</para> <para>Defined in
+			///                      <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+			///                    </para>
+			/// </summary>
+			Dsa = 2,
 		}
 
+		/// <summary>
+		///   Type of gateway
+		/// </summary>
 		public enum IpSecGatewayType : byte
 		{
+			/// <summary>
+			///   None
+			/// </summary>
 			None = 0,
-			IpV4 = 1, // RFC4025
-			IpV6 = 2, // RFC4025
-			Domain = 3, // RFC4025
+
+			/// <summary>
+			///   <para>Gateway is a IPv4 address</para> <para>Defined in
+			///                                            <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+			///                                          </para>
+			/// </summary>
+			IpV4 = 1,
+
+			/// <summary>
+			///   <para>Gateway is a IPv6 address</para> <para>Defined in
+			///                                            <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+			///                                          </para>
+			/// </summary>
+			IpV6 = 2,
+
+			/// <summary>
+			///   <para>Gateway is a domain name</para> <para>Defined in
+			///                                           <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+			///                                         </para>
+			/// </summary>
+			Domain = 3,
 		}
 
+		/// <summary>
+		///   Precedence of the record
+		/// </summary>
 		public byte Precedence { get; private set; }
+
+		/// <summary>
+		///   Type of gateway
+		/// </summary>
 		public IpSecGatewayType GatewayType { get; private set; }
+
+		/// <summary>
+		///   Algorithm of the key
+		/// </summary>
 		public IpSecAlgorithm Algorithm { get; private set; }
+
+		/// <summary>
+		///   Address of the gateway
+		/// </summary>
 		public string Gateway { get; private set; }
+
+		/// <summary>
+		///   Binary data of the public key
+		/// </summary>
 		public byte[] PublicKey { get; private set; }
 
 		internal IpSecKeyRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the IpSecKeyRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="precedence"> Precedence of the record </param>
+		/// <param name="gatewayType"> Type of gateway </param>
+		/// <param name="algorithm"> Algorithm of the key </param>
+		/// <param name="gateway"> Address of the gateway </param>
+		/// <param name="publicKey"> Binary data of the public key </param>
 		public IpSecKeyRecord(string name, int timeToLive, byte precedence, IpSecGatewayType gatewayType, IpSecAlgorithm algorithm, string gateway, byte[] publicKey)
 			: base(name, RecordType.IpSecKey, RecordClass.INet, timeToLive)
 		{

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,32 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Key exchanger record</para> <para>Defined in
+	///                                       <see cref="!:http://tools.ietf.org/html/rfc2230">RFC 2230</see>
+	///                                     </para>
+	/// </summary>
 	public class KxRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Preference of the record
+		/// </summary>
 		public ushort Preference { get; private set; }
+
+		/// <summary>
+		///   Domain name of the exchange host
+		/// </summary>
 		public string Exchanger { get; private set; }
 
 		internal KxRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the KxRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="preference"> Preference of the record </param>
+		/// <param name="exchanger"> Domain name of the exchange host </param>
 		public KxRecord(string name, int timeToLive, ushort preference, string exchanger)
 			: base(name, RecordType.Kx, RecordClass.INet, timeToLive)
 		{

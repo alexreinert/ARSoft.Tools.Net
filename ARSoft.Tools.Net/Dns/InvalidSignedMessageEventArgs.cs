@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,11 +21,17 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Event arguments of <see cref="DnsServer.InvalidSignedMessageReceived" /> event.
+	/// </summary>
 	public class InvalidSignedMessageEventArgs : EventArgs
 	{
+		/// <summary>
+		///   Original message, which the client provided
+		/// </summary>
 		public DnsMessageBase Message { get; set; }
 
-		public InvalidSignedMessageEventArgs(DnsMessageBase message)
+		internal InvalidSignedMessageEventArgs(DnsMessageBase message)
 		{
 			Message = message;
 		}

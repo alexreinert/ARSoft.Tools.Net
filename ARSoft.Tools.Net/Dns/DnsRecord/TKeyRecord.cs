@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,27 +21,102 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Transaction key</para> <para>Defined in
+	///                                  <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+	///                                </para>
+	/// </summary>
 	public class TKeyRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Mode of transaction
+		/// </summary>
 		public enum TKeyMode : ushort
 		{
+			/// <summary>
+			///   <para>Server assignment</para> <para>Defined in
+			///                                    <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///                                  </para>
+			/// </summary>
 			ServerAssignment = 1, // RFC2930
+
+			/// <summary>
+			///   <para>Diffie-Hellman exchange</para> <para>Defined in
+			///                                          <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///                                        </para>
+			/// </summary>
 			DiffieHellmanExchange = 2, // RFC2930
+
+			/// <summary>
+			///   <para>GSS-API negotiation</para> <para>Defined in
+			///                                      <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///                                    </para>
+			/// </summary>
 			GssNegotiation = 3, // RFC2930
+
+			/// <summary>
+			///   <para>Resolver assignment</para> <para>Defined in
+			///                                      <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///                                    </para>
+			/// </summary>
 			ResolverAssignment = 4, // RFC2930
+
+			/// <summary>
+			///   <para>Key deletion</para> <para>Defined in
+			///                               <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///                             </para>
+			/// </summary>
 			KeyDeletion = 5, // RFC2930
 		}
 
+		/// <summary>
+		///   Algorithm of the key
+		/// </summary>
 		public TSigAlgorithm Algorithm { get; private set; }
+
+		/// <summary>
+		///   Date from which the key is valid
+		/// </summary>
 		public DateTime Inception { get; private set; }
+
+		/// <summary>
+		///   Date to which the key is valid
+		/// </summary>
 		public DateTime Expiration { get; private set; }
+
+		/// <summary>
+		///   Mode of transaction
+		/// </summary>
 		public TKeyMode Mode { get; private set; }
+
+		/// <summary>
+		///   Error field
+		/// </summary>
 		public ReturnCode Error { get; private set; }
+
+		/// <summary>
+		///   Binary data of the key
+		/// </summary>
 		public byte[] Key { get; private set; }
+
+		/// <summary>
+		///   Binary other data
+		/// </summary>
 		public byte[] OtherData { get; private set; }
 
 		internal TKeyRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the TKeyRecord class
+		/// </summary>
+		/// <param name="name"> Name of the record </param>
+		/// <param name="algorithm"> Algorithm of the key </param>
+		/// <param name="inception"> Date from which the key is valid </param>
+		/// <param name="expiration"> Date to which the key is valid </param>
+		/// <param name="mode"> Mode of transaction </param>
+		/// <param name="error"> Error field </param>
+		/// <param name="key"> Binary data of the key </param>
+		/// <param name="otherData"> Binary other data </param>
 		public TKeyRecord(string name, TSigAlgorithm algorithm, DateTime inception, DateTime expiration, TKeyMode mode, ReturnCode error, byte[] key, byte[] otherData)
 			: base(name, RecordType.TKey, RecordClass.Any, 0)
 		{

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,9 +21,23 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   Type of DNSSEC digest
+	/// </summary>
 	public enum DnsSecDigestType : byte
 	{
-		Sha1 = 1, // RFC3658
-		Sha256 = 2, // RFC4509
+		/// <summary>
+		///   <para>SHA-1</para> <para>Defined in
+		///                        <see cref="!:http://tools.ietf.org/html/rfc3658">RFC 3658</see>
+		///                      </para>
+		/// </summary>
+		Sha1 = 1,
+
+		/// <summary>
+		///   <para>SHA-256</para> <para>Defined in
+		///                          <see cref="!:http://tools.ietf.org/html/rfc4509">RFC 4509</see>
+		///                        </para>
+		/// </summary>
+		Sha256 = 2,
 	}
 }

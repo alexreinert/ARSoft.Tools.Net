@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,32 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Host information</para> <para>Defined in
+	///                                   <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///                                 </para>
+	/// </summary>
 	public class HInfoRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Type of the CPU of the host
+		/// </summary>
 		public string Cpu { get; private set; }
+
+		/// <summary>
+		///   Name of the operating system of the host
+		/// </summary>
 		public string OperatingSystem { get; private set; }
 
 		internal HInfoRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the HInfoRecord class
+		/// </summary>
+		/// <param name="name"> Name of the host </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="cpu"> Type of the CPU of the host </param>
+		/// <param name="operatingSystem"> Name of the operating system of the host </param>
 		public HInfoRecord(string name, int timeToLive, string cpu, string operatingSystem)
 			: base(name, RecordType.HInfo, RecordClass.INet, timeToLive)
 		{

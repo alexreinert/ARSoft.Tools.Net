@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,13 +23,16 @@ using System.Text;
 
 namespace ARSoft.Tools.Net
 {
+	/// <summary>
+	///   Extension class for the <see cref="IPAddress" /> class
+	/// </summary>
 	public static class IPAddressExtension
 	{
 		/// <summary>
-		/// Reverses the order of the bytes of an IPAddress
+		///   Reverses the order of the bytes of an IPAddress
 		/// </summary>
-		/// <param name="ipAddress">Instance of the IPAddress, that should be reversed</param>
-		/// <returns>New instance of IPAddress with reversed address</returns>
+		/// <param name="ipAddress"> Instance of the IPAddress, that should be reversed </param>
+		/// <returns> New instance of IPAddress with reversed address </returns>
 		public static IPAddress Reverse(this IPAddress ipAddress)
 		{
 			if (ipAddress == null)
@@ -47,11 +50,11 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		/// Gets the network address for a specified IPAddress and netmask
+		///   Gets the network address for a specified IPAddress and netmask
 		/// </summary>
-		/// <param name="ipAddress">IPAddress, for that the network address should be returned</param>
-		/// <param name="netmask">Netmask, that should be used</param>
-		/// <returns>New instance of IPAddress with the network address assigend</returns>
+		/// <param name="ipAddress"> IPAddress, for that the network address should be returned </param>
+		/// <param name="netmask"> Netmask, that should be used </param>
+		/// <returns> New instance of IPAddress with the network address assigend </returns>
 		public static IPAddress GetNetworkAddress(this IPAddress ipAddress, IPAddress netmask)
 		{
 			if (ipAddress == null)
@@ -76,11 +79,11 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		/// Gets the network address for a specified IPAddress and netmask
+		///   Gets the network address for a specified IPAddress and netmask
 		/// </summary>
-		/// <param name="ipAddress">IPAddress, for that the network address should be returned</param>
-		/// <param name="netmask">Netmask in CIDR format</param>
-		/// <returns>New instance of IPAddress with the network address assigend</returns>
+		/// <param name="ipAddress"> IPAddress, for that the network address should be returned </param>
+		/// <param name="netmask"> Netmask in CIDR format </param>
+		/// <returns> New instance of IPAddress with the network address assigend </returns>
 		public static IPAddress GetNetworkAddress(this IPAddress ipAddress, int netmask)
 		{
 			if (ipAddress == null)
@@ -114,22 +117,38 @@ namespace ARSoft.Tools.Net
 		}
 
 		/// <summary>
-		/// Returns the reverse lookup address of an IPAddress
+		///   Returns the reverse lookup address of an IPAddress
 		/// </summary>
-		/// <param name="ipAddress">Instance of the IPAddress, that should be used</param>
-		/// <returns>A string with the reverse lookup address</returns>
+		/// <param name="ipAddress"> Instance of the IPAddress, that should be used </param>
+		/// <returns> A string with the reverse lookup address </returns>
 		public static string GetReverseLookupAddress(this IPAddress ipAddress)
 		{
 			StringBuilder res = new StringBuilder();
 
 			byte[] addressBytes = ipAddress.GetAddressBytes();
-			for (int i = addressBytes.Length - 1; i >= 0; i--)
-			{
-				res.Append(addressBytes[i]);
-				res.Append(".");
-			}
 
-			res.Append(ipAddress.AddressFamily == AddressFamily.InterNetwork ? "in-addr.arpa" : "ip6.arpa");
+			if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+			{
+				for (int i = addressBytes.Length - 1; i >= 0; i--)
+				{
+					res.Append(addressBytes[i]);
+					res.Append(".");
+				}
+				res.Append("in-addr.arpa");
+			}
+			else
+			{
+				for (int i = addressBytes.Length - 1; i >= 0; i--)
+				{
+					string hex = addressBytes[i].ToString("x2");
+					res.Append(hex[1]);
+					res.Append(".");
+					res.Append(hex[0]);
+					res.Append(".");
+				}
+
+				res.Append("ip6.arpa");
+			}
 
 			return res.ToString();
 		}

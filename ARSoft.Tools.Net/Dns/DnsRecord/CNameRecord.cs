@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..11 Alexander Reinert
+// Copyright 2010..2012 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,26 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <summary>
+	///   <para>Canonical name for an alias</para> <para>Defined in
+	///                                              <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///                                            </para>
+	/// </summary>
 	public class CNameRecord : DnsRecordBase
 	{
+		/// <summary>
+		///   Canonical name
+		/// </summary>
 		public string CanonicalName { get; private set; }
 
 		internal CNameRecord() {}
 
+		/// <summary>
+		///   Creates a new instance of the CNameRecord class
+		/// </summary>
+		/// <param name="name"> Domain name the host </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="canonicalName"> Canocical name for the alias of the host </param>
 		public CNameRecord(string name, int timeToLive, string canonicalName)
 			: base(name, RecordType.CName, RecordClass.INet, timeToLive)
 		{
