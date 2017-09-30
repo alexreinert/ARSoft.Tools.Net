@@ -248,8 +248,6 @@ namespace ARSoft.Tools.Net.Spf
 
 		private async Task<SpfQualifier> CheckMechanismAsync(SpfMechanism mechanism, IPAddress ip, DomainName domain, string sender, State state, CancellationToken token)
 		{
-			DomainName mechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
-
 			switch (mechanism.Type)
 			{
 				case SpfMechanismType.All:
@@ -259,7 +257,9 @@ namespace ARSoft.Tools.Net.Spf
 					if (++state.DnsLookupCount > 10)
 						return SpfQualifier.PermError;
 
-					bool? isAMatch = await IsIpMatchAsync(mechanismDomain, ip, mechanism.Prefix, mechanism.Prefix6, token);
+					DomainName aMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
+
+					bool? isAMatch = await IsIpMatchAsync(aMechanismDomain, ip, mechanism.Prefix, mechanism.Prefix6, token);
 					if (!isAMatch.HasValue)
 						return SpfQualifier.TempError;
 
@@ -273,7 +273,9 @@ namespace ARSoft.Tools.Net.Spf
 					if (++state.DnsLookupCount > 10)
 						return SpfQualifier.PermError;
 
-					DnsResolveResult<MxRecord> dnsMxResult = await ResolveDnsAsync<MxRecord>(mechanismDomain, RecordType.Mx, token);
+					DomainName mxMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
+
+					DnsResolveResult<MxRecord> dnsMxResult = await ResolveDnsAsync<MxRecord>(mxMechanismDomain, RecordType.Mx, token);
 					if ((dnsMxResult == null) || ((dnsMxResult.ReturnCode != ReturnCode.NoError) && (dnsMxResult.ReturnCode != ReturnCode.NxDomain)))
 						return SpfQualifier.TempError;
 
@@ -333,6 +335,8 @@ namespace ARSoft.Tools.Net.Spf
 					if ((dnsPtrResult == null) || ((dnsPtrResult.ReturnCode != ReturnCode.NoError) && (dnsPtrResult.ReturnCode != ReturnCode.NxDomain)))
 						return SpfQualifier.TempError;
 
+					DomainName ptrMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
+
 					int ptrCheckedCount = 0;
 					foreach (PtrRecord ptrRecord in dnsPtrResult.Records)
 					{
@@ -342,7 +346,7 @@ namespace ARSoft.Tools.Net.Spf
 						bool? isPtrMatch = await IsIpMatchAsync(ptrRecord.PointerDomainName, ip, 0, 0, token);
 						if (isPtrMatch.HasValue && isPtrMatch.Value)
 						{
-							if (ptrRecord.PointerDomainName.Equals(mechanismDomain) || (ptrRecord.PointerDomainName.IsSubDomainOf(mechanismDomain)))
+							if (ptrRecord.PointerDomainName.Equals(ptrMechanismDomain) || (ptrRecord.PointerDomainName.IsSubDomainOf(ptrMechanismDomain)))
 								return mechanism.Qualifier;
 						}
 					}
@@ -355,7 +359,9 @@ namespace ARSoft.Tools.Net.Spf
 					if (String.IsNullOrEmpty(mechanism.Domain))
 						return SpfQualifier.PermError;
 
-					DnsResolveResult<ARecord> dnsAResult = await ResolveDnsAsync<ARecord>(mechanismDomain, RecordType.A, token);
+					DomainName existsMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
+
+					DnsResolveResult<ARecord> dnsAResult = await ResolveDnsAsync<ARecord>(existsMechanismDomain, RecordType.A, token);
 					if ((dnsAResult == null) || ((dnsAResult.ReturnCode != ReturnCode.NoError) && (dnsAResult.ReturnCode != ReturnCode.NxDomain)))
 						return SpfQualifier.TempError;
 
@@ -372,10 +378,12 @@ namespace ARSoft.Tools.Net.Spf
 					if (String.IsNullOrEmpty(mechanism.Domain))
 						return SpfQualifier.PermError;
 
-					if (mechanismDomain.Equals(domain))
+					DomainName includeMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
+
+					if (includeMechanismDomain.Equals(domain))
 						return SpfQualifier.PermError;
 
-					var includeResult = await CheckHostInternalAsync(ip, mechanismDomain, sender, false, state, token);
+					var includeResult = await CheckHostInternalAsync(ip, includeMechanismDomain, sender, false, state, token);
 					switch (includeResult.Result)
 					{
 						case SpfQualifier.Pass:
