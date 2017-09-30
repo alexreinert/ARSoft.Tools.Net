@@ -1,7 +1,7 @@
 ﻿#region Copyright and License
 // Copyright 2010..2017 Alexander Reinert
 // 
-// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,5 +33,5 @@ using System.Text;
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 [assembly: Guid("7c85a543-2ba0-477d-8e77-0d080cc03c5d")]
-[assembly: AssemblyVersion("2.2.8.0")]
-[assembly: AssemblyFileVersion("2.2.8.0")]
+[assembly: AssemblyVersion("2.2.9.0")]
+[assembly: AssemblyFileVersion("2.2.9.0")]

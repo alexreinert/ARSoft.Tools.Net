@@ -1,7 +1,7 @@
 #region Copyright and License
 // Copyright 2010..2017 Alexander Reinert
 // 
-// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			// b.root-servers.net
 			IPAddress.Parse("192.228.79.201"),
-			IPAddress.Parse("2001:500:84::b"),
+			IPAddress.Parse("2001:500:200::b"),
 
 			// c.root-servers.net
 			IPAddress.Parse("192.33.4.12"),
@@ -47,6 +47,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			// e.root-servers.net
 			IPAddress.Parse("192.203.230.10"),
+			IPAddress.Parse("2001:500:a8::e"),
 
 			// f.root-servers.net
 			IPAddress.Parse("192.5.5.241"),
@@ -54,10 +55,11 @@ namespace ARSoft.Tools.Net.Dns
 
 			// g.root-servers.net
 			IPAddress.Parse("192.112.36.4"),
+			IPAddress.Parse("2001:500:12::d0d"),
 
 			// h.root-servers.net
-			IPAddress.Parse("128.63.2.53"),
-			IPAddress.Parse("2001:500:1::803f:235"),
+			IPAddress.Parse("198.97.190.53"),
+			IPAddress.Parse("2001:500:1::53"),
 
 			// i.root-servers.net
 			IPAddress.Parse("192.36.148.17"),
@@ -73,7 +75,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			// l.root-servers.net
 			IPAddress.Parse("199.7.83.42"),
-			IPAddress.Parse("2001:500:3::42"),
+			IPAddress.Parse("2001:500:9f::42"),
 
 			// m.root-servers.net
 			IPAddress.Parse("202.12.27.33"),
@@ -87,7 +89,8 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static readonly List<DsRecord> _rootKeys = new List<DsRecord>()
 		{
-			new DsRecord(DomainName.Root, RecordClass.INet, 0, 19036, DnsSecAlgorithm.RsaSha256, DnsSecDigestType.Sha256, "49AAC11D7B6F6446702E54A1607371607A1A41855200FD2CE1CDDE32F24E8FB5".FromBase16String())
+			new DsRecord(DomainName.Root, RecordClass.INet, 0, 19036, DnsSecAlgorithm.RsaSha256, DnsSecDigestType.Sha256, "49AAC11D7B6F6446702E54A1607371607A1A41855200FD2CE1CDDE32F24E8FB5".FromBase16String()),
+			new DsRecord(DomainName.Root, RecordClass.INet, 0, 20326, DnsSecAlgorithm.RsaSha256, DnsSecDigestType.Sha256, "E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D".FromBase16String()),
 		};
 
 		/// <summary>
