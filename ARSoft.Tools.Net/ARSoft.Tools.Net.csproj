@@ -137,6 +137,7 @@
     <Compile Include="EnumHelper.cs" />
     <Compile Include="Dns\InvalidSignedMessageEventArgs.cs" />
     <Compile Include="IPAddressExtension.cs" />
+    <Compile Include="Socket\UdpListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spf\SpfCheckHostParameter.cs" />
     <Compile Include="Spf\SpfMechanism.cs" />
