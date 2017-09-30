@@ -293,15 +293,13 @@ namespace ARSoft.Tools.Net.Dns
 			if (compare != 0)
 				return compare;
 
-			int maxLength = 2 + Math.Max(MaximumRecordDataLength, other.MaximumRecordDataLength);
-
-			byte[] thisBuffer = new byte[maxLength];
+			byte[] thisBuffer = new byte[MaximumRecordDataLength];
 			int thisLength = 0;
-			EncodeRecordBody(thisBuffer, 0, ref thisLength, null, false);
+			EncodeRecordData(thisBuffer, 0, ref thisLength, null, false);
 
-			byte[] otherBuffer = new byte[maxLength];
+			byte[] otherBuffer = new byte[other.MaximumRecordDataLength];
 			int otherLength = 0;
-			other.EncodeRecordBody(otherBuffer, 0, ref otherLength, null, false);
+			other.EncodeRecordData(otherBuffer, 0, ref otherLength, null, false);
 
 			for (int i = 0; i < Math.Min(thisLength, otherLength); i++)
 			{

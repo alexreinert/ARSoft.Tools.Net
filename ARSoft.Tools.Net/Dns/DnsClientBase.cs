@@ -245,7 +245,7 @@ namespace ARSoft.Tools.Net.Dns
 					for (int j = 0; j < message.Questions.Count; j++)
 					{
 						DnsQuestion queryQuestion = message.Questions[j];
-						DnsQuestion responseQuestion = message.Questions[j];
+						DnsQuestion responseQuestion = result.Questions[j];
 
 						if ((queryQuestion.RecordClass != responseQuestion.RecordClass)
 						    || (queryQuestion.RecordType != responseQuestion.RecordType)
