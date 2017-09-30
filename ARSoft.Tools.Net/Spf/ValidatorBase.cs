@@ -1,5 +1,7 @@
 ﻿#region Copyright and License
-// Copyright 2010..2012 Alexander Reinert
+// Copyright 2010..2014 Alexander Reinert
+// 
+// This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,19 +41,22 @@ namespace ARSoft.Tools.Net.Spf
 		public string HeloDomain { get; set; }
 
 		/// <summary>
-		///   IP address of the computer validating the record <para>Default is the first IP the computer</para>
+		///   IP address of the computer validating the record
+		///   <para>Default is the first IP the computer</para>
 		/// </summary>
 		public IPAddress LocalIP { get; set; }
 
 		/// <summary>
-		///   Name of the computer validating the record <para>Default is the computer name</para>
+		///   Name of the computer validating the record
+		///   <para>Default is the computer name</para>
 		/// </summary>
 		public string LocalDomain { get; set; }
 
 		private int _dnsLookupLimit = 20;
 
 		/// <summary>
-		///   The maximum number of DNS lookups allowed <para>Default is 20</para>
+		///   The maximum number of DNS lookups allowed
+		///   <para>Default is 20</para>
 		/// </summary>
 		public int DnsLookupLimit
 		{
@@ -486,10 +491,10 @@ namespace ARSoft.Tools.Net.Spf
 							IPAddress address =
 								LocalIP
 								?? NetworkInterface.GetAllNetworkInterfaces()
-								   	.Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
-								   	.SelectMany(n => n.GetIPProperties().UnicastAddresses)
-								   	.Select(u => u.Address)
-								   	.FirstOrDefault(a => a.AddressFamily == ip.AddressFamily)
+								                   .Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+								                   .SelectMany(n => n.GetIPProperties().UnicastAddresses)
+								                   .Select(u => u.Address)
+								                   .FirstOrDefault(a => a.AddressFamily == ip.AddressFamily)
 								?? ((ip.AddressFamily == AddressFamily.InterNetwork) ? IPAddress.Loopback : IPAddress.IPv6Loopback);
 							letter = address.ToString();
 							break;

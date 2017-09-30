@@ -334,6 +334,20 @@ namespace ARSoft.Tools.Net.Dns
 					{
 						foreach (IPAddress dns in nic.GetIPProperties().DnsAddresses)
 						{
+							// only use servers defined in draft-ietf-ipngwg-dns-discovery if they are in the same subnet
+							// fec0::/10 is marked deprecated in RFC 3879, so nobody should use these addresses
+							if (dns.AddressFamily == AddressFamily.InterNetworkV6)
+							{
+								IPAddress unscoped = new IPAddress(dns.GetAddressBytes());
+								if (unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::1"))
+										|| unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::2"))
+										|| unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::3")))
+								{
+									if (!nic.GetIPProperties().UnicastAddresses.Any(x => x.Address.GetNetworkAddress(10).Equals(IPAddress.Parse("fec0::"))))
+										continue;
+								}
+							}
+
 							if (!res.Contains(dns))
 								res.Add(dns);
 						}

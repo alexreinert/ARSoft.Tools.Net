@@ -58,7 +58,7 @@ namespace ARSoft.Tools.Net.Dns
 		public IPAddress Address { get; private set; }
 
 		internal ClientSubnetOption()
-			: base(EDnsOptionType.ClientSubnet) {}
+			: base(EDnsOptionType.ClientSubnet) { }
 
 		/// <summary>
 		///   Creates a new instance of the OwnerOption class
@@ -66,7 +66,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="sourceNetmask"> The source subnet mask </param>
 		/// <param name="address"> The address </param>
 		public ClientSubnetOption(byte sourceNetmask, IPAddress address)
-			: this(sourceNetmask, 0, address) {}
+			: this(sourceNetmask, 0, address) { }
 
 		/// <summary>
 		///   Creates a new instance of the OwnerOption class
@@ -84,11 +84,11 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
-			AddressFamily family = (AddressFamily) DnsMessageBase.ParseUShort(resultData, ref startPosition);
+			ushort family = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			SourceNetmask = resultData[startPosition++];
 			ScopeNetmask = resultData[startPosition++];
 
-			byte[] addressData = new byte[family == AddressFamily.InterNetwork ? 4 : 16];
+			byte[] addressData = new byte[family == 1 ? 4 : 16];
 			Buffer.BlockCopy(resultData, startPosition, addressData, 0, GetAddressLength());
 
 			Address = new IPAddress(addressData);
@@ -101,7 +101,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{
-			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Family);
+			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) (Family == AddressFamily.InterNetwork ? 1 : 2));
 			messageData[currentPosition++] = SourceNetmask;
 			messageData[currentPosition++] = ScopeNetmask;
 
@@ -111,7 +111,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private int GetAddressLength()
 		{
-			return (int) Math.Ceiling(SourceNetmask / 8d) * 8;
+			return (int) Math.Ceiling(SourceNetmask / 8d);
 		}
 	}
 }
