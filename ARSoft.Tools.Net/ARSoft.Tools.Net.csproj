@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{65BFA748-C640-49B0-B506-34BBB165233A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ARSoft.Tools.Net</RootNamespace>
+    <AssemblyName>ARSoft.Tools.Net</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\Debug\ARSoft.Tools.Net\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\Release\ARSoft.Tools.Net\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Dns\DnsClient.cs" />
+    <Compile Include="Dns\DnsMessage.cs" />
+    <Compile Include="Dns\DnsMessageEntryBase.cs" />
+    <Compile Include="Dns\DnsQuestion.cs" />
+    <Compile Include="Dns\DnsRecord\AaaaRecord.cs" />
+    <Compile Include="Dns\DnsRecord\AfsdbRecord.cs" />
+    <Compile Include="Dns\DnsRecord\ARecord.cs" />
+    <Compile Include="Dns\DnsRecord\CNameRecord.cs" />
+    <Compile Include="Dns\DnsRecord\DNameRecord.cs" />
+    <Compile Include="Dns\DnsRecord\DnsRecordBase.cs" />
+    <Compile Include="Dns\DnsRecord\MxRecord.cs" />
+    <Compile Include="Dns\DnsRecord\NaptrRecord.cs" />
+    <Compile Include="Dns\DnsRecord\NsRecord.cs" />
+    <Compile Include="Dns\DnsRecord\PtrRecord.cs" />
+    <Compile Include="Dns\DnsRecord\SoaRecord.cs" />
+    <Compile Include="Dns\DnsRecord\SpfRecord.cs" />
+    <Compile Include="Dns\DnsRecord\SrvRecord.cs" />
+    <Compile Include="Dns\DnsRecord\TxtRecord.cs" />
+    <Compile Include="Dns\DnsRecord\UnknownRecord.cs" />
+    <Compile Include="Dns\OperationCode.cs" />
+    <Compile Include="Dns\RecordClass.cs" />
+    <Compile Include="Dns\RecordType.cs" />
+    <Compile Include="Dns\ReturnCode.cs" />
+    <Compile Include="EnumHelper.cs" />
+    <Compile Include="IPAddressExtension.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Spf\SpfCheckHostParameter.cs" />
+    <Compile Include="Spf\SpfMechanism.cs" />
+    <Compile Include="Spf\SpfMechanismType.cs" />
+    <Compile Include="Spf\SpfModifier.cs" />
+    <Compile Include="Spf\SpfModifierType.cs" />
+    <Compile Include="Spf\SpfQualifier.cs" />
+    <Compile Include="Spf\SpfRecord.cs" />
+    <Compile Include="Spf\SpfTerm.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
