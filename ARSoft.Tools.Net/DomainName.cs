@@ -22,6 +22,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using ARSoft.Tools.Net.Dns;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
@@ -259,7 +260,11 @@ namespace ARSoft.Tools.Net
 				}
 			}
 
-			if (TryParseLabel(s.Substring(lastOffset, s.Length - lastOffset), out label))
+			if (s.Length == lastOffset)
+			{
+				// empty label --> name ends with dot
+			}
+			else if (TryParseLabel(s.Substring(lastOffset, s.Length - lastOffset), out label))
 			{
 				labels.Add(label);
 			}
@@ -269,21 +274,27 @@ namespace ARSoft.Tools.Net
 				return false;
 			}
 
-			if (labels[labels.Count - 1] == String.Empty)
-				labels.RemoveAt(labels.Count - 1);
-
 			name = new DomainName(labels.ToArray());
 			return true;
 		}
 
 		private static readonly IdnMapping _idnParser = new IdnMapping() { UseStd3AsciiRules = true };
+		private static readonly Regex _asciiNameRegex = new Regex("^[a-zA-Z0-9_-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
 		private static bool TryParseLabel(string s, out string label)
 		{
 			try
 			{
-				label = _idnParser.GetAscii(s);
-				return true;
+				if (_asciiNameRegex.IsMatch(s))
+				{
+					label = s;
+					return true;
+				}
+				else
+				{
+					label = _idnParser.GetAscii(s);
+					return true;
+				}
 			}
 			catch
 			{

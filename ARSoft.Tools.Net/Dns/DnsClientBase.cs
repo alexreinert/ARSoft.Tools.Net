@@ -782,6 +782,7 @@ namespace ARSoft.Tools.Net.Dns
 			else
 			{
 				endpointInfos = _servers
+					.Where(x => IsIPv6Enabled || (x.AddressFamily == AddressFamily.InterNetwork))
 					.Select(
 						s => new DnsClientEndpointInfo
 						{
@@ -792,6 +793,16 @@ namespace ARSoft.Tools.Net.Dns
 					).ToList();
 			}
 			return endpointInfos;
+		}
+
+		private static bool IsIPv6Enabled { get; } = IsAnyIPv6Configured();
+
+		private static bool IsAnyIPv6Configured()
+		{
+			return NetworkInterface.GetAllNetworkInterfaces()
+				.Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+				.SelectMany(n => n.GetIPProperties().UnicastAddresses.Select(a => a.Address))
+				.Any(a => !IPAddress.IsLoopback(a) && (a.AddressFamily == AddressFamily.InterNetworkV6) && !a.IsIPv6LinkLocal && !a.IsIPv6Teredo && !a.IsIPv4MappedToIPv6);
 		}
 	}
 }

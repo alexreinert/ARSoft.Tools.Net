@@ -43,6 +43,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private const int _DNS_PORT = 53;
 
+		private readonly object _listenerLock = new object();
 		private TcpListener _tcpListener;
 		private UdpClient _udpListener;
 		private readonly IPEndPoint _bindEndPoint;
@@ -106,7 +107,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if (_udpListenerCount > 0)
 			{
-				lock (_udpListener)
+				lock (_listenerLock)
 				{
 					_availableUdpListener = _udpListenerCount;
 				}
@@ -116,7 +117,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (_tcpListenerCount > 0)
 			{
-				lock (_tcpListener)
+				lock (_listenerLock)
 				{
 					_availableTcpListener = _tcpListenerCount;
 				}
@@ -183,7 +184,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void StartUdpListenerTask()
 		{
-			lock (_udpListener)
+			lock (_listenerLock)
 			{
 				if ((_udpListener.Client == null) || !_udpListener.Client.IsBound) // server is stopped
 					return;
@@ -212,7 +213,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				finally
 				{
-					lock (_udpListener)
+					lock (_listenerLock)
 					{
 						_hasActiveUdpListener = false;
 					}
@@ -356,7 +357,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 			finally
 			{
-				lock (_udpListener)
+				lock (_listenerLock)
 				{
 					_availableUdpListener++;
 				}
@@ -366,7 +367,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void StartTcpListenerTask()
 		{
-			lock (_tcpListener)
+			lock (_listenerLock)
 			{
 				if (!_tcpListener.Server.IsBound) // server is stopped
 					return;
@@ -398,7 +399,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				finally
 				{
-					lock (_tcpListener)
+					lock (_listenerLock)
 					{
 						_hasActiveTcpListener = false;
 					}
@@ -528,7 +529,7 @@ namespace ARSoft.Tools.Net.Dns
 					// ignored
 				}
 
-				lock (_tcpListener)
+				lock (_listenerLock)
 				{
 					_availableTcpListener++;
 				}
