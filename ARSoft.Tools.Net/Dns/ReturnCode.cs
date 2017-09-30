@@ -20,6 +20,7 @@ namespace ARSoft.Tools.Net.Dns
 		NotAuthoritive = 9,
 		NotZone = 10,
 
+		BadVersion = 16,
 		BadSig = 16,
 		BadKey = 17,
 		BadTime = 18,

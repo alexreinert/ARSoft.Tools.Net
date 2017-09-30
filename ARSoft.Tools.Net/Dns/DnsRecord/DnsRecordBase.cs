@@ -57,12 +57,15 @@ namespace ARSoft.Tools.Net.Dns
 				case RecordType.Spf:
 					return new SpfRecord();
 
+				case RecordType.Opt:
+					return new OptRecord();
+
 				default:
 					return new UnknownRecord();
 			}
 		}
 
-		#region Sending data (not yet implemented)
+		#region Sending data
 		internal override sealed int MaximumLength
 		{
 			get

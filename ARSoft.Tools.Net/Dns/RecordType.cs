@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	public enum RecordType : uint
+	public enum RecordType : ushort
 	{
 		Invalid = 0,
 
@@ -72,7 +72,7 @@ namespace ARSoft.Tools.Net.Dns
 		Ta = 32768, // !!! not supported yet
 		Dlv = 32769, // !!! not supported yet
 
-		Opt = 41, // !!! not supported yet
+		Opt = 41,
 		TKey = 249, // !!! not supported yet
 		TSig = 250, // !!! not supported yet
 		Ixfr = 251,
