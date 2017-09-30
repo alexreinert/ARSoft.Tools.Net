@@ -201,7 +201,7 @@ namespace ARSoft.Tools.Net
 					labels[labelPos++] = hex[0].ToString();
 				}
 
-				labels[labelPos++] = "in6";
+				labels[labelPos++] = "ip6";
 				labels[labelPos] = "arpa";
 
 				return new DomainName(labels);
