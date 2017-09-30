@@ -28,6 +28,7 @@
     <UseVSHostingProcess>true</UseVSHostingProcess>
     <DocumentationFile>
     </DocumentationFile>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -38,6 +39,7 @@
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <DocumentationFile>..\..\bin\Release\ARSoft.Tools.Net\ARSoft.Tools.Net.xml</DocumentationFile>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -54,6 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseEncoding.cs" />
     <Compile Include="Dns\DnsAsyncState.cs" />
     <Compile Include="Dns\DnsClient.cs" />
     <Compile Include="Dns\DnsMessage.cs" />
@@ -62,13 +65,44 @@
     <Compile Include="Dns\DnsQuestion.cs" />
     <Compile Include="Dns\DnsRecord\AaaaRecord.cs" />
     <Compile Include="Dns\DnsRecord\AfsdbRecord.cs" />
+    <Compile Include="Dns\DnsRecord\AplRecord.cs" />
     <Compile Include="Dns\DnsRecord\ARecord.cs" />
+    <Compile Include="Dns\DnsRecord\CertRecord.cs" />
     <Compile Include="Dns\DnsRecord\CNameRecord.cs" />
+    <Compile Include="Dns\DnsRecord\DhcpIRecord.cs" />
     <Compile Include="Dns\DnsRecord\DNameRecord.cs" />
     <Compile Include="Dns\DnsRecord\DnsRecordBase.cs" />
+    <Compile Include="Dns\DnsRecord\GPosRecord.cs" />
+    <Compile Include="Dns\DnsRecord\HInfoRecord.cs" />
+    <Compile Include="Dns\DnsRecord\IpSecKeyRecord.cs" />
+    <Compile Include="Dns\DnsRecord\IsdnRecord.cs" />
+    <Compile Include="Dns\DnsRecord\HipRecord.cs" />
+    <Compile Include="Dns\DnsRecord\ITextRecord.cs" />
+    <Compile Include="Dns\DnsRecord\LocRecord.cs" />
+    <Compile Include="Dns\DnsRecord\KxRecord.cs" />
     <Compile Include="Dns\DnsRecord\MxRecord.cs" />
     <Compile Include="Dns\DnsRecord\NaptrRecord.cs" />
+    <Compile Include="Dns\DnsRecord\NsapRecord.cs" />
     <Compile Include="Dns\DnsRecord\NsRecord.cs" />
+    <Compile Include="Dns\DnsRecord\PxRecord.cs" />
+    <Compile Include="Dns\DnsRecord\RpRecord.cs" />
+    <Compile Include="Dns\DnsRecord\RtRecord.cs" />
+    <Compile Include="Dns\DnsRecord\SshFpRecord.cs" />
+    <Compile Include="Dns\DnsRecord\TKeyRecord.cs" />
+    <Compile Include="Dns\DnsRecord\WksRecord.cs" />
+    <Compile Include="Dns\DnsRecord\X25Record.cs" />
+    <Compile Include="Dns\DnsSec\DiffieHellmanKeyRecord.cs" />
+    <Compile Include="Dns\DnsSec\DlvRecord.cs" />
+    <Compile Include="Dns\DnsSec\DnsKeyRecord.cs" />
+    <Compile Include="Dns\DnsSec\DnsSecAlgorithm.cs" />
+    <Compile Include="Dns\DnsSec\DnsSecDigestType.cs" />
+    <Compile Include="Dns\DnsSec\DsRecord.cs" />
+    <Compile Include="Dns\DnsSec\KeyRecord.cs" />
+    <Compile Include="Dns\DnsSec\KeyRecordBase.cs" />
+    <Compile Include="Dns\DnsSec\NSec3ParamRecord.cs" />
+    <Compile Include="Dns\DnsSec\Nsec3Record.cs" />
+    <Compile Include="Dns\DnsSec\NSecRecord.cs" />
+    <Compile Include="Dns\DnsSec\RrSigRecord.cs" />
     <Compile Include="Dns\DynamicUpdate\AddRecordUpdate.cs" />
     <Compile Include="Dns\DynamicUpdate\DeleteAllRecordsUpdate.cs" />
     <Compile Include="Dns\DynamicUpdate\DeleteRecordUpdate.cs" />
@@ -79,6 +113,7 @@
     <Compile Include="Dns\DynamicUpdate\RecordExistsPrequisite.cs" />
     <Compile Include="Dns\DynamicUpdate\RecordNotExistsPrequisite.cs" />
     <Compile Include="Dns\DynamicUpdate\UpdateBase.cs" />
+    <Compile Include="Dns\DnsSec\SigRecord.cs" />
     <Compile Include="Dns\TSig\TSigAlgorithm.cs" />
     <Compile Include="Dns\TSig\TSigAlgorithmHelper.cs" />
     <Compile Include="Dns\TSig\TSigRecord.cs" />

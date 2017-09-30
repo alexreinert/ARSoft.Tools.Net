@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ namespace ARSoft.Tools.Net.Dns
 	{
 		public enum AfsSubType : ushort
 		{
-			Afs = 1,
-			Dce = 2,
+			Afs = 1, // RFC1183
+			Dce = 2, // RFC1183
 		}
 
 		public AfsSubType SubType { get; private set; }
@@ -35,21 +35,22 @@ namespace ARSoft.Tools.Net.Dns
 		internal AfsdbRecord() {}
 
 		public AfsdbRecord(string name, int timeToLive, AfsSubType subType, string hostname)
-			: base(name, RecordType.Mx, RecordClass.INet, timeToLive)
+			: base(name, RecordType.Afsdb, RecordClass.INet, timeToLive)
 		{
 			SubType = subType;
 			Hostname = hostname ?? String.Empty;
 		}
 
-		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
+		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			SubType = (AfsSubType) DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			Hostname = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		public override string ToString()
+		internal override string RecordDataToString()
 		{
-			return base.ToString() + " " + SubType + " " + Hostname;
+			return (byte) SubType
+			       + " " + Hostname;
 		}
 
 		protected internal override int MaximumRecordDataLength

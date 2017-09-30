@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,12 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 			Record = record;
 		}
 
-		internal override void ParseAnswer(byte[] resultData, int startPosition, int length) {}
+		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
+
+		internal override string RecordDataToString()
+		{
+			return (Record == null) ? null : Record.RecordDataToString();
+		}
 
 		protected internal override int MaximumRecordDataLength
 		{

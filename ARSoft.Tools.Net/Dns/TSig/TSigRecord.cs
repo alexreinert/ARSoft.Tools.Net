@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ namespace ARSoft.Tools.Net.Dns
 			KeyData = keyData;
 		}
 
-		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
+		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			Algorithm = TSigAlgorithmHelper.GetAlgorithmByName(DnsMessageBase.ParseDomainName(resultData, ref startPosition));
 			TimeSigned = ParseDateTime(resultData, ref startPosition);
@@ -62,18 +62,17 @@ namespace ARSoft.Tools.Net.Dns
 			OtherData = DnsMessageBase.ParseByteData(resultData, ref startPosition, otherDataSize);
 		}
 
-		public override string ToString()
+		internal override string RecordDataToString()
 		{
-			return base.ToString()
-			       + " " + TSigAlgorithmHelper.GetDomainName(Algorithm)
+			return TSigAlgorithmHelper.GetDomainName(Algorithm)
 			       + " " + (int) (TimeSigned - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
 			       + " " + (ushort) Fudge.TotalSeconds
 			       + " " + OriginalMac.Length
-			       + " " + Convert.ToBase64String(OriginalMac)
+			       + " " + OriginalMac.ToBase64String()
 			       + " " + OriginalID
-			       + " " + EnumHelper<ReturnCode>.ToString(Error)
+			       + " " + (ushort) Error
 			       + " " + OtherData.Length
-			       + " " + Convert.ToBase64String(OtherData);
+			       + " " + OtherData.ToBase64String();
 		}
 
 		protected internal override int MaximumRecordDataLength
@@ -100,23 +99,22 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (BitConverter.IsLittleEndian)
 			{
-				buffer[currentPosition] = (byte) ((timeStamp >> 40) & 0xff);
-				buffer[++currentPosition] = (byte) ((timeStamp >> 32) & 0xff);
-				buffer[++currentPosition] = (byte) (timeStamp >> 24 & 0xff);
-				buffer[++currentPosition] = (byte) ((timeStamp >> 16) & 0xff);
-				buffer[++currentPosition] = (byte) ((timeStamp >> 8) & 0xff);
-				buffer[++currentPosition] = (byte) (timeStamp & 0xff);
+				buffer[currentPosition++] = (byte) ((timeStamp >> 40) & 0xff);
+				buffer[currentPosition++] = (byte) ((timeStamp >> 32) & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp >> 24 & 0xff);
+				buffer[currentPosition++] = (byte) ((timeStamp >> 16) & 0xff);
+				buffer[currentPosition++] = (byte) ((timeStamp >> 8) & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp & 0xff);
 			}
 			else
 			{
-				buffer[currentPosition] = (byte) (timeStamp & 0xff);
-				buffer[++currentPosition] = (byte) ((timeStamp >> 8) & 0xff);
-				buffer[++currentPosition] = (byte) ((timeStamp >> 16) & 0xff);
-				buffer[++currentPosition] = (byte) ((timeStamp >> 24) & 0xff);
-				buffer[++currentPosition] = (byte) ((timeStamp >> 32) & 0xff);
-				buffer[++currentPosition] = (byte) ((timeStamp >> 40) & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp & 0xff);
+				buffer[currentPosition++] = (byte) ((timeStamp >> 8) & 0xff);
+				buffer[currentPosition++] = (byte) ((timeStamp >> 16) & 0xff);
+				buffer[currentPosition++] = (byte) ((timeStamp >> 24) & 0xff);
+				buffer[currentPosition++] = (byte) ((timeStamp >> 32) & 0xff);
+				buffer[currentPosition++] = (byte) ((timeStamp >> 40) & 0xff);
 			}
-			currentPosition++;
 		}
 
 		private static DateTime ParseDateTime(byte[] buffer, ref int currentPosition)
@@ -125,14 +123,12 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (BitConverter.IsLittleEndian)
 			{
-				timeStamp = ((buffer[currentPosition] << 40) | (buffer[++currentPosition] << 32) | buffer[++currentPosition] << 24 | (buffer[++currentPosition] << 16) | (buffer[++currentPosition] << 8) | buffer[++currentPosition]);
+				timeStamp = ((buffer[currentPosition++] << 40) | (buffer[currentPosition++] << 32) | buffer[currentPosition++] << 24 | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 8) | buffer[currentPosition++]);
 			}
 			else
 			{
-				timeStamp = (buffer[currentPosition] | (buffer[++currentPosition] << 8) | (buffer[++currentPosition] << 16) | (buffer[++currentPosition] << 24) | (buffer[++currentPosition] << 32) | (buffer[++currentPosition] << 40));
+				timeStamp = (buffer[currentPosition++] | (buffer[currentPosition++] << 8) | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 24) | (buffer[currentPosition++] << 32) | (buffer[currentPosition++] << 40));
 			}
-
-			currentPosition++;
 
 			return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timeStamp).ToLocalTime();
 		}

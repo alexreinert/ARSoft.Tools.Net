@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,15 +35,16 @@ namespace ARSoft.Tools.Net.Dns
 			ExchangeDomainName = exchangeDomainName ?? String.Empty;
 		}
 
-		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
+		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			Preference = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			ExchangeDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		public override string ToString()
+		internal override string RecordDataToString()
 		{
-			return base.ToString() + " " + Preference + " " + ExchangeDomainName;
+			return Preference
+			       + " " + ExchangeDomainName;
 		}
 
 		protected internal override int MaximumRecordDataLength

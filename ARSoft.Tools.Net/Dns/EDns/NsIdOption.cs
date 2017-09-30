@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,8 +30,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
-			Payload = new byte[length];
-			Buffer.BlockCopy(resultData, startPosition, Payload, 0, length);
+			Payload = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
 
 		internal override ushort DataLength
@@ -41,11 +40,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{
-			if ((Payload != null) && (Payload.Length != 0))
-			{
-				Buffer.BlockCopy(Payload, 0, messageData, currentPosition, Payload.Length);
-				currentPosition += Payload.Length;
-			}
+			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Payload);
 		}
 	}
 }

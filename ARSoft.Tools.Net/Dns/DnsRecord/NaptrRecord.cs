@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ namespace ARSoft.Tools.Net.Dns
 			Replacement = replacement ?? String.Empty;
 		}
 
-		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
+		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			Order = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			Preference = DnsMessageBase.ParseUShort(resultData, ref startPosition);
@@ -53,9 +53,14 @@ namespace ARSoft.Tools.Net.Dns
 			Replacement = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		public override string ToString()
+		internal override string RecordDataToString()
 		{
-			return base.ToString() + " " + Order + " " + Preference + " " + Flags + " " + Services + " " + RegExp + " " + Replacement;
+			return Order
+			       + " " + Preference
+			       + " \"" + Flags + "\""
+			       + " \"" + Services + "\""
+			       + " \"" + RegExp + "\""
+			       + " \"" + Replacement + "\"";
 		}
 
 		protected internal override int MaximumRecordDataLength

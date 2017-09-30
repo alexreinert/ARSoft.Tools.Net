@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ namespace ARSoft.Tools.Net.Dns
 			NegativeCachingTTL = negativeCachingTTL;
 		}
 
-		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
+		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			MasterName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 			ResponsibleName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
@@ -57,9 +57,15 @@ namespace ARSoft.Tools.Net.Dns
 			NegativeCachingTTL = DnsMessageBase.ParseInt(resultData, ref startPosition);
 		}
 
-		public override string ToString()
+		internal override string RecordDataToString()
 		{
-			return base.ToString() + " " + MasterName + " " + ResponsibleName + " (" + SerialNumber + " " + RefreshInterval + " " + RetryInterval + " " + ExpireInterval + " " + NegativeCachingTTL + ")";
+			return MasterName
+			       + " " + ResponsibleName
+			       + " " + SerialNumber
+			       + " " + RefreshInterval
+			       + " " + RetryInterval
+			       + " " + ExpireInterval
+			       + " " + NegativeCachingTTL;
 		}
 
 		protected internal override int MaximumRecordDataLength

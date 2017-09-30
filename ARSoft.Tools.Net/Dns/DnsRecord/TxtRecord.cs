@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,23 +21,19 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	public class TxtRecord : DnsRecordBase
+	public class TxtRecord : DnsRecordBase, ITextRecord
 	{
 		public string TextData { get; protected set; }
 
 		internal TxtRecord() {}
 
 		public TxtRecord(string name, int timeToLive, string textData)
-			: this(name, RecordType.Txt, RecordClass.INet, timeToLive, textData) {}
-
-		public TxtRecord(string name, RecordType recordType, RecordClass recordClass, int timeToLive, string textData)
-			: base(name, recordType, recordClass, timeToLive)
+			: base(name, RecordType.Txt, RecordClass.INet, timeToLive)
 		{
-			TextData = textData;
+			TextData = textData ?? String.Empty;
 		}
 
-
-		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
+		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			int endPosition = startPosition + length;
 
@@ -48,9 +44,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		public override string ToString()
+		internal override string RecordDataToString()
 		{
-			return base.ToString() + " " + TextData;
+			return " \"" + TextData + "\"";
 		}
 
 		protected internal override int MaximumRecordDataLength

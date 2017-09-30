@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -209,9 +209,9 @@ namespace ARSoft.Tools.Net.Dns
 			}
 
 			byte[] messageData;
-			int messageLength = message.Encode(out messageData, true);
+			int messageLength = message.Encode(false, out messageData);
 
-			bool sendByTcp = ((messageLength > 512) || message.IsForcingTcp);
+			bool sendByTcp = ((messageLength > 512) || message.IsTcpUsingRequested);
 
 			for (int i = 0; i < _dnsServers.Count; i++)
 			{
@@ -243,7 +243,7 @@ namespace ARSoft.Tools.Net.Dns
 						continue;
 					}
 
-					if (result.IsForcingTcp)
+					if (result.IsTcpResendingRequested)
 					{
 						resultData = QueryByTcp(nameServer, messageData, messageLength);
 						if (resultData != null)
@@ -357,7 +357,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 
 			byte[] queryData;
-			int queryLength = message.Encode(out queryData, true);
+			int queryLength = message.Encode(false, out queryData);
 
 			DnsAsyncState asyncResult = new DnsAsyncState() { QueryData = queryData, QueryLength = queryLength, UserCallback = requestCallback, AsyncState = state, Servers = _dnsServers, ServerIndex = 0 };
 			if (message.TSigOptions != null)

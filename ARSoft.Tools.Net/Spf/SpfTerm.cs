@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ namespace ARSoft.Tools.Net.Spf
 			}
 
 			#region Parse Mechanism
-			Regex regex = new Regex(@"^(\s)*(?<qualifier>[~+?-]?)(?<type>[a-z]+)(:(?<domain>[^/]+))?(/(?<prefix>[0-9]+))?(//(?<prefix6>[0-9]+))?(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+			Regex regex = new Regex(@"^(\s)*(?<qualifier>[~+?-]?)(?<type>[a-z0-9]+)(:(?<domain>[^/]+))?(/(?<prefix>[0-9]+))?(//(?<prefix6>[0-9]+))?(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 			Match match = regex.Match(s);
 			if (match.Success)
 			{

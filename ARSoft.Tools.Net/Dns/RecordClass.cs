@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,10 +24,10 @@ namespace ARSoft.Tools.Net.Dns
 	public enum RecordClass : ushort
 	{
 		Invalid = 0,
-		INet = 1,
-		Chaos = 3,
-		Hesiod = 4,
-		None = 254,
-		Any = 255
+		INet = 1, // RFC1035
+		Chaos = 3, // Moon1981
+		Hesiod = 4, // Dyer1987
+		None = 254, // RFC2136
+		Any = 255 // RFC1035
 	}
 }

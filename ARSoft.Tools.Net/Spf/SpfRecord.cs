@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ namespace ARSoft.Tools.Net.Spf
 		internal static SpfQualifier CheckHost(string spfDomain, SpfCheckHostParameter parameters)
 		{
 			#region First try "real" spf records
-			List<SpfRecord> spfRecords = GetValidSpfRecords(spfDomain, RecordType.Spf);
+			List<SpfRecord> spfRecords = GetValidSpfRecords<Dns.SpfRecord>(spfDomain, RecordType.Spf);
 			if (spfRecords == null)
 			{
 				return SpfQualifier.TempError;
@@ -101,7 +101,7 @@ namespace ARSoft.Tools.Net.Spf
 			#endregion
 
 			#region Then fallback to TXT records
-			spfRecords = GetValidSpfRecords(spfDomain, RecordType.Txt);
+			spfRecords = GetValidSpfRecords<TxtRecord>(spfDomain, RecordType.Txt);
 			if (spfRecords == null)
 			{
 				return SpfQualifier.TempError;
@@ -121,7 +121,8 @@ namespace ARSoft.Tools.Net.Spf
 			#endregion
 		}
 
-		private static List<SpfRecord> GetValidSpfRecords(string spfDomain, RecordType recordType)
+		private static List<SpfRecord> GetValidSpfRecords<T>(string spfDomain, RecordType recordType)
+			where T: ITextRecord
 		{
 			List<SpfRecord> res = new List<SpfRecord>();
 
@@ -131,7 +132,7 @@ namespace ARSoft.Tools.Net.Spf
 				return null;
 			}
 
-			foreach (TxtRecord txtRecord in dnsMessage.AnswerRecords.Where(record => record.RecordType == recordType).Cast<TxtRecord>())
+			foreach (T txtRecord in dnsMessage.AnswerRecords.Where(record => record.RecordType == recordType).Cast<T>())
 			{
 				SpfRecord spfRecord;
 				if (TryParse(txtRecord.TextData, out spfRecord))

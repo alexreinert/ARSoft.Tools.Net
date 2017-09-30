@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		public int TimeToLive { get; internal set; }
 
-		internal DnsRecordBase() {}
+		protected DnsRecordBase() {}
 
 		protected DnsRecordBase(string name, RecordType recordType, RecordClass recordClass, int timeToLive)
 		{
@@ -38,14 +38,7 @@ namespace ARSoft.Tools.Net.Dns
 			TimeToLive = timeToLive;
 		}
 
-		internal abstract void ParseAnswer(byte[] resultData, int startPosition, int length);
-
-		public override string ToString()
-		{
-			return Name + " " + RecordType + " " + RecordClass + " " + TimeToLive;
-		}
-
-		internal static DnsRecordBase Create(RecordType type)
+		internal static DnsRecordBase Create(RecordType type, byte[] resultData, int recordDataPosition)
 		{
 			switch (type)
 			{
@@ -57,37 +50,142 @@ namespace ARSoft.Tools.Net.Dns
 					return new CNameRecord();
 				case RecordType.Soa:
 					return new SoaRecord();
+				case RecordType.Wks:
+					return new WksRecord();
 				case RecordType.Ptr:
 					return new PtrRecord();
+				case RecordType.HInfo:
+					return new HInfoRecord();
 				case RecordType.Mx:
 					return new MxRecord();
 				case RecordType.Txt:
 					return new TxtRecord();
+				case RecordType.Rp:
+					return new RpRecord();
 				case RecordType.Afsdb:
 					return new AfsdbRecord();
+				case RecordType.X25:
+					return new X25Record();
+				case RecordType.Isdn:
+					return new IsdnRecord();
+				case RecordType.Rt:
+					return new RtRecord();
+				case RecordType.Nsap:
+					return new NsapRecord();
+				case RecordType.Sig:
+					return new SigRecord();
+				case RecordType.Key:
+					if (resultData[recordDataPosition + 3] == (byte) DnsSecAlgorithm.DiffieHellman)
+					{
+						return new DiffieHellmanKeyRecord();
+					}
+					else
+					{
+						return new KeyRecord();
+					}
+				case RecordType.Px:
+					return new PxRecord();
+				case RecordType.GPos:
+					return new GPosRecord();
 				case RecordType.Aaaa:
 					return new AaaaRecord();
+				case RecordType.Loc:
+					return new LocRecord();
 				case RecordType.Srv:
 					return new SrvRecord();
 				case RecordType.Naptr:
 					return new NaptrRecord();
+				case RecordType.Kx:
+					return new KxRecord();
+				case RecordType.Cert:
+					return new CertRecord();
 				case RecordType.DName:
 					return new DNameRecord();
-				case RecordType.Spf:
-					return new SpfRecord();
-
 				case RecordType.Opt:
 					return new OptRecord();
-
+				case RecordType.Apl:
+					return new AplRecord();
+				case RecordType.Ds:
+					return new DsRecord();
+				case RecordType.SshFp:
+					return new SshFpRecord();
+				case RecordType.IpSecKey:
+					return new IpSecKeyRecord();
+				case RecordType.RrSig:
+					return new RrSigRecord();
+				case RecordType.NSec:
+					return new NSecRecord();
+				case RecordType.DnsKey:
+					return new DnsKeyRecord();
+				case RecordType.DhcpI:
+					return new DhcpIRecord();
+				case RecordType.NSec3:
+					return new NSec3Record();
+				case RecordType.NSec3Param:
+					return new NSec3ParamRecord();
+				case RecordType.Hip:
+					return new HipRecord();
+				case RecordType.Spf:
+					return new SpfRecord();
+				case RecordType.TKey:
+					return new TKeyRecord();
 				case RecordType.TSig:
 					return new TSigRecord();
+				case RecordType.Dlv:
+					return new DlvRecord();
 
 				default:
 					return new UnknownRecord();
 			}
 		}
 
-		#region Sending data
+		#region ToString
+		internal abstract string RecordDataToString();
+
+		public override string ToString()
+		{
+			string recordData = (RecordDataLength != 0) ? RecordDataToString() : null;
+
+			return Name + " " + TimeToLive + " " + ToString(RecordClass) + " " + ToString(RecordType) + (String.IsNullOrEmpty(recordData) ? "" : " " + recordData);
+		}
+
+		protected static string ToString(RecordClass recordClass)
+		{
+			switch (recordClass)
+			{
+				case RecordClass.INet:
+					return "IN";
+				case RecordClass.Chaos:
+					return "CH";
+				case RecordClass.Hesiod:
+					return "HS";
+				case RecordClass.None:
+					return "NONE";
+				case RecordClass.Any:
+					return "*";
+				default:
+					return "CLASS" + (int) recordClass;
+			}
+		}
+
+		protected static string ToString(RecordType recordType)
+		{
+			string res;
+			if (!EnumHelper<RecordType>.Names.TryGetValue(recordType, out res))
+			{
+				return "TYPE" + (int) recordType;
+			}
+			return res.ToUpper();
+		}
+		#endregion
+
+		#region Parsing
+		internal abstract void ParseRecordData(byte[] resultData, int startPosition, int length);
+
+		internal virtual void ParseRecordData(string[] stringRepresentation) {}
+		#endregion
+
+		#region Encoding
 		internal override sealed int MaximumLength
 		{
 			get { return Name.Length + 12 + MaximumRecordDataLength; }

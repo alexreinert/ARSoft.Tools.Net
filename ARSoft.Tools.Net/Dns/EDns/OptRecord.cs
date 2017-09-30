@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else
 				{
-					TimeToLive &= 0x8000;
+					TimeToLive &= 0x7fff;
 				}
 			}
 		}
@@ -85,7 +85,7 @@ namespace ARSoft.Tools.Net.Dns
 		public OptRecord()
 			: base(".", RecordType.Opt, unchecked((RecordClass) 512), 0) {}
 
-		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
+		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			int endPosition = startPosition + length;
 
@@ -115,6 +115,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		public override string ToString()
+		{
+			return RecordDataToString();
+		}
+
+		internal override string RecordDataToString()
 		{
 			string flags = IsDnsSecOk ? "DO" : "";
 			return String.Format("; EDNS version: {0}; flags: {1}; udp: {2}", Version, flags, UpdPayloadSize);

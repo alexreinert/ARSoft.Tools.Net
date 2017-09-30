@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -172,7 +172,7 @@ namespace ARSoft.Tools.Net.Dns
 					query.ReturnCode = ReturnCode.ServerFailure;
 				}
 
-				int length = response.Encode(out buffer, false);
+				int length = response.Encode(false, out buffer);
 
 				#region Truncating
 				DnsMessage message = response as DnsMessage;
@@ -198,7 +198,7 @@ namespace ARSoft.Tools.Net.Dns
 								}
 							}
 
-							length = message.Encode(out buffer, false);
+							length = message.Encode(false, out buffer);
 							continue;
 						}
 
@@ -218,7 +218,7 @@ namespace ARSoft.Tools.Net.Dns
 
 							message.IsTruncated = true;
 
-							length = message.Encode(out buffer, false);
+							length = message.Encode(false, out buffer);
 							continue;
 						}
 
@@ -237,7 +237,7 @@ namespace ARSoft.Tools.Net.Dns
 
 							message.IsTruncated = true;
 
-							length = message.Encode(out buffer, false);
+							length = message.Encode(false, out buffer);
 							continue;
 						}
 
@@ -256,7 +256,7 @@ namespace ARSoft.Tools.Net.Dns
 
 							message.IsTruncated = true;
 
-							length = message.Encode(out buffer, false);
+							length = message.Encode(false, out buffer);
 							continue;
 						}
 					}
@@ -485,7 +485,7 @@ namespace ARSoft.Tools.Net.Dns
 					query.ReturnCode = ReturnCode.ServerFailure;
 				}
 
-				int length = response.Encode(out buffer, true);
+				int length = response.Encode(true, out buffer);
 
 				timer = new Timer(TcpTimedOut, new object[] { client, stream }, 120000, System.Threading.Timeout.Infinite);
 				stream.BeginWrite(buffer, 0, length, EndTcpSendData, new object[] { client, stream, timer });

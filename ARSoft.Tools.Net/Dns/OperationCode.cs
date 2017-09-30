@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,10 +23,10 @@ namespace ARSoft.Tools.Net.Dns
 {
 	public enum OperationCode : ushort
 	{
-		Query = 0x0000,
-		InverseQuery = 0x0800,
-		Status = 0x1000,
-		Notify = 0x2000,
-		Update = 0x2800,
+		Query = 0, // RFC1035
+		InverseQuery = 1, // RFC3425 - Obsolete
+		Status = 2, // RFC1035
+		Notify = 4, // RFC1996
+		Update = 5, // RFC2136
 	}
 }

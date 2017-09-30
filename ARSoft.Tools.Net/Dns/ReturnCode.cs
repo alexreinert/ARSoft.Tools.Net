@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,26 +23,26 @@ namespace ARSoft.Tools.Net.Dns
 {
 	public enum ReturnCode : ushort
 	{
-		NoError = 0,
-		FormatError = 1,
-		ServerFailure = 2,
-		NxDomain = 3,
-		NotImplemented = 4,
-		Refused = 5,
+		NoError = 0, // RFC1035
+		FormatError = 1, // RFC1035
+		ServerFailure = 2, // RFC1035
+		NxDomain = 3, // RFC1035
+		NotImplemented = 4, // RFC1035
+		Refused = 5, // RFC1035
 
-		YXDomain = 6,
-		YXRRSet = 7,
-		NXRRSet = 8,
-		NotAuthoritive = 9,
-		NotZone = 10,
+		YXDomain = 6, // RFC2136
+		YXRRSet = 7, // RFC2136
+		NXRRSet = 8, // RFC2136
+		NotAuthoritive = 9, // RFC2136
+		NotZone = 10, // RFC2136
 
-		BadVersion = 16,
-		BadSig = 16,
-		BadKey = 17,
-		BadTime = 18,
-		BadMode = 19,
-		BadName = 20,
-		BadAlg = 21,
-		BadTrunc = 22,
+		BadVersion = 16, // RFC2671
+		BadSig = 16, // RFC2845
+		BadKey = 17, // RFC2845
+		BadTime = 18, // RFC2845
+		BadMode = 19, // RFC2930
+		BadName = 20, // RFC2930
+		BadAlg = 21, // RFC2930
+		BadTrunc = 22, // RFC4635
 	}
 }

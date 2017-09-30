@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,11 +21,42 @@ using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	public class SpfRecord : TxtRecord
+	public class SpfRecord : DnsRecordBase, ITextRecord
 	{
+		public string TextData { get; protected set; }
+
 		internal SpfRecord() {}
 
 		public SpfRecord(string name, int timeToLive, string textData)
-			: base(name, RecordType.Spf, RecordClass.INet, timeToLive, textData) {}
+			: base(name, RecordType.Spf, RecordClass.INet, timeToLive)
+		{
+			TextData = textData ?? String.Empty;
+		}
+
+		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+		{
+			int endPosition = startPosition + length;
+
+			TextData = String.Empty;
+			while (startPosition < endPosition)
+			{
+				TextData += DnsMessageBase.ParseText(resultData, ref startPosition);
+			}
+		}
+
+		internal override string RecordDataToString()
+		{
+			return " \"" + TextData + "\"";
+		}
+
+		protected internal override int MaximumRecordDataLength
+		{
+			get { return TextData.Length + (TextData.Length / 255) + (TextData.Length % 255 == 0 ? 0 : 1); }
+		}
+
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		{
+			DnsMessageBase.EncodeText(messageData, ref currentPosition, TextData);
+		}
 	}
 }

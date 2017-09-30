@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,13 @@ namespace ARSoft.Tools.Net
 
 		public static string ToString(T value)
 		{
-			return _names[value];
+			string res;
+			return _names.TryGetValue(value, out res) ? res : Convert.ToInt64(value).ToString();
+		}
+
+		public static Dictionary<T, string> Names
+		{
+			get { return _names; }
 		}
 	}
 }

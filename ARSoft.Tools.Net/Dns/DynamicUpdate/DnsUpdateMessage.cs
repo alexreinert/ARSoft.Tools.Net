@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,12 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 			set { _updates = value; }
 		}
 
-		internal override bool IsForcingTcp
+		internal override bool IsTcpUsingRequested
+		{
+			get { return false; }
+		}
+
+		internal override bool IsTcpResendingRequested
 		{
 			get { return false; }
 		}

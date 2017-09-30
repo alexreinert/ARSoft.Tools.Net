@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010 Alexander Reinert
+// Copyright 2010..11 Alexander Reinert
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,19 +31,17 @@ namespace ARSoft.Tools.Net.Dns
 		public ARecord(string name, int timeToLive, IPAddress address)
 			: base(name, RecordType.A, RecordClass.INet, timeToLive)
 		{
-			Address = address;
+			Address = address ?? IPAddress.None;
 		}
 
-		internal override void ParseAnswer(byte[] resultData, int startPosition, int length)
+		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
-			byte[] data = new byte[4];
-			Buffer.BlockCopy(resultData, startPosition, data, 0, 4);
-			Address = new IPAddress(data);
+			Address = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref startPosition, 4));
 		}
 
-		public override string ToString()
+		internal override string RecordDataToString()
 		{
-			return base.ToString() + " " + Address;
+			return Address.ToString();
 		}
 
 		protected internal override int MaximumRecordDataLength
@@ -53,8 +51,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
-			Buffer.BlockCopy(Address.GetAddressBytes(), 0, messageData, currentPosition, 4);
-			currentPosition += 4;
+			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
 		}
 	}
 }
