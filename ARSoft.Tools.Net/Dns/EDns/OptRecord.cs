@@ -89,13 +89,16 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Gets or set additional EDNS options
 		/// </summary>
-		public List<EDnsOptionBase> Options { get; set; }
+		public List<EDnsOptionBase> Options { get; private set; }
 
 		/// <summary>
 		///   Creates a new instance of the OptRecord
 		/// </summary>
 		public OptRecord()
-			: base(".", RecordType.Opt, unchecked((RecordClass) 512), 0) {}
+			: base(".", RecordType.Opt, unchecked((RecordClass) 512), 0)
+		{
+			Options = new List<EDnsOptionBase>();
+		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
@@ -111,8 +114,20 @@ namespace ARSoft.Tools.Net.Dns
 
 				switch (type)
 				{
+					case EDnsOptionType.LongLivedQuery:
+						option = new LongLivedQueryOption();
+						break;
+
+					case EDnsOptionType.UpdateLease:
+						option = new UpdateLeaseOption();
+						break;
+
 					case EDnsOptionType.NsId:
 						option = new NsIdOption();
+						break;
+
+					case EDnsOptionType.Owner:
+						option = new OwnerOption();
 						break;
 
 					default:

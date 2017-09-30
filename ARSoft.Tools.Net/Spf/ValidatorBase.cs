@@ -144,15 +144,22 @@ namespace ARSoft.Tools.Net.Spf
 			#region Evaluate modifiers
 			if (result == SpfQualifier.None)
 			{
-				SpfModifier redirectModifier = record.Terms.OfType<SpfModifier>().Where(m => m.Type == SpfModifierType.Redirect).FirstOrDefault();
+				SpfModifier redirectModifier = record.Terms.OfType<SpfModifier>().FirstOrDefault(m => m.Type == SpfModifierType.Redirect);
 				if (redirectModifier != null)
 				{
 					string redirectDomain = ExpandDomain(redirectModifier.Domain ?? String.Empty, ip, sender, domain);
 
-					result = CheckHostInternal(ip, sender, redirectDomain, expandExplanation, out explanation);
-
-					if (result == SpfQualifier.None)
+					if (String.IsNullOrEmpty(redirectDomain) || (redirectDomain.Equals(domain, StringComparison.InvariantCultureIgnoreCase)))
+					{
 						result = SpfQualifier.PermError;
+					}
+					else
+					{
+						result = CheckHostInternal(ip, sender, redirectDomain, expandExplanation, out explanation);
+
+						if (result == SpfQualifier.None)
+							result = SpfQualifier.PermError;
+					}
 				}
 			}
 			else if ((result == SpfQualifier.Fail) && expandExplanation)
@@ -211,22 +218,18 @@ namespace ARSoft.Tools.Net.Spf
 
 					int mxCheckedCount = 0;
 
-					foreach (DnsRecordBase dnsRecord in dnsMessage.AnswerRecords)
+					foreach (MxRecord mxRecord in dnsMessage.AnswerRecords.OfType<MxRecord>())
 					{
-						MxRecord mxRecord = dnsRecord as MxRecord;
-						if (mxRecord != null)
+						if (++mxCheckedCount == 10)
+							break;
+
+						bool? isMxMatch = IsIpMatch(mxRecord.ExchangeDomainName, ip, mechanism.Prefix, mechanism.Prefix6);
+						if (!isMxMatch.HasValue)
+							return SpfQualifier.TempError;
+
+						if (isMxMatch.Value)
 						{
-							if (++mxCheckedCount == 10)
-								break;
-
-							bool? isMxMatch = IsIpMatch(mxRecord.ExchangeDomainName, ip, mechanism.Prefix, mechanism.Prefix6);
-							if (!isMxMatch.HasValue)
-								return SpfQualifier.TempError;
-
-							if (isMxMatch.Value)
-							{
-								return mechanism.Qualifier;
-							}
+							return mechanism.Qualifier;
 						}
 					}
 					break;
@@ -269,20 +272,16 @@ namespace ARSoft.Tools.Net.Spf
 					string ptrCompareName = String.IsNullOrEmpty(mechanism.Domain) ? domain : mechanism.Domain;
 
 					int ptrCheckedCount = 0;
-					foreach (DnsRecordBase dnsRecord in dnsMessage.AnswerRecords)
+					foreach (PtrRecord ptrRecord in dnsMessage.AnswerRecords.OfType<PtrRecord>())
 					{
-						PtrRecord ptrRecord = dnsRecord as PtrRecord;
-						if (ptrRecord != null)
-						{
-							if (++ptrCheckedCount == 10)
-								break;
+						if (++ptrCheckedCount == 10)
+							break;
 
-							bool? isPtrMatch = IsIpMatch(ptrRecord.PointerDomainName, ip, 0, 0);
-							if (isPtrMatch.HasValue && isPtrMatch.Value)
-							{
-								if (ptrRecord.PointerDomainName.Equals(ptrCompareName, StringComparison.InvariantCultureIgnoreCase) || (ptrRecord.PointerDomainName.EndsWith("." + ptrCompareName, StringComparison.InvariantCultureIgnoreCase)))
-									return mechanism.Qualifier;
-							}
+						bool? isPtrMatch = IsIpMatch(ptrRecord.PointerDomainName, ip, 0, 0);
+						if (isPtrMatch.HasValue && isPtrMatch.Value)
+						{
+							if (ptrRecord.PointerDomainName.Equals(ptrCompareName, StringComparison.InvariantCultureIgnoreCase) || (ptrRecord.PointerDomainName.EndsWith("." + ptrCompareName, StringComparison.InvariantCultureIgnoreCase)))
+								return mechanism.Qualifier;
 						}
 					}
 					break;
@@ -302,7 +301,7 @@ namespace ARSoft.Tools.Net.Spf
 					break;
 
 				case SpfMechanismType.Include:
-					if (String.IsNullOrEmpty(mechanism.Domain))
+					if (String.IsNullOrEmpty(mechanism.Domain) || (mechanism.Domain.Equals(domain, StringComparison.InvariantCultureIgnoreCase)))
 						return SpfQualifier.PermError;
 
 					string includeDomain = ExpandDomain(mechanism.Domain, ip, sender, domain);
@@ -440,29 +439,25 @@ namespace ARSoft.Tools.Net.Spf
 							}
 
 							int ptrCheckedCount = 0;
-							foreach (DnsRecordBase dnsRecord in dnsMessage.AnswerRecords)
+							foreach (PtrRecord ptrRecord in dnsMessage.AnswerRecords.OfType<PtrRecord>())
 							{
-								PtrRecord ptrRecord = dnsRecord as PtrRecord;
-								if (ptrRecord != null)
-								{
-									if (++ptrCheckedCount == 10)
-										break;
+								if (++ptrCheckedCount == 10)
+									break;
 
-									bool? isPtrMatch = IsIpMatch(ptrRecord.PointerDomainName, ip, 0, 0);
-									if (isPtrMatch.HasValue && isPtrMatch.Value)
+								bool? isPtrMatch = IsIpMatch(ptrRecord.PointerDomainName, ip, 0, 0);
+								if (isPtrMatch.HasValue && isPtrMatch.Value)
+								{
+									if (letter == "unknown" || ptrRecord.PointerDomainName.EndsWith("." + domain, StringComparison.OrdinalIgnoreCase))
 									{
-										if (letter == "unknown" || ptrRecord.PointerDomainName.EndsWith("." + domain, StringComparison.OrdinalIgnoreCase))
-										{
-											// use value, if first record or subdomain
-											// but evaluate the other records
-											letter = ptrRecord.PointerDomainName;
-										}
-										else if (ptrRecord.PointerDomainName.Equals(domain, StringComparison.OrdinalIgnoreCase))
-										{
-											// ptr equal domain --> best match, use it
-											letter = ptrRecord.PointerDomainName;
-											break;
-										}
+										// use value, if first record or subdomain
+										// but evaluate the other records
+										letter = ptrRecord.PointerDomainName;
+									}
+									else if (ptrRecord.PointerDomainName.Equals(domain, StringComparison.OrdinalIgnoreCase))
+									{
+										// ptr equal domain --> best match, use it
+										letter = ptrRecord.PointerDomainName;
+										break;
 									}
 								}
 							}
@@ -477,10 +472,10 @@ namespace ARSoft.Tools.Net.Spf
 							IPAddress address =
 								LocalIP
 								?? NetworkInterface.GetAllNetworkInterfaces()
-								   	.Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
-								   	.SelectMany(n => n.GetIPProperties().UnicastAddresses)
-								   	.Select(u => u.Address)
-								   	.FirstOrDefault(a => a.AddressFamily == ip.AddressFamily)
+										.Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+										.SelectMany(n => n.GetIPProperties().UnicastAddresses)
+										.Select(u => u.Address)
+										.FirstOrDefault(a => a.AddressFamily == ip.AddressFamily)
 								?? ((ip.AddressFamily == AddressFamily.InterNetwork) ? IPAddress.Loopback : IPAddress.IPv6Loopback);
 							letter = address.ToString();
 							break;

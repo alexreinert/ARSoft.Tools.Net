@@ -28,11 +28,13 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public abstract class DnsMessageBase
 	{
-		protected ushort _flags;
-		protected List<DnsQuestion> _questions = new List<DnsQuestion>();
-		protected List<DnsRecordBase> _answerRecords = new List<DnsRecordBase>();
-		protected List<DnsRecordBase> _authorityRecords = new List<DnsRecordBase>();
-		protected List<DnsRecordBase> _additionalRecords = new List<DnsRecordBase>();
+		protected ushort Flags;
+
+		protected internal List<DnsQuestion> Questions = new List<DnsQuestion>();
+		protected internal List<DnsRecordBase> AnswerRecords = new List<DnsRecordBase>();
+		protected internal List<DnsRecordBase> AuthorityRecords = new List<DnsRecordBase>();
+
+		private List<DnsRecordBase> _additionalRecords = new List<DnsRecordBase>();
 
 		/// <summary>
 		///   Gets or sets the entries in the additional records section
@@ -57,16 +59,16 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsQuery
 		{
-			get { return (_flags & 0x8000) == 0; }
+			get { return (Flags & 0x8000) == 0; }
 			set
 			{
 				if (value)
 				{
-					_flags &= 0x7fff;
+					Flags &= 0x7fff;
 				}
 				else
 				{
-					_flags |= 0x8000;
+					Flags |= 0x8000;
 				}
 			}
 		}
@@ -76,11 +78,11 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public OperationCode OperationCode
 		{
-			get { return (OperationCode) ((_flags & 0x7800) >> 11); }
+			get { return (OperationCode) ((Flags & 0x7800) >> 11); }
 			set
 			{
-				ushort clearedOp = (ushort) (_flags & 0x8700);
-				_flags = (ushort) (clearedOp | (ushort) value << 11);
+				ushort clearedOp = (ushort) (Flags & 0x8700);
+				Flags = (ushort) (clearedOp | (ushort) value << 11);
 			}
 		}
 
@@ -91,7 +93,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			get
 			{
-				ReturnCode rcode = (ReturnCode) (_flags & 0x000f);
+				ReturnCode rcode = (ReturnCode) (Flags & 0x000f);
 
 				OptRecord ednsOptions = EDnsOptions;
 				if (ednsOptions == null)
@@ -126,8 +128,8 @@ namespace ARSoft.Tools.Net.Dns
 					}
 				}
 
-				ushort clearedOp = (ushort) (_flags & 0xfff0);
-				_flags = (ushort) (clearedOp | ((ushort) value & 0x0f));
+				ushort clearedOp = (ushort) (Flags & 0xfff0);
+				Flags = (ushort) (clearedOp | ((ushort) value & 0x0f));
 			}
 		}
 		#endregion
@@ -270,7 +272,7 @@ namespace ARSoft.Tools.Net.Dns
 			int currentPosition = 0;
 
 			TransactionID = ParseUShort(resultData, ref currentPosition);
-			_flags = ParseUShort(resultData, ref currentPosition);
+			Flags = ParseUShort(resultData, ref currentPosition);
 
 			int questionCount = ParseUShort(resultData, ref currentPosition);
 			int answerRecordCount = ParseUShort(resultData, ref currentPosition);
@@ -278,8 +280,8 @@ namespace ARSoft.Tools.Net.Dns
 			int additionalRecordCount = ParseUShort(resultData, ref currentPosition);
 
 			ParseQuestions(resultData, ref currentPosition, questionCount);
-			ParseSection(resultData, ref currentPosition, _answerRecords, answerRecordCount);
-			ParseSection(resultData, ref currentPosition, _authorityRecords, authorityRecordCount);
+			ParseSection(resultData, ref currentPosition, AnswerRecords, answerRecordCount);
+			ParseSection(resultData, ref currentPosition, AuthorityRecords, authorityRecordCount);
 			ParseSection(resultData, ref currentPosition, _additionalRecords, additionalRecordCount);
 
 			if (_additionalRecords.Count > 0)
@@ -365,7 +367,7 @@ namespace ARSoft.Tools.Net.Dns
 		#endregion
 
 		#region Parsing
-		protected virtual void FinishParsing() {}
+		protected virtual void FinishParsing() { }
 
 		#region Methods for parsing answer
 		private static void ParseSection(byte[] resultData, ref int currentPosition, List<DnsRecordBase> sectionList, int recordCount)
@@ -405,7 +407,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				DnsQuestion question = new DnsQuestion { Name = ParseDomainName(resultData, ref currentPosition), RecordType = (RecordType) ParseUShort(resultData, ref currentPosition), RecordClass = (RecordClass) ParseUShort(resultData, ref currentPosition) };
 
-				_questions.Add(question);
+				Questions.Add(question);
 			}
 		}
 		#endregion
@@ -473,6 +475,22 @@ namespace ARSoft.Tools.Net.Dns
 			else
 			{
 				res = (resultData[currentPosition++] | ((uint) resultData[currentPosition++] << 8) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 24));
+			}
+
+			return res;
+		}
+
+		internal static ulong ParseULong(byte[] resultData, ref int currentPosition)
+		{
+			ulong res;
+
+			if (BitConverter.IsLittleEndian)
+			{
+				res = ((ulong) ParseUInt(resultData, ref currentPosition) << 32) | ParseUInt(resultData, ref currentPosition);
+			}
+			else
+			{
+				res = ParseUInt(resultData, ref currentPosition) | ((ulong) ParseUInt(resultData, ref currentPosition) << 32);
 			}
 
 			return res;
@@ -564,7 +582,7 @@ namespace ARSoft.Tools.Net.Dns
 		#endregion
 
 		#region Serializing
-		protected virtual void PrepareEncoding() {}
+		protected virtual void PrepareEncoding() { }
 
 		internal int Encode(bool addLengthPrefix, out byte[] messageData)
 		{
@@ -587,9 +605,9 @@ namespace ARSoft.Tools.Net.Dns
 
 			#region Get Message Length
 			maxLength += 12;
-			maxLength += _questions.Sum(question => question.MaximumLength);
-			maxLength += _answerRecords.Sum(record => record.MaximumLength);
-			maxLength += _authorityRecords.Sum(record => record.MaximumLength);
+			maxLength += Questions.Sum(question => question.MaximumLength);
+			maxLength += AnswerRecords.Sum(record => record.MaximumLength);
+			maxLength += AuthorityRecords.Sum(record => record.MaximumLength);
 			maxLength += _additionalRecords.Sum(record => record.MaximumLength);
 			#endregion
 
@@ -599,21 +617,21 @@ namespace ARSoft.Tools.Net.Dns
 			Dictionary<string, ushort> domainNames = new Dictionary<string, ushort>();
 
 			EncodeUShort(messageData, ref currentPosition, TransactionID);
-			EncodeUShort(messageData, ref currentPosition, _flags);
-			EncodeUShort(messageData, ref currentPosition, (ushort) _questions.Count);
-			EncodeUShort(messageData, ref currentPosition, (ushort) _answerRecords.Count);
-			EncodeUShort(messageData, ref currentPosition, (ushort) _authorityRecords.Count);
+			EncodeUShort(messageData, ref currentPosition, Flags);
+			EncodeUShort(messageData, ref currentPosition, (ushort) Questions.Count);
+			EncodeUShort(messageData, ref currentPosition, (ushort) AnswerRecords.Count);
+			EncodeUShort(messageData, ref currentPosition, (ushort) AuthorityRecords.Count);
 			EncodeUShort(messageData, ref currentPosition, (ushort) _additionalRecords.Count);
 
-			foreach (DnsQuestion question in _questions)
+			foreach (DnsQuestion question in Questions)
 			{
 				question.Encode(messageData, offset, ref currentPosition, domainNames);
 			}
-			foreach (DnsRecordBase record in _answerRecords)
+			foreach (DnsRecordBase record in AnswerRecords)
 			{
 				record.Encode(messageData, offset, ref currentPosition, domainNames);
 			}
-			foreach (DnsRecordBase record in _authorityRecords)
+			foreach (DnsRecordBase record in AuthorityRecords)
 			{
 				record.Encode(messageData, offset, ref currentPosition, domainNames);
 			}
@@ -728,6 +746,20 @@ namespace ARSoft.Tools.Net.Dns
 				buffer[currentPosition++] = (byte) ((value >> 8) & 0xff);
 				buffer[currentPosition++] = (byte) ((value >> 16) & 0xff);
 				buffer[currentPosition++] = (byte) ((value >> 24) & 0xff);
+			}
+		}
+
+		internal static void EncodeULong(byte[] buffer, ref int currentPosition, ulong value)
+		{
+			if (BitConverter.IsLittleEndian)
+			{
+				EncodeUInt(buffer, ref currentPosition, (uint) ((value >> 32) & 0xffffffff));
+				EncodeUInt(buffer, ref currentPosition, (uint) (value & 0xffffffff));
+			}
+			else
+			{
+				EncodeUInt(buffer, ref currentPosition, (uint) (value & 0xffffffff));
+				EncodeUInt(buffer, ref currentPosition, (uint) ((value >> 32) & 0xffffffff));
 			}
 		}
 

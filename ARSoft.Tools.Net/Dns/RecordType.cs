@@ -314,15 +314,18 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   <para>A6</para> <para>Defined in
 		///                     <see cref="!:http://tools.ietf.org/html/rfc3226">RFC 3226</see>
-		///                     and
+		///                     ,
 		///                     <see cref="!:http://tools.ietf.org/html/rfc2874">RFC 2874</see>
+		///                     and
+		///                     <see cref="!:http://tools.ietf.org/html/rfc6563">RFC 2874</see>
 		///                     - Experimental</para>
 		/// </summary>
-		A6 = 38, // not supported yet
+		[Obsolete]
+		A6 = 38,
 
 		/// <summary>
 		///   <para>DNS Name Redirection</para> <para>Defined in
-		///                                       <see cref="!:http://tools.ietf.org/html/rfc2672">RFC 2672</see>
+		///                                       <see cref="!:http://tools.ietf.org/html/rfc2672">RFC 6672</see>
 		///                                     </para>
 		/// </summary>
 		DName = 39,
@@ -416,6 +419,11 @@ namespace ARSoft.Tools.Net.Dns
 		///                                            </para>
 		/// </summary>
 		NSec3Param = 51,
+
+		/// <summary>
+		///   <para>TLSA</para> <para>Defined by Warren Kumari, &lt;warren&kumari.net&gt;, April 2012</para>
+		/// </summary>
+		Tlsa = 52, // not supported yet
 
 		/// <summary>
 		///   <para>Host identity protocol</para> <para>Defined in
@@ -531,7 +539,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   <para>Certification authority auhtorization</para> <para>Defined by Phillip Hallam-Baker, &lt;phill@hallambaker.com&gt;, 07 April 2011</para>
 		/// </summary>
-		CAA = 256, // not supported yet
+		CAA = 257, // not supported yet
 
 		/// <summary>
 		///   <para>DNSSEC trust authorities</para> <para>Defined by Sam Weiler, &lt;weiler+iana@tislabs.com&gt;</para>

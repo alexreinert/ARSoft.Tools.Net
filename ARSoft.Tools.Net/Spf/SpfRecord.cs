@@ -92,20 +92,5 @@ namespace ARSoft.Tools.Net.Spf
 				return false;
 			}
 		}
-
-		/// <summary>
-		///   Validates the SPF records
-		/// </summary>
-		/// <param name="clientAddress"> The IP address of the SMTP client that is emitting the mail </param>
-		/// <param name="clientName"> Parameter is not more in use, only for signature compability </param>
-		/// <param name="heloName"> Domain name which was used in HELO/EHLO </param>
-		/// <param name="domain"> The domain portion of the "MAIL FROM" or "HELO" identity </param>
-		/// <param name="sender"> The "MAIL FROM" or "HELO" identity </param>
-		/// <returns> Result of the evaluation </returns>
-		[Obsolete("Will be removed in further versions, please use SpfValidator class instead")]
-		public static SpfQualifier CheckHost(IPAddress clientAddress, string clientName, string heloName, string domain, string sender)
-		{
-			return new SpfValidator() { HeloDomain = heloName }.CheckHost(clientAddress, domain, sender);
-		}
 	}
 }

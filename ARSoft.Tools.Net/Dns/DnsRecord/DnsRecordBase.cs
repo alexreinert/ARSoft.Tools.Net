@@ -201,7 +201,7 @@ namespace ARSoft.Tools.Net.Dns
 			get { return Name.Length + 12 + MaximumRecordDataLength; }
 		}
 
-		internal override sealed void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, true, domainNames);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);

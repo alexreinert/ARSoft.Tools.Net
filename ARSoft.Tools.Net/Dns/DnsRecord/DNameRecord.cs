@@ -23,7 +23,7 @@ namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
 	///   <para>DNS Name Redirection record</para> <para>Defined in
-	///                                              <see cref="!:http://tools.ietf.org/html/rfc2672">RFC 2672</see>
+	///                                              <see cref="!:http://tools.ietf.org/html/rfc2672">RFC 6672</see>
 	///                                            </para>
 	/// </summary>
 	public class DNameRecord : DnsRecordBase

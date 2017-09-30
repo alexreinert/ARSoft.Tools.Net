@@ -42,7 +42,6 @@ namespace ARSoft.Tools.Net.Dns
 		public RecordClass RecordClass { get; internal set; }
 
 		internal abstract int MaximumLength { get; }
-		internal abstract void Encode(byte[] destination, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames);
 
 		/// <summary>
 		///   Returns the textual representation

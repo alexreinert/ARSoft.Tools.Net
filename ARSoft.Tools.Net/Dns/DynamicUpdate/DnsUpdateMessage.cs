@@ -44,8 +44,8 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		public string ZoneName
 		{
-			get { return _questions.Count > 0 ? _questions[0].Name : null; }
-			set { _questions = new List<DnsQuestion>() { new DnsQuestion(value, RecordType.Soa, RecordClass.Any) }; }
+			get { return Questions.Count > 0 ? Questions[0].Name : null; }
+			set { Questions = new List<DnsQuestion>() { new DnsQuestion(value, RecordType.Soa, RecordClass.Any) }; }
 		}
 
 		/// <summary>
@@ -78,14 +78,14 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		protected override void PrepareEncoding()
 		{
-			_answerRecords = (Prequisites != null ? Prequisites.Cast<DnsRecordBase>().ToList() : new List<DnsRecordBase>());
-			_authorityRecords = (Updates != null ? Updates.Cast<DnsRecordBase>().ToList() : new List<DnsRecordBase>());
+			AnswerRecords = (Prequisites != null ? Prequisites.Cast<DnsRecordBase>().ToList() : new List<DnsRecordBase>());
+			AuthorityRecords = (Updates != null ? Updates.Cast<DnsRecordBase>().ToList() : new List<DnsRecordBase>());
 		}
 
 		protected override void FinishParsing()
 		{
 			Prequisites =
-				_answerRecords.ConvertAll<PrequisiteBase>(
+				AnswerRecords.ConvertAll<PrequisiteBase>(
 					record =>
 					{
 						if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
@@ -115,7 +115,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 					}).Where(prequisite => (prequisite != null)).ToList();
 
 			Updates =
-				_authorityRecords.ConvertAll<UpdateBase>(
+				AuthorityRecords.ConvertAll<UpdateBase>(
 					record =>
 					{
 						if (record.TimeToLive != 0)

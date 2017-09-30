@@ -24,7 +24,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   Message returned as result to a dns query
 	/// </summary>
-	public class DnsMessage : DnsMessageBase
+	public class MulticastDnsMessage : DnsMessageBase
 	{
 		#region Header
 		/// <summary>

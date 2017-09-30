@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 
@@ -123,6 +124,9 @@ namespace ARSoft.Tools.Net
 		/// <returns> A string with the reverse lookup address </returns>
 		public static string GetReverseLookupAddress(this IPAddress ipAddress)
 		{
+			if (ipAddress == null)
+				throw new ArgumentNullException("ipAddress");
+
 			StringBuilder res = new StringBuilder();
 
 			byte[] addressBytes = ipAddress.GetAddressBytes();
@@ -151,6 +155,60 @@ namespace ARSoft.Tools.Net
 			}
 
 			return res.ToString();
+		}
+
+		private static readonly IPAddress _ipv4MulticastNetworkAddress = IPAddress.Parse("224.0.0.0");
+		private static readonly IPAddress _ipv6MulticastNetworkAddress = IPAddress.Parse("FF00::");
+
+		/// <summary>
+		///   Returns a value indicating whether a ip address is a multicast address
+		/// </summary>
+		/// <param name="ipAddress"> Instance of the IPAddress, that should be used </param>
+		/// <returns> true, if the given address is a multicast address; otherwise, false </returns>
+		public static bool IsMulticast(this IPAddress ipAddress)
+		{
+			if (ipAddress == null)
+				throw new ArgumentNullException("ipAddress");
+
+			if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+			{
+				return ipAddress.GetNetworkAddress(4).Equals(_ipv4MulticastNetworkAddress);
+			}
+			else
+			{
+				return ipAddress.GetNetworkAddress(8).Equals(_ipv6MulticastNetworkAddress);
+			}
+		}
+
+		/// <summary>
+		///   Returns the index for the interface which has the ip address assigned
+		/// </summary>
+		/// <param name="ipAddress"> The ip address to look for </param>
+		/// <returns> The index for the interface which has the ip address assigned </returns>
+		public static int GetInterfaceIndex(this IPAddress ipAddress)
+		{
+			if (ipAddress == null)
+				throw new ArgumentNullException("ipAddress");
+
+			var interfaceProperty = NetworkInterface.GetAllNetworkInterfaces().Select(n => n.GetIPProperties()).FirstOrDefault(p => p.UnicastAddresses.Any(a => a.Address.Equals(ipAddress)));
+
+			if (interfaceProperty != null)
+			{
+				if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+				{
+					var property = interfaceProperty.GetIPv4Properties();
+					if (property != null)
+						return property.Index;
+				}
+				else
+				{
+					var property = interfaceProperty.GetIPv6Properties();
+					if (property != null)
+						return property.Index;
+				}
+			}
+
+			throw new ArgumentOutOfRangeException("ipAddress", "The given ip address is not configured on the local system");
 		}
 
 		private static byte ReverseBitOrder(byte value)

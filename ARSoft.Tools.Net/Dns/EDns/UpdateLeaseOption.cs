@@ -22,41 +22,42 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   Unknown EDNS option
+	///   <para>Update lease option</para> <para>Defined in
+	///                                 <see cref="!:http://files.dns-sd.org/draft-sekar-dns-ul.txt">draft-sekar-dns-ul</see>
+	///                               </para>
 	/// </summary>
-	public class UnknownOption : EDnsOptionBase
+	public class UpdateLeaseOption : EDnsOptionBase
 	{
 		/// <summary>
-		///   Binary data of the option
+		///   Desired lease (request) or granted lease (response)
 		/// </summary>
-		public byte[] Data { get; private set; }
+		public TimeSpan LeaseTime { get; private set; }
 
-		internal UnknownOption(EDnsOptionType type)
-			: base(type) { }
+		internal UpdateLeaseOption()
+			: base(EDnsOptionType.UpdateLease) { }
 
 		/// <summary>
-		///   Creates a new instance of the UnknownOption class
+		///   Creates a new instance of the UpdateLeaseOption class
 		/// </summary>
-		/// <param name="type"> Type of the option </param>
-		public UnknownOption(EDnsOptionType type, byte[] data)
-			: this(type)
+		public UpdateLeaseOption(TimeSpan leaseTime)
+			: this()
 		{
-			Data = data;
+			LeaseTime = leaseTime;
 		}
 
 		internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
-			Data = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
+			LeaseTime = TimeSpan.FromSeconds(DnsMessageBase.ParseInt(resultData, ref startPosition));
 		}
 
 		internal override ushort DataLength
 		{
-			get { return (ushort) ((Data == null) ? 0 : Data.Length); }
+			get { return 4; }
 		}
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Data);
+			DnsMessageBase.EncodeInt(messageData, ref currentPosition, (int) LeaseTime.TotalSeconds);
 		}
 	}
 }

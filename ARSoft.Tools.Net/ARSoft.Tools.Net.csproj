@@ -22,7 +22,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\bin\Debug\ARSoft.Tools.Net\</OutputPath>
+    <OutputPath>..\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -34,13 +34,17 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\Release\ARSoft.Tools.Net\</OutputPath>
+    <OutputPath>..\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
-    <DocumentationFile>..\..\bin\Release\ARSoft.Tools.Net\ARSoft.Tools.Net.xml</DocumentationFile>
+    <DocumentationFile>..\bin\Release\ARSoft.Tools.Net.xml</DocumentationFile>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="Exists('D:\arsoft.pfx')">
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>D:\arsoft.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -58,8 +62,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseEncoding.cs" />
-    <Compile Include="Dns\DnsAsyncState.cs" />
+    <Compile Include="Dns\DnsClientAsyncState.cs" />
     <Compile Include="Dns\DnsClient.cs" />
+    <Compile Include="Dns\DnsClientBase.cs" />
+    <Compile Include="Dns\DnsClientEndpointInfo.cs" />
+    <Compile Include="Dns\DnsClientParallelAsyncState.cs" />
+    <Compile Include="Dns\DnsClientParallelState.cs" />
     <Compile Include="Dns\DnsMessage.cs" />
     <Compile Include="Dns\DnsMessageBase.cs" />
     <Compile Include="Dns\DnsMessageEntryBase.cs" />
@@ -116,6 +124,13 @@
     <Compile Include="Dns\DynamicUpdate\RecordNotExistsPrequisite.cs" />
     <Compile Include="Dns\DynamicUpdate\UpdateBase.cs" />
     <Compile Include="Dns\DnsSec\SigRecord.cs" />
+    <Compile Include="Dns\EDns\LongLivedQueryOption.cs" />
+    <Compile Include="Dns\EDns\OwnerOption.cs" />
+    <Compile Include="Dns\EDns\UpdateLeaseOption.cs" />
+    <Compile Include="Dns\LlmnrClient.cs" />
+    <Compile Include="Dns\LlmnrMessage.cs" />
+    <Compile Include="Dns\MulticastDnsOneShotClient.cs" />
+    <Compile Include="Dns\MulticastDnsMessage.cs" />
     <Compile Include="Dns\TSig\TSigAlgorithm.cs" />
     <Compile Include="Dns\TSig\TSigAlgorithmHelper.cs" />
     <Compile Include="Dns\TSig\TSigRecord.cs" />
@@ -162,8 +177,14 @@
     <None Include="..\NOTICE">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="..\Documentation\ARSoft.Tools.Net.dxp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties DocumentXCommentEditorState="&lt;HtmlEditState&gt;&#xA;  &lt;Attributes&gt;&#xA;    &lt;Attribute key=&quot;dtscrollpos&quot; valuetype=&quot;integer&quot;&gt;0&lt;/Attribute&gt;&#xA;    &lt;Attribute key=&quot;inheritedMembers&quot; valuetype=&quot;string&quot;&gt;on&lt;/Attribute&gt;&#xA;    &lt;Attribute key=&quot;protectedMembers&quot; valuetype=&quot;string&quot;&gt;on&lt;/Attribute&gt;&#xA;    &lt;Attribute key=&quot;lang_CS&quot; valuetype=&quot;string&quot;&gt;on&lt;/Attribute&gt;&#xA;  &lt;/Attributes&gt;&#xA;&lt;/HtmlEditState&gt;" />
+    </VisualStudio>
+  </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

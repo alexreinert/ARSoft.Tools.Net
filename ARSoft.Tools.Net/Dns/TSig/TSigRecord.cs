@@ -46,15 +46,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   MAC defined by algorithm
 		/// </summary>
-		[Obsolete("Use property Mac instead, will be removed in future release")]
-		public byte[] OriginalMac
-		{
-			get { return Mac; }
-		}
-
-		/// <summary>
-		///   MAC defined by algorithm
-		/// </summary>
 		public byte[] Mac { get; internal set; }
 
 		/// <summary>

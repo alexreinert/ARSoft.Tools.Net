@@ -31,13 +31,19 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Binary data of the payload
 		/// </summary>
-		public byte[] Payload { get; set; }
+		public byte[] Payload { get; private set; }
+
+		internal NsIdOption()
+			: base(EDnsOptionType.NsId) { }
 
 		/// <summary>
 		///   Creates a new instance of the NsIdOption class
 		/// </summary>
-		public NsIdOption()
-			: base(EDnsOptionType.NsId) {}
+		public NsIdOption(byte[] payload)
+			: this()
+		{
+			Payload = payload;
+		}
 
 		internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
