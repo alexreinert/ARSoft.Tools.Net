@@ -76,65 +76,122 @@ namespace ARSoft.Tools.Net.Dns
 
 			for (int i = 0; i < endpointInfos.Count; i++)
 			{
-				var endpointInfo = endpointInfos[i];
+				TcpClient tcpClient = null;
+				NetworkStream tcpStream = null;
 
-				IPAddress responderAddress;
-				byte[] resultData = sendByTcp ? QueryByTcp(endpointInfo.ServerAddress, messageData, messageLength, out responderAddress) : QueryByUdp(endpointInfo, messageData, messageLength, out responderAddress);
-
-				if (resultData != null)
+				try
 				{
-					TMessage result = new TMessage();
+					var endpointInfo = endpointInfos[i];
 
-					try
-					{
-						result.Parse(resultData, false, tsigKeySelector, tsigOriginalMac);
-					}
-					catch (Exception e)
-					{
-						Trace.TraceError("Error on dns query: " + e);
-						continue;
-					}
+					IPAddress responderAddress;
+					byte[] resultData = sendByTcp ? QueryByTcp(endpointInfo.ServerAddress, messageData, messageLength, ref tcpClient, ref tcpStream, out responderAddress) : QueryByUdp(endpointInfo, messageData, messageLength, out responderAddress);
 
-					if (!ValidateResponse(message, result))
-						continue;
-
-					if ((result.ReturnCode == ReturnCode.ServerFailure) && (i != endpointInfos.Count - 1))
+					if (resultData != null)
 					{
-						continue;
-					}
+						TMessage result = new TMessage();
 
-					if (result.IsTcpResendingRequested)
-					{
-						resultData = QueryByTcp(responderAddress, messageData, messageLength, out responderAddress);
-						if (resultData != null)
+						try
 						{
-							TMessage tcpResult = new TMessage();
+							result.Parse(resultData, false, tsigKeySelector, tsigOriginalMac);
+						}
+						catch (Exception e)
+						{
+							Trace.TraceError("Error on dns query: " + e);
+							continue;
+						}
 
-							try
-							{
-								tcpResult.Parse(resultData, false, tsigKeySelector, tsigOriginalMac);
-							}
-							catch (Exception e)
-							{
-								Trace.TraceError("Error on dns query: " + e);
-								continue;
-							}
+						if (!ValidateResponse(message, result))
+							continue;
 
-							if (tcpResult.ReturnCode == ReturnCode.ServerFailure)
+						if ((result.ReturnCode == ReturnCode.ServerFailure) && (i != endpointInfos.Count - 1))
+						{
+							continue;
+						}
+
+						if (result.IsTcpResendingRequested)
+						{
+							resultData = QueryByTcp(responderAddress, messageData, messageLength, ref tcpClient, ref tcpStream, out responderAddress);
+							if (resultData != null)
 							{
-								if (i != endpointInfos.Count - 1)
+								TMessage tcpResult = new TMessage();
+
+								try
 								{
+									tcpResult.Parse(resultData, false, tsigKeySelector, tsigOriginalMac);
+								}
+								catch (Exception e)
+								{
+									Trace.TraceError("Error on dns query: " + e);
 									continue;
+								}
+
+								if (tcpResult.ReturnCode == ReturnCode.ServerFailure)
+								{
+									if (i != endpointInfos.Count - 1)
+									{
+										continue;
+									}
+								}
+								else
+								{
+									result = tcpResult;
+								}
+							}
+						}
+
+						bool isTcpNextMessageWaiting = result.IsTcpNextMessageWaiting;
+						bool isSucessfullFinished = true;
+
+						while (isTcpNextMessageWaiting)
+						{
+							resultData = QueryByTcp(responderAddress, null, 0, ref tcpClient, ref tcpStream, out responderAddress);
+							if (resultData != null)
+							{
+								TMessage tcpResult = new TMessage();
+
+								try
+								{
+									tcpResult.Parse(resultData, false, tsigKeySelector, tsigOriginalMac);
+								}
+								catch (Exception e)
+								{
+									Trace.TraceError("Error on dns query: " + e);
+									isSucessfullFinished = false;
+									break;
+								}
+
+								if (tcpResult.ReturnCode == ReturnCode.ServerFailure)
+								{
+									isSucessfullFinished = false;
+									break;
+								}
+								else
+								{
+									result.AnswerRecords.AddRange(tcpResult.AnswerRecords);
+									isTcpNextMessageWaiting = tcpResult.IsTcpNextMessageWaiting;
 								}
 							}
 							else
 							{
-								result = tcpResult;
+								isSucessfullFinished = false;
+								break;
 							}
 						}
-					}
 
-					return result;
+						if (isSucessfullFinished)
+							return result;
+					}
+				}
+				finally
+				{
+					try
+					{
+						if (tcpStream != null)
+							tcpStream.Dispose();
+						if (tcpClient != null)
+							tcpClient.Close();
+					}
+					catch {}
 				}
 			}
 
@@ -284,54 +341,58 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		private byte[] QueryByTcp(IPAddress nameServer, byte[] messageData, int messageLength, out IPAddress responderAddress)
+		private byte[] QueryByTcp(IPAddress nameServer, byte[] messageData, int messageLength, ref TcpClient tcpClient, ref NetworkStream tcpStream, out IPAddress responderAddress)
 		{
 			responderAddress = nameServer;
 
 			IPEndPoint endPoint = new IPEndPoint(nameServer, _port);
 
-			using (TcpClient tcpClient = new TcpClient(nameServer.AddressFamily))
+			try
 			{
-				try
+				if (tcpClient == null)
 				{
-					tcpClient.ReceiveTimeout = QueryTimeout;
-					tcpClient.SendTimeout = QueryTimeout;
+					tcpClient = new TcpClient(nameServer.AddressFamily)
+					            {
+					            	ReceiveTimeout = QueryTimeout,
+					            	SendTimeout = QueryTimeout
+					            };
+
 					tcpClient.Connect(endPoint);
-
-					byte[] resultData;
-					using (NetworkStream tcpStream = tcpClient.GetStream())
-					{
-						int tmp = 0;
-
-						byte[] lengthBuffer = new byte[2];
-						DnsMessageBase.EncodeUShort(lengthBuffer, ref tmp, (ushort) messageLength);
-
-						tcpStream.Write(lengthBuffer, 0, 2);
-						tcpStream.Write(messageData, 0, messageLength);
-
-						lengthBuffer[0] = (byte) tcpStream.ReadByte();
-						lengthBuffer[1] = (byte) tcpStream.ReadByte();
-
-						tmp = 0;
-						int length = DnsMessageBase.ParseUShort(lengthBuffer, ref tmp);
-
-						resultData = new byte[length];
-
-						int readBytes = 0;
-
-						while (readBytes < length)
-						{
-							readBytes += tcpStream.Read(resultData, readBytes, length - readBytes);
-						}
-					}
-
-					return resultData;
+					tcpStream = tcpClient.GetStream();
 				}
-				catch (Exception e)
+
+				int tmp = 0;
+				byte[] lengthBuffer = new byte[2];
+
+				if (messageLength > 0)
 				{
-					Trace.TraceError("Error on dns query: " + e);
-					return null;
+					DnsMessageBase.EncodeUShort(lengthBuffer, ref tmp, (ushort) messageLength);
+
+					tcpStream.Write(lengthBuffer, 0, 2);
+					tcpStream.Write(messageData, 0, messageLength);
 				}
+
+				lengthBuffer[0] = (byte) tcpStream.ReadByte();
+				lengthBuffer[1] = (byte) tcpStream.ReadByte();
+
+				tmp = 0;
+				int length = DnsMessageBase.ParseUShort(lengthBuffer, ref tmp);
+
+				byte[] resultData = new byte[length];
+
+				int readBytes = 0;
+
+				while (readBytes < length)
+				{
+					readBytes += tcpStream.Read(resultData, readBytes, length - readBytes);
+				}
+
+				return resultData;
+			}
+			catch (Exception e)
+			{
+				Trace.TraceError("Error on dns query: " + e);
+				return null;
 			}
 		}
 
@@ -733,6 +794,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (!asyncResult.IsCompleted)
 			{
 				DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) asyncResult.AsyncState;
+				state.PartialMessage = null;
 				state.TimedOut = true;
 				if (state.TcpStream != null)
 					state.TcpStream.Close();
@@ -945,11 +1007,6 @@ namespace ARSoft.Tools.Net.Dns
 					}
 					else
 					{
-						state.TcpStream.Close();
-						state.TcpClient.Close();
-						state.TcpStream = null;
-						state.TcpClient = null;
-
 						byte[] buffer = state.Buffer;
 						state.Buffer = null;
 
@@ -959,12 +1016,42 @@ namespace ARSoft.Tools.Net.Dns
 						if (!ValidateResponse(state.Query, response) || (response.ReturnCode == ReturnCode.ServerFailure))
 						{
 							state.EndpointInfoIndex++;
+							state.PartialMessage = null;
+							state.TcpStream.Close();
+							state.TcpClient.Close();
+							state.TcpStream = null;
+							state.TcpClient = null;
 							TcpBeginConnect(state);
 						}
 						else
 						{
-							state.Responses.Add(response);
-							state.SetCompleted();
+							if (state.PartialMessage != null)
+							{
+								state.PartialMessage.AnswerRecords.AddRange(response.AnswerRecords);
+							}
+							else
+							{
+								state.PartialMessage = response;
+							}
+
+							if (response.IsTcpNextMessageWaiting)
+							{
+								state.TcpBytesToReceive = 2;
+								state.Buffer = new byte[2];
+
+								IAsyncResult asyncResult = state.TcpStream.BeginRead(state.Buffer, 0, 2, TcpReceiveLengthCompleted<TMessage>, state);
+								state.Timer = new Timer(TcpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
+							}
+							else
+							{
+								state.TcpStream.Close();
+								state.TcpClient.Close();
+								state.TcpStream = null;
+								state.TcpClient = null;
+
+								state.Responses.Add(state.PartialMessage);
+								state.SetCompleted();
+							}
 						}
 					}
 				}

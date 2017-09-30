@@ -37,6 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal DnsServer.SelectTsigKey TSigKeySelector;
 		internal byte[] TSigOriginalMac;
 
+		internal TMessage PartialMessage;
 		internal List<TMessage> Responses;
 
 		internal Timer Timer;

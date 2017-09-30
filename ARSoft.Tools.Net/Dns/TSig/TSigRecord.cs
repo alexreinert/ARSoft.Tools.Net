@@ -130,17 +130,32 @@ namespace ARSoft.Tools.Net.Dns
 			get { return TSigAlgorithmHelper.GetDomainName(Algorithm).Length + 18 + TSigAlgorithmHelper.GetHashSize(Algorithm) + OtherData.Length; }
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames, byte[] mac)
+		{
+			int recordDataOffset;
+			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, out recordDataOffset);
+
+			EncodeRecordData(messageData, offset, ref recordDataOffset, domainNames, mac);
+
+			EncodeRecordLength(messageData, offset, ref currentPosition, domainNames, recordDataOffset);
+		}
+
+		private void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames, byte[] mac)
 		{
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TSigAlgorithmHelper.GetDomainName(Algorithm), false, domainNames);
 			EncodeDateTime(messageData, ref currentPosition, TimeSigned);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Fudge.TotalSeconds);
-			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Mac.Length);
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Mac);
+			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) mac.Length);
+			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, mac);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, OriginalID);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Error);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) OtherData.Length);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, OtherData);
+		}
+
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
+		{
+			EncodeRecordData(messageData, offset, ref currentPosition, domainNames, Mac);
 		}
 
 		internal static void EncodeDateTime(byte[] buffer, ref int currentPosition, DateTime value)

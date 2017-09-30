@@ -76,6 +76,11 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 			get { return false; }
 		}
 
+		internal override bool IsTcpNextMessageWaiting
+		{
+			get { return false; }
+		}
+
 		protected override void PrepareEncoding()
 		{
 			AnswerRecords = (Prequisites != null ? Prequisites.Cast<DnsRecordBase>().ToList() : new List<DnsRecordBase>());

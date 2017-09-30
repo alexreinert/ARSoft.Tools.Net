@@ -203,17 +203,30 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames)
 		{
+			int recordDataOffset;
+			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, out recordDataOffset);
+
+			EncodeRecordData(messageData, offset, ref recordDataOffset, domainNames);
+
+			EncodeRecordLength(messageData, offset, ref currentPosition, domainNames, recordDataOffset);
+		}
+
+		internal void EncodeRecordHeader(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames, out int recordPosition)
+		{
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, true, domainNames);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordClass);
 			DnsMessageBase.EncodeInt(messageData, ref currentPosition, TimeToLive);
 
-			int recordPosition = currentPosition + 2;
-			EncodeRecordData(messageData, offset, ref recordPosition, domainNames);
-
-			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) (recordPosition - currentPosition - 2));
-			currentPosition = recordPosition;
+			recordPosition = currentPosition + 2;
 		}
+
+		internal void EncodeRecordLength(byte[] messageData, int offset, ref int recordDataOffset, Dictionary<string, ushort> domainNames, int recordPosition)
+		{
+			DnsMessageBase.EncodeUShort(messageData, ref recordDataOffset, (ushort) (recordPosition - recordDataOffset - 2));
+			recordDataOffset = recordPosition;
+		}
+
 
 		protected internal abstract int MaximumRecordDataLength { get; }
 

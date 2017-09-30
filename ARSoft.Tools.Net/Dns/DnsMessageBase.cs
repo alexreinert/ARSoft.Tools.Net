@@ -47,6 +47,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal abstract bool IsTcpUsingRequested { get; }
 		internal abstract bool IsTcpResendingRequested { get; }
+		internal abstract bool IsTcpNextMessageWaiting { get; }
 
 		#region Header
 		/// <summary>
@@ -586,18 +587,34 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal int Encode(bool addLengthPrefix, out byte[] messageData)
 		{
+			byte[] newTSigMac;
+
+			return Encode(addLengthPrefix, null, false, out messageData, out newTSigMac);
+		}
+
+		internal int Encode(bool addLengthPrefix, byte[] originalTsigMac, out byte[] messageData)
+		{
+			byte[] newTSigMac;
+
+			return Encode(addLengthPrefix, originalTsigMac, false, out messageData, out newTSigMac);
+		}
+
+		internal int Encode(bool addLengthPrefix, byte[] originalTsigMac, bool isSubSequentResponse, out byte[] messageData, out byte[] newTSigMac)
+		{
 			PrepareEncoding();
 
-			int offset = addLengthPrefix ? 2 : 0;
+			int offset = 0;
 			int messageOffset = offset;
-			int maxLength = offset;
+			int maxLength = addLengthPrefix ? 2 : 0;
+
+			originalTsigMac = originalTsigMac ?? new byte[] { };
 
 			if (TSigOptions != null)
 			{
 				if (!IsQuery)
 				{
-					offset += 2 + TSigOptions.Mac.Length;
-					maxLength += 2 + TSigOptions.Mac.Length;
+					offset += 2 + originalTsigMac.Length;
+					maxLength += 2 + originalTsigMac.Length;
 				}
 
 				maxLength += TSigOptions.MaximumLength;
@@ -640,55 +657,69 @@ namespace ARSoft.Tools.Net.Dns
 				record.Encode(messageData, offset, ref currentPosition, domainNames);
 			}
 
-			if (TSigOptions != null)
+			if (TSigOptions == null)
+			{
+				newTSigMac = null;
+			}
+			else
 			{
 				if (!IsQuery)
 				{
-					EncodeUShort(messageData, messageOffset, (ushort) TSigOptions.Mac.Length);
-					Buffer.BlockCopy(TSigOptions.Mac, 0, messageData, messageOffset + 2, TSigOptions.Mac.Length);
+					EncodeUShort(messageData, messageOffset, (ushort) originalTsigMac.Length);
+					Buffer.BlockCopy(originalTsigMac, 0, messageData, messageOffset + 2, originalTsigMac.Length);
 				}
 
 				EncodeUShort(messageData, offset, TSigOptions.OriginalID);
 
 				int tsigVariablesPosition = currentPosition;
 
-				EncodeDomainName(messageData, offset, ref tsigVariablesPosition, TSigOptions.Name, false, null);
-				EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.RecordClass);
-				EncodeInt(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.TimeToLive);
-				EncodeDomainName(messageData, offset, ref tsigVariablesPosition, TSigAlgorithmHelper.GetDomainName(TSigOptions.Algorithm), false, null);
-				TSigRecord.EncodeDateTime(messageData, ref tsigVariablesPosition, TSigOptions.TimeSigned);
-				EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.Fudge.TotalSeconds);
-				EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.Error);
-				EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.OtherData.Length);
-				EncodeByteArray(messageData, ref tsigVariablesPosition, TSigOptions.OtherData);
-
-				KeyedHashAlgorithm hashAlgorithm = TSigAlgorithmHelper.GetHashAlgorithm(TSigOptions.Algorithm);
-				if ((hashAlgorithm != null) && (TSigOptions.KeyData != null) && (TSigOptions.KeyData.Length > 0))
+				if (isSubSequentResponse)
 				{
-					hashAlgorithm.Key = TSigOptions.KeyData;
-					TSigOptions.Mac = hashAlgorithm.ComputeHash(messageData, messageOffset, tsigVariablesPosition);
+					TSigRecord.EncodeDateTime(messageData, ref tsigVariablesPosition, TSigOptions.TimeSigned);
+					EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.Fudge.TotalSeconds);
 				}
 				else
 				{
-					TSigOptions.Mac = new byte[] { };
+					EncodeDomainName(messageData, offset, ref tsigVariablesPosition, TSigOptions.Name, false, null);
+					EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.RecordClass);
+					EncodeInt(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.TimeToLive);
+					EncodeDomainName(messageData, offset, ref tsigVariablesPosition, TSigAlgorithmHelper.GetDomainName(TSigOptions.Algorithm), false, null);
+					TSigRecord.EncodeDateTime(messageData, ref tsigVariablesPosition, TSigOptions.TimeSigned);
+					EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.Fudge.TotalSeconds);
+					EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.Error);
+					EncodeUShort(messageData, ref tsigVariablesPosition, (ushort) TSigOptions.OtherData.Length);
+					EncodeByteArray(messageData, ref tsigVariablesPosition, TSigOptions.OtherData);
+				}
+
+				KeyedHashAlgorithm hashAlgorithm = TSigAlgorithmHelper.GetHashAlgorithm(TSigOptions.Algorithm);
+				//byte[] mac;
+				if ((hashAlgorithm != null) && (TSigOptions.KeyData != null) && (TSigOptions.KeyData.Length > 0))
+				{
+					hashAlgorithm.Key = TSigOptions.KeyData;
+					newTSigMac = hashAlgorithm.ComputeHash(messageData, messageOffset, tsigVariablesPosition);
+				}
+				else
+				{
+					newTSigMac = new byte[] { };
 				}
 
 				EncodeUShort(messageData, offset, TransactionID);
 				EncodeUShort(messageData, offset + 10, (ushort) (_additionalRecords.Count + 1));
 
-				TSigOptions.Encode(messageData, offset, ref currentPosition, domainNames);
+				TSigOptions.Encode(messageData, offset, ref currentPosition, domainNames, newTSigMac);
 
 				if (!IsQuery)
 				{
 					Buffer.BlockCopy(messageData, offset, messageData, messageOffset, (currentPosition - offset));
-					offset = messageOffset;
-					currentPosition -= (2 + TSigOptions.Mac.Length);
+					currentPosition -= (2 + originalTsigMac.Length);
 				}
 			}
 
 			if (addLengthPrefix)
 			{
-				EncodeUShort(messageData, 0, (ushort) (currentPosition - offset));
+				Buffer.BlockCopy(messageData, 0, messageData, 2, currentPosition);
+				EncodeUShort(messageData, 0, (ushort) (currentPosition));
+				currentPosition += 2;
 			}
 
 			return currentPosition;

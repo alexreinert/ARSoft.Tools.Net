@@ -77,8 +77,15 @@ namespace ARSoft.Tools.Net.Spf
 		/// <returns> The result of the evaluation </returns>
 		public SpfQualifier CheckHost(IPAddress ip, string domain, string sender)
 		{
-			string explanation;
-			return CheckHostInternal(ip, sender, domain, false, out explanation);
+			try
+			{
+				string explanation;
+				return CheckHostInternal(ip, sender, domain, false, out explanation);
+			}
+			finally
+			{
+				_dnsCache.Clear();
+			}
 		}
 
 		/// <summary>
@@ -91,7 +98,14 @@ namespace ARSoft.Tools.Net.Spf
 		/// <returns> The result of the evaluation </returns>
 		public SpfQualifier CheckHost(IPAddress ip, string sender, string domain, out string explanation)
 		{
-			return CheckHostInternal(ip, sender, domain, true, out explanation);
+			try
+			{
+				return CheckHostInternal(ip, sender, domain, true, out explanation);
+			}
+			finally
+			{
+				_dnsCache.Clear();
+			}
 		}
 
 		private SpfQualifier CheckHostInternal(IPAddress ip, string sender, string domain, bool expandExplanation, out string explanation)

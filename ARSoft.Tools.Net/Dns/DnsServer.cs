@@ -36,6 +36,8 @@ namespace ARSoft.Tools.Net.Dns
 			public IAsyncResult AsyncResult;
 			public TcpClient Client;
 			public NetworkStream Stream;
+			public DnsMessageBase Response;
+			public byte[] NextTsigMac;
 			public byte[] Buffer;
 			public int BytesToReceive;
 			public Timer Timer;
@@ -209,9 +211,11 @@ namespace ARSoft.Tools.Net.Dns
 				byte[] buffer = _udpListener.EndReceive(ar, out endpoint);
 
 				DnsMessageBase query;
+				byte[] originalMac;
 				try
 				{
 					query = DnsMessageBase.Create(buffer, true, TsigKeySelector, null);
+					originalMac = (query.TSigOptions == null) ? null : query.TSigOptions.Mac;
 				}
 				catch (Exception e)
 				{
@@ -236,7 +240,7 @@ namespace ARSoft.Tools.Net.Dns
 					query.ReturnCode = ReturnCode.ServerFailure;
 				}
 
-				int length = response.Encode(false, out buffer);
+				int length = response.Encode(false, originalMac, out buffer);
 
 				#region Truncating
 				DnsMessage message = response as DnsMessage;
@@ -262,7 +266,7 @@ namespace ARSoft.Tools.Net.Dns
 								}
 							}
 
-							length = message.Encode(false, out buffer);
+							length = message.Encode(false, originalMac, out buffer);
 							continue;
 						}
 
@@ -282,7 +286,7 @@ namespace ARSoft.Tools.Net.Dns
 
 							message.IsTruncated = true;
 
-							length = message.Encode(false, out buffer);
+							length = message.Encode(false, originalMac, out buffer);
 							continue;
 						}
 
@@ -301,7 +305,7 @@ namespace ARSoft.Tools.Net.Dns
 
 							message.IsTruncated = true;
 
-							length = message.Encode(false, out buffer);
+							length = message.Encode(false, originalMac, out buffer);
 							continue;
 						}
 
@@ -320,8 +324,7 @@ namespace ARSoft.Tools.Net.Dns
 
 							message.IsTruncated = true;
 
-							length = message.Encode(false, out buffer);
-							continue;
+							length = message.Encode(false, originalMac, out buffer);
 						}
 					}
 				}
@@ -430,7 +433,7 @@ namespace ARSoft.Tools.Net.Dns
 				stream = client.GetStream();
 
 				MyState state =
-					new MyState()
+					new MyState
 					{
 						Client = client,
 						Stream = stream,
@@ -581,44 +584,89 @@ namespace ARSoft.Tools.Net.Dns
 				else
 				{
 					DnsMessageBase query;
-
 					try
 					{
 						query = DnsMessageBase.Create(state.Buffer, true, TsigKeySelector, null);
+						state.NextTsigMac = (query.TSigOptions == null) ? null : query.TSigOptions.Mac;
 					}
 					catch (Exception e)
 					{
 						throw new Exception("Error parsing dns query", e);
 					}
 
-					DnsMessageBase response;
 					try
 					{
-						response = ProcessMessage(query, ((IPEndPoint) client.Client.RemoteEndPoint).Address, ProtocolType.Tcp);
+						state.Response = ProcessMessage(query, ((IPEndPoint) client.Client.RemoteEndPoint).Address, ProtocolType.Tcp);
 					}
 					catch (Exception ex)
 					{
 						OnExceptionThrown(ex);
-						response = null;
+						state.Response = null;
 					}
 
-					if (response == null)
-					{
-						response = query;
-						query.IsQuery = false;
-						query.ReturnCode = ReturnCode.ServerFailure;
-					}
-
-					int length = response.Encode(true, out state.Buffer);
-
-					state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
-					state.AsyncResult = stream.BeginWrite(state.Buffer, 0, length, EndTcpSendData, state);
+					ProcessAndSendTcpResponse(state, false);
 				}
 			}
 			catch (Exception e)
 			{
 				HandleTcpException(e, stream, client);
 			}
+		}
+
+		private void ProcessAndSendTcpResponse(MyState state, bool isSubSequentResponse)
+		{
+			if (state.Response == null)
+			{
+				state.Response = DnsMessageBase.Create(state.Buffer, true, TsigKeySelector, null);
+				state.Response.IsQuery = false;
+				state.Response.AdditionalRecords.Clear();
+				state.Response.AuthorityRecords.Clear();
+				state.Response.ReturnCode = ReturnCode.ServerFailure;
+			}
+
+			byte[] newTsigMac;
+
+			int length = state.Response.Encode(true, state.NextTsigMac, isSubSequentResponse, out state.Buffer, out newTsigMac);
+
+			if (length > 65535)
+			{
+				if ((state.Response.Questions.Count == 0) || (state.Response.Questions[0].RecordType != RecordType.Axfr))
+				{
+					OnExceptionThrown(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
+					state.Response = DnsMessageBase.Create(state.Buffer, true, TsigKeySelector, null);
+					state.Response.IsQuery = false;
+					state.Response.ReturnCode = ReturnCode.ServerFailure;
+					state.Response.AdditionalRecords.Clear();
+					state.Response.AuthorityRecords.Clear();
+					length = state.Response.Encode(true, state.NextTsigMac, isSubSequentResponse, out state.Buffer, out newTsigMac);
+				}
+				else
+				{
+					List<DnsRecordBase> nextPacketRecords = new List<DnsRecordBase>();
+
+					do
+					{
+						int lastIndex = Math.Min(500, state.Response.AnswerRecords.Count / 2);
+						int removeCount = state.Response.AnswerRecords.Count - lastIndex;
+
+						nextPacketRecords.InsertRange(0, state.Response.AnswerRecords.GetRange(lastIndex, removeCount));
+						state.Response.AnswerRecords.RemoveRange(lastIndex, removeCount);
+
+						length = state.Response.Encode(true, state.NextTsigMac, isSubSequentResponse, out state.Buffer, out newTsigMac);
+					} while (length > 65535);
+
+					state.Response.AnswerRecords = nextPacketRecords;
+				}
+			}
+			else
+			{
+				state.Response = null;
+			}
+
+			state.NextTsigMac = newTsigMac;
+
+			state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
+			state.AsyncResult = state.Stream.BeginWrite(state.Buffer, 0, length, EndTcpSendData, state);
 		}
 
 		private void EndTcpSendData(IAsyncResult ar)
@@ -636,12 +684,28 @@ namespace ARSoft.Tools.Net.Dns
 
 				stream.EndWrite(ar);
 
-				state.Buffer = new byte[2];
-				state.BytesToReceive = 2;
-				state.TimeRemaining = Timeout;
+				if (state.Response == null)
+				{
+					if (state.NextTsigMac == null)
+					{
+						state.Buffer = new byte[2];
+						state.BytesToReceive = 2;
+						state.TimeRemaining = Timeout;
 
-				state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
-				state.AsyncResult = stream.BeginRead(state.Buffer, 0, 2, EndTcpReadLength, state);
+						state.Timer = new Timer(TcpTimedOut, state, state.TimeRemaining, System.Threading.Timeout.Infinite);
+						state.AsyncResult = stream.BeginRead(state.Buffer, 0, 2, EndTcpReadLength, state);
+					}
+					else
+					{
+						// Since support for multiple tsig signed messages is not finished, just close connection after response to first signed query
+						state.Stream.Close();
+						state.Client.Close();
+					}
+				}
+				else
+				{
+					ProcessAndSendTcpResponse(state, true);
+				}
 			}
 			catch (Exception e)
 			{

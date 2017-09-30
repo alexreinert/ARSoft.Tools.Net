@@ -127,5 +127,10 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			get { return IsTruncated; }
 		}
+
+		internal override bool IsTcpNextMessageWaiting
+		{
+			get { return false; }
+		}
 	}
 }

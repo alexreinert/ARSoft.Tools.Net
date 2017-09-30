@@ -190,5 +190,16 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			get { return IsTruncated; }
 		}
+
+		internal override bool IsTcpNextMessageWaiting
+		{
+			get
+			{
+				return (Questions.Count > 0)
+				       && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr))
+				       && (AnswerRecords.Count > 0)
+				       && (AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa);
+			}
+		}
 	}
 }
