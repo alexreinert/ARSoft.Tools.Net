@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2016 Alexander Reinert
+// Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -66,7 +66,7 @@ namespace ARSoft.Tools.Net.Spf
 		/// <summary>
 		///   EXISTS mechanism, matches if the given domain exists
 		/// </summary>
-		Exist,
+		Exists,
 
 		/// <summary>
 		///   INCLUDE mechanism, triggers a recursive evaluation

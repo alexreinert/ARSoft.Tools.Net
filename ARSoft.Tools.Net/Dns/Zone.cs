@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2016 Alexander Reinert
+// Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Org.BouncyCastle.Crypto.Prng;
 using Org.BouncyCastle.Security;
 
 namespace ARSoft.Tools.Net.Dns
@@ -32,6 +33,8 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public class Zone : ICollection<DnsRecordBase>
 	{
+		private static readonly SecureRandom _secureRandom = new SecureRandom(new CryptoApiRandomGenerator());
+
 		private static readonly Regex _commentRemoverRegex = new Regex(@"^(?<data>(\\\""|[^\""]|(?<!\\)\"".*?(?<!\\)\"")*?)(;.*)?$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 		private static readonly Regex _lineSplitterRegex = new Regex("([^\\s\"]+)|\"(.*?(?<!\\\\))\"", RegexOptions.Compiled);
 
@@ -474,7 +477,7 @@ namespace ARSoft.Tools.Net.Dns
 			List<NSec3Record> nSec3Records = new List<NSec3Record>(Count);
 
 			if (nsec3Salt == null)
-				nsec3Salt = SecureRandom.GetSeed(8);
+				nsec3Salt = _secureRandom.GenerateSeed(8);
 
 			recordsByName[0].Item2.Add(new NSec3ParamRecord(soaRecord.Name, soaRecord.RecordClass, 0, nsec3Algorithm, 0, (ushort) nsec3Iterations, nsec3Salt));
 

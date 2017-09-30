@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2016 Alexander Reinert
+// Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -437,7 +437,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			ECDomainParameters dParams = ECGost3410NamedCurves.GetByOid(CryptoProObjectIdentifiers.GostR3410x2001CryptoProA);
 			byte[] reversedPublicKey = PublicKey.Reverse().ToArray();
-			ECPoint q = dParams.Curve.CreatePoint(new BigInteger(1, reversedPublicKey, 32, 32), new BigInteger(1, reversedPublicKey, 0, 32), false);
+			ECPoint q = dParams.Curve.CreatePoint(new BigInteger(1, reversedPublicKey, 32, 32), new BigInteger(1, reversedPublicKey, 0, 32));
 			ECPublicKeyParameters parameters = new ECPublicKeyParameters(q, dParams);
 
 			var signer = new ECGost3410Signer();
@@ -463,7 +463,7 @@ namespace ARSoft.Tools.Net.Dns
 				curveParameter.H,
 				curveParameter.GetSeed());
 
-			ECPoint q = dParams.Curve.CreatePoint(new BigInteger(1, PublicKey, 0, digestSize), new BigInteger(1, PublicKey, digestSize, digestSize), false);
+			ECPoint q = dParams.Curve.CreatePoint(new BigInteger(1, PublicKey, 0, digestSize), new BigInteger(1, PublicKey, digestSize, digestSize));
 
 			ECPublicKeyParameters parameters = new ECPublicKeyParameters(q, dParams);
 
@@ -564,8 +564,8 @@ namespace ARSoft.Tools.Net.Dns
 
 					publicKey = new byte[64];
 
-					gostPublicKey.Q.X.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, 32);
-					gostPublicKey.Q.Y.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, 0);
+					gostPublicKey.Q.AffineXCoord.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, 32);
+					gostPublicKey.Q.AffineYCoord.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, 0);
 
 					publicKey = publicKey.Reverse().ToArray();
 					break;
@@ -602,8 +602,8 @@ namespace ARSoft.Tools.Net.Dns
 
 					publicKey = new byte[ecDsaDigestSize * 2];
 
-					ecDsaPublicKey.Q.X.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, 0);
-					ecDsaPublicKey.Q.Y.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, ecDsaDigestSize);
+					ecDsaPublicKey.Q.AffineXCoord.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, 0);
+					ecDsaPublicKey.Q.AffineYCoord.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, ecDsaDigestSize);
 					break;
 
 				default:
