@@ -1,5 +1,5 @@
 #region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -735,7 +735,6 @@ namespace ARSoft.Tools.Net.Dns
 				}
 
 				KeyedHashAlgorithm hashAlgorithm = TSigAlgorithmHelper.GetHashAlgorithm(TSigOptions.Algorithm);
-				//byte[] mac;
 				if ((hashAlgorithm != null) && (TSigOptions.KeyData != null) && (TSigOptions.KeyData.Length > 0))
 				{
 					hashAlgorithm.Key = TSigOptions.KeyData;

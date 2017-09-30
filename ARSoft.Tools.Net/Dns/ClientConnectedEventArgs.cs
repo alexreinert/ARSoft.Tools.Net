@@ -17,33 +17,35 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Net;
+using System.Net.Sockets;
 
-namespace ARSoft.Tools.Net.Dns.DynamicUpdate
+namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   Prequisite, that a name exists
+	///   Event arguments of <see cref="DnsServer.ClientConnected" /> event.
 	/// </summary>
-	public class NameIsInUsePrequisite : PrequisiteBase
+	public class ClientConnectedEventArgs : EventArgs
 	{
-		internal NameIsInUsePrequisite() {}
+		/// <summary>
+		///   Protocol used by the client
+		/// </summary>
+		public ProtocolType ProtocolType { get; private set; }
 
 		/// <summary>
-		///   Creates a new instance of the NameIsInUsePrequisite class
+		///   Remote endpoint of the client
 		/// </summary>
-		/// <param name="name"> Name that should be checked </param>
-		public NameIsInUsePrequisite(string name)
-			: base(name, RecordType.Any, RecordClass.Any, 0) {}
+		public IPEndPoint RemoteEndpoint { get; private set; }
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
+		/// <summary>
+		///   If true, the client connection will be refused
+		/// </summary>
+		public bool RefuseConnect { get; set; }
 
-		protected internal override int MaximumRecordDataLength
+		internal ClientConnectedEventArgs(ProtocolType protocolType, IPEndPoint remoteEndpoint)
 		{
-			get { return 0; }
+			ProtocolType = protocolType;
+			RemoteEndpoint = remoteEndpoint;
 		}
-
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames) {}
 	}
 }

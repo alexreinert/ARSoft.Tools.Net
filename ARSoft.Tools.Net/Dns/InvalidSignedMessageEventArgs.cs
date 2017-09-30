@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
@@ -31,11 +33,23 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Original message, which the client provided
 		/// </summary>
-		public DnsMessageBase Message { get; set; }
+		public DnsMessageBase Query { get; private set; }
 
-		internal InvalidSignedMessageEventArgs(DnsMessageBase message)
+		/// <summary>
+		///   Protocol used by the client
+		/// </summary>
+		public ProtocolType ProtocolType { get; private set; }
+
+		/// <summary>
+		///   Remote endpoint of the client
+		/// </summary>
+		public IPEndPoint RemoteEndpoint { get; private set; }
+
+		internal InvalidSignedMessageEventArgs(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
 		{
-			Message = message;
+			Query = query;
+			ProtocolType = protocolType;
+			RemoteEndpoint = remoteEndpoint;
 		}
 	}
 }

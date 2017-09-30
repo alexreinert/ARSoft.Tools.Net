@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -61,6 +62,9 @@ namespace ARSoft.Tools.Net.Dns
 			catch {}
 
 			_maximumMessageSize = Math.Max(512, maximumMessageSize);
+
+			IsUdpEnabled = true;
+			IsTcpEnabled = false;
 		}
 
 		private readonly int _maximumMessageSize;
@@ -70,28 +74,13 @@ namespace ARSoft.Tools.Net.Dns
 			get { return _maximumMessageSize; }
 		}
 
-		protected override bool AreMultipleResponsesAllowedInParallelMode
-		{
-			get { return true; }
-		}
-
-		/// <summary>
-		///   Queries for specified name and all records (RecordType.Any).
-		/// </summary>
-		/// <param name="name"> Domain, that should be queried </param>
-		/// <returns> All available responses on the local network </returns>
-		public List<MulticastDnsMessage> Resolve(string name)
-		{
-			return Resolve(name, RecordType.Any);
-		}
-
 		/// <summary>
 		///   Queries for specified records.
 		/// </summary>
 		/// <param name="name"> Name, that should be queried </param>
 		/// <param name="recordType"> Type the should be queried </param>
 		/// <returns> All available responses on the local network </returns>
-		public List<MulticastDnsMessage> Resolve(string name, RecordType recordType)
+		public List<MulticastDnsMessage> Resolve(string name, RecordType recordType = RecordType.Any)
 		{
 			if (String.IsNullOrEmpty(name))
 			{
@@ -105,44 +94,12 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   Queries for specified records asynchronously.
-		/// </summary>
-		/// <param name="name"> Name, that should be queried </param>
-		/// <param name="requestCallback">
-		///   An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete.
-		/// </param>
-		/// <param name="state">
-		///   A user-defined object that contains information about the receive operation. This object is passed to the
-		///   <paramref
-		///     name="requestCallback" />
-		///   delegate when the operation is complete.
-		/// </param>
-		/// <returns>
-		///   An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive.
-		/// </returns>
-		public IAsyncResult BeginResolve(string name, AsyncCallback requestCallback, object state)
-		{
-			return BeginResolve(name, RecordType.Any, requestCallback, state);
-		}
-
-		/// <summary>
-		///   Queries for specified records asynchronously.
+		///   Queries for specified records as an asynchronous operation.
 		/// </summary>
 		/// <param name="name"> Name, that should be queried </param>
 		/// <param name="recordType"> Type the should be queried </param>
-		/// <param name="requestCallback">
-		///   An <see cref="System.AsyncCallback" /> delegate that references the method to invoked then the operation is complete.
-		/// </param>
-		/// <param name="state">
-		///   A user-defined object that contains information about the receive operation. This object is passed to the
-		///   <paramref
-		///     name="requestCallback" />
-		///   delegate when the operation is complete.
-		/// </param>
-		/// <returns>
-		///   An <see cref="System.IAsyncResult" /> IAsyncResult object that references the asynchronous receive.
-		/// </returns>
-		public IAsyncResult BeginResolve(string name, RecordType recordType, AsyncCallback requestCallback, object state)
+		/// <returns> All available responses on the local network </returns>
+		public async Task<List<MulticastDnsMessage>> ResolveAsync(string name, RecordType recordType = RecordType.Any)
 		{
 			if (String.IsNullOrEmpty(name))
 			{
@@ -152,22 +109,7 @@ namespace ARSoft.Tools.Net.Dns
 			MulticastDnsMessage message = new MulticastDnsMessage { IsQuery = true, OperationCode = OperationCode.Query };
 			message.Questions.Add(new DnsQuestion(name, recordType, RecordClass.INet));
 
-			return BeginSendMessageParallel(message, requestCallback, state);
-		}
-
-		/// <summary>
-		///   Ends a pending asynchronous operation.
-		/// </summary>
-		/// <param name="ar">
-		///   An <see cref="System.IAsyncResult" /> object returned by a call to
-		///   <see
-		///     cref="ARSoft.Tools.Net.Dns.MulticastDnsOneShotClient.BeginResolve" />
-		///   .
-		/// </param>
-		/// <returns> All available responses on the local network </returns>
-		public List<MulticastDnsMessage> EndResolve(IAsyncResult ar)
-		{
-			return EndSendMessageParallel<MulticastDnsMessage>(ar);
+			return await SendMessageParallelAsync(message);
 		}
 	}
 }

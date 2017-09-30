@@ -17,41 +17,41 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Net;
+using System.Net.Sockets;
 
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   Base class for a dns name identity
+	///   Event arguments of <see cref="DnsServer.QueryReceived" /> event.
 	/// </summary>
-	public abstract class DnsMessageEntryBase
+	public class QueryReceivedEventArgs : EventArgs
 	{
 		/// <summary>
-		///   Domain name
+		///   Original query, which the client provided
 		/// </summary>
-		public string Name { get; internal set; }
+		public DnsMessageBase Query { get; private set; }
 
 		/// <summary>
-		///   Type of the record
+		///   Protocol used by the client
 		/// </summary>
-		public RecordType RecordType { get; internal set; }
+		public ProtocolType ProtocolType { get; private set; }
 
 		/// <summary>
-		///   Class of the record
+		///   Remote endpoint of the client
 		/// </summary>
-		public RecordClass RecordClass { get; internal set; }
-
-		internal abstract int MaximumLength { get; }
+		public IPEndPoint RemoteEndpoint { get; private set; }
 
 		/// <summary>
-		///   Returns the textual representation
+		///   The response, which should be sent to the client
 		/// </summary>
-		/// <returns> Textual representation </returns>
-		public override string ToString()
+		public DnsMessageBase Response { get; set; }
+
+		internal QueryReceivedEventArgs(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
 		{
-			return Name + " " + RecordType + " " + RecordClass;
+			Query = query;
+			ProtocolType = protocolType;
+			RemoteEndpoint = remoteEndpoint;
 		}
 	}
 }

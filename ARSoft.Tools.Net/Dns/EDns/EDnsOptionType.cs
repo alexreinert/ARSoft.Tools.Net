@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -99,5 +99,14 @@ namespace ARSoft.Tools.Net.Dns
 		///   </para>
 		/// </summary>
 		ClientSubnet = 8,
+
+		/// <summary>
+		///   <para>Expire EDNS Option</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:http://tools.ietf.org/html/rfc7314">RFC 7314</see>
+		///   </para>
+		/// </summary>
+		Expire = 9,
 	}
 }

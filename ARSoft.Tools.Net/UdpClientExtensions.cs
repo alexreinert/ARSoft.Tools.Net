@@ -19,31 +19,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace ARSoft.Tools.Net.Dns.DynamicUpdate
+namespace ARSoft.Tools.Net
 {
-	/// <summary>
-	///   Prequisite, that a name exists
-	/// </summary>
-	public class NameIsInUsePrequisite : PrequisiteBase
+	internal static class UdpClientExtensions
 	{
-		internal NameIsInUsePrequisite() {}
-
-		/// <summary>
-		///   Creates a new instance of the NameIsInUsePrequisite class
-		/// </summary>
-		/// <param name="name"> Name that should be checked </param>
-		public NameIsInUsePrequisite(string name)
-			: base(name, RecordType.Any, RecordClass.Any, 0) {}
-
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
-
-		protected internal override int MaximumRecordDataLength
+		public static async Task<UdpReceiveResult> ReceiveAsync(this UdpClient udpClient, int timeout)
 		{
-			get { return 0; }
-		}
+			var connectTask = udpClient.ReceiveAsync();
+			var timeoutTask = Task.Delay(timeout);
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames) {}
+			await Task.WhenAny(connectTask, timeoutTask);
+
+			if (connectTask.IsCompleted)
+				return connectTask.Result;
+
+			return new UdpReceiveResult();
+		}
 	}
 }

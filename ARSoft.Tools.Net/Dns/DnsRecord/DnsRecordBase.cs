@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -135,8 +135,10 @@ namespace ARSoft.Tools.Net.Dns
 					return new TlsaRecord();
 				case RecordType.Hip:
 					return new HipRecord();
+#pragma warning disable 0612
 				case RecordType.Spf:
 					return new SpfRecord();
+#pragma warning restore 0612
 				case RecordType.NId:
 					return new NIdRecord();
 				case RecordType.L32:

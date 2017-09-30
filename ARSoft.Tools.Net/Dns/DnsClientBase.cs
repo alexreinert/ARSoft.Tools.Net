@@ -1,5 +1,5 @@
 #region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -17,6 +17,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -24,6 +25,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -66,7 +68,9 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected abstract int MaximumQueryMessageSize { get; }
 
-		protected abstract bool AreMultipleResponsesAllowedInParallelMode { get; }
+		protected virtual bool IsUdpEnabled { get; set; }
+
+		protected virtual bool IsTcpEnabled { get; set; }
 
 		protected TMessage SendMessage<TMessage>(TMessage message)
 			where TMessage : DnsMessageBase, new()
@@ -78,9 +82,9 @@ namespace ARSoft.Tools.Net.Dns
 
 			PrepareMessage(message, out messageLength, out messageData, out tsigKeySelector, out tsigOriginalMac);
 
-			bool sendByTcp = ((messageLength > MaximumQueryMessageSize) || message.IsTcpUsingRequested);
+			bool sendByTcp = ((messageLength > MaximumQueryMessageSize) || message.IsTcpUsingRequested || !IsUdpEnabled);
 
-			var endpointInfos = GetEndpointInfos<TMessage>();
+			var endpointInfos = GetEndpointInfos();
 
 			for (int i = 0; i < endpointInfos.Count; i++)
 			{
@@ -209,9 +213,7 @@ namespace ARSoft.Tools.Net.Dns
 		protected List<TMessage> SendMessageParallel<TMessage>(TMessage message)
 			where TMessage : DnsMessageBase, new()
 		{
-			IAsyncResult ar = BeginSendMessageParallel(message, null, null);
-			ar.AsyncWaitHandle.WaitOne();
-			return EndSendMessageParallel<TMessage>(ar);
+			return SendMessageParallelAsync(message).Result;
 		}
 
 		private bool ValidateResponse<TMessage>(TMessage message, TMessage result)
@@ -353,6 +355,9 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			responderAddress = nameServer;
 
+			if (!IsTcpEnabled)
+				return null;
+
 			IPEndPoint endPoint = new IPEndPoint(nameServer, _port);
 
 			try
@@ -365,7 +370,9 @@ namespace ARSoft.Tools.Net.Dns
 						SendTimeout = QueryTimeout
 					};
 
-					tcpClient.Connect(endPoint);
+					if (!tcpClient.TryConnect(endPoint, QueryTimeout))
+						return null;
+
 					tcpStream = tcpClient.GetStream();
 				}
 
@@ -404,89 +411,331 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		protected IAsyncResult BeginSendMessage<TMessage>(TMessage message, AsyncCallback requestCallback, object state)
+		protected async Task<TMessage> SendMessageAsync<TMessage>(TMessage message)
 			where TMessage : DnsMessageBase, new()
 		{
-			return BeginSendMessage(message, GetEndpointInfos<TMessage>(), requestCallback, state);
-		}
+			int messageLength;
+			byte[] messageData;
+			DnsServer.SelectTsigKey tsigKeySelector;
+			byte[] tsigOriginalMac;
 
-		protected IAsyncResult BeginSendMessageParallel<TMessage>(TMessage message, AsyncCallback requestCallback, object state)
-			where TMessage : DnsMessageBase, new()
-		{
-			List<DnsClientEndpointInfo> endpointInfos = GetEndpointInfos<TMessage>();
+			PrepareMessage(message, out messageLength, out messageData, out tsigKeySelector, out tsigOriginalMac);
 
-			DnsClientParallelAsyncState<TMessage> asyncResult =
-				new DnsClientParallelAsyncState<TMessage>
-				{
-					UserCallback = requestCallback,
-					AsyncState = state,
-					Responses = new List<TMessage>(),
-					ResponsesToReceive = endpointInfos.Count
-				};
+			bool sendByTcp = ((messageLength > MaximumQueryMessageSize) || message.IsTcpUsingRequested || !IsUdpEnabled);
 
-			foreach (var endpointInfo in endpointInfos)
+			var endpointInfos = GetEndpointInfos();
+
+			for (int i = 0; i < endpointInfos.Count; i++)
 			{
-				DnsClientParallelState<TMessage> parallelState = new DnsClientParallelState<TMessage> { ParallelMessageAsyncState = asyncResult };
+				var endpointInfo = endpointInfos[i];
+				QueryResponse resultData = null;
 
-				lock (parallelState.Lock)
+				try
 				{
-					parallelState.SingleMessageAsyncResult = BeginSendMessage(message, new List<DnsClientEndpointInfo> { endpointInfo }, SendMessageFinished<TMessage>, parallelState);
+					resultData = await (sendByTcp ? QueryByTcpAsync(endpointInfo.ServerAddress, messageData, messageLength, null, null) : QuerySingleResponseByUdpAsync(endpointInfo, messageData, messageLength));
+
+					if (resultData == null)
+						return null;
+
+					TMessage result;
+
+					try
+					{
+						result = DnsMessageBase.Parse<TMessage>(resultData.Buffer, tsigKeySelector, tsigOriginalMac);
+					}
+					catch (Exception e)
+					{
+						Trace.TraceError("Error on dns query: " + e);
+						continue;
+					}
+
+					if (!ValidateResponse(message, result))
+						continue;
+
+					if ((result.ReturnCode == ReturnCode.ServerFailure) && (i != endpointInfos.Count - 1))
+						continue;
+
+					if (result.IsTcpResendingRequested)
+					{
+						resultData = await QueryByTcpAsync(resultData.ResponderAddress, messageData, messageLength, resultData.TcpClient, resultData.TcpStream);
+						if (resultData != null)
+						{
+							TMessage tcpResult;
+
+							try
+							{
+								tcpResult = DnsMessageBase.Parse<TMessage>(resultData.Buffer, tsigKeySelector, tsigOriginalMac);
+							}
+							catch (Exception e)
+							{
+								Trace.TraceError("Error on dns query: " + e);
+								return null;
+							}
+
+							if (tcpResult.ReturnCode == ReturnCode.ServerFailure)
+							{
+								return result;
+							}
+							else
+							{
+								result = tcpResult;
+							}
+						}
+					}
+
+					bool isTcpNextMessageWaiting = result.IsTcpNextMessageWaiting(false);
+					bool isSucessfullFinished = true;
+
+					while (isTcpNextMessageWaiting)
+					{
+						resultData = await QueryByTcpAsync(resultData.ResponderAddress, null, 0, resultData.TcpClient, resultData.TcpStream);
+						if (resultData != null)
+						{
+							TMessage tcpResult;
+
+							try
+							{
+								tcpResult = DnsMessageBase.Parse<TMessage>(resultData.Buffer, tsigKeySelector, tsigOriginalMac);
+							}
+							catch (Exception e)
+							{
+								Trace.TraceError("Error on dns query: " + e);
+								isSucessfullFinished = false;
+								break;
+							}
+
+							if (tcpResult.ReturnCode == ReturnCode.ServerFailure)
+							{
+								isSucessfullFinished = false;
+								break;
+							}
+							else
+							{
+								result.AnswerRecords.AddRange(tcpResult.AnswerRecords);
+								isTcpNextMessageWaiting = tcpResult.IsTcpNextMessageWaiting(true);
+							}
+						}
+						else
+						{
+							isSucessfullFinished = false;
+							break;
+						}
+					}
+
+					if (isSucessfullFinished)
+						return result;
+				}
+				finally
+				{
+					if (resultData != null)
+					{
+						try
+						{
+							if (resultData.TcpStream != null)
+								resultData.TcpStream.Dispose();
+							if (resultData.TcpClient != null)
+								resultData.TcpClient.Close();
+						}
+						catch {}
+					}
 				}
 			}
-			return asyncResult;
+
+			return null;
 		}
 
-		private void SendMessageFinished<TMessage>(IAsyncResult ar)
-			where TMessage : DnsMessageBase, new()
+		private async Task<QueryResponse> QuerySingleResponseByUdpAsync(DnsClientEndpointInfo endpointInfo, byte[] messageData, int messageLength)
 		{
-			DnsClientParallelState<TMessage> state = (DnsClientParallelState<TMessage>) ar.AsyncState;
-
-			List<TMessage> responses;
-
-			lock (state.Lock)
+			try
 			{
-				responses = EndSendMessage<TMessage>(state.SingleMessageAsyncResult);
-			}
-
-			lock (state.ParallelMessageAsyncState.Responses)
-			{
-				state.ParallelMessageAsyncState.Responses.AddRange(responses);
-				state.ParallelMessageAsyncState.ResponsesToReceive--;
-
-				if (state.ParallelMessageAsyncState.ResponsesToReceive == 0)
-					state.ParallelMessageAsyncState.SetCompleted();
-			}
-		}
-
-		private IAsyncResult BeginSendMessage<TMessage>(TMessage message, List<DnsClientEndpointInfo> endpointInfos, AsyncCallback requestCallback, object state)
-			where TMessage : DnsMessageBase, new()
-		{
-			DnsClientAsyncState<TMessage> asyncResult =
-				new DnsClientAsyncState<TMessage>
+				if (endpointInfo.IsMulticast)
 				{
-					Query = message,
-					Responses = new List<TMessage>(),
-					UserCallback = requestCallback,
-					AsyncState = state,
-					EndpointInfoIndex = 0
-				};
+					using (UdpClient udpClient = new UdpClient(new IPEndPoint(endpointInfo.LocalAddress, 0)))
+					{
+						IPEndPoint serverEndpoint = new IPEndPoint(endpointInfo.ServerAddress, _port);
+						await udpClient.SendAsync(messageData, messageLength, serverEndpoint);
 
-			PrepareMessage(message, out asyncResult.QueryLength, out asyncResult.QueryData, out asyncResult.TSigKeySelector, out asyncResult.TSigOriginalMac);
-			asyncResult.EndpointInfos = endpointInfos;
+						udpClient.Client.SendTimeout = QueryTimeout;
+						udpClient.Client.ReceiveTimeout = QueryTimeout;
+						//	serverEndpoint = new IPEndPoint(endpointInfo.ServerAddress.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any, _port);
 
-			if ((asyncResult.QueryLength > MaximumQueryMessageSize) || message.IsTcpUsingRequested)
-			{
-				TcpBeginConnect(asyncResult);
+						UdpReceiveResult response = await udpClient.ReceiveAsync(QueryTimeout);
+						return new QueryResponse(response.Buffer, response.RemoteEndPoint.Address);
+					}
+				}
+				else
+				{
+					using (UdpClient udpClient = new UdpClient(endpointInfo.LocalAddress.AddressFamily))
+					{
+						udpClient.Connect(endpointInfo.ServerAddress, _port);
+
+						udpClient.Client.SendTimeout = QueryTimeout;
+						udpClient.Client.ReceiveTimeout = QueryTimeout;
+
+						await udpClient.SendAsync(messageData, messageLength);
+
+						UdpReceiveResult response = await udpClient.ReceiveAsync(QueryTimeout);
+						return new QueryResponse(response.Buffer, response.RemoteEndPoint.Address);
+					}
+				}
 			}
-			else
+			catch (Exception e)
 			{
-				UdpBeginSend(asyncResult);
+				Trace.TraceError("Error on dns query: " + e);
+				return null;
 			}
-
-			return asyncResult;
 		}
 
-		private List<DnsClientEndpointInfo> GetEndpointInfos<TMessage>() where TMessage : DnsMessageBase, new()
+		private class QueryResponse
+		{
+			public byte[] Buffer { get; private set; }
+			public IPAddress ResponderAddress { get; private set; }
+
+			public TcpClient TcpClient { get; private set; }
+			public NetworkStream TcpStream { get; private set; }
+
+			public QueryResponse(byte[] buffer, IPAddress responderAddress)
+			{
+				Buffer = buffer;
+				ResponderAddress = responderAddress;
+			}
+
+			public QueryResponse(byte[] buffer, IPAddress responderAddress, TcpClient tcpClient, NetworkStream tcpStream)
+			{
+				Buffer = buffer;
+				ResponderAddress = responderAddress;
+				TcpClient = tcpClient;
+				TcpStream = tcpStream;
+			}
+		}
+
+		private async Task<QueryResponse> QueryByTcpAsync(IPAddress nameServer, byte[] messageData, int messageLength, TcpClient tcpClient, NetworkStream tcpStream)
+		{
+			if (!IsTcpEnabled)
+				return null;
+
+			try
+			{
+				if (tcpClient == null)
+				{
+					tcpClient = new TcpClient(nameServer.AddressFamily)
+					{
+						ReceiveTimeout = QueryTimeout,
+						SendTimeout = QueryTimeout
+					};
+
+					if (!await tcpClient.TryConnectAsync(nameServer, _port, QueryTimeout))
+					{
+						return null;
+					}
+
+					tcpStream = tcpClient.GetStream();
+				}
+
+				int tmp = 0;
+				byte[] lengthBuffer = new byte[2];
+
+				if (messageLength > 0)
+				{
+					DnsMessageBase.EncodeUShort(lengthBuffer, ref tmp, (ushort) messageLength);
+
+					await tcpStream.WriteAsync(lengthBuffer, 0, 2);
+					await tcpStream.WriteAsync(messageData, 0, messageLength);
+				}
+
+				await tcpStream.ReadAsync(lengthBuffer, 0, 2);
+
+				tmp = 0;
+				int length = DnsMessageBase.ParseUShort(lengthBuffer, ref tmp);
+
+				byte[] resultData = new byte[length];
+
+				int readBytes = 0;
+
+				while (readBytes < length)
+				{
+					readBytes += await tcpStream.ReadAsync(resultData, readBytes, length - readBytes);
+				}
+
+				return new QueryResponse(resultData, nameServer, tcpClient, tcpStream);
+			}
+			catch (Exception e)
+			{
+				Trace.TraceError("Error on dns query: " + e);
+				return null;
+			}
+		}
+
+		protected async Task<List<TMessage>> SendMessageParallelAsync<TMessage>(TMessage message)
+			where TMessage : DnsMessageBase, new()
+		{
+			int messageLength;
+			byte[] messageData;
+			DnsServer.SelectTsigKey tsigKeySelector;
+			byte[] tsigOriginalMac;
+
+			PrepareMessage(message, out messageLength, out messageData, out tsigKeySelector, out tsigOriginalMac);
+
+			if (messageLength > MaximumQueryMessageSize)
+				throw new ArgumentException("Message exceeds maximum size");
+
+			if (message.IsTcpUsingRequested)
+				throw new NotSupportedException("Using tcp is not supported in parallel mode");
+
+			BlockingCollection<TMessage> results = new BlockingCollection<TMessage>();
+			CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
+			GetEndpointInfos().Select(x => SendMessageParallelAsync(x, message, messageData, messageLength, tsigKeySelector, tsigOriginalMac, results, cancellationTokenSource.Token)).ToArray();
+
+			await Task.Delay(QueryTimeout);
+
+			cancellationTokenSource.Cancel();
+
+			return results.ToList();
+		}
+
+		private async Task SendMessageParallelAsync<TMessage>(DnsClientEndpointInfo endpointInfo, TMessage message, byte[] messageData, int messageLength, DnsServer.SelectTsigKey tsigKeySelector, byte[] tsigOriginalMac, BlockingCollection<TMessage> results, CancellationToken cancellationToken)
+			where TMessage : DnsMessageBase, new()
+		{
+			using (UdpClient udpClient = new UdpClient(new IPEndPoint(endpointInfo.LocalAddress, 0)))
+			{
+				IPEndPoint serverEndpoint = new IPEndPoint(endpointInfo.ServerAddress, _port);
+				await udpClient.SendAsync(messageData, messageLength, serverEndpoint);
+
+				udpClient.Client.SendTimeout = QueryTimeout;
+				udpClient.Client.ReceiveTimeout = QueryTimeout;
+				//	serverEndpoint = new IPEndPoint(endpointInfo.ServerAddress.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any, _port);
+
+				while (true)
+				{
+					TMessage result;
+					UdpReceiveResult response = await udpClient.ReceiveAsync();
+
+					try
+					{
+						result = DnsMessageBase.Parse<TMessage>(response.Buffer, tsigKeySelector, tsigOriginalMac);
+					}
+					catch (Exception e)
+					{
+						Trace.TraceError("Error on dns query: " + e);
+						continue;
+					}
+
+					if (!ValidateResponse(message, result))
+						continue;
+
+					if (result.ReturnCode == ReturnCode.ServerFailure)
+						continue;
+
+					results.Add(result);
+
+					if (cancellationToken.IsCancellationRequested)
+						break;
+				}
+			}
+		}
+
+		private List<DnsClientEndpointInfo> GetEndpointInfos()
 		{
 			List<DnsClientEndpointInfo> endpointInfos;
 			if (_isAnyServerMulticast)
@@ -540,544 +789,6 @@ namespace ARSoft.Tools.Net.Dns
 					).ToList();
 			}
 			return endpointInfos;
-		}
-
-		protected List<TMessage> EndSendMessage<TMessage>(IAsyncResult ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) ar;
-			return state.Responses;
-		}
-
-		protected List<TMessage> EndSendMessageParallel<TMessage>(IAsyncResult ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			DnsClientParallelAsyncState<TMessage> state = (DnsClientParallelAsyncState<TMessage>) ar;
-			return state.Responses;
-		}
-
-		private void UdpBeginSend<TMessage>(DnsClientAsyncState<TMessage> state)
-			where TMessage : DnsMessageBase, new()
-		{
-			if (state.EndpointInfoIndex == state.EndpointInfos.Count)
-			{
-				state.UdpClient = null;
-				state.UdpEndpoint = null;
-				state.SetCompleted();
-				return;
-			}
-
-			try
-			{
-				DnsClientEndpointInfo endpointInfo = state.EndpointInfos[state.EndpointInfoIndex];
-
-				state.UdpEndpoint = new IPEndPoint(endpointInfo.ServerAddress, _port);
-
-				state.UdpClient = new System.Net.Sockets.Socket(state.UdpEndpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-
-				PrepareAndBindUdpSocket(endpointInfo, state.UdpClient);
-
-				state.TimedOut = false;
-				state.TimeRemaining = QueryTimeout;
-
-				IAsyncResult asyncResult = state.UdpClient.BeginSendTo(state.QueryData, 0, state.QueryLength, SocketFlags.None, state.UdpEndpoint, UdpSendCompleted<TMessage>, state);
-				state.Timer = new Timer(UdpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-			}
-			catch (Exception e)
-			{
-				Trace.TraceError("Error on dns query: " + e);
-
-				try
-				{
-					state.UdpClient.Close();
-					state.Timer.Dispose();
-				}
-				catch {}
-
-				state.EndpointInfoIndex++;
-				UdpBeginSend(state);
-			}
-		}
-
-		private static void UdpTimedOut<TMessage>(object ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			IAsyncResult asyncResult = (IAsyncResult) ar;
-
-			if (!asyncResult.IsCompleted)
-			{
-				DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) asyncResult.AsyncState;
-				state.TimedOut = true;
-				state.UdpClient.Close();
-			}
-		}
-
-		private void UdpSendCompleted<TMessage>(IAsyncResult ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) ar.AsyncState;
-
-			if (state.Timer != null)
-				state.Timer.Dispose();
-
-			if (state.TimedOut)
-			{
-				state.EndpointInfoIndex++;
-				UdpBeginSend(state);
-			}
-			else
-			{
-				try
-				{
-					state.UdpClient.EndSendTo(ar);
-
-					state.Buffer = new byte[65535];
-
-					if (state.EndpointInfos[state.EndpointInfoIndex].IsMulticast)
-						state.UdpEndpoint = new IPEndPoint(state.UdpClient.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any, _port);
-
-					IAsyncResult asyncResult = state.UdpClient.BeginReceiveFrom(state.Buffer, 0, state.Buffer.Length, SocketFlags.None, ref state.UdpEndpoint, UdpReceiveCompleted<TMessage>, state);
-					state.Timer = new Timer(UdpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-				}
-				catch (Exception e)
-				{
-					Trace.TraceError("Error on dns query: " + e);
-
-					try
-					{
-						state.UdpClient.Close();
-						state.Timer.Dispose();
-					}
-					catch {}
-
-					state.EndpointInfoIndex++;
-					UdpBeginSend(state);
-				}
-			}
-		}
-
-		private void UdpReceiveCompleted<TMessage>(IAsyncResult ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) ar.AsyncState;
-
-			if (state.Timer != null)
-				state.Timer.Dispose();
-
-			if (state.TimedOut)
-			{
-				state.EndpointInfoIndex++;
-				UdpBeginSend(state);
-			}
-			else
-			{
-				try
-				{
-					int length = state.UdpClient.EndReceiveFrom(ar, ref state.UdpEndpoint);
-					byte[] responseData = new byte[length];
-					Buffer.BlockCopy(state.Buffer, 0, responseData, 0, length);
-
-					TMessage response = DnsMessageBase.Parse<TMessage>(responseData, state.TSigKeySelector, state.TSigOriginalMac);
-
-					if (AreMultipleResponsesAllowedInParallelMode)
-					{
-						if (ValidateResponse(state.Query, response))
-						{
-							if (response.IsTcpResendingRequested)
-							{
-								TcpBeginConnect<TMessage>(state.CreateTcpCloneWithoutCallback(), ((IPEndPoint) state.UdpEndpoint).Address);
-							}
-							else
-							{
-								state.Responses.Add(response);
-							}
-						}
-
-						state.Buffer = new byte[65535];
-
-						if (state.EndpointInfos[state.EndpointInfoIndex].IsMulticast)
-							state.UdpEndpoint = new IPEndPoint(state.UdpClient.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any, _port);
-
-						IAsyncResult asyncResult = state.UdpClient.BeginReceiveFrom(state.Buffer, 0, state.Buffer.Length, SocketFlags.None, ref state.UdpEndpoint, UdpReceiveCompleted<TMessage>, state);
-						state.Timer = new Timer(UdpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-					}
-					else
-					{
-						state.UdpClient.Close();
-						state.UdpClient = null;
-						state.UdpEndpoint = null;
-
-						if (!ValidateResponse(state.Query, response) || (response.ReturnCode == ReturnCode.ServerFailure))
-						{
-							state.EndpointInfoIndex++;
-							UdpBeginSend(state);
-						}
-						else
-						{
-							if (response.IsTcpResendingRequested)
-							{
-								TcpBeginConnect<TMessage>(state, ((IPEndPoint) state.UdpEndpoint).Address);
-							}
-							else
-							{
-								state.Responses.Add(response);
-								state.SetCompleted();
-							}
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					Trace.TraceError("Error on dns query: " + e);
-
-					try
-					{
-						state.UdpClient.Close();
-						state.Timer.Dispose();
-					}
-					catch {}
-
-					state.EndpointInfoIndex++;
-					UdpBeginSend(state);
-				}
-			}
-		}
-
-		private void TcpBeginConnect<TMessage>(DnsClientAsyncState<TMessage> state)
-			where TMessage : DnsMessageBase, new()
-		{
-			if (state.EndpointInfoIndex == state.EndpointInfos.Count)
-			{
-				state.TcpStream = null;
-				state.TcpClient = null;
-				state.SetCompleted();
-				return;
-			}
-
-			TcpBeginConnect(state, state.EndpointInfos[state.EndpointInfoIndex].ServerAddress);
-		}
-
-		private void TcpBeginConnect<TMessage>(DnsClientAsyncState<TMessage> state, IPAddress server)
-			where TMessage : DnsMessageBase, new()
-		{
-			if (state.EndpointInfoIndex == state.EndpointInfos.Count)
-			{
-				state.TcpStream = null;
-				state.TcpClient = null;
-				state.SetCompleted();
-				return;
-			}
-
-			try
-			{
-				state.TcpClient = new TcpClient(server.AddressFamily);
-				state.TimedOut = false;
-				state.TimeRemaining = QueryTimeout;
-
-				IAsyncResult asyncResult = state.TcpClient.BeginConnect(server, _port, TcpConnectCompleted<TMessage>, state);
-				state.Timer = new Timer(TcpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-			}
-			catch (Exception e)
-			{
-				Trace.TraceError("Error on dns query: " + e);
-
-				try
-				{
-					state.TcpClient.Close();
-					state.Timer.Dispose();
-				}
-				catch {}
-
-				state.EndpointInfoIndex++;
-				TcpBeginConnect(state);
-			}
-		}
-
-		private static void TcpTimedOut<TMessage>(object ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			IAsyncResult asyncResult = (IAsyncResult) ar;
-
-			if (!asyncResult.IsCompleted)
-			{
-				DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) asyncResult.AsyncState;
-				state.PartialMessage = null;
-				state.TimedOut = true;
-				if (state.TcpStream != null)
-					state.TcpStream.Close();
-				state.TcpClient.Close();
-			}
-		}
-
-		private void TcpConnectCompleted<TMessage>(IAsyncResult ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) ar.AsyncState;
-
-			if (state.Timer != null)
-				state.Timer.Dispose();
-
-			if (state.TimedOut)
-			{
-				state.EndpointInfoIndex++;
-				TcpBeginConnect(state);
-			}
-			else
-			{
-				try
-				{
-					state.TcpClient.EndConnect(ar);
-
-					state.TcpStream = state.TcpClient.GetStream();
-
-					int tmp = 0;
-
-					state.Buffer = new byte[2];
-					DnsMessageBase.EncodeUShort(state.Buffer, ref tmp, (ushort) state.QueryLength);
-
-					IAsyncResult asyncResult = state.TcpStream.BeginWrite(state.Buffer, 0, 2, TcpSendLengthCompleted<TMessage>, state);
-					state.Timer = new Timer(TcpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-				}
-				catch (Exception e)
-				{
-					Trace.TraceError("Error on dns query: " + e);
-
-					try
-					{
-						state.TcpClient.Close();
-						state.Timer.Dispose();
-					}
-					catch {}
-
-					state.EndpointInfoIndex++;
-					TcpBeginConnect(state);
-				}
-			}
-		}
-
-		private void TcpSendLengthCompleted<TMessage>(IAsyncResult ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) ar.AsyncState;
-
-			if (state.Timer != null)
-				state.Timer.Dispose();
-
-			if (state.TimedOut)
-			{
-				state.EndpointInfoIndex++;
-				TcpBeginConnect(state);
-			}
-			else
-			{
-				try
-				{
-					state.TcpStream.EndWrite(ar);
-
-					IAsyncResult asyncResult = state.TcpStream.BeginWrite(state.QueryData, 0, state.QueryLength, TcpSendCompleted<TMessage>, state);
-					state.Timer = new Timer(TcpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-				}
-				catch (Exception e)
-				{
-					Trace.TraceError("Error on dns query: " + e);
-
-					try
-					{
-						state.TcpClient.Close();
-						state.Timer.Dispose();
-					}
-					catch {}
-
-					state.EndpointInfoIndex++;
-					TcpBeginConnect(state);
-				}
-			}
-		}
-
-		private void TcpSendCompleted<TMessage>(IAsyncResult ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) ar.AsyncState;
-
-			if (state.Timer != null)
-				state.Timer.Dispose();
-
-			if (state.TimedOut)
-			{
-				state.EndpointInfoIndex++;
-				TcpBeginConnect(state);
-			}
-			else
-			{
-				try
-				{
-					state.TcpStream.EndWrite(ar);
-
-					state.TcpBytesToReceive = 2;
-
-					IAsyncResult asyncResult = state.TcpStream.BeginRead(state.Buffer, 0, 2, TcpReceiveLengthCompleted<TMessage>, state);
-					state.Timer = new Timer(TcpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-				}
-				catch (Exception e)
-				{
-					Trace.TraceError("Error on dns query: " + e);
-
-					try
-					{
-						state.TcpClient.Close();
-						state.Timer.Dispose();
-					}
-					catch {}
-
-					state.EndpointInfoIndex++;
-					TcpBeginConnect(state);
-				}
-			}
-		}
-
-		private void TcpReceiveLengthCompleted<TMessage>(IAsyncResult ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) ar.AsyncState;
-
-			if (state.Timer != null)
-				state.Timer.Dispose();
-
-			if (state.TimedOut)
-			{
-				state.EndpointInfoIndex++;
-				TcpBeginConnect(state);
-			}
-			else
-			{
-				try
-				{
-					state.TcpBytesToReceive -= state.TcpStream.EndRead(ar);
-
-					if (state.TcpBytesToReceive > 0)
-					{
-						IAsyncResult asyncResult = state.TcpStream.BeginRead(state.Buffer, 2 - state.TcpBytesToReceive, state.TcpBytesToReceive, TcpReceiveLengthCompleted<TMessage>, state);
-						state.Timer = new Timer(TcpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-					}
-					else
-					{
-						int tmp = 0;
-						int responseLength = DnsMessageBase.ParseUShort(state.Buffer, ref tmp);
-
-						state.Buffer = new byte[responseLength];
-						state.TcpBytesToReceive = responseLength;
-
-						IAsyncResult asyncResult = state.TcpStream.BeginRead(state.Buffer, 0, responseLength, TcpReceiveCompleted<TMessage>, state);
-						state.Timer = new Timer(TcpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-					}
-				}
-				catch (Exception e)
-				{
-					Trace.TraceError("Error on dns query: " + e);
-
-					try
-					{
-						state.TcpClient.Close();
-						state.Timer.Dispose();
-					}
-					catch {}
-
-					state.EndpointInfoIndex++;
-					TcpBeginConnect(state);
-				}
-			}
-		}
-
-		private void TcpReceiveCompleted<TMessage>(IAsyncResult ar)
-			where TMessage : DnsMessageBase, new()
-		{
-			DnsClientAsyncState<TMessage> state = (DnsClientAsyncState<TMessage>) ar.AsyncState;
-
-			if (state.Timer != null)
-				state.Timer.Dispose();
-
-			if (state.TimedOut)
-			{
-				state.EndpointInfoIndex++;
-				TcpBeginConnect(state);
-			}
-			else
-			{
-				try
-				{
-					state.TcpBytesToReceive -= state.TcpStream.EndRead(ar);
-
-					if (state.TcpBytesToReceive > 0)
-					{
-						IAsyncResult asyncResult = state.TcpStream.BeginRead(state.Buffer, state.Buffer.Length - state.TcpBytesToReceive, state.TcpBytesToReceive, TcpReceiveCompleted<TMessage>, state);
-						state.Timer = new Timer(TcpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-					}
-					else
-					{
-						byte[] buffer = state.Buffer;
-						state.Buffer = null;
-
-						TMessage response = DnsMessageBase.Parse<TMessage>(buffer, state.TSigKeySelector, state.TSigOriginalMac);
-
-						if (!ValidateResponse(state.Query, response) || (response.ReturnCode == ReturnCode.ServerFailure))
-						{
-							state.EndpointInfoIndex++;
-							state.PartialMessage = null;
-							state.TcpStream.Close();
-							state.TcpClient.Close();
-							state.TcpStream = null;
-							state.TcpClient = null;
-							TcpBeginConnect(state);
-						}
-						else
-						{
-							bool isSubsequentResponseMessage = (state.PartialMessage != null);
-
-							if (isSubsequentResponseMessage)
-							{
-								state.PartialMessage.AnswerRecords.AddRange(response.AnswerRecords);
-							}
-							else
-							{
-								state.PartialMessage = response;
-							}
-
-							if (response.IsTcpNextMessageWaiting(isSubsequentResponseMessage))
-							{
-								state.TcpBytesToReceive = 2;
-								state.Buffer = new byte[2];
-
-								IAsyncResult asyncResult = state.TcpStream.BeginRead(state.Buffer, 0, 2, TcpReceiveLengthCompleted<TMessage>, state);
-								state.Timer = new Timer(TcpTimedOut<TMessage>, asyncResult, state.TimeRemaining, Timeout.Infinite);
-							}
-							else
-							{
-								state.TcpStream.Close();
-								state.TcpClient.Close();
-								state.TcpStream = null;
-								state.TcpClient = null;
-
-								state.Responses.Add(state.PartialMessage);
-								state.SetCompleted();
-							}
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					Trace.TraceError("Error on dns query: " + e);
-
-					try
-					{
-						state.TcpClient.Close();
-						state.Timer.Dispose();
-					}
-					catch {}
-
-					state.EndpointInfoIndex++;
-					TcpBeginConnect(state);
-				}
-			}
 		}
 	}
 }

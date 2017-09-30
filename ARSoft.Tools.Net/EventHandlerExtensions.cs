@@ -21,29 +21,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ARSoft.Tools.Net.Dns.DynamicUpdate
+namespace ARSoft.Tools.Net
 {
-	/// <summary>
-	///   Prequisite, that a name exists
-	/// </summary>
-	public class NameIsInUsePrequisite : PrequisiteBase
+	internal static class EventHandlerExtensions
 	{
-		internal NameIsInUsePrequisite() {}
-
-		/// <summary>
-		///   Creates a new instance of the NameIsInUsePrequisite class
-		/// </summary>
-		/// <param name="name"> Name that should be checked </param>
-		public NameIsInUsePrequisite(string name)
-			: base(name, RecordType.Any, RecordClass.Any, 0) {}
-
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
-
-		protected internal override int MaximumRecordDataLength
+		public static void Raise<T>(this EventHandler<T> eventHandler, object sender, T eventArgs)
+			where T : EventArgs
 		{
-			get { return 0; }
+			if (eventHandler != null)
+				eventHandler(sender, eventArgs);
 		}
-
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames) {}
 	}
 }

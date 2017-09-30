@@ -16,34 +16,21 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace ARSoft.Tools.Net.Dns.DynamicUpdate
+namespace ARSoft.Tools.Net.Spf
 {
 	/// <summary>
-	///   Prequisite, that a name exists
+	///   The result of a SPF or SenderID validation
 	/// </summary>
-	public class NameIsInUsePrequisite : PrequisiteBase
+	public class ValidationResult
 	{
-		internal NameIsInUsePrequisite() {}
+		/// <summary>
+		///   The result of the validation
+		/// </summary>
+		public SpfQualifier Result { get; internal set; }
 
 		/// <summary>
-		///   Creates a new instance of the NameIsInUsePrequisite class
+		///   A explanation in case of result Fail. Only filled if requested on validation call
 		/// </summary>
-		/// <param name="name"> Name that should be checked </param>
-		public NameIsInUsePrequisite(string name)
-			: base(name, RecordType.Any, RecordClass.Any, 0) {}
-
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
-
-		protected internal override int MaximumRecordDataLength
-		{
-			get { return 0; }
-		}
-
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<string, ushort> domainNames) {}
+		public string Explanation { get; internal set; }
 	}
 }

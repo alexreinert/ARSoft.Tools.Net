@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -24,6 +24,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns;
 
 namespace ARSoft.Tools.Net.Spf
@@ -35,6 +36,12 @@ namespace ARSoft.Tools.Net.Spf
 	public abstract class ValidatorBase<T>
 		where T : SpfRecordBase
 	{
+		/// <summary>
+		///   DnsClient which is used for DNS lookups
+		///   <para>Default is DnsClient.Default</para>
+		/// </summary>
+		public DnsClient DnsClient { get; set; }
+
 		/// <summary>
 		///   Domain name which was used in HELO/EHLO
 		/// </summary>
@@ -64,14 +71,7 @@ namespace ARSoft.Tools.Net.Spf
 			set { _dnsLookupLimit = value; }
 		}
 
-		private readonly Dictionary<string, DnsMessage> _dnsCache = new Dictionary<string, DnsMessage>();
-
-		private int LookupCount
-		{
-			get { return _dnsCache.Count; }
-		}
-
-		protected abstract bool TryLoadRecords(string domain, out T record, out SpfQualifier errorResult);
+		protected abstract Task<LoadRecordResult> LoadRecordsAsync(string domain, Dictionary<string, DnsMessage> dnsCache);
 
 		/// <summary>
 		///   Validates the record(s)
@@ -79,18 +79,14 @@ namespace ARSoft.Tools.Net.Spf
 		/// <param name="ip"> The IP address of the SMTP client that is emitting the mail </param>
 		/// <param name="domain"> The domain portion of the "MAIL FROM" or "HELO" identity </param>
 		/// <param name="sender"> The "MAIL FROM" or "HELO" identity </param>
+		/// <param name="expandExplanation"> A value indicating if the explanation should be retrieved in case of Fail</param>
 		/// <returns> The result of the evaluation </returns>
-		public SpfQualifier CheckHost(IPAddress ip, string domain, string sender)
+		public ValidationResult CheckHost(IPAddress ip, string domain, string sender, bool expandExplanation)
 		{
-			try
-			{
-				string explanation;
-				return CheckHostInternal(ip, sender, domain, false, out explanation);
-			}
-			finally
-			{
-				_dnsCache.Clear();
-			}
+			var result = CheckHostInternalAsync(ip, domain, sender, false, new Dictionary<string, DnsMessage>());
+			result.Wait();
+
+			return result.Result;
 		}
 
 		/// <summary>
@@ -99,28 +95,29 @@ namespace ARSoft.Tools.Net.Spf
 		/// <param name="ip"> The IP address of the SMTP client that is emitting the mail </param>
 		/// <param name="domain"> The domain portion of the "MAIL FROM" or "HELO" identity </param>
 		/// <param name="sender"> The "MAIL FROM" or "HELO" identity </param>
-		/// <param name="explanation"> A explanation in case of result Fail </param>
+		/// <param name="expandExplanation"> A value indicating if the explanation should be retrieved in case of Fail</param>
 		/// <returns> The result of the evaluation </returns>
-		public SpfQualifier CheckHost(IPAddress ip, string sender, string domain, out string explanation)
+		public async Task<ValidationResult> CheckHostAsync(IPAddress ip, string domain, string sender, bool expandExplanation)
 		{
-			try
-			{
-				return CheckHostInternal(ip, sender, domain, true, out explanation);
-			}
-			finally
-			{
-				_dnsCache.Clear();
-			}
+			return await CheckHostInternalAsync(ip, domain, sender, expandExplanation, new Dictionary<string, DnsMessage>());
 		}
 
-		private SpfQualifier CheckHostInternal(IPAddress ip, string sender, string domain, bool expandExplanation, out string explanation)
+		protected class LoadRecordResult
 		{
-			explanation = String.Empty;
+			public bool CouldBeLoaded { get; internal set; }
+			public T Record { get; internal set; }
+			public SpfQualifier ErrorResult { get; internal set; }
+		}
 
+		private async Task<ValidationResult> CheckHostInternalAsync(IPAddress ip, string domain, string sender, bool expandExplanation, Dictionary<string, DnsMessage> dnsCache)
+		{
 			if (String.IsNullOrEmpty(domain))
 			{
-				return SpfQualifier.None;
+				return new ValidationResult() { Result = SpfQualifier.None, Explanation = String.Empty };
 			}
+
+			if (domain.Contains('@'))
+				throw new ArgumentException("Domain should not be an email address", "domain");
 
 			if (String.IsNullOrEmpty(sender))
 			{
@@ -131,76 +128,81 @@ namespace ARSoft.Tools.Net.Spf
 				sender = "postmaster@" + sender;
 			}
 
-			SpfQualifier result;
-			T record;
-			if (!TryLoadRecords(domain, out record, out result))
+			LoadRecordResult loadResult = await LoadRecordsAsync(domain, dnsCache);
+
+			if (!loadResult.CouldBeLoaded)
 			{
-				return result;
+				return new ValidationResult() { Result = loadResult.ErrorResult, Explanation = String.Empty };
 			}
 
+			T record = loadResult.Record;
+
 			if ((record.Terms == null) || (record.Terms.Count == 0))
-				return SpfQualifier.Neutral;
+				return new ValidationResult() { Result = SpfQualifier.Neutral, Explanation = String.Empty };
+
 
 			if (record.Terms.OfType<SpfModifier>().GroupBy(m => m.Type).Where(g => (g.Key == SpfModifierType.Exp) || (g.Key == SpfModifierType.Redirect)).Any(g => g.Count() > 1))
-				return SpfQualifier.PermError;
+				return new ValidationResult() { Result = SpfQualifier.PermError, Explanation = String.Empty };
+
+			ValidationResult result = new ValidationResult() { Result = loadResult.ErrorResult };
 
 			#region Evaluate mechanism
 			foreach (SpfMechanism mechanism in record.Terms.OfType<SpfMechanism>())
 			{
-				if (LookupCount > DnsLookupLimit)
-					return SpfQualifier.PermError;
+				if (dnsCache.Count > DnsLookupLimit)
+					return new ValidationResult() { Result = SpfQualifier.PermError, Explanation = String.Empty };
 
-				SpfQualifier qualifier = CheckMechanism(mechanism, ip, sender, domain);
+				SpfQualifier qualifier = await CheckMechanismAsync(mechanism, ip, domain, sender, dnsCache);
 
 				if (qualifier != SpfQualifier.None)
 				{
-					result = qualifier;
+					result.Result = qualifier;
 					break;
 				}
 			}
 			#endregion
 
 			#region Evaluate modifiers
-			if (result == SpfQualifier.None)
+			if (result.Result == SpfQualifier.None)
 			{
 				SpfModifier redirectModifier = record.Terms.OfType<SpfModifier>().FirstOrDefault(m => m.Type == SpfModifierType.Redirect);
 				if (redirectModifier != null)
 				{
-					string redirectDomain = ExpandDomain(redirectModifier.Domain ?? String.Empty, ip, sender, domain);
+					string redirectDomain = await ExpandDomainAsync(redirectModifier.Domain ?? String.Empty, ip, domain, sender, dnsCache);
 
 					if (String.IsNullOrEmpty(redirectDomain) || (redirectDomain.Equals(domain, StringComparison.InvariantCultureIgnoreCase)))
 					{
-						result = SpfQualifier.PermError;
+						result.Result = SpfQualifier.PermError;
 					}
 					else
 					{
-						result = CheckHostInternal(ip, sender, redirectDomain, expandExplanation, out explanation);
+						result = await CheckHostInternalAsync(ip, redirectDomain, sender, expandExplanation, dnsCache);
 
-						if (result == SpfQualifier.None)
-							result = SpfQualifier.PermError;
+						if (result.Result == SpfQualifier.None)
+							result.Result = SpfQualifier.PermError;
 					}
 				}
 			}
-			else if ((result == SpfQualifier.Fail) && expandExplanation)
+			else if ((result.Result == SpfQualifier.Fail) && expandExplanation)
 			{
 				SpfModifier expModifier = record.Terms.OfType<SpfModifier>().Where(m => m.Type == SpfModifierType.Exp).FirstOrDefault();
 				if (expModifier != null)
 				{
-					string target = ExpandDomain(expModifier.Domain, ip, sender, domain);
+					string target = await ExpandDomainAsync(expModifier.Domain, ip, domain, sender, dnsCache);
 
 					if (String.IsNullOrEmpty(target))
 					{
-						explanation = String.Empty;
+						result.Explanation = String.Empty;
 					}
 					else
 					{
-						DnsMessage dnsMessage = ResolveDns(target, RecordType.Txt);
-						if ((dnsMessage != null) && (dnsMessage.ReturnCode == ReturnCode.NoError))
+						DnsResolveResult<TxtRecord> dnsResult = await ResolveDnsAsync<TxtRecord>(target, RecordType.Txt, dnsCache);
+						if ((dnsResult != null) && (dnsResult.ReturnCode == ReturnCode.NoError))
 						{
-							TxtRecord txtRecord = dnsMessage.AnswerRecords.OfType<TxtRecord>().FirstOrDefault();
+							TxtRecord txtRecord = dnsResult.Records.FirstOrDefault();
 							if (txtRecord != null)
 							{
-								explanation = ExpandDomain(txtRecord.TextData, ip, sender, domain);
+								result.Explanation = await ExpandDomainAsync(txtRecord.TextData, ip, domain, sender, dnsCache);
 							}
 						}
 					}
@@ -208,19 +210,21 @@ namespace ARSoft.Tools.Net.Spf
 			}
 			#endregion
 
-			return (result != SpfQualifier.None) ? result : SpfQualifier.Neutral;
+			if (result.Result == SpfQualifier.None)
+				result.Result = SpfQualifier.Neutral;
+
+			return result;
 		}
 
-		private SpfQualifier CheckMechanism(SpfMechanism mechanism, IPAddress ip, string sender, string domain)
+		private async Task<SpfQualifier> CheckMechanismAsync(SpfMechanism mechanism, IPAddress ip, string domain, string sender, Dictionary<string, DnsMessage> dnsCache)
 		{
-			DnsMessage dnsMessage;
 			switch (mechanism.Type)
 			{
 				case SpfMechanismType.All:
 					return mechanism.Qualifier;
 
 				case SpfMechanismType.A:
-					bool? isAMatch = IsIpMatch(String.IsNullOrEmpty(mechanism.Domain) ? domain : mechanism.Domain, ip, mechanism.Prefix, mechanism.Prefix6);
+					bool? isAMatch = await IsIpMatchAsync(String.IsNullOrEmpty(mechanism.Domain) ? domain : mechanism.Domain, ip, mechanism.Prefix, mechanism.Prefix6, dnsCache);
 					if (!isAMatch.HasValue)
 						return SpfQualifier.TempError;
 
@@ -231,18 +235,18 @@ namespace ARSoft.Tools.Net.Spf
 					break;
 
 				case SpfMechanismType.Mx:
-					dnsMessage = ResolveDns(ExpandDomain(String.IsNullOrEmpty(mechanism.Domain) ? domain : mechanism.Domain, ip, sender, domain), RecordType.Mx);
-					if ((dnsMessage == null) || ((dnsMessage.ReturnCode != ReturnCode.NoError) && (dnsMessage.ReturnCode != ReturnCode.NxDomain)))
+					DnsResolveResult<MxRecord> dnsMxResult = await ResolveDnsAsync<MxRecord>(await ExpandDomainAsync(String.IsNullOrEmpty(mechanism.Domain) ? domain : mechanism.Domain, ip, domain, sender, dnsCache), RecordType.Mx, dnsCache);
+					if ((dnsMxResult == null) || ((dnsMxResult.ReturnCode != ReturnCode.NoError) && (dnsMxResult.ReturnCode != ReturnCode.NxDomain)))
 						return SpfQualifier.TempError;
 
 					int mxCheckedCount = 0;
 
-					foreach (MxRecord mxRecord in dnsMessage.AnswerRecords.OfType<MxRecord>())
+					foreach (MxRecord mxRecord in dnsMxResult.Records)
 					{
 						if (++mxCheckedCount == 10)
 							break;
 
-						bool? isMxMatch = IsIpMatch(mxRecord.ExchangeDomainName, ip, mechanism.Prefix, mechanism.Prefix6);
+						bool? isMxMatch = await IsIpMatchAsync(mxRecord.ExchangeDomainName, ip, mechanism.Prefix, mechanism.Prefix6, dnsCache);
 						if (!isMxMatch.HasValue)
 							return SpfQualifier.TempError;
 
@@ -284,19 +288,19 @@ namespace ARSoft.Tools.Net.Spf
 					break;
 
 				case SpfMechanismType.Ptr:
-					dnsMessage = ResolveDns(ip.GetReverseLookupAddress(), RecordType.Ptr);
-					if ((dnsMessage == null) || ((dnsMessage.ReturnCode != ReturnCode.NoError) && (dnsMessage.ReturnCode != ReturnCode.NxDomain)))
+					DnsResolveResult<PtrRecord> dnsPtrResult = await ResolveDnsAsync<PtrRecord>(ip.GetReverseLookupAddress(), RecordType.Ptr, dnsCache);
+					if ((dnsPtrResult == null) || ((dnsPtrResult.ReturnCode != ReturnCode.NoError) && (dnsPtrResult.ReturnCode != ReturnCode.NxDomain)))
 						return SpfQualifier.TempError;
 
 					string ptrCompareName = String.IsNullOrEmpty(mechanism.Domain) ? domain : mechanism.Domain;
 
 					int ptrCheckedCount = 0;
-					foreach (PtrRecord ptrRecord in dnsMessage.AnswerRecords.OfType<PtrRecord>())
+					foreach (PtrRecord ptrRecord in dnsPtrResult.Records)
 					{
 						if (++ptrCheckedCount == 10)
 							break;
 
-						bool? isPtrMatch = IsIpMatch(ptrRecord.PointerDomainName, ip, 0, 0);
+						bool? isPtrMatch = await IsIpMatchAsync(ptrRecord.PointerDomainName, ip, 0, 0, dnsCache);
 						if (isPtrMatch.HasValue && isPtrMatch.Value)
 						{
 							if (ptrRecord.PointerDomainName.Equals(ptrCompareName, StringComparison.InvariantCultureIgnoreCase) || (ptrRecord.PointerDomainName.EndsWith("." + ptrCompareName, StringComparison.InvariantCultureIgnoreCase)))
@@ -309,11 +313,11 @@ namespace ARSoft.Tools.Net.Spf
 					if (String.IsNullOrEmpty(mechanism.Domain))
 						return SpfQualifier.PermError;
 
-					dnsMessage = ResolveDns(ExpandDomain(mechanism.Domain, ip, sender, domain), RecordType.A);
-					if ((dnsMessage == null) || ((dnsMessage.ReturnCode != ReturnCode.NoError) && (dnsMessage.ReturnCode != ReturnCode.NxDomain)))
+					DnsResolveResult<ARecord> dnsAResult = await ResolveDnsAsync<ARecord>(await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, dnsCache), RecordType.A, dnsCache);
+					if ((dnsAResult == null) || ((dnsAResult.ReturnCode != ReturnCode.NoError) && (dnsAResult.ReturnCode != ReturnCode.NxDomain)))
 						return SpfQualifier.TempError;
 
-					if (dnsMessage.AnswerRecords.Count(record => (record.RecordType == RecordType.A)) > 0)
+					if (dnsAResult.Records.Count(record => (record.RecordType == RecordType.A)) > 0)
 					{
 						return mechanism.Qualifier;
 					}
@@ -323,9 +327,9 @@ namespace ARSoft.Tools.Net.Spf
 					if (String.IsNullOrEmpty(mechanism.Domain) || (mechanism.Domain.Equals(domain, StringComparison.InvariantCultureIgnoreCase)))
 						return SpfQualifier.PermError;
 
-					string includeDomain = ExpandDomain(mechanism.Domain, ip, sender, domain);
-					string explanation;
-					switch (CheckHostInternal(ip, sender, includeDomain, false, out explanation))
+					string includeDomain = await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, dnsCache);
+					var includeResult = await CheckHostInternalAsync(ip, sender, includeDomain, false, dnsCache);
+					switch (includeResult.Result)
 					{
 						case SpfQualifier.Pass:
 							return mechanism.Qualifier;
@@ -351,31 +355,32 @@ namespace ARSoft.Tools.Net.Spf
 			return SpfQualifier.None;
 		}
 
-		private bool? IsIpMatch(string domain, IPAddress ipAddress, int? prefix4, int? prefix6)
+		private async Task<bool?> IsIpMatchAsync(string domain, IPAddress ipAddress, int? prefix4, int? prefix6, Dictionary<string, DnsMessage> dnsCache)
 		{
-			int? prefix;
-			RecordType recordType;
 			if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
 			{
-				prefix = prefix6;
-				recordType = RecordType.Aaaa;
+				if (prefix6.HasValue)
+					ipAddress = ipAddress.GetNetworkAddress(prefix6.Value);
+
+				return await IsIpMatchAsync<AaaaRecord>(domain, ipAddress, prefix6, RecordType.Aaaa, dnsCache);
 			}
 			else
 			{
-				prefix = prefix4;
-				recordType = RecordType.A;
-			}
+				if (prefix4.HasValue)
+					ipAddress = ipAddress.GetNetworkAddress(prefix4.Value);
 
-			if (prefix.HasValue)
-			{
-				ipAddress = ipAddress.GetNetworkAddress(prefix.Value);
+				return await IsIpMatchAsync<ARecord>(domain, ipAddress, prefix4, RecordType.A, dnsCache);
 			}
+		}
 
-			DnsMessage dnsMessage = ResolveDns(domain, recordType);
-			if ((dnsMessage == null) || ((dnsMessage.ReturnCode != ReturnCode.NoError) && (dnsMessage.ReturnCode != ReturnCode.NxDomain)))
+		private async Task<bool?> IsIpMatchAsync<TRecord>(string domain, IPAddress ipAddress, int? prefix, RecordType recordType, Dictionary<string, DnsMessage> dnsCache)
+			where TRecord : DnsRecordBase, IAddressRecord
+		{
+			DnsResolveResult<TRecord> dnsResult = await ResolveDnsAsync<TRecord>(domain, recordType, dnsCache);
+			if ((dnsResult == null) || ((dnsResult.ReturnCode != ReturnCode.NoError) && (dnsResult.ReturnCode != ReturnCode.NxDomain)))
 				return null;
 
-			foreach (var dnsRecord in dnsMessage.AnswerRecords.Where(record => record.RecordType == recordType).Cast<IAddressRecord>())
+			foreach (var dnsRecord in dnsResult.Records)
 			{
 				if (prefix.HasValue)
 				{
@@ -392,31 +397,92 @@ namespace ARSoft.Tools.Net.Spf
 			return false;
 		}
 
-		protected DnsMessage ResolveDns(string domain, RecordType recordType)
+		protected class DnsResolveResult<TRecord>
+			where TRecord : DnsRecordBase
+		{
+			public ReturnCode ReturnCode { get; private set; }
+			public List<TRecord> Records { get; private set; }
+
+			public DnsResolveResult(ReturnCode returnCode, List<TRecord> records)
+			{
+				ReturnCode = returnCode;
+				Records = records;
+			}
+		}
+
+		protected async Task<DnsResolveResult<TRecord>> ResolveDnsAsync<TRecord>(string domain, RecordType recordType, Dictionary<string, DnsMessage> dnsCache)
+			where TRecord : DnsRecordBase
+		{
+			DnsMessage msg = await ResolveDnsMessageAsync(domain, recordType, dnsCache);
+
+			if ((msg == null) || ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain)))
+			{
+				return new DnsResolveResult<TRecord>(msg.ReturnCode, new List<TRecord>());
+			}
+
+			CNameRecord cName = msg.AnswerRecords.Where(x => x.Name.Equals(domain, StringComparison.OrdinalIgnoreCase)).OfType<CNameRecord>().FirstOrDefault();
+
+			if (cName != null)
+			{
+				var records = msg.AnswerRecords.Where(x => x.Name.Equals(cName.CanonicalName, StringComparison.OrdinalIgnoreCase)).OfType<TRecord>().ToList();
+				if (records.Count > 0)
+					return new DnsResolveResult<TRecord>(msg.ReturnCode, records);
+
+				return await ResolveDnsAsync<TRecord>(cName.CanonicalName, recordType, dnsCache);
+			}
+
+			return new DnsResolveResult<TRecord>(msg.ReturnCode, msg.AnswerRecords.Where(x => x.Name.Equals(domain, StringComparison.OrdinalIgnoreCase)).OfType<TRecord>().ToList());
+		}
+
+		protected async Task<DnsMessage> ResolveDnsMessageAsync(string domain, RecordType recordType, Dictionary<string, DnsMessage> dnsCache)
 		{
 			string key = EnumHelper<RecordType>.ToString(recordType) + "|" + domain;
 
-			DnsMessage result;
-			if (!_dnsCache.TryGetValue(key, out result))
+			DnsMessage msg;
+			if (!dnsCache.TryGetValue(key, out msg))
 			{
-				result = DnsClient.Default.Resolve(domain, recordType);
-				_dnsCache[key] = result;
+				msg = await (DnsClient ?? DnsClient.Default).ResolveAsync(domain, recordType);
+				dnsCache[key] = msg;
 			}
 
-			return result;
+			return msg;
 		}
 
-		private string ExpandDomain(string pattern, IPAddress ip, string sender, string domain)
+		private async Task<string> ExpandDomainAsync(string pattern, IPAddress ip, string domain, string sender, Dictionary<string, DnsMessage> dnsCache)
 		{
 			if (String.IsNullOrEmpty(pattern))
 				return String.Empty;
 
 			Regex regex = new Regex(@"(%%|%_|%-|%\{(?<letter>[slodiphcrtv])(?<count>\d*)(?<reverse>r?)(?<delimiter>[\.\-+,/=]*)})", RegexOptions.Compiled);
 
-			return regex.Replace(pattern, p => ExpandMacro(p, ip, sender, domain));
+			Match match = regex.Match(pattern);
+			if (!match.Success)
+			{
+				return pattern;
+			}
+
+			StringBuilder sb = new StringBuilder();
+			int pos = 0;
+			do
+			{
+				if (match.Index != pos)
+				{
+					sb.Append(pattern, pos, match.Index - pos);
+				}
+				pos = match.Index + match.Length;
+				sb.Append(await ExpandMacroAsync(match, ip, domain, sender, dnsCache));
+				match = match.NextMatch();
+			} while (match.Success);
+
+			if (pos < pattern.Length)
+			{
+				sb.Append(pattern, pos, pattern.Length - pos);
+			}
+
+			return sb.ToString();
 		}
 
-		private string ExpandMacro(Match pattern, IPAddress ip, string sender, string domain)
+		private async Task<string> ExpandMacroAsync(Match pattern, IPAddress ip, string domain, string sender, Dictionary<string, DnsMessage> dnsCache)
 		{
 			switch (pattern.Value)
 			{
@@ -451,19 +517,19 @@ namespace ARSoft.Tools.Net.Spf
 						case "p":
 							letter = "unknown";
 
-							DnsMessage dnsMessage = ResolveDns(ip.GetReverseLookupAddress(), RecordType.Ptr);
-							if ((dnsMessage == null) || ((dnsMessage.ReturnCode != ReturnCode.NoError) && (dnsMessage.ReturnCode != ReturnCode.NxDomain)))
+							DnsResolveResult<PtrRecord> dnsResult = await ResolveDnsAsync<PtrRecord>(ip.GetReverseLookupAddress(), RecordType.Ptr, dnsCache);
+							if ((dnsResult == null) || ((dnsResult.ReturnCode != ReturnCode.NoError) && (dnsResult.ReturnCode != ReturnCode.NxDomain)))
 							{
 								break;
 							}
 
 							int ptrCheckedCount = 0;
-							foreach (PtrRecord ptrRecord in dnsMessage.AnswerRecords.OfType<PtrRecord>())
+							foreach (PtrRecord ptrRecord in dnsResult.Records)
 							{
 								if (++ptrCheckedCount == 10)
 									break;
 
-								bool? isPtrMatch = IsIpMatch(ptrRecord.PointerDomainName, ip, 0, 0);
+								bool? isPtrMatch = await IsIpMatchAsync(ptrRecord.PointerDomainName, ip, 0, 0, dnsCache);
 								if (isPtrMatch.HasValue && isPtrMatch.Value)
 								{
 									if (letter == "unknown" || ptrRecord.PointerDomainName.EndsWith("." + domain, StringComparison.OrdinalIgnoreCase))

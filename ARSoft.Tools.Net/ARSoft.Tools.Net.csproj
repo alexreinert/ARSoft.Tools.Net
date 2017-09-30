@@ -10,13 +10,14 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ARSoft.Tools.Net</RootNamespace>
     <AssemblyName>ARSoft.Tools.Net</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
     <ApplicationVersion>1.2.3.4</ApplicationVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,6 +31,7 @@
     <DocumentationFile>
     </DocumentationFile>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -41,6 +43,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <DocumentationFile>..\bin\Release\ARSoft.Tools.Net.xml</DocumentationFile>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="Exists('D:\arsoft.pfx')">
     <SignAssembly>true</SignAssembly>
@@ -62,12 +65,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseEncoding.cs" />
-    <Compile Include="Dns\DnsClientAsyncState.cs" />
+    <Compile Include="Dns\ClientConnectedEventArgs.cs" />
     <Compile Include="Dns\DnsClient.cs" />
     <Compile Include="Dns\DnsClientBase.cs" />
     <Compile Include="Dns\DnsClientEndpointInfo.cs" />
-    <Compile Include="Dns\DnsClientParallelAsyncState.cs" />
-    <Compile Include="Dns\DnsClientParallelState.cs" />
     <Compile Include="Dns\DnsMessage.cs" />
     <Compile Include="Dns\DnsMessageBase.cs" />
     <Compile Include="Dns\DnsMessageEntryBase.cs" />
@@ -135,6 +136,7 @@
     <Compile Include="Dns\EDns\ClientSubnetOption.cs" />
     <Compile Include="Dns\EDns\DnssecAlgorithmUnderstoodOption.cs" />
     <Compile Include="Dns\EDns\DsHashUnderstoodOption.cs" />
+    <Compile Include="Dns\EDns\ExpireOption.cs" />
     <Compile Include="Dns\EDns\LongLivedQueryOption.cs" />
     <Compile Include="Dns\EDns\Nsec3HashUnderstoodOption.cs" />
     <Compile Include="Dns\EDns\OwnerOption.cs" />
@@ -143,6 +145,7 @@
     <Compile Include="Dns\LlmnrMessage.cs" />
     <Compile Include="Dns\MulticastDnsOneShotClient.cs" />
     <Compile Include="Dns\MulticastDnsMessage.cs" />
+    <Compile Include="Dns\QueryReceivedEventArgs.cs" />
     <Compile Include="Dns\TSig\TSigAlgorithm.cs" />
     <Compile Include="Dns\TSig\TSigAlgorithmHelper.cs" />
     <Compile Include="Dns\TSig\TSigRecord.cs" />
@@ -165,8 +168,8 @@
     <Compile Include="Dns\ReturnCode.cs" />
     <Compile Include="EnumHelper.cs" />
     <Compile Include="Dns\InvalidSignedMessageEventArgs.cs" />
-    <Compile Include="IPAddressExtension.cs" />
-    <Compile Include="Socket\UdpListener.cs" />
+    <Compile Include="EventHandlerExtensions.cs" />
+    <Compile Include="IPAddressExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spf\SenderIDScope.cs" />
     <Compile Include="Spf\SenderIDValidator.cs" />
@@ -180,7 +183,10 @@
     <Compile Include="Spf\SpfRecord.cs" />
     <Compile Include="Spf\SpfTerm.cs" />
     <Compile Include="Spf\SpfValidator.cs" />
+    <Compile Include="Spf\ValidationResult.cs" />
     <Compile Include="Spf\ValidatorBase.cs" />
+    <Compile Include="TcpClientExtensions.cs" />
+    <Compile Include="UdpClientExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE">

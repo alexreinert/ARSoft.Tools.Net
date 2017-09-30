@@ -24,52 +24,50 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>DNSSEC Algorithm Understood option</para>
+	///   <para>Expire EDNS Option</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc6975">RFC 6975</see>
+	///     <see cref="!:http://tools.ietf.org/html/rfc7314">RFC 7314</see>
 	///   </para>
 	/// </summary>
-	public class DnssecAlgorithmUnderstoodOption : EDnsOptionBase
+	public class ExpireOption : EDnsOptionBase
 	{
 		/// <summary>
-		///   List of Algorithms
+		///   The expiration of the SOA record in seconds. Should be null on queries.
 		/// </summary>
-		public List<DnsSecAlgorithm> Algorithms { get; private set; }
-
-		internal DnssecAlgorithmUnderstoodOption()
-			: base(EDnsOptionType.DnssecAlgorithmUnderstood) {}
+		public int? SoaExpire { get; private set; }
 
 		/// <summary>
-		///   Creates a new instance of the DnssecAlgorithmUnderstoodOption class
+		///   Creates a new instance of the ExpireOption class
 		/// </summary>
-		/// <param name="algorithms">The list of algorithms</param>
-		public DnssecAlgorithmUnderstoodOption(List<DnsSecAlgorithm> algorithms)
+		public ExpireOption()
+			: base(EDnsOptionType.Expire) {}
+
+		/// <summary>
+		///   Creates a new instance of the ExpireOption class
+		/// </summary>
+		/// <param name="soaExpire">The expiration of the SOA record in seconds</param>
+		public ExpireOption(int soaExpire)
 			: this()
 		{
-			Algorithms = algorithms;
+			SoaExpire = soaExpire;
 		}
 
 		internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
-			Algorithms = new List<DnsSecAlgorithm>(length);
-			for (int i = 0; i < length; i++)
-			{
-				Algorithms.Add((DnsSecAlgorithm) resultData[startPosition++]);
-			}
+			if (length == 4)
+				SoaExpire = DnsMessageBase.ParseInt(resultData, ref startPosition);
 		}
 
 		internal override ushort DataLength
 		{
-			get { return (ushort) ((Algorithms == null) ? 0 : Algorithms.Count); }
+			get { return (ushort) (SoaExpire.HasValue ? 4 : 0); }
 		}
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{
-			foreach (var algorithm in Algorithms)
-			{
-				messageData[currentPosition++] = (byte) algorithm;
-			}
+			if (SoaExpire.HasValue)
+				DnsMessageBase.EncodeInt(messageData, ref currentPosition, SoaExpire.Value);
 		}
 	}
 }

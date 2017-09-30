@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -24,7 +24,7 @@ using System.Text;
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
-	///   <para>Mail exchange</para>
+	///   <para>CAA</para>
 	///   <para>
 	///     Defined in
 	///     <see cref="!:http://tools.ietf.org/html/rfc6844">RFC 6844</see>

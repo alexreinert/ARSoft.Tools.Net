@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2014 Alexander Reinert
+// Copyright 2010..2015 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (http://arsofttoolsnet.codeplex.com/)
 // 
@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns;
 
 namespace ARSoft.Tools.Net.Spf
@@ -29,51 +30,32 @@ namespace ARSoft.Tools.Net.Spf
 	/// </summary>
 	public class SpfValidator : ValidatorBase<SpfRecord>
 	{
-		protected override bool TryLoadRecords(string domain, out SpfRecord record, out SpfQualifier errorResult)
+		protected override async Task<LoadRecordResult> LoadRecordsAsync(string domain, Dictionary<string, DnsMessage> dnsCache)
 		{
-			if (!TryLoadRecords(domain, RecordType.Spf, out record, out errorResult))
+			DnsResolveResult<TxtRecord> dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, dnsCache);
+			if ((dnsResult == null) || ((dnsResult.ReturnCode != ReturnCode.NoError) && (dnsResult.ReturnCode != ReturnCode.NxDomain)))
 			{
-				return (errorResult == SpfQualifier.None) && TryLoadRecords(domain, RecordType.Txt, out record, out errorResult);
-			}
-			else
-			{
-				return true;
-			}
-		}
-
-		private bool TryLoadRecords(string domain, RecordType recordType, out SpfRecord record, out SpfQualifier errorResult)
-		{
-			DnsMessage dnsMessage = ResolveDns(domain, recordType);
-			if ((dnsMessage == null) || ((dnsMessage.ReturnCode != ReturnCode.NoError) && (dnsMessage.ReturnCode != ReturnCode.NxDomain)))
-			{
-				record = default(SpfRecord);
-				errorResult = SpfQualifier.TempError;
-				return false;
+				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError };
 			}
 
-			var spfTextRecords =
-				dnsMessage.AnswerRecords
-				          .Where(r => r.RecordType == recordType)
-				          .Cast<ITextRecord>()
-				          .Select(r => r.TextData)
-				          .Where(SpfRecord.IsSpfRecord).ToList();
+			var spfTextRecords = dnsResult.Records
+			                              .Select(r => r.TextData)
+			                              .Where(SpfRecord.IsSpfRecord)
+			                              .ToList();
+
+			SpfRecord record;
 
 			if (spfTextRecords.Count == 0)
 			{
-				record = default(SpfRecord);
-				errorResult = SpfQualifier.None;
-				return false;
+				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.None };
 			}
 			else if ((spfTextRecords.Count > 1) || !SpfRecord.TryParse(spfTextRecords[0], out record))
 			{
-				record = default(SpfRecord);
-				errorResult = SpfQualifier.PermError;
-				return false;
+				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
 			}
 			else
 			{
-				errorResult = default(SpfQualifier);
-				return true;
+				return new LoadRecordResult() { CouldBeLoaded = true, Record = record };
 			}
 		}
 	}
