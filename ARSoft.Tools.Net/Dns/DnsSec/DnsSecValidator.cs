@@ -141,7 +141,15 @@ namespace ARSoft.Tools.Net.Dns
 						return DnsSecValidationResult.Bogus;
 				}
 
-				current = DomainName.Asterisk + current.GetParentName(current.Labels[0] == "*" ? 2 : 1);
+				// Updated the following lines to fix an issue where an NSEC entry is present for a parent domain but is not a wildcard entry.
+				if (current.Labels[0] == "*")
+				{
+					current = current.GetParentName();
+				}
+				else
+				{
+					current = DomainName.Asterisk + current.GetParentName();
+				}
 			}
 		}
 
@@ -179,7 +187,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			while (true)
 			{
-				if (nsecRecords.Any(x => x.Name == hashedName))
+				if (nsecRecords.Any(x => x.Name.Equals(hashedName, true)))
 					break;
 
 				if (current == zoneApex)

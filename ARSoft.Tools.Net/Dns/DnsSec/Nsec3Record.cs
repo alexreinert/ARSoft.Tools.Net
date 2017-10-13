@@ -152,7 +152,14 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			DomainName nextDomainName = new DomainName(NextHashedOwnerName.ToBase32HexString(), name.GetParentName());
 
-			return ((name.CompareTo(Name) > 0) && (name.CompareTo(nextDomainName) < 0));
+			// NSEC*-Record are organized in a chained list with the last element pointing to the first.
+			// So either the name being queries is between the current item (Name) and nextDomainName or
+			// the current item is greater than the the next item. In this case, we have to cases:
+			// 1. The name being queried is on the right side of the list (name > nextName)
+			// 2. The name being queired is on the left side of the list (Name < name)
+			// If one of these three criteria is met, the record is covering the name being queried.
+			return (name.CompareTo(Name) > 0 && name.CompareTo(nextDomainName) < 0) ||
+			       (Name.CompareTo(nextDomainName) > 0 && (name.CompareTo(Name) > 0 || name.CompareTo(nextDomainName) < 0));
 		}
 	}
 }
