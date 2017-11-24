@@ -1,4 +1,4 @@
-#region Copyright and License
+﻿#region Copyright and License
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -16,15 +16,21 @@
 // limitations under the License.
 #endregion
 
-using System.Net;
-
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net
 {
-	internal class DnsClientEndpointInfo
-	{
-		public bool IsMulticast;
-		public IPAddress LocalAddress;
-		public IPAddress ServerAddress;
-        public int ServerPort;
-	}
+    /// <summary>
+    ///   Represents a Tls Pinset
+    /// </summary>
+    public class TlsPubkeyPinningHash
+    {
+        /// <summary>
+        /// Pinset digest method, this should be an enum
+        /// </summary>
+        public string Digest { get; set; }
+
+        /// <summary>
+        /// Pinset digest hash
+        /// </summary>
+        public string Hash { get; set; }
+    }
 }

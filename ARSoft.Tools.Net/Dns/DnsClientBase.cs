@@ -94,14 +94,15 @@ namespace ARSoft.Tools.Net.Dns
 			for (int i = 0; i < endpointInfos.Count; i++)
 			{
 				TcpClient tcpClient = null;
-				NetworkStream tcpStream = null;
+				System.IO.Stream tcpStream = null;
 
 				try
 				{
 					var endpointInfo = endpointInfos[i];
 
 					IPAddress responderAddress;
-					byte[] resultData = sendByTcp ? QueryByTcp(endpointInfo.ServerAddress, messageData, messageLength, ref tcpClient, ref tcpStream, out responderAddress) : QueryByUdp(endpointInfo, messageData, messageLength, out responderAddress);
+                    int responderPort = 0;
+					byte[] resultData = sendByTcp ? QueryByTcp(endpointInfo.ServerAddress, endpointInfo.ServerPort, messageData, messageLength, ref tcpClient, ref tcpStream, out responderAddress, out responderPort) : QueryByUdp(endpointInfo, messageData, messageLength, out responderAddress);
 
 					if (resultData != null)
 					{
@@ -127,7 +128,7 @@ namespace ARSoft.Tools.Net.Dns
 
 						if (result.IsTcpResendingRequested)
 						{
-							resultData = QueryByTcp(responderAddress, messageData, messageLength, ref tcpClient, ref tcpStream, out responderAddress);
+							resultData = QueryByTcp(responderAddress, responderPort, messageData, messageLength, ref tcpClient, ref tcpStream, out responderAddress, out responderPort);
 							if (resultData != null)
 							{
 								TMessage tcpResult;
@@ -161,7 +162,7 @@ namespace ARSoft.Tools.Net.Dns
 
 						while (isTcpNextMessageWaiting)
 						{
-							resultData = QueryByTcp(responderAddress, null, 0, ref tcpClient, ref tcpStream, out responderAddress);
+							resultData = QueryByTcp(responderAddress, responderPort, null, 0, ref tcpClient, ref tcpStream, out responderAddress, out responderPort);
 							if (resultData != null)
 							{
 								TMessage tcpResult;
@@ -226,7 +227,7 @@ namespace ARSoft.Tools.Net.Dns
 			return result.Result;
 		}
 
-		private bool ValidateResponse<TMessage>(TMessage message, TMessage result)
+        private bool ValidateResponse<TMessage>(TMessage message, TMessage result)
 			where TMessage : DnsMessageBase
 		{
 			if (IsResponseValidationEnabled)
@@ -260,7 +261,7 @@ namespace ARSoft.Tools.Net.Dns
 			return true;
 		}
 
-		private void PrepareMessage<TMessage>(TMessage message, out int messageLength, out byte[] messageData, out DnsServer.SelectTsigKey tsigKeySelector, out byte[] tsigOriginalMac)
+        private void PrepareMessage<TMessage>(TMessage message, out int messageLength, out byte[] messageData, out DnsServer.SelectTsigKey tsigKeySelector, out byte[] tsigOriginalMac)
 			where TMessage : DnsMessageBase, new()
 		{
 			if (message.TransactionID == 0)
@@ -334,14 +335,15 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		private byte[] QueryByTcp(IPAddress nameServer, byte[] messageData, int messageLength, ref TcpClient tcpClient, ref NetworkStream tcpStream, out IPAddress responderAddress)
+		protected virtual byte[] QueryByTcp(IPAddress nameServer, int port, byte[] messageData, int messageLength, ref TcpClient tcpClient, ref System.IO.Stream tcpStream, out IPAddress responderAddress, out int responderPort)
 		{
 			responderAddress = nameServer;
+            responderPort = port == 0 ? _port : port;
 
-			if (!IsTcpEnabled)
+            if (!IsTcpEnabled)
 				return null;
 
-			IPEndPoint endPoint = new IPEndPoint(nameServer, _port);
+			IPEndPoint endPoint = new IPEndPoint(nameServer, port == 0 ? _port : port);
 
 			try
 			{
@@ -387,7 +389,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		private bool TryRead(TcpClient client, NetworkStream stream, byte[] buffer, int length)
+		protected bool TryRead(TcpClient client, System.IO.Stream stream, byte[] buffer, int length)
 		{
 			int readBytes = 0;
 
@@ -425,7 +427,7 @@ namespace ARSoft.Tools.Net.Dns
 
 				try
 				{
-					resultData = await (sendByTcp ? QueryByTcpAsync(endpointInfo.ServerAddress, messageData, messageLength, null, null, token) : QuerySingleResponseByUdpAsync(endpointInfo, messageData, messageLength, token));
+					resultData = await (sendByTcp ? QueryByTcpAsync(endpointInfo.ServerAddress, endpointInfo.ServerPort, messageData, messageLength, null, null, token) : QuerySingleResponseByUdpAsync(endpointInfo, messageData, messageLength, token));
 
 					if (resultData == null)
 						return null;
@@ -450,7 +452,7 @@ namespace ARSoft.Tools.Net.Dns
 
 					if (result.IsTcpResendingRequested)
 					{
-						resultData = await QueryByTcpAsync(resultData.ResponderAddress, messageData, messageLength, resultData.TcpClient, resultData.TcpStream, token);
+						resultData = await QueryByTcpAsync(resultData.ResponderAddress, resultData.ResponderPort, messageData, messageLength, resultData.TcpClient, resultData.TcpStream, token);
 						if (resultData != null)
 						{
 							TMessage tcpResult;
@@ -482,7 +484,7 @@ namespace ARSoft.Tools.Net.Dns
 					while (isTcpNextMessageWaiting)
 					{
 						// ReSharper disable once PossibleNullReferenceException
-						resultData = await QueryByTcpAsync(resultData.ResponderAddress, null, 0, resultData.TcpClient, resultData.TcpStream, token);
+						resultData = await QueryByTcpAsync(resultData.ResponderAddress, resultData.ResponderPort, null, 0, resultData.TcpClient, resultData.TcpStream, token);
 						if (resultData != null)
 						{
 							TMessage tcpResult;
@@ -580,35 +582,38 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		private class QueryResponse
+		protected class QueryResponse
 		{
 			public byte[] Buffer { get; }
 			public IPAddress ResponderAddress { get; }
+            public int ResponderPort { get; }
 
-			public TcpClient TcpClient { get; }
-			public NetworkStream TcpStream { get; }
+            public TcpClient TcpClient { get; }
+			public System.IO.Stream TcpStream { get; }
 
-			public QueryResponse(byte[] buffer, IPAddress responderAddress)
+			public QueryResponse(byte[] buffer, IPAddress responderAddress, int responderPort = 0)
 			{
 				Buffer = buffer;
 				ResponderAddress = responderAddress;
+                ResponderPort = responderPort;
 			}
 
-			public QueryResponse(byte[] buffer, IPAddress responderAddress, TcpClient tcpClient, NetworkStream tcpStream)
+			public QueryResponse(byte[] buffer, IPAddress responderAddress, TcpClient tcpClient, System.IO.Stream tcpStream, int responderPort = 0)
 			{
 				Buffer = buffer;
 				ResponderAddress = responderAddress;
-				TcpClient = tcpClient;
+                ResponderPort = responderPort;
+                TcpClient = tcpClient;
 				TcpStream = tcpStream;
 			}
 		}
 
-		private async Task<QueryResponse> QueryByTcpAsync(IPAddress nameServer, byte[] messageData, int messageLength, TcpClient tcpClient, NetworkStream tcpStream, CancellationToken token)
+		protected virtual async Task<QueryResponse> QueryByTcpAsync(IPAddress nameServer, int port, byte[] messageData, int messageLength, TcpClient tcpClient, System.IO.Stream tcpStream, CancellationToken token)
 		{
 			if (!IsTcpEnabled)
 				return null;
-
-			try
+            int responderPort = port == 0 ? _port : port;
+            try
 			{
 				if (tcpClient == null)
 				{
@@ -618,7 +623,7 @@ namespace ARSoft.Tools.Net.Dns
 						SendTimeout = QueryTimeout
 					};
 
-					if (!await tcpClient.TryConnectAsync(nameServer, _port, QueryTimeout, token))
+					if (!await tcpClient.TryConnectAsync(nameServer, responderPort, QueryTimeout, token))
 					{
 						return null;
 					}
@@ -645,7 +650,7 @@ namespace ARSoft.Tools.Net.Dns
 
 				byte[] resultData = new byte[length];
 
-				return await TryReadAsync(tcpClient, tcpStream, resultData, length, token) ? new QueryResponse(resultData, nameServer, tcpClient, tcpStream) : null;
+				return await TryReadAsync(tcpClient, tcpStream, resultData, length, token) ? new QueryResponse(resultData, nameServer, tcpClient, tcpStream, responderPort) : null;
 			}
 			catch (Exception e)
 			{
@@ -654,7 +659,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		private async Task<bool> TryReadAsync(TcpClient client, NetworkStream stream, byte[] buffer, int length, CancellationToken token)
+		protected async Task<bool> TryReadAsync(TcpClient client, System.IO.Stream stream, byte[] buffer, int length, CancellationToken token)
 		{
 			int readBytes = 0;
 
@@ -738,7 +743,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		private List<DnsClientEndpointInfo> GetEndpointInfos()
+		internal virtual List<DnsClientEndpointInfo> GetEndpointInfos()
 		{
 			List<DnsClientEndpointInfo> endpointInfos;
 			if (_isAnyServerMulticast)
@@ -795,11 +800,11 @@ namespace ARSoft.Tools.Net.Dns
 			return endpointInfos;
 		}
 
-		private static bool IsIPv6Enabled { get; } = IsAnyIPv6Configured();
+		protected static bool IsIPv6Enabled { get; } = IsAnyIPv6Configured();
 
-		private static readonly IPAddress _ipvMappedNetworkAddress = IPAddress.Parse("0:0:0:0:0:FFFF::");
+        protected static readonly IPAddress _ipvMappedNetworkAddress = IPAddress.Parse("0:0:0:0:0:FFFF::");
 
-		private static bool IsAnyIPv6Configured()
+        protected static bool IsAnyIPv6Configured()
 		{
 			return NetworkInterface.GetAllNetworkInterfaces()
 				.Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
