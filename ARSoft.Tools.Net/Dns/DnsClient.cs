@@ -65,21 +65,23 @@ namespace ARSoft.Tools.Net.Dns
 			Default = new DnsClient(GetLocalConfiguredDnsServers(), 10000) { IsResponseValidationEnabled = true };
 		}
 
-		/// <summary>
-		///   Provides a new instance with custom dns server and query timeout
-		/// </summary>
-		/// <param name="dnsServer"> The IPAddress of the dns server to use </param>
-		/// <param name="queryTimeout"> Query timeout in milliseconds </param>
-		public DnsClient(IPAddress dnsServer, int queryTimeout)
-			: this(new List<IPAddress> { dnsServer }, queryTimeout) {}
+        /// <summary>
+        ///   Provides a new instance with custom dns server and query timeout
+        /// </summary>
+        /// <param name="dnsServer"> The IPAddress of the dns server to use </param>
+        /// <param name="queryTimeout"> Query timeout in milliseconds </param>
+        /// <param name="port"> Server port </param>
+        public DnsClient(IPAddress dnsServer, int queryTimeout, int port = 53)
+			: this(new List<IPAddress> { dnsServer }, queryTimeout, port) {}
 
-		/// <summary>
-		///   Provides a new instance with custom dns servers and query timeout
-		/// </summary>
-		/// <param name="dnsServers"> The IPAddresses of the dns servers to use </param>
-		/// <param name="queryTimeout"> Query timeout in milliseconds </param>
-		public DnsClient(IEnumerable<IPAddress> dnsServers, int queryTimeout)
-			: base(dnsServers, queryTimeout, 53)
+        /// <summary>
+        ///   Provides a new instance with custom dns servers and query timeout
+        /// </summary>
+        /// <param name="dnsServers"> The IPAddresses of the dns servers to use </param>
+        /// <param name="queryTimeout"> Query timeout in milliseconds </param>
+        /// <param name="port"> Server port </param>
+        public DnsClient(IEnumerable<IPAddress> dnsServers, int queryTimeout, int port = 53)
+			: base(dnsServers, queryTimeout, port)
 		{
 			IsUdpEnabled = true;
 			IsTcpEnabled = true;
