@@ -429,8 +429,15 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					resultData = await (sendByTcp ? QueryByTcpAsync(endpointInfo.ServerAddress, endpointInfo.ServerPort, messageData, messageLength, null, null, token) : QuerySingleResponseByUdpAsync(endpointInfo, messageData, messageLength, token));
 
-					if (resultData == null)
-						return null;
+                    if (resultData == null)
+                    {
+                        if (i == endpointInfos.Count - 1)
+                        {
+                            return null;
+                        }
+                        continue;
+                    }
+						
 
 					TMessage result;
 
