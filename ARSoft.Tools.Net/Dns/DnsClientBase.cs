@@ -71,6 +71,11 @@ namespace ARSoft.Tools.Net.Dns
 		// ReSharper disable once InconsistentNaming
 		public bool Is0x20ValidationEnabled { get; set; }
 
+		/// <summary>
+		/// Gets the list of DNS servers used by this client.
+		/// </summary>
+		public IReadOnlyList<IPAddress> Servers => _servers.AsReadOnly();
+
 		protected abstract int MaximumQueryMessageSize { get; }
 
 		protected virtual bool IsUdpEnabled { get; set; }
