@@ -75,7 +75,9 @@
     <Compile Include="Dns\Cache\DnsCache.cs" />
     <Compile Include="Dns\Cache\NameserverCache.cs" />
     <Compile Include="Dns\ClientConnectedEventArgs.cs" />
+    <Compile Include="Dns\DnsOverTlsClient.cs" />
     <Compile Include="Dns\DnsClient.cs" />
+    <Compile Include="Dns\DnsOverTlsClientBase.cs" />
     <Compile Include="Dns\DnsClientBase.cs" />
     <Compile Include="Dns\DnsClientEndpointInfo.cs" />
     <Compile Include="Dns\DnsMessage.cs" />
@@ -154,6 +156,8 @@
     <Compile Include="Dns\Resolver\StaticResolverHintStore.cs" />
     <Compile Include="Dns\Resolver\UpdateableResolverHintStoreBase.cs" />
     <Compile Include="Dns\Resolver\ZoneFileResolverHintStore.cs" />
+    <Compile Include="Dns\ReusableTcpConnection.cs" />
+    <Compile Include="Dns\TlsUpstreamServer.cs" />
     <Compile Include="DomainName.cs" />
     <Compile Include="Dns\DynamicUpdate\AddRecordUpdate.cs" />
     <Compile Include="Dns\DynamicUpdate\DeleteAllRecordsUpdate.cs" />
@@ -227,7 +231,9 @@
     <Compile Include="Spf\ValidationResult.cs" />
     <Compile Include="Spf\ValidatorBase.cs" />
     <Compile Include="TcpClientExtensions.cs" />
+    <Compile Include="TlsPubkeyPinset.cs" />
     <Compile Include="UdpClientExtensions.cs" />
+    <Compile Include="X509Certificate2Helper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LICENSE">

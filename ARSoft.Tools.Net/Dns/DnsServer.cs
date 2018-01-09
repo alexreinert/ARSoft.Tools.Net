@@ -75,22 +75,23 @@ namespace ARSoft.Tools.Net.Dns
 		public DnsServer(int udpListenerCount, int tcpListenerCount)
 			: this(IPAddress.Any, udpListenerCount, tcpListenerCount) {}
 
-		/// <summary>
-		///   Creates a new dns server instance
-		/// </summary>
-		/// <param name="bindAddress"> The address, on which should be listend </param>
-		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
-		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
-		public DnsServer(IPAddress bindAddress, int udpListenerCount, int tcpListenerCount)
-			: this(new IPEndPoint(bindAddress, _DNS_PORT), udpListenerCount, tcpListenerCount) {}
+        /// <summary>
+        ///   Creates a new dns server instance
+        /// </summary>
+        /// <param name="bindAddress"> The address, on which should be listend </param>
+        /// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
+        /// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
+        /// <param name="port"> Listening port </param>
+        public DnsServer(IPAddress bindAddress, int udpListenerCount, int tcpListenerCount, int port = _DNS_PORT)
+			: this(new IPEndPoint(bindAddress, port), udpListenerCount, tcpListenerCount) {}
 
-		/// <summary>
-		///   Creates a new dns server instance
-		/// </summary>
-		/// <param name="bindEndPoint"> The endpoint, on which should be listend </param>
-		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
-		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
-		public DnsServer(IPEndPoint bindEndPoint, int udpListenerCount, int tcpListenerCount)
+        /// <summary>
+        ///   Creates a new dns server instance
+        /// </summary>
+        /// <param name="bindEndPoint"> The endpoint, on which should be listend </param>
+        /// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
+        /// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
+        public DnsServer(IPEndPoint bindEndPoint, int udpListenerCount, int tcpListenerCount)
 		{
 			_bindEndPoint = bindEndPoint;
 
