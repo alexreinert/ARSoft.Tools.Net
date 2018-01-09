@@ -39,27 +39,43 @@ namespace ARSoft.Tools.Net.Dns
 		private readonly bool _isAnyServerMulticast;
 		private readonly int _port;
 
-		internal DnsClientBase(IEnumerable<IPAddress> servers, int queryTimeout, int port)
+        /// <summary>
+        /// Map to store reusable TCP connections per server.
+        /// </summary>
+        internal ConcurrentDictionary<string, ReusableTcpConnection> reusableTcp;
+
+        internal DnsClientBase(IEnumerable<IPAddress> servers, int queryTimeout, int port)
 		{
 			_servers = servers.OrderBy(s => s.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ToList();
 			_isAnyServerMulticast = _servers.Any(s => s.IsMulticast());
 			QueryTimeout = queryTimeout;
 			_port = port;
-		}
+            reusableTcp = new ConcurrentDictionary<string, ReusableTcpConnection>();
+        }
 
 		/// <summary>
 		///   Milliseconds after which a query times out.
 		/// </summary>
 		public int QueryTimeout { get; }
 
-		/// <summary>
-		///   Gets or set a value indicating whether the response is validated as described in
-		///   <see
-		///     cref="!:http://tools.ietf.org/id/draft-vixie-dnsext-dns0x20-00.txt">
-		///     draft-vixie-dnsext-dns0x20-00
-		///   </see>
+        /// <summary>
+		///   Gets or set a value indicating whether the client should reuse TCP connections.
 		/// </summary>
-		public bool IsResponseValidationEnabled { get; set; }
+		public bool IsReuseTcpEnabled { get; set; }
+
+        /// <summary>
+		///   Milliseconds after which a reusable TCP connection is considered IDLE and should automatically close, defaults to 5000.
+		/// </summary>
+		public int IdleTimeout { get; set; }
+
+        /// <summary>
+        ///   Gets or set a value indicating whether the response is validated as described in
+        ///   <see
+        ///     cref="!:http://tools.ietf.org/id/draft-vixie-dnsext-dns0x20-00.txt">
+        ///     draft-vixie-dnsext-dns0x20-00
+        ///   </see>
+        /// </summary>
+        public bool IsResponseValidationEnabled { get; set; }
 
 		/// <summary>
 		///   Gets or set a value indicating whether the query labels are used for additional validation as described in
@@ -93,13 +109,26 @@ namespace ARSoft.Tools.Net.Dns
 
 			for (int i = 0; i < endpointInfos.Count; i++)
 			{
-				TcpClient tcpClient = null;
-				System.IO.Stream tcpStream = null;
+                var endpointInfo = endpointInfos[i];
+                TcpClient tcpClient = null;
+                System.IO.Stream tcpStream = null;
+
+                string reusableMapKey = string.Concat(endpointInfo.ServerAddress, endpointInfo.ServerPort);
+                if (sendByTcp && this.IsReuseTcpEnabled)
+                {
+                    if (!this.reusableTcp.ContainsKey(reusableMapKey))
+                    {
+                        this.reusableTcp[reusableMapKey] = new ReusableTcpConnection();
+                    }
+
+                    ReusableTcpConnection reuse = this.reusableTcp[reusableMapKey];
+                    tcpClient = reuse.Client;
+                    tcpStream = reuse.Stream;
+                    this.reusableTcp[reusableMapKey].LastUsed = DateTime.UtcNow;
+                }
 
 				try
 				{
-					var endpointInfo = endpointInfos[i];
-
 					IPAddress responderAddress;
                     int responderPort = 0;
 					byte[] resultData = sendByTcp ? QueryByTcp(endpointInfo.ServerAddress, endpointInfo.ServerPort, messageData, messageLength, ref tcpClient, ref tcpStream, out responderAddress, out responderPort) : QueryByUdp(endpointInfo, messageData, messageLength, out responderAddress);
@@ -204,8 +233,19 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					try
 					{
-						tcpStream?.Dispose();
-						tcpClient?.Close();
+                        if (sendByTcp && this.IsReuseTcpEnabled)
+                        {
+                            if (this.reusableTcp[reusableMapKey].Client == null || !ReferenceEquals(this.reusableTcp[reusableMapKey].Client, tcpClient))
+                            {
+                                this.reusableTcp[reusableMapKey].Client = tcpClient;
+                                this.reusableTcp[reusableMapKey].Stream = tcpStream;
+                            }
+                        }
+                        else
+                        {
+                            tcpStream?.Dispose();
+                            tcpClient?.Close();
+                        }
 					}
 					catch
 					{
@@ -347,16 +387,29 @@ namespace ARSoft.Tools.Net.Dns
 
 			try
 			{
-				if (tcpClient == null)
+				if (tcpClient == null || (this.IsReuseTcpEnabled && !tcpClient.IsConnected()))
 				{
-					tcpClient = new TcpClient(nameServer.AddressFamily)
+                    tcpClient = new TcpClient(nameServer.AddressFamily)
 					{
 						ReceiveTimeout = QueryTimeout,
 						SendTimeout = QueryTimeout
 					};
 
-					if (!tcpClient.TryConnect(endPoint, QueryTimeout))
-						return null;
+                    if (!tcpClient.TryConnect(endPoint, QueryTimeout))
+                    {
+                        if (this.IsReuseTcpEnabled)
+                        {
+                            try
+                            {
+                                tcpClient.Close();
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }
+
+                        return null;
+                    }
 
 					tcpStream = tcpClient.GetStream();
 				}
@@ -424,8 +477,9 @@ namespace ARSoft.Tools.Net.Dns
 
 				var endpointInfo = endpointInfos[i];
 				QueryResponse resultData = null;
+                string reusableMapKey = string.Concat(endpointInfo.ServerAddress, endpointInfo.ServerPort);
 
-				try
+                try
 				{
 					resultData = await (sendByTcp ? QueryByTcpAsync(endpointInfo.ServerAddress, endpointInfo.ServerPort, messageData, messageLength, null, null, token) : QuerySingleResponseByUdpAsync(endpointInfo, messageData, messageLength, token));
 
@@ -532,15 +586,26 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					if (resultData != null)
 					{
-						try
-						{
-							resultData.TcpStream?.Dispose();
-							resultData.TcpClient?.Close();
-						}
-						catch
-						{
-							// ignored
-						}
+                        if (sendByTcp && this.IsReuseTcpEnabled)
+                        {
+                            if (this.reusableTcp[reusableMapKey].Client == null || !ReferenceEquals(this.reusableTcp[reusableMapKey].Client, resultData.TcpClient))
+                            {
+                                this.reusableTcp[reusableMapKey].Client = resultData.TcpClient;
+                                this.reusableTcp[reusableMapKey].Stream = resultData.TcpStream;
+                            }
+                        }
+                        else
+                        {
+                            try
+                            {
+                                resultData.TcpStream?.Dispose();
+                                resultData.TcpClient?.Close();
+                            }
+                            catch
+                            {
+                                // ignored
+                            }
+                        }
 					}
 				}
 			}
@@ -619,12 +684,27 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if (!IsTcpEnabled)
 				return null;
+
+            string reusableMapKey = string.Concat(nameServer, port);
+            if (tcpClient == null && this.IsReuseTcpEnabled)
+            {
+                if (!this.reusableTcp.ContainsKey(reusableMapKey))
+                {
+                    this.reusableTcp[reusableMapKey] = new ReusableTcpConnection();
+                }
+
+                ReusableTcpConnection reuse = this.reusableTcp[reusableMapKey];
+                tcpClient = reuse.Client;
+                tcpStream = reuse.Stream;
+                this.reusableTcp[reusableMapKey].LastUsed = DateTime.UtcNow;
+            }
+
             int responderPort = port == 0 ? _port : port;
             try
 			{
-				if (tcpClient == null)
+				if (tcpClient == null || (this.IsReuseTcpEnabled && !tcpClient.IsConnected()))
 				{
-					tcpClient = new TcpClient(nameServer.AddressFamily)
+                    tcpClient = new TcpClient(nameServer.AddressFamily)
 					{
 						ReceiveTimeout = QueryTimeout,
 						SendTimeout = QueryTimeout
@@ -632,7 +712,18 @@ namespace ARSoft.Tools.Net.Dns
 
 					if (!await tcpClient.TryConnectAsync(nameServer, responderPort, QueryTimeout, token))
 					{
-						return null;
+                        if (this.IsReuseTcpEnabled)
+                        {
+                            try
+                            {
+                                tcpClient.Close();
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }
+
+                        return null;
 					}
 
 					tcpStream = tcpClient.GetStream();

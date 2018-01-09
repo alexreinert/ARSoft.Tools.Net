@@ -85,7 +85,7 @@ namespace ARSoft.Tools.Net.Dns
 
             try
             {
-                if (tcpClient == null)
+                if (tcpClient == null || (this.IsReuseTcpEnabled && !tcpClient.IsConnected()))
                 {
                     tcpClient = new TcpClient(nameServer.AddressFamily)
                     {
@@ -109,6 +109,18 @@ namespace ARSoft.Tools.Net.Dns
                     if (!sslStream.IsAuthenticated)
                     {
                         Trace.TraceError("Error on dns query: invalid TLS upstream server certificate");
+                        if (this.IsReuseTcpEnabled)
+                        {
+                            try
+                            {
+                                tlsStream.Dispose();
+                                tcpClient.Close();
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }
+
                         return null;
                     }
                 }
@@ -154,9 +166,23 @@ namespace ARSoft.Tools.Net.Dns
                 return null;
             }
 
+            string reusableMapKey = string.Concat(nameServer, port);
+            if (tcpClient == null && this.IsReuseTcpEnabled)
+            {
+                if (!this.reusableTcp.ContainsKey(reusableMapKey))
+                {
+                    this.reusableTcp[reusableMapKey] = new ReusableTcpConnection();
+                }
+
+                ReusableTcpConnection reuse = this.reusableTcp[reusableMapKey];
+                tcpClient = reuse.Client;
+                tlsStream = reuse.Stream;
+                this.reusableTcp[reusableMapKey].LastUsed = DateTime.UtcNow;
+            }
+
             try
             {
-                if (tcpClient == null)
+                if (tcpClient == null || (this.IsReuseTcpEnabled && !tcpClient.IsConnected()))
                 {
                     tcpClient = new TcpClient(nameServer.AddressFamily)
                     {
@@ -182,6 +208,18 @@ namespace ARSoft.Tools.Net.Dns
                     if (!sslStream.IsAuthenticated)
                     {
                         Trace.TraceError("Error on dns query: invalid TLS upstream server certificate");
+                        if (this.IsReuseTcpEnabled)
+                        {
+                            try
+                            {
+                                tlsStream.Dispose();
+                                tcpClient.Close();
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }
+
                         return null;
                     }
                 }
