@@ -156,6 +156,7 @@
     <Compile Include="Dns\Resolver\StaticResolverHintStore.cs" />
     <Compile Include="Dns\Resolver\UpdateableResolverHintStoreBase.cs" />
     <Compile Include="Dns\Resolver\ZoneFileResolverHintStore.cs" />
+    <Compile Include="Dns\ReusableTcpConnection.cs" />
     <Compile Include="Dns\TlsUpstreamServer.cs" />
     <Compile Include="DomainName.cs" />
     <Compile Include="Dns\DynamicUpdate\AddRecordUpdate.cs" />

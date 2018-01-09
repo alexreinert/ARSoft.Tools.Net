@@ -117,5 +117,41 @@ namespace ARSoft.Tools.Net.Dns
 		///   </para>
 		/// </summary>
 		Cookie = 10,
-	}
+
+        /// <summary>
+		///   <para>TCP keep alive option</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:https://tools.ietf.org/html/rfc7828">The edns-tcp-keepalive EDNS0 Option</see>
+		///   </para>
+		/// </summary>
+		TcpKeepAlive = 11,
+
+        /// <summary>
+		///   <para>Padding option</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:https://tools.ietf.org/html/rfc7830">The EDNS(0) Padding Option</see>
+		///   </para>
+		/// </summary>
+		Padding = 12,
+
+        /// <summary>
+		///   <para>Beginning of range reserved option for local/experimental use</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:https://tools.ietf.org/html/rfc6891">Extension Mechanisms for DNS (EDNS(0))</see>
+		///   </para>
+		/// </summary>
+		LocalStart = 65001,
+
+        /// <summary>
+		///   <para>End of range reserved reserved option for local/experimental use</para>
+		///   <para>
+		///     Defined in
+		///     <see cref="!:https://tools.ietf.org/html/rfc6891">Extension Mechanisms for DNS (EDNS(0))</see>
+		///   </para>
+		/// </summary>
+		LocalEnd = 65534,
+    }
 }
