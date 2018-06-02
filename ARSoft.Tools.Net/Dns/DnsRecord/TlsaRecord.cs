@@ -289,8 +289,6 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 
 	    protected internal override int MaximumRecordDataLength => 3 + CertificateAssociationData.Length;
 
-
-
         protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) CertificateUsage;
