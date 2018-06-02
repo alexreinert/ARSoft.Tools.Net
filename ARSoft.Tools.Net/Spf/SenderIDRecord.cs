@@ -59,9 +59,7 @@ namespace ARSoft.Tools.Net.Spf
 			var res = new StringBuilder();
 
 			if (Version == 1)
-			{
-				res.Append("v=spf1");
-			}
+			    res.Append("v=spf1");
 			else
 			{
 				res.Append("v=spf");
@@ -105,8 +103,7 @@ namespace ARSoft.Tools.Net.Spf
 
 		    if (version == 1 && (scope == SenderIdScope.MFrom || scope == SenderIdScope.Pra))
 		        return true;
-		    else
-		        return scopes.Contains(scope);
+		    return scopes.Contains(scope);
 		}
 
 		private static bool TryParsePrefix(string prefix, out int version, out int minor, out List<SenderIdScope> scopes)
@@ -167,11 +164,9 @@ namespace ARSoft.Tools.Net.Spf
                     };
                 return true;
             }
-            else
-            {
-                value = null;
-                return false;
-            }
-        }
+
+		    value = null;
+		    return false;
+		}
 	}
 }

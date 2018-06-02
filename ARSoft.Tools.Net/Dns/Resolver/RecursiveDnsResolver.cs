@@ -170,17 +170,15 @@ namespace ARSoft.Tools.Net.Dns.Resolver
 
 					            continue;
 					        }
-					        else
-					        {
-					            var firstReferal = referalRecords.First();
 
-					            var newLookedUpServers = await ResolveHostWithTtlAsync(firstReferal.NameServer, state, token);
+					        var firstReferal = referalRecords.First();
 
-					            foreach (var newServer in newLookedUpServers) _nameserverCache.Add(firstReferal.Name, newServer.Item1, Math.Min(firstReferal.TimeToLive, newServer.Item2));
+					        var newLookedUpServers = await ResolveHostWithTtlAsync(firstReferal.NameServer, state, token);
 
-					            if (newLookedUpServers.Count > 0)
-					                continue;
-					        }
+					        foreach (var newServer in newLookedUpServers) _nameserverCache.Add(firstReferal.Name, newServer.Item1, Math.Min(firstReferal.TimeToLive, newServer.Item2));
+
+					        if (newLookedUpServers.Count > 0)
+					            continue;
 					    }
 
 				    // Response of best known server is not authoritive and has no referrals --> No chance to get a result

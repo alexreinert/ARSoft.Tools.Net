@@ -87,9 +87,7 @@ namespace ARSoft.Tools.Net.Dns
 					if (value) throw new ArgumentOutOfRangeException(nameof(value), "Setting DO flag is allowed in edns messages only");
 				}
 				else
-				{
-					ednsOptions.IsDnsSecOk = value;
-				}
+				    ednsOptions.IsDnsSecOk = value;
 			}
 		}
 	}

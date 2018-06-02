@@ -110,7 +110,7 @@ namespace ARSoft.Tools.Net
 
 			while (inPos < inEnd)
 			{
-				outData[outPos++] = _base16Alphabet[(inArray[inPos] >> 4) & 0x0f];
+				outData[outPos++] = _base16Alphabet[inArray[inPos] >> 4 & 0x0f];
 				outData[outPos++] = _base16Alphabet[inArray[inPos++] & 0x0f];
 			}
 
@@ -255,11 +255,11 @@ namespace ARSoft.Tools.Net
 			{
 				for (var i = 0; i < 8; i++) buffer[i] = alphabet[inData[inPos++]];
 
-			    res[outPos++] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
-				res[outPos++] = (byte) (((buffer[1] >> 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
-				res[outPos++] = (byte) (((buffer[3] << 4) & 0xf0) | ((buffer[4] >> 1) & 0x0f));
-				res[outPos++] = (byte) (((buffer[4] << 7) & 0x80) | (buffer[5] << 2) | ((buffer[6] >> 3) & 0x03));
-				res[outPos++] = (byte) (((buffer[6] << 5) & 0xe0) | buffer[7]);
+			    res[outPos++] = (byte) (buffer[0] << 3 | buffer[1] >> 2 & 0x07);
+				res[outPos++] = (byte) (buffer[1] >> 6 & 0xc0 | buffer[2] << 1 | buffer[3] >> 4 & 0x01);
+				res[outPos++] = (byte) (buffer[3] << 4 & 0xf0 | buffer[4] >> 1 & 0x0f);
+				res[outPos++] = (byte) (buffer[4] << 7 & 0x80 | buffer[5] << 2 | buffer[6] >> 3 & 0x03);
+				res[outPos++] = (byte) (buffer[6] << 5 & 0xe0 | buffer[7]);
 			}
 
 			if (remain > 0)
@@ -269,22 +269,22 @@ namespace ARSoft.Tools.Net
 			    switch (remain)
 				{
 					case 1:
-						res[outPos] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
+						res[outPos] = (byte) (buffer[0] << 3 | buffer[1] >> 2 & 0x07);
 						break;
 					case 2:
-						res[outPos++] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
-						res[outPos] = (byte) (((buffer[1] >> 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
+						res[outPos++] = (byte) (buffer[0] << 3 | buffer[1] >> 2 & 0x07);
+						res[outPos] = (byte) (buffer[1] >> 6 & 0xc0 | buffer[2] << 1 | buffer[3] >> 4 & 0x01);
 						break;
 					case 3:
-						res[outPos++] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
-						res[outPos++] = (byte) (((buffer[1] >> 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
-						res[outPos] = (byte) (((buffer[3] << 4) & 0xf0) | ((buffer[4] >> 1) & 0x0f));
+						res[outPos++] = (byte) (buffer[0] << 3 | buffer[1] >> 2 & 0x07);
+						res[outPos++] = (byte) (buffer[1] >> 6 & 0xc0 | buffer[2] << 1 | buffer[3] >> 4 & 0x01);
+						res[outPos] = (byte) (buffer[3] << 4 & 0xf0 | buffer[4] >> 1 & 0x0f);
 						break;
 					case 4:
-						res[outPos++] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
-						res[outPos++] = (byte) (((buffer[1] >> 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
-						res[outPos++] = (byte) (((buffer[3] << 4) & 0xf0) | ((buffer[4] >> 1) & 0x0f));
-						res[outPos] = (byte) (((buffer[4] << 7) & 0x80) | (buffer[5] << 2) | ((buffer[6] >> 3) & 0x03));
+						res[outPos++] = (byte) (buffer[0] << 3 | buffer[1] >> 2 & 0x07);
+						res[outPos++] = (byte) (buffer[1] >> 6 & 0xc0 | buffer[2] << 1 | buffer[3] >> 4 & 0x01);
+						res[outPos++] = (byte) (buffer[3] << 4 & 0xf0 | buffer[4] >> 1 & 0x0f);
+						res[outPos] = (byte) (buffer[4] << 7 & 0x80 | buffer[5] << 2 | buffer[6] >> 3 & 0x03);
 						break;
 				}
 			}
@@ -306,12 +306,12 @@ namespace ARSoft.Tools.Net
 			while (inPos < inSafeEnd)
 			{
 				outData[outPos++] = alphabet[(inArray[inPos] & 0xf8) >> 3];
-				outData[outPos++] = alphabet[((inArray[inPos] & 0x07) << 2) | ((inArray[++inPos] & 0xc0) >> 6)];
+				outData[outPos++] = alphabet[(inArray[inPos] & 0x07) << 2 | (inArray[++inPos] & 0xc0) >> 6];
 				outData[outPos++] = alphabet[(inArray[inPos] & 0x3e) >> 1];
-				outData[outPos++] = alphabet[((inArray[inPos] & 0x01) << 4) | ((inArray[++inPos] & 0xf0) >> 4)];
-				outData[outPos++] = alphabet[((inArray[inPos] & 0x0f) << 1) | ((inArray[++inPos] & 0x80) >> 7)];
+				outData[outPos++] = alphabet[(inArray[inPos] & 0x01) << 4 | (inArray[++inPos] & 0xf0) >> 4];
+				outData[outPos++] = alphabet[(inArray[inPos] & 0x0f) << 1 | (inArray[++inPos] & 0x80) >> 7];
 				outData[outPos++] = alphabet[(inArray[inPos] & 0x7c) >> 2];
-				outData[outPos++] = alphabet[((inArray[inPos] & 0x03) << 3) | ((inArray[++inPos] & 0xe0) >> 5)];
+				outData[outPos++] = alphabet[(inArray[inPos] & 0x03) << 3 | (inArray[++inPos] & 0xe0) >> 5];
 				outData[outPos++] = alphabet[inArray[inPos++] & 0x1f];
 			}
 
@@ -329,7 +329,7 @@ namespace ARSoft.Tools.Net
 					break;
 				case 2:
 					outData[outPos++] = alphabet[(inArray[inPos] & 0xf8) >> 3];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x07) << 2) | ((inArray[++inPos] & 0xc0) >> 6)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x07) << 2 | (inArray[++inPos] & 0xc0) >> 6];
 					outData[outPos++] = alphabet[(inArray[inPos] & 0x3e) >> 1];
 					outData[outPos++] = alphabet[(inArray[inPos] & 0x01) << 4];
 					outData[outPos++] = alphabet[32];
@@ -339,9 +339,9 @@ namespace ARSoft.Tools.Net
 					break;
 				case 3:
 					outData[outPos++] = alphabet[(inArray[inPos] & 0xf8) >> 3];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x07) << 2) | ((inArray[++inPos] & 0xc0) >> 6)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x07) << 2 | (inArray[++inPos] & 0xc0) >> 6];
 					outData[outPos++] = alphabet[(inArray[inPos] & 0x3e) >> 1];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x01) << 4) | ((inArray[++inPos] & 0xf0) >> 4)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x01) << 4 | (inArray[++inPos] & 0xf0) >> 4];
 					outData[outPos++] = alphabet[(inArray[inPos] & 0x0f) << 1];
 					outData[outPos++] = alphabet[32];
 					outData[outPos++] = alphabet[32];
@@ -349,10 +349,10 @@ namespace ARSoft.Tools.Net
 					break;
 				case 4:
 					outData[outPos++] = alphabet[(inArray[inPos] & 0xf8) >> 3];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x07) << 2) | ((inArray[++inPos] & 0xc0) >> 6)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x07) << 2 | (inArray[++inPos] & 0xc0) >> 6];
 					outData[outPos++] = alphabet[(inArray[inPos] & 0x3e) >> 1];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x01) << 4) | ((inArray[++inPos] & 0xf0) >> 4)];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x0f) << 1) | ((inArray[++inPos] & 0x80) >> 7)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x01) << 4 | (inArray[++inPos] & 0xf0) >> 4];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x0f) << 1 | (inArray[++inPos] & 0x80) >> 7];
 					outData[outPos++] = alphabet[(inArray[inPos] & 0x7c) >> 2];
 					outData[outPos++] = alphabet[(inArray[inPos] & 0x03) << 3];
 					outData[outPos] = alphabet[32];
@@ -478,9 +478,9 @@ namespace ARSoft.Tools.Net
 	        {
 	            for (var i = 0; i < 4; i++) buffer[i] = alphabet[inData[inPos++]];
 
-	            res[outPos++] = (byte) ((buffer[0] << 2) | ((buffer[1] >> 4) & 0x03));
-	            res[outPos++] = (byte) (((buffer[1] << 4) & 0xf0) | ((buffer[2] >> 2) & 0x0f));
-	            res[outPos++] = (byte) (((buffer[2] << 6) & 0xc0) | (buffer[3] & 0x3f));
+	            res[outPos++] = (byte) (buffer[0] << 2 | buffer[1] >> 4 & 0x03);
+	            res[outPos++] = (byte) (buffer[1] << 4 & 0xf0 | buffer[2] >> 2 & 0x0f);
+	            res[outPos++] = (byte) (buffer[2] << 6 & 0xc0 | buffer[3] & 0x3f);
 	        }
 
 	        if (remain <= 0) return res;
@@ -489,11 +489,11 @@ namespace ARSoft.Tools.Net
 	        if (remain != 1)
 	        {
 	            if (remain != 2) return res;
-	            res[outPos++] = (byte) ((buffer[0] << 2) | ((buffer[1] >> 4) & 0x03));
-	            res[outPos] = (byte) (((buffer[1] << 4) & 0xf0) | ((buffer[2] >> 2) & 0x0f));
+	            res[outPos++] = (byte) (buffer[0] << 2 | buffer[1] >> 4 & 0x03);
+	            res[outPos] = (byte) (buffer[1] << 4 & 0xf0 | buffer[2] >> 2 & 0x0f);
 	        }
 	        else
-	            res[outPos] = (byte) ((buffer[0] << 2) | ((buffer[1] >> 4) & 0x03));
+	            res[outPos] = (byte) (buffer[0] << 2 | buffer[1] >> 4 & 0x03);
 
 	        return res;
 	    }
@@ -512,8 +512,8 @@ namespace ARSoft.Tools.Net
 			while (inPos < inSafeEnd)
 			{
 				outData[outPos++] = alphabet[(inArray[inPos] & 0xfc) >> 2];
-				outData[outPos++] = alphabet[((inArray[inPos] & 0x03) << 4) | ((inArray[++inPos] & 0xf0) >> 4)];
-				outData[outPos++] = alphabet[((inArray[inPos] & 0x0f) << 2) | ((inArray[++inPos] & 0xc0) >> 6)];
+				outData[outPos++] = alphabet[(inArray[inPos] & 0x03) << 4 | (inArray[++inPos] & 0xf0) >> 4];
+				outData[outPos++] = alphabet[(inArray[inPos] & 0x0f) << 2 | (inArray[++inPos] & 0xc0) >> 6];
 				outData[outPos++] = alphabet[inArray[inPos++] & 0x3f];
 			}
 
@@ -527,7 +527,7 @@ namespace ARSoft.Tools.Net
 					break;
 				case 2:
 					outData[outPos++] = alphabet[(inArray[inPos] & 0xfc) >> 2];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x03) << 4) | ((inArray[++inPos] & 0xf0) >> 4)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x03) << 4 | (inArray[++inPos] & 0xf0) >> 4];
 					outData[outPos++] = alphabet[(inArray[inPos] & 0x0f) << 2];
 					outData[outPos] = alphabet[64];
 					break;

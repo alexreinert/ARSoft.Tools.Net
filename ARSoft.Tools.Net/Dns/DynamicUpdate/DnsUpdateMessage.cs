@@ -115,34 +115,32 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 				AnswerRecords.ConvertAll<PrequisiteBase>(
 					record =>
 					{
-						if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
+					    if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
 						    return new RecordExistsPrequisite(record.Name, record.RecordType);
-						else if (record.RecordClass == RecordClass.Any)
-						    return new RecordExistsPrequisite(record);
-						else if (record.RecordClass == RecordClass.None && record.RecordDataLength == 0)
-						    return new RecordNotExistsPrequisite(record.Name, record.RecordType);
-						else if (record.RecordClass == RecordClass.Any && record.RecordType == RecordType.Any)
-						    return new NameIsInUsePrequisite(record.Name);
-						else if (record.RecordClass == RecordClass.None && record.RecordType == RecordType.Any)
-						    return new NameIsNotInUsePrequisite(record.Name);
-						else
-						    return null;
+					    if (record.RecordClass == RecordClass.Any)
+					        return new RecordExistsPrequisite(record);
+					    if (record.RecordClass == RecordClass.None && record.RecordDataLength == 0)
+					        return new RecordNotExistsPrequisite(record.Name, record.RecordType);
+					    if (record.RecordClass == RecordClass.Any && record.RecordType == RecordType.Any)
+					        return new NameIsInUsePrequisite(record.Name);
+					    if (record.RecordClass == RecordClass.None && record.RecordType == RecordType.Any)
+					        return new NameIsNotInUsePrequisite(record.Name);
+					    return null;
 					}).Where(prequisite => prequisite != null).ToList();
 
 			Updates =
 				AuthorityRecords.ConvertAll<UpdateBase>(
 					record =>
 					{
-						if (record.TimeToLive != 0)
+					    if (record.TimeToLive != 0)
 						    return new AddRecordUpdate(record);
-						else if (record.RecordType == RecordType.Any && record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
-						    return new DeleteAllRecordsUpdate(record.Name);
-						else if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
-						    return new DeleteRecordUpdate(record.Name, record.RecordType);
-						else if (record.RecordClass == RecordClass.None)
-						    return new DeleteRecordUpdate(record);
-						else
-						    return null;
+					    if (record.RecordType == RecordType.Any && record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
+					        return new DeleteAllRecordsUpdate(record.Name);
+					    if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
+					        return new DeleteRecordUpdate(record.Name, record.RecordType);
+					    if (record.RecordClass == RecordClass.None)
+					        return new DeleteRecordUpdate(record);
+					    return null;
 					}).Where(update => update != null).ToList();
 		}
 	}

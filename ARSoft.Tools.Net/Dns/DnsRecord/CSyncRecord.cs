@@ -115,7 +115,7 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 					var bitmap = resultData[currentPosition++];
 
 					for (var bit = 0; bit < 8; bit++)
-					    if ((bitmap & (1 << Math.Abs(bit - 7))) != 0)
+					    if ((bitmap & 1 << Math.Abs(bit - 7)) != 0)
 					        types.Add((RecordType) (windowNumber * 256 + i * 8 + bit));
 				}
 			}
@@ -137,7 +137,9 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 
 	    protected internal override int MaximumRecordDataLength => 7 + GetMaximumTypeBitmapLength(Types);
 
-		internal static int GetMaximumTypeBitmapLength(List<RecordType> types)
+
+
+        internal static int GetMaximumTypeBitmapLength(List<RecordType> types)
 		{
 			var res = 0;
 

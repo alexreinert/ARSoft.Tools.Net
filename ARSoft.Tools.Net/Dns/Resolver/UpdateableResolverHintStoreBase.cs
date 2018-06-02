@@ -24,6 +24,7 @@ using ARSoft.Tools.Net.Dns.DnsSec;
 
 namespace ARSoft.Tools.Net.Dns.Resolver
 {
+    /// <inheritdoc />
     /// <summary>
     ///   Base class for a ResolverHintStore, which has an updateable local storage for the hints
     /// </summary>
@@ -33,6 +34,7 @@ namespace ARSoft.Tools.Net.Dns.Resolver
 		private List<IPAddress> _rootServers;
 		private List<DsRecord> _rootKeys;
 
+		/// <inheritdoc />
 		/// <summary>
 		///   List of hints to the root servers
 		/// </summary>
@@ -46,6 +48,7 @@ namespace ARSoft.Tools.Net.Dns.Resolver
 			private set => _rootServers = value;
 		}
 
+		/// <inheritdoc />
 		/// <summary>
 		///   List of DsRecords of the root zone
 		/// </summary>

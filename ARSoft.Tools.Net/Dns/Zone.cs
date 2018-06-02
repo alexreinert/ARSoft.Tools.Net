@@ -311,9 +311,7 @@ namespace ARSoft.Tools.Net.Dns
 		        line = ReadLineWithoutComment(reader);
 
 		        if ((bracketPos = line.IndexOf(')')) == -1)
-		        {
 		            sb.Append(line);
-		        }
 		        else
 		        {
 		            sb.Append(line.Substring(0, bracketPos));

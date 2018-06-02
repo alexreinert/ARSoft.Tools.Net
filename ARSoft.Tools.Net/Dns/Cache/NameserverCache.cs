@@ -106,7 +106,7 @@ namespace ARSoft.Tools.Net.Dns.Cache
 
 			        kvp.Value.RemoveWhere(x => x.ExpireDateUtc < utcNow);
 			        if (kvp.Value.Count == 0)
-			            _cache.TryRemove(kvp.Key, out var tmp);
+			            _cache.TryRemove(kvp.Key, out _);
 			    }
 		}
 	}

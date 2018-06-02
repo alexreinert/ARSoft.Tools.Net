@@ -42,10 +42,9 @@ namespace ARSoft.Tools.Net.Spf
 
             if (spfTextRecords.Count == 0)
                 return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.None };
-            else if (spfTextRecords.Count > 1 || !SpfRecord.TryParse(spfTextRecords[0], out var record))
-                return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
-            else
-                return new LoadRecordResult { CouldBeLoaded = true, Record = record };
+		    if (spfTextRecords.Count > 1 || !SpfRecord.TryParse(spfTextRecords[0], out var record))
+		        return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
+		    return new LoadRecordResult { CouldBeLoaded = true, Record = record };
 		}
 	}
 }

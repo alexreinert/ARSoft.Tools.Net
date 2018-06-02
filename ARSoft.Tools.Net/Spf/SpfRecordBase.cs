@@ -36,9 +36,7 @@ namespace ARSoft.Tools.Net.Spf
 
 			for (var i = 1; i < terms.Length; i++)
 			    if (SpfTerm.TryParse(terms[i], out var term))
-			    {
 			        parsedTerms.Add(term);
-			    }
 			    else
 			    {
 			        parsedTerms = null;

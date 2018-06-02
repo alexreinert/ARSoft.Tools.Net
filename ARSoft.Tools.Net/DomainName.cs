@@ -252,10 +252,8 @@ namespace ARSoft.Tools.Net
 				// empty label --> name ends with dot
 			}
 			else if (TryParseLabel(s.Substring(lastOffset, s.Length - lastOffset), out label))
-			{
-				labels.Add(label);
-			}
-			else
+		        labels.Add(label);
+		    else
 			{
 				name = null;
 				return false;
@@ -277,11 +275,9 @@ namespace ARSoft.Tools.Net
 					label = s;
 					return true;
 				}
-				else
-				{
-					label = _idnParser.GetAscii(s);
-					return true;
-				}
+
+			    label = _idnParser.GetAscii(s);
+			    return true;
 			}
 			catch
 			{

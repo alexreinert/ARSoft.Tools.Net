@@ -45,7 +45,7 @@ namespace ARSoft.Tools.Net.Spf
 			var dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, token);
 			if (dnsResult == null || dnsResult.ReturnCode != ReturnCode.NoError && dnsResult.ReturnCode != ReturnCode.NxDomain)
 			    return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError };
-			else if (Scope == SenderIdScope.Pra && dnsResult.ReturnCode == ReturnCode.NxDomain) return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.Fail };
+		    if (Scope == SenderIdScope.Pra && dnsResult.ReturnCode == ReturnCode.NxDomain) return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.Fail };
 
 		    var senderIdTextRecords = dnsResult.Records
 				.Select(r => r.TextData)
@@ -63,13 +63,10 @@ namespace ARSoft.Tools.Net.Spf
 
 			    if (potentialRecords.GroupBy(r => r.Version).Any(g => g.Count() > 1))
 			        return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
-			    else
-			        return new LoadRecordResult { CouldBeLoaded = true, ErrorResult = default(SpfQualifier), Record = potentialRecords.OrderByDescending(r => r.Version).First() };
+			    return new LoadRecordResult { CouldBeLoaded = true, ErrorResult = default(SpfQualifier), Record = potentialRecords.OrderByDescending(r => r.Version).First() };
 			}
-			else
-			{
-				return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.None };
-			}
+
+		    return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.None };
 		}
 	}
 }

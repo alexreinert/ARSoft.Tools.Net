@@ -124,17 +124,12 @@ namespace ARSoft.Tools.Net.Dns.DnsSec
 
 			    var nsecRecord = nsecRecords.FirstOrDefault(x => x.Name.Equals(current));
 				if (nsecRecord != null)
-				{
-					return nsecRecord.Types.Contains(recordType) ? DnsSecValidationResult.Bogus : DnsSecValidationResult.Signed;
-				}
-				else
-				{
-					nsecRecord = nsecRecords.FirstOrDefault(x => x.IsCovering(current, zoneApex));
-					if (nsecRecord == null)
-						return DnsSecValidationResult.Bogus;
-				}
+				    return nsecRecord.Types.Contains(recordType) ? DnsSecValidationResult.Bogus : DnsSecValidationResult.Signed;
+			    nsecRecord = nsecRecords.FirstOrDefault(x => x.IsCovering(current, zoneApex));
+			    if (nsecRecord == null)
+			        return DnsSecValidationResult.Bogus;
 
-				current = DomainName.Asterisk + current.GetParentName(current.Labels[0] == "*" ? 2 : 1);
+			    current = DomainName.Asterisk + current.GetParentName(current.Labels[0] == "*" ? 2 : 1);
 			}
 		}
 
@@ -194,10 +189,8 @@ namespace ARSoft.Tools.Net.Dns.DnsSec
 				var wildcardCoveringMatch = nsecRecords.FirstOrDefault(x => x.IsCovering(wildcardHashName));
 				return wildcardCoveringMatch != null ? DnsSecValidationResult.Signed : DnsSecValidationResult.Bogus;
 			}
-			else
-			{
-				return DnsSecValidationResult.Signed;
-			}
+
+		    return DnsSecValidationResult.Signed;
 		}
 
 		private async Task<DnsSecValidationResult> ValidateRrSigAsync<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, List<TRecord> resultRecords, List<RrSigRecord> rrSigRecords, DomainName zoneApex, DnsMessageBase msg, TState state, CancellationToken token)
@@ -230,9 +223,7 @@ namespace ARSoft.Tools.Net.Dns.DnsSec
 				List<DsRecord> dsRecords;
 
 				if (rrSigRecord.SignersName.Equals(DomainName.Root))
-				{
-					dsRecords = _resolverHintStore.RootKeys;
-				}
+				    dsRecords = _resolverHintStore.RootKeys;
 				else
 				{
 					var dsRecordResults = await _resolver.ResolveSecureAsync<DsRecord>(rrSigRecord.SignersName, RecordType.Ds, recordClass, state, token);
@@ -248,18 +239,16 @@ namespace ARSoft.Tools.Net.Dns.DnsSec
 
 				return dsRecords.Any(dsRecord => rrSigRecord.Verify(coveredRecords, coveredRecords.Cast<DnsKeyRecord>().Where(dsRecord.IsCovering).ToList())) ? DnsSecValidationResult.Signed : DnsSecValidationResult.Bogus;
 			}
-			else
-			{
-				var dnsKeyRecordResults = await _resolver.ResolveSecureAsync<DnsKeyRecord>(rrSigRecord.SignersName, RecordType.DnsKey, recordClass, state, token);
 
-				if (dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Bogus || dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Indeterminate)
-					throw new DnsSecValidationException("DNSKEY records could not be retrieved");
+		    var dnsKeyRecordResults = await _resolver.ResolveSecureAsync<DnsKeyRecord>(rrSigRecord.SignersName, RecordType.DnsKey, recordClass, state, token);
 
-				if (dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Unsigned)
-					return DnsSecValidationResult.Unsigned;
+		    if (dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Bogus || dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Indeterminate)
+		        throw new DnsSecValidationException("DNSKEY records could not be retrieved");
 
-				return rrSigRecord.Verify(coveredRecords, dnsKeyRecordResults.Records) ? DnsSecValidationResult.Signed : DnsSecValidationResult.Bogus;
-			}
+		    if (dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Unsigned)
+		        return DnsSecValidationResult.Unsigned;
+
+		    return rrSigRecord.Verify(coveredRecords, dnsKeyRecordResults.Records) ? DnsSecValidationResult.Signed : DnsSecValidationResult.Bogus;
 		}
 	}
 }

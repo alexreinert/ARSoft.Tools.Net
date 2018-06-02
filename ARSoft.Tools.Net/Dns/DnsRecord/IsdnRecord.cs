@@ -89,7 +89,9 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 
 	    protected internal override int MaximumRecordDataLength => 2 + IsdnAddress.Length + SubAddress.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+
+
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, IsdnAddress);
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, SubAddress);

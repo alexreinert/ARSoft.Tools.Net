@@ -80,7 +80,7 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 				var octet = resultData[currentPosition++];
 
 				for (var bit = 0; bit < 8; bit++)
-				    if ((octet & (1 << Math.Abs(bit - 7))) != 0)
+				    if ((octet & 1 << Math.Abs(bit - 7)) != 0)
 				        Ports.Add((ushort) (octetNumber * 8 + bit));
 
 			    octetNumber++;
@@ -105,7 +105,9 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 
 		protected internal override int MaximumRecordDataLength => 5 + Ports.Max() / 8 + 1;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+
+
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
 			messageData[currentPosition++] = (byte) Protocol;

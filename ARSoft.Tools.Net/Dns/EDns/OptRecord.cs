@@ -23,6 +23,7 @@ using ARSoft.Tools.Net.Dns.DnsRecord;
 
 namespace ARSoft.Tools.Net.Dns.EDns
 {
+    /// <inheritdoc />
     /// <summary>
     ///   <para>OPT record</para>
     ///   <para>
@@ -50,7 +51,7 @@ namespace ARSoft.Tools.Net.Dns.EDns
 		    set
 			{
 				var clearedTtl = TimeToLive & 0x00ffffff;
-				TimeToLive = clearedTtl | ((int) value << 20);
+				TimeToLive = clearedTtl | (int) value << 20;
 			}
 		}
 
@@ -63,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns.EDns
 		    set
 			{
 				var clearedTtl = (int) ((uint) TimeToLive & 0xff00ffff);
-				TimeToLive = clearedTtl | (value << 16);
+				TimeToLive = clearedTtl | value << 16;
 			}
 		}
 
@@ -189,14 +190,15 @@ namespace ARSoft.Tools.Net.Dns.EDns
 		{
 			get
 			{
-				if (Options == null || Options.Count == 0)
+			    if (Options == null || Options.Count == 0)
 				    return 0;
-				else
-				    return Options.Sum(option => option.DataLength + 4);
+			    return Options.Sum(option => option.DataLength + 4);
 			}
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+
+
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			if (Options != null && Options.Count != 0)
 			    foreach (var option in Options)

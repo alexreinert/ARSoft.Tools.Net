@@ -175,7 +175,9 @@ namespace ARSoft.Tools.Net.Dns.DnsSec
 
 	    protected internal override int MaximumRecordDataLength => 20 + SignersName.MaximumRecordDataLength + Signature.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+
+
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			EncodeRecordData(messageData, offset, ref currentPosition, domainNames, useCanonical, true);
 		}

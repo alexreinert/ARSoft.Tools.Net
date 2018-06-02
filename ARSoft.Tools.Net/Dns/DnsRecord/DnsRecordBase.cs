@@ -43,10 +43,7 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 
 		protected DnsRecordBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive)
 		{
-			if (name == null)
-				throw new ArgumentNullException(nameof(name));
-
-			Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
 			RecordType = recordType;
 			RecordClass = recordClass;
 			TimeToLive = timeToLive;
@@ -54,10 +51,9 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 
 		internal static DnsRecordBase Create(RecordType type, byte[] resultData, int recordDataPosition)
 		{
-			if (type == RecordType.Key && resultData[recordDataPosition + 3] == (byte) DnsSecAlgorithm.DiffieHellman)
+		    if (type == RecordType.Key && resultData[recordDataPosition + 3] == (byte) DnsSecAlgorithm.DiffieHellman)
 			    return new DiffieHellmanKeyRecord();
-			else
-			    return Create(type);
+		    return Create(type);
 		}
 
 		internal static DnsRecordBase Create(RecordType type)
@@ -229,12 +225,12 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 
 			return DomainName.ParseFromMasterfile(name) + origin;
 		}
-		#endregion
+        #endregion
 
-		#region Encoding
-		internal override sealed int MaximumLength => Name.MaximumRecordDataLength + 12 + MaximumRecordDataLength;
+        #region Encoding
+	    internal override sealed int MaximumLength => Name.MaximumRecordDataLength + 12 + MaximumRecordDataLength;
 
-		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical = false)
+        internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical = false)
 		{
 			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, useCanonical);
 			EncodeRecordBody(messageData, offset, ref currentPosition, domainNames, useCanonical);

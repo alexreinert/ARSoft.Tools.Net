@@ -95,9 +95,7 @@ namespace ARSoft.Tools.Net
 
 			for (var i = 0; i < ipAddressBytes.Length; i++)
 			    if (netmask >= 8)
-			    {
 			        netmask -= 8;
-			    }
 			    else
 			    {
 			        if (BitConverter.IsLittleEndian) ipAddressBytes[i] &= ReverseBitOrder((byte) ~(255 << netmask));
@@ -208,8 +206,7 @@ namespace ARSoft.Tools.Net
 
 			if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
 			    return ipAddress.GetNetworkAddress(4).Equals(_ipv4MulticastNetworkAddress);
-			else
-			    return ipAddress.GetNetworkAddress(8).Equals(_ipv6MulticastNetworkAddress);
+		    return ipAddress.GetNetworkAddress(8).Equals(_ipv6MulticastNetworkAddress);
 		}
 
 		/// <summary>
@@ -247,7 +244,7 @@ namespace ARSoft.Tools.Net
 		{
 			byte result = 0;
 
-			for (var i = 0; i < 8; i++) result |= (byte) ((((1 << i) & value) >> i) << (7 - i));
+			for (var i = 0; i < 8; i++) result |= (byte) ((1 << i & value) >> i << 7 - i);
 
 		    return result;
 		}

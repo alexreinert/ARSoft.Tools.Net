@@ -156,7 +156,7 @@ namespace ARSoft.Tools.Net.Dns.DnsSec
 
 			for (var i = 0; i < currentPosition; ++i) ac += (i & 1) == 1 ? buffer[i] : (ulong) buffer[i] << 8;
 
-		    ac += (ac >> 16) & 0xFFFF;
+		    ac += ac >> 16 & 0xFFFF;
 
 			var res = (ushort) (ac & 0xffff);
 
@@ -225,7 +225,9 @@ namespace ARSoft.Tools.Net.Dns.DnsSec
 
 	    protected internal override int MaximumRecordDataLength => 4 + PublicKey.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+
+
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Flags);
 			messageData[currentPosition++] = Protocol;

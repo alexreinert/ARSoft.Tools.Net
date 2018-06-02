@@ -133,7 +133,9 @@ namespace ARSoft.Tools.Net.Dns.TSig
 
 	    protected internal override int MaximumRecordDataLength => TSigAlgorithmHelper.GetDomainName(Algorithm).MaximumRecordDataLength + 18 + TSigAlgorithmHelper.GetHashSize(Algorithm) + OtherData.Length;
 
-		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, byte[] mac)
+
+
+        internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, byte[] mac)
 		{
 			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, false);
 			var recordDataOffset = currentPosition + 2;
@@ -165,21 +167,21 @@ namespace ARSoft.Tools.Net.Dns.TSig
 
 			if (BitConverter.IsLittleEndian)
 			{
-				buffer[currentPosition++] = (byte) ((timeStamp >> 40) & 0xff);
-				buffer[currentPosition++] = (byte) ((timeStamp >> 32) & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp >> 40 & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp >> 32 & 0xff);
 				buffer[currentPosition++] = (byte) (timeStamp >> 24 & 0xff);
-				buffer[currentPosition++] = (byte) ((timeStamp >> 16) & 0xff);
-				buffer[currentPosition++] = (byte) ((timeStamp >> 8) & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp >> 16 & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp >> 8 & 0xff);
 				buffer[currentPosition++] = (byte) (timeStamp & 0xff);
 			}
 			else
 			{
 				buffer[currentPosition++] = (byte) (timeStamp & 0xff);
-				buffer[currentPosition++] = (byte) ((timeStamp >> 8) & 0xff);
-				buffer[currentPosition++] = (byte) ((timeStamp >> 16) & 0xff);
-				buffer[currentPosition++] = (byte) ((timeStamp >> 24) & 0xff);
-				buffer[currentPosition++] = (byte) ((timeStamp >> 32) & 0xff);
-				buffer[currentPosition++] = (byte) ((timeStamp >> 40) & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp >> 8 & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp >> 16 & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp >> 24 & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp >> 32 & 0xff);
+				buffer[currentPosition++] = (byte) (timeStamp >> 40 & 0xff);
 			}
 		}
 
@@ -188,9 +190,9 @@ namespace ARSoft.Tools.Net.Dns.TSig
 			long timeStamp;
 
 			if (BitConverter.IsLittleEndian)
-			    timeStamp = (buffer[currentPosition++] << 40) | (buffer[currentPosition++] << 32) | buffer[currentPosition++] << 24 | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 8) | buffer[currentPosition++];
+			    timeStamp = buffer[currentPosition++] << 40 | buffer[currentPosition++] << 32 | buffer[currentPosition++] << 24 | buffer[currentPosition++] << 16 | buffer[currentPosition++] << 8 | buffer[currentPosition++];
 			else
-			    timeStamp = buffer[currentPosition++] | (buffer[currentPosition++] << 8) | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 24) | (buffer[currentPosition++] << 32) | (buffer[currentPosition++] << 40);
+			    timeStamp = buffer[currentPosition++] | buffer[currentPosition++] << 8 | buffer[currentPosition++] << 16 | buffer[currentPosition++] << 24 | buffer[currentPosition++] << 32 | buffer[currentPosition++] << 40;
 
 		    return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timeStamp).ToLocalTime();
 		}

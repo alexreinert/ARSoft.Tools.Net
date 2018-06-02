@@ -45,7 +45,7 @@ namespace ARSoft.Tools.Net.Dns.Cache
 				_recordClass = recordClass;
 				_recordType = recordType;
 
-				_hashCode = name.GetHashCode() ^ (7 * (int) recordType) ^ (11 * (int) recordClass);
+				_hashCode = name.GetHashCode() ^ 7 * (int) recordType ^ 11 * (int) recordClass;
 			}
 
 
@@ -172,7 +172,7 @@ namespace ARSoft.Tools.Net.Dns.Cache
 
 			foreach (var kvp in _cache)
 			    if (kvp.Value.ExpireDateUtc < utcNow)
-			        _cache.TryRemove(kvp.Key, out var tmp);
+			        _cache.TryRemove(kvp.Key, out _);
 		}
 	}
 }

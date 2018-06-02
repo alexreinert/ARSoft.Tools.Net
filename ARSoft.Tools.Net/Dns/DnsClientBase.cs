@@ -139,9 +139,7 @@ namespace ARSoft.Tools.Net.Dns
 									if (i != endpointInfos.Count - 1) continue;
 								}
 								else
-								{
-									result = tcpResult;
-								}
+								    result = tcpResult;
 							}
 						}
 
@@ -171,11 +169,9 @@ namespace ARSoft.Tools.Net.Dns
 									isSucessfullFinished = false;
 									break;
 								}
-								else
-								{
-									result.AnswerRecords.AddRange(tcpResult.AnswerRecords);
-									isTcpNextMessageWaiting = tcpResult.IsTcpNextMessageWaiting(true);
-								}
+
+							    result.AnswerRecords.AddRange(tcpResult.AnswerRecords);
+							    isTcpNextMessageWaiting = tcpResult.IsTcpNextMessageWaiting(true);
 							}
 							else
 							{
@@ -470,11 +466,9 @@ namespace ARSoft.Tools.Net.Dns
 								isSucessfullFinished = false;
 								break;
 							}
-							else
-							{
-								result.AnswerRecords.AddRange(tcpResult.AnswerRecords);
-								isTcpNextMessageWaiting = tcpResult.IsTcpNextMessageWaiting(true);
-							}
+
+						    result.AnswerRecords.AddRange(tcpResult.AnswerRecords);
+						    isTcpNextMessageWaiting = tcpResult.IsTcpNextMessageWaiting(true);
 						}
 						else
 						{
@@ -707,7 +701,7 @@ namespace ARSoft.Tools.Net.Dns
 					.SelectMany(
 						s =>
 						{
-							if (s.IsMulticast())
+						    if (s.IsMulticast())
 							    return localIPs
 							        .Where(l => l.AddressFamily == s.AddressFamily)
 							        .Select(
@@ -717,32 +711,30 @@ namespace ARSoft.Tools.Net.Dns
 							                ServerAddress = s,
 							                LocalAddress = l
 							            });
-							else
-							    return new[]
-							    {
-							        new DnsClientEndpointInfo
-							        {
-							            IsMulticast = false,
-							            ServerAddress = s,
-							            LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
-							        }
-							    };
+						    return new[]
+						    {
+						        new DnsClientEndpointInfo
+						        {
+						            IsMulticast = false,
+						            ServerAddress = s,
+						            LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
+						        }
+						    };
 						}).ToList();
 			}
 			else
-			{
-				endpointInfos = _servers
-					.Where(x => IsIPv6Enabled || x.AddressFamily == AddressFamily.InterNetwork)
-					.Select(
-						s => new DnsClientEndpointInfo
-						{
-							IsMulticast = false,
-							ServerAddress = s,
-							LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
-						}
-					).ToList();
-			}
-			return endpointInfos;
+			    endpointInfos = _servers
+			        .Where(x => IsIPv6Enabled || x.AddressFamily == AddressFamily.InterNetwork)
+			        .Select(
+			            s => new DnsClientEndpointInfo
+			            {
+			                IsMulticast = false,
+			                ServerAddress = s,
+			                LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
+			            }
+			        ).ToList();
+
+		    return endpointInfos;
 		}
 
 		private static bool IsIPv6Enabled { get; } = IsAnyIPv6Configured();

@@ -245,7 +245,9 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 
 	    protected internal override int MaximumRecordDataLength => 16;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+
+
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = Version;
 			messageData[currentPosition++] = ConvertPrecision(Size);
@@ -261,7 +263,7 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 
 		private static double ConvertPrecision(byte precision)
 		{
-			var mantissa = ((precision >> 4) & 0x0f) % 10;
+			var mantissa = (precision >> 4 & 0x0f) % 10;
 			var exponent = (precision & 0x0f) % 10;
 			return mantissa * (double) _powerOften[exponent] / 100;
 		}
@@ -279,7 +281,7 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 			if (mantissa > 9)
 				mantissa = 9;
 
-			return (byte) ((mantissa << 4) | exponent);
+			return (byte) (mantissa << 4 | exponent);
 		}
 		#endregion
 
@@ -295,11 +297,9 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
 				degrees = -degrees;
 			}
 			else
-			{
-				isNegative = false;
-			}
+			    isNegative = false;
 
-			var milliseconds = degrees % 1000;
+		    var milliseconds = degrees % 1000;
 			degrees /= 1000;
 			var seconds = degrees % 60;
 			degrees /= 60;

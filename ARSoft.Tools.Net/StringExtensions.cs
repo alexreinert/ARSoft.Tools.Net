@@ -37,10 +37,9 @@ namespace ARSoft.Tools.Net
 
 				if (key == "#")
 				    return @"\#";
-				else if (key.Length == 3)
-				    return new string((char) byte.Parse(key), 1);
-				else
-				    return key;
+			    if (key.Length == 3)
+			        return new string((char) byte.Parse(key), 1);
+			    return key;
 			});
 		}
 

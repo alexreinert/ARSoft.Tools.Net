@@ -425,10 +425,8 @@ namespace ARSoft.Tools.Net.Dns
                         length = response.Encode(true, tsigMac, false, out buffer, out var newTsigMac);
 
                         if (length <= 65535)
-						{
-							await stream.WriteAsync(buffer, 0, length);
-						}
-						else
+                            await stream.WriteAsync(buffer, 0, length);
+                        else
 						{
 							if (response.Questions.Count == 0 || response.Questions[0].RecordType != RecordType.Axfr)
 							{

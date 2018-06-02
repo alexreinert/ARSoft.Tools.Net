@@ -81,11 +81,9 @@ namespace ARSoft.Tools.Net.Spf
                 value = new SpfRecord { Terms = parsedTerms };
                 return true;
             }
-            else
-            {
-                value = null;
-                return false;
-            }
-        }
+
+		    value = null;
+		    return false;
+		}
 	}
 }

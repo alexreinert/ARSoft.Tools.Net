@@ -35,19 +35,16 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="recordClass"> Record class </param>
 		public DnsQuestion(DomainName name, RecordType recordType, RecordClass recordClass)
 		{
-			if (name == null)
-				throw new ArgumentNullException(nameof(name));
-
-			Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
 			RecordType = recordType;
 			RecordClass = recordClass;
 		}
 
 		internal DnsQuestion() {}
 
-		internal override int MaximumLength => Name.MaximumRecordDataLength + 6;
+	    internal override int MaximumLength => Name.MaximumRecordDataLength + 6;
 
-		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
+        internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
 		{
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, domainNames, false);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
@@ -66,12 +63,6 @@ namespace ARSoft.Tools.Net.Dns
 
 		public override bool Equals(object obj) => Equals(obj as DnsQuestion);
 
-	    public bool Equals(DnsQuestion other)
-		{
-			if (other == null)
-				return false;
-
-			return base.Equals(other);
-		}
+	    public bool Equals(DnsQuestion other) => other != null && base.Equals(other);
 	}
 }
