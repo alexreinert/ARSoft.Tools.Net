@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,21 +15,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
-	/// <summary>
-	///   The exception that is thrown when a DNSSEC validation fails
-	/// </summary>
-	public class DnsSecValidationException : Exception
-	{
-		internal DnsSecValidationException(string message)
-			: base(message) {}
-	}
+    /// <summary>
+    ///     The exception that is thrown when a DNSSEC validation fails
+    /// </summary>
+    public class DnsSecValidationException : Exception
+    {
+        internal DnsSecValidationException(string message)
+            : base(message)
+        {
+        }
+    }
 }

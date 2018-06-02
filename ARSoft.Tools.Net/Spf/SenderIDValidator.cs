@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,82 +15,67 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   Validator for SenderID records
-	/// </summary>
-	public class SenderIDValidator : ValidatorBase<SenderIDRecord>
-	{
-		/// <summary>
-		///   Scope to examin
-		/// </summary>
-		public SenderIDScope Scope { get; set; }
+    /// <summary>
+    ///     Validator for SenderID records
+    /// </summary>
+    public class SenderIdValidator : ValidatorBase<SenderIdRecord>
+    {
+        /// <summary>
+        ///     Initializes a new instance of the SenderIDValidator class.
+        /// </summary>
+        public SenderIdValidator() => Scope = SenderIdScope.MFrom;
 
-		/// <summary>
-		///   Initializes a new instance of the SenderIDValidator class.
-		/// </summary>
-		public SenderIDValidator()
-		{
-			Scope = SenderIDScope.MFrom;
-		}
+        /// <summary>
+        ///     Scope to examin
+        /// </summary>
+        public SenderIdScope Scope { get; set; }
 
-		protected override async Task<LoadRecordResult> LoadRecordsAsync(DomainName domain, CancellationToken token)
-		{
-			DnsResolveResult<TxtRecord> dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, token);
-			if ((dnsResult == null) || ((dnsResult.ReturnCode != ReturnCode.NoError) && (dnsResult.ReturnCode != ReturnCode.NxDomain)))
-			{
-				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError };
-			}
-			else if ((Scope == SenderIDScope.Pra) && (dnsResult.ReturnCode == ReturnCode.NxDomain))
-			{
-				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.Fail };
-			}
+        protected override async Task<LoadRecordResult> LoadRecordsAsync(DomainName domain, CancellationToken token)
+        {
+            var dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, token);
+            if (dnsResult == null || dnsResult.ReturnCode != ReturnCode.NoError &&
+                dnsResult.ReturnCode != ReturnCode.NxDomain)
+                return new LoadRecordResult {CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError};
+            if (Scope == SenderIdScope.Pra && dnsResult.ReturnCode == ReturnCode.NxDomain)
+                return new LoadRecordResult {CouldBeLoaded = false, ErrorResult = SpfQualifier.Fail};
 
-			var senderIDTextRecords = dnsResult.Records
-				.Select(r => r.TextData)
-				.Where(t => SenderIDRecord.IsSenderIDRecord(t, Scope))
-				.ToList();
+            var senderIdTextRecords = dnsResult.Records
+                .Select(r => r.TextData)
+                .Where(t => SenderIdRecord.IsSenderIdRecord(t, Scope))
+                .ToList();
 
-			if (senderIDTextRecords.Count >= 1)
-			{
-				var potentialRecords = new List<SenderIDRecord>();
-				foreach (var senderIDTextRecord in senderIDTextRecords)
-				{
-					SenderIDRecord tmpRecord;
-					if (SenderIDRecord.TryParse(senderIDTextRecord, out tmpRecord))
-					{
-						potentialRecords.Add(tmpRecord);
-					}
-					else
-					{
-						return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
-					}
-				}
+            if (senderIdTextRecords.Count >= 1)
+            {
+                var potentialRecords = new List<SenderIdRecord>();
+                foreach (var senderIdTextRecord in senderIdTextRecords)
+                    if (SenderIdRecord.TryParse(senderIdTextRecord, out var tmpRecord))
+                        potentialRecords.Add(tmpRecord);
+                    else
+                        return new LoadRecordResult {CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError};
 
-				if (potentialRecords.GroupBy(r => r.Version).Any(g => g.Count() > 1))
-				{
-					return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
-				}
-				else
-				{
-					return new LoadRecordResult() { CouldBeLoaded = true, ErrorResult = default(SpfQualifier), Record = potentialRecords.OrderByDescending(r => r.Version).First() };
-				}
-			}
-			else
-			{
-				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.None };
-			}
-		}
-	}
+                if (potentialRecords.GroupBy(r => r.Version).Any(g => g.Count() > 1))
+                    return new LoadRecordResult {CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError};
+                return new LoadRecordResult
+                {
+                    CouldBeLoaded = true,
+                    ErrorResult = default(SpfQualifier),
+                    Record = potentialRecords.OrderByDescending(r => r.Version).First()
+                };
+            }
+
+            return new LoadRecordResult {CouldBeLoaded = false, ErrorResult = SpfQualifier.None};
+        }
+    }
 }

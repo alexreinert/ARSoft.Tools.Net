@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,98 +15,101 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   Represents a single term of a SPF record
-	/// </summary>
-	public class SpfTerm
-	{
-		private static readonly Regex _parseMechanismRegex = new Regex(@"^(\s)*(?<qualifier>[~+?-]?)(?<type>[a-z0-9]+)(:(?<domain>[^/]+))?(/(?<prefix>[0-9]+)(/(?<prefix6>[0-9]+))?)?(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		private static readonly Regex _parseModifierRegex = new Regex(@"^(\s)*(?<type>[a-z]+)=(?<domain>[^\s]+)(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    /// <summary>
+    ///     Represents a single term of a SPF record
+    /// </summary>
+    public class SpfTerm
+    {
+        private static readonly Regex _parseMechanismRegex =
+            new Regex(
+                @"^(\s)*(?<qualifier>[~+?-]?)(?<type>[a-z0-9]+)(:(?<domain>[^/]+))?(/(?<prefix>[0-9]+)(/(?<prefix6>[0-9]+))?)?(\s)*$",
+                RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		internal static bool TryParse(string s, out SpfTerm value)
-		{
-			if (String.IsNullOrEmpty(s))
-			{
-				value = null;
-				return false;
-			}
+        private static readonly Regex _parseModifierRegex = new Regex(@"^(\s)*(?<type>[a-z]+)=(?<domain>[^\s]+)(\s)*$",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-			#region Parse Mechanism
-			Match match = _parseMechanismRegex.Match(s);
-			if (match.Success)
-			{
-				SpfMechanism mechanism = new SpfMechanism();
+        internal static bool TryParse(string s, out SpfTerm value)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                value = null;
+                return false;
+            }
 
-				switch (match.Groups["qualifier"].Value)
-				{
-					case "+":
-						mechanism.Qualifier = SpfQualifier.Pass;
-						break;
-					case "-":
-						mechanism.Qualifier = SpfQualifier.Fail;
-						break;
-					case "~":
-						mechanism.Qualifier = SpfQualifier.SoftFail;
-						break;
-					case "?":
-						mechanism.Qualifier = SpfQualifier.Neutral;
-						break;
+            #region Parse Mechanism
 
-					default:
-						mechanism.Qualifier = SpfQualifier.Pass;
-						break;
-				}
+            var match = _parseMechanismRegex.Match(s);
+            if (match.Success)
+            {
+                var mechanism = new SpfMechanism();
 
-				SpfMechanismType type;
-				mechanism.Type = EnumHelper<SpfMechanismType>.TryParse(match.Groups["type"].Value, true, out type) ? type : SpfMechanismType.Unknown;
+                switch (match.Groups["qualifier"].Value)
+                {
+                    case "+":
+                        mechanism.Qualifier = SpfQualifier.Pass;
+                        break;
+                    case "-":
+                        mechanism.Qualifier = SpfQualifier.Fail;
+                        break;
+                    case "~":
+                        mechanism.Qualifier = SpfQualifier.SoftFail;
+                        break;
+                    case "?":
+                        mechanism.Qualifier = SpfQualifier.Neutral;
+                        break;
 
-				mechanism.Domain = match.Groups["domain"].Value;
+                    default:
+                        mechanism.Qualifier = SpfQualifier.Pass;
+                        break;
+                }
 
-				string tmpPrefix = match.Groups["prefix"].Value;
-				int prefix;
-				if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out prefix))
-				{
-					mechanism.Prefix = prefix;
-				}
+                mechanism.Type = EnumHelper<SpfMechanismType>.TryParse(match.Groups["type"].Value, true, out var type)
+                    ? type
+                    : SpfMechanismType.Unknown;
 
-				tmpPrefix = match.Groups["prefix6"].Value;
-				if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out prefix))
-				{
-					mechanism.Prefix6 = prefix;
-				}
+                mechanism.Domain = match.Groups["domain"].Value;
 
-				value = mechanism;
-				return true;
-			}
-			#endregion
+                var tmpPrefix = match.Groups["prefix"].Value;
+                if (!string.IsNullOrEmpty(tmpPrefix) && int.TryParse(tmpPrefix, out var prefix))
+                    mechanism.Prefix = prefix;
 
-			#region Parse Modifier
-			match = _parseModifierRegex.Match(s);
-			if (match.Success)
-			{
-				SpfModifier modifier = new SpfModifier();
+                tmpPrefix = match.Groups["prefix6"].Value;
+                if (!string.IsNullOrEmpty(tmpPrefix) && int.TryParse(tmpPrefix, out prefix)) mechanism.Prefix6 = prefix;
 
-				SpfModifierType type;
-				modifier.Type = EnumHelper<SpfModifierType>.TryParse(match.Groups["type"].Value, true, out type) ? type : SpfModifierType.Unknown;
-				modifier.Domain = match.Groups["domain"].Value;
+                value = mechanism;
+                return true;
+            }
 
-				value = modifier;
-				return true;
-			}
-			#endregion
+            #endregion
 
-			value = null;
-			return false;
-		}
-	}
+            #region Parse Modifier
+
+            match = _parseModifierRegex.Match(s);
+            if (match.Success)
+            {
+                var modifier = new SpfModifier
+                {
+                    Type = EnumHelper<SpfModifierType>.TryParse(match.Groups["type"].Value, true, out var type)
+                        ? type
+                        : SpfModifierType.Unknown,
+                    Domain = match.Groups["domain"].Value
+                };
+
+                value = modifier;
+                return true;
+            }
+
+            #endregion
+
+            value = null;
+            return false;
+        }
+    }
 }

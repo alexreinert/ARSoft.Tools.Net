@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,22 +15,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.DnsRecord;
+using ARSoft.Tools.Net.Dns.Resolver;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
-	internal interface IInternalDnsSecResolver<in TState>
-	{
-		Task<DnsMessage> ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, TState state, CancellationToken token);
+    internal interface IInternalDnsSecResolver<in TState>
+    {
+        Task<DnsMessage> ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass,
+            TState state, CancellationToken token);
 
-		Task<DnsSecResult<TRecord>> ResolveSecureAsync<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, TState state, CancellationToken token)
-			where TRecord : DnsRecordBase;
-	}
+        Task<DnsSecResult<TRecord>> ResolveSecureAsync<TRecord>(DomainName name, RecordType recordType,
+            RecordClass recordClass, TState state, CancellationToken token)
+            where TRecord : DnsRecordBase;
+    }
 }

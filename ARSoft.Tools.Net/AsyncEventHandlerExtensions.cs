@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -22,15 +24,16 @@ using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net
 {
-	internal static class AsyncEventHandlerExtensions
-	{
-		public static Task RaiseAsync<T>(this AsyncEventHandler<T> eventHandler, object sender, T eventArgs)
-			where T : EventArgs
-		{
-			if (eventHandler == null)
-				return Task.FromResult(false);
+    internal static class AsyncEventHandlerExtensions
+    {
+        public static Task RaiseAsync<T>(this AsyncEventHandler<T> eventHandler, object sender, T eventArgs)
+            where T : EventArgs
+        {
+            if (eventHandler == null)
+                return Task.FromResult(false);
 
-			return Task.WhenAll(eventHandler.GetInvocationList().Cast<AsyncEventHandler<T>>().Select(x => x.Invoke(sender, eventArgs)));
-		}
-	}
+            return Task.WhenAll(eventHandler.GetInvocationList().Cast<AsyncEventHandler<T>>()
+                .Select(x => x.Invoke(sender, eventArgs)));
+        }
+    }
 }

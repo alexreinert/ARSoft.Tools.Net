@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,42 +15,42 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Event arguments of <see cref="DnsServer.InvalidSignedMessageReceived" /> event.
-	/// </summary>
-	public class InvalidSignedMessageEventArgs : EventArgs
-	{
-		/// <summary>
-		///   Original message, which the client provided
-		/// </summary>
-		public DnsMessageBase Query { get; private set; }
+    /// <inheritdoc />
+    /// <summary>
+    ///     Event arguments of <see cref="E:ARSoft.Tools.Net.Dns.DnsServer.InvalidSignedMessageReceived" /> event.
+    /// </summary>
+    public class InvalidSignedMessageEventArgs : EventArgs
+    {
+        internal InvalidSignedMessageEventArgs(DnsMessageBase query, ProtocolType protocolType,
+            IPEndPoint remoteEndpoint)
+        {
+            Query = query;
+            ProtocolType = protocolType;
+            RemoteEndpoint = remoteEndpoint;
+        }
 
-		/// <summary>
-		///   Protocol used by the client
-		/// </summary>
-		public ProtocolType ProtocolType { get; private set; }
+        /// <summary>
+        ///     Original message, which the client provided
+        /// </summary>
+        public DnsMessageBase Query { get; }
 
-		/// <summary>
-		///   Remote endpoint of the client
-		/// </summary>
-		public IPEndPoint RemoteEndpoint { get; private set; }
+        /// <summary>
+        ///     Protocol used by the client
+        /// </summary>
+        public ProtocolType ProtocolType { get; }
 
-		internal InvalidSignedMessageEventArgs(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
-		{
-			Query = query;
-			ProtocolType = protocolType;
-			RemoteEndpoint = remoteEndpoint;
-		}
-	}
+        /// <summary>
+        ///     Remote endpoint of the client
+        /// </summary>
+        public IPEndPoint RemoteEndpoint { get; }
+    }
 }
