@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Authoritatitve name server record</para>
@@ -44,12 +44,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="nameServer"> Name of the authoritative name server </param>
 		public NsRecord(DomainName name, int timeToLive, DomainName nameServer)
-			: base(name, RecordType.Ns, RecordClass.INet, timeToLive)
-		{
-			NameServer = nameServer ?? DomainName.Root;
-		}
+			: base(name, RecordType.Ns, RecordClass.INet, timeToLive) => NameServer = nameServer ?? DomainName.Root;
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			NameServer = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
@@ -62,12 +59,9 @@ namespace ARSoft.Tools.Net.Dns
 			NameServer = ParseDomainName(origin, stringRepresentation[0]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return NameServer.ToString();
-		}
+		internal override string RecordDataToString() => NameServer.ToString();
 
-		protected internal override int MaximumRecordDataLength => NameServer.MaximumRecordDataLength + 2;
+	    protected internal override int MaximumRecordDataLength => NameServer.MaximumRecordDataLength + 2;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

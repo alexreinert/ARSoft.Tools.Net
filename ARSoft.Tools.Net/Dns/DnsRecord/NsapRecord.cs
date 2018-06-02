@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>NSAP address, NSAP style A record</para>
@@ -46,12 +46,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="recordData"> Binary encoded NSAP data </param>
 		public NsapRecord(DomainName name, int timeToLive, byte[] recordData)
-			: base(name, RecordType.Nsap, RecordClass.INet, timeToLive)
-		{
-			RecordData = recordData ?? new byte[] { };
-		}
+			: base(name, RecordType.Nsap, RecordClass.INet, timeToLive) => RecordData = recordData ?? new byte[] { };
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
@@ -64,15 +61,12 @@ namespace ARSoft.Tools.Net.Dns
 			if (!stringRepresentation[0].StartsWith("0x", StringComparison.InvariantCultureIgnoreCase))
 				throw new FormatException();
 
-			RecordData = stringRepresentation[0].Substring(2).Replace(".", String.Empty).FromBase16String();
+			RecordData = stringRepresentation[0].Substring(2).Replace(".", string.Empty).FromBase16String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return "0x" + RecordData.ToBase16String();
-		}
+		internal override string RecordDataToString() => "0x" + RecordData.ToBase16String();
 
-		protected internal override int MaximumRecordDataLength => RecordData.Length;
+	    protected internal override int MaximumRecordDataLength => RecordData.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

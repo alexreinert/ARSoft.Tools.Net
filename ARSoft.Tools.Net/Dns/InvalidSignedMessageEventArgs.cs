@@ -22,31 +22,32 @@ using System.Net.Sockets;
 
 namespace ARSoft.Tools.Net.Dns
 {
+    /// <inheritdoc />
     /// <summary>
-    ///   Event arguments of <see cref="DnsServer.InvalidSignedMessageReceived" /> event.
+    ///   Event arguments of <see cref="E:ARSoft.Tools.Net.Dns.DnsServer.InvalidSignedMessageReceived" /> event.
     /// </summary>
     public class InvalidSignedMessageEventArgs : EventArgs
-	{
-		/// <summary>
-		///   Original message, which the client provided
-		/// </summary>
-		public DnsMessageBase Query { get; private set; }
+    {
+        /// <summary>
+        ///   Original message, which the client provided
+        /// </summary>
+        public DnsMessageBase Query { get; }
 
-		/// <summary>
-		///   Protocol used by the client
-		/// </summary>
-		public ProtocolType ProtocolType { get; private set; }
+        /// <summary>
+        ///   Protocol used by the client
+        /// </summary>
+        public ProtocolType ProtocolType { get; }
 
-		/// <summary>
-		///   Remote endpoint of the client
-		/// </summary>
-		public IPEndPoint RemoteEndpoint { get; private set; }
+        /// <summary>
+        ///   Remote endpoint of the client
+        /// </summary>
+        public IPEndPoint RemoteEndpoint { get; }
 
-		internal InvalidSignedMessageEventArgs(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
-		{
-			Query = query;
-			ProtocolType = protocolType;
-			RemoteEndpoint = remoteEndpoint;
-		}
-	}
+        internal InvalidSignedMessageEventArgs(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
+        {
+            Query = query;
+            ProtocolType = protocolType;
+            RemoteEndpoint = remoteEndpoint;
+        }
+    }
 }

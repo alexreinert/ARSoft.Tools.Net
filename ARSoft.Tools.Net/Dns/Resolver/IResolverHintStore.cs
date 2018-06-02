@@ -18,8 +18,9 @@
 
 using System.Collections.Generic;
 using System.Net;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
     ///   Interface to provide hints used by resolvers

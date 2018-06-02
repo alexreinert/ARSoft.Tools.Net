@@ -17,6 +17,7 @@
 #endregion
 
 using System.Collections.Generic;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
@@ -45,12 +46,9 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		/// <param name="record"> tecord that should be checked </param>
 		public RecordExistsPrequisite(DnsRecordBase record)
-			: base(record.Name, record.RecordType, record.RecordClass, 0)
-		{
-			Record = record;
-		}
+			: base(record.Name, record.RecordType, record.RecordClass, 0) => Record = record;
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
 
 		protected internal override int MaximumRecordDataLength => Record?.MaximumRecordDataLength ?? 0;
 

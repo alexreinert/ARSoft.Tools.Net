@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
 	/// <summary>
 	///   <para>OpenPGP Key</para>
@@ -45,12 +45,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="publicKey"> The Public Key</param>
 		public OpenPGPKeyRecord(DomainName name, int timeToLive, byte[] publicKey)
-			: base(name, RecordType.OpenPGPKey, RecordClass.INet, timeToLive)
-		{
-			PublicKey = publicKey ?? new byte[] { };
-		}
+			: base(name, RecordType.OpenPGPKey, RecordClass.INet, timeToLive) => PublicKey = publicKey ?? new byte[] { };
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
@@ -60,15 +57,12 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length == 0)
 				throw new NotSupportedException();
 
-			PublicKey = String.Join(String.Empty, stringRepresentation).FromBase64String();
+			PublicKey = string.Join(string.Empty, stringRepresentation).FromBase64String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return PublicKey.ToBase64String();
-		}
+		internal override string RecordDataToString() => PublicKey.ToBase64String();
 
-		protected internal override int MaximumRecordDataLength => PublicKey.Length;
+	    protected internal override int MaximumRecordDataLength => PublicKey.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

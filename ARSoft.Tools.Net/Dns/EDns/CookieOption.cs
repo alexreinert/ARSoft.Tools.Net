@@ -18,7 +18,7 @@
 
 using System;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.EDns
 {
 	/// <summary>
 	///   <para>Cookie Option</para>
@@ -36,8 +36,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] ClientCookie
 		{
-			get { return _clientCookie; }
-			private set
+			get => _clientCookie;
+		    private set
 			{
 				if (value == null || value.Length != 8)
 					throw new ArgumentException("Client cookie must contain 8 bytes");

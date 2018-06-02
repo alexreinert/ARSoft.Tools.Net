@@ -19,8 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
     /// <summary>
     ///   Hashed next owner
@@ -85,13 +86,9 @@ namespace ARSoft.Tools.Net.Dns
 			NextHashedOwnerName = nextHashedOwnerName ?? new byte[] { };
 
 			if (types == null || types.Count == 0)
-			{
-				Types = new List<RecordType>();
-			}
+			    Types = new List<RecordType>();
 			else
-			{
-				Types = types.Distinct().OrderBy(x => x).ToList();
-			}
+			    Types = types.Distinct().OrderBy(x => x).ToList();
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
@@ -113,25 +110,22 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 5)
 				throw new FormatException();
 
-			HashAlgorithm = (NSec3HashAlgorithm) Byte.Parse(stringRepresentation[0]);
-			Flags = Byte.Parse(stringRepresentation[1]);
-			Iterations = UInt16.Parse(stringRepresentation[2]);
+			HashAlgorithm = (NSec3HashAlgorithm) byte.Parse(stringRepresentation[0]);
+			Flags = byte.Parse(stringRepresentation[1]);
+			Iterations = ushort.Parse(stringRepresentation[2]);
 			Salt = stringRepresentation[3] == "-" ? new byte[] { } : stringRepresentation[3].FromBase16String();
 			NextHashedOwnerName = stringRepresentation[4].FromBase32HexString();
 			Types = stringRepresentation.Skip(5).Select(RecordTypeHelper.ParseShortString).ToList();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return (byte) HashAlgorithm
-			       + " " + Flags
-			       + " " + Iterations
-			       + " " + (Salt.Length == 0 ? "-" : Salt.ToBase16String())
-			       + " " + NextHashedOwnerName.ToBase32HexString()
-			       + " " + String.Join(" ", Types.Select(RecordTypeHelper.ToShortString));
-		}
+		internal override string RecordDataToString() => (byte) HashAlgorithm
+		                                                 + " " + Flags
+		                                                 + " " + Iterations
+		                                                 + " " + (Salt.Length == 0 ? "-" : Salt.ToBase16String())
+		                                                 + " " + NextHashedOwnerName.ToBase32HexString()
+		                                                 + " " + string.Join(" ", Types.Select(RecordTypeHelper.ToShortString));
 
-		protected internal override int MaximumRecordDataLength => 6 + Salt.Length + NextHashedOwnerName.Length + NSecRecord.GetMaximumTypeBitmapLength(Types);
+	    protected internal override int MaximumRecordDataLength => 6 + Salt.Length + NextHashedOwnerName.Length + NSecRecord.GetMaximumTypeBitmapLength(Types);
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

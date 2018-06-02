@@ -22,7 +22,7 @@ namespace ARSoft.Tools.Net.Spf
     /// <summary>
     ///   Scope of a SenderID record
     /// </summary>
-    public enum SenderIDScope
+    public enum SenderIdScope
 	{
 		/// <summary>
 		///   Unknown scope

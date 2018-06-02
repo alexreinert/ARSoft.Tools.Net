@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>ISDN address</para>
@@ -49,7 +49,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="isdnAddress"> ISDN number </param>
 		public IsdnRecord(DomainName name, int timeToLive, string isdnAddress)
-			: this(name, timeToLive, isdnAddress, String.Empty) {}
+			: this(name, timeToLive, isdnAddress, string.Empty) {}
 
 		/// <summary>
 		///   Creates a new instance of the IsdnRecord class
@@ -61,8 +61,8 @@ namespace ARSoft.Tools.Net.Dns
 		public IsdnRecord(DomainName name, int timeToLive, string isdnAddress, string subAddress)
 			: base(name, RecordType.Isdn, RecordClass.INet, timeToLive)
 		{
-			IsdnAddress = isdnAddress ?? String.Empty;
-			SubAddress = subAddress ?? String.Empty;
+			IsdnAddress = isdnAddress ?? string.Empty;
+			SubAddress = subAddress ?? string.Empty;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
@@ -70,7 +70,7 @@ namespace ARSoft.Tools.Net.Dns
 			var endPosition = currentPosition + length;
 
 			IsdnAddress = DnsMessageBase.ParseText(resultData, ref currentPosition);
-			SubAddress = currentPosition < endPosition ? DnsMessageBase.ParseText(resultData, ref currentPosition) : String.Empty;
+			SubAddress = currentPosition < endPosition ? DnsMessageBase.ParseText(resultData, ref currentPosition) : string.Empty;
 		}
 
 		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
@@ -84,13 +84,10 @@ namespace ARSoft.Tools.Net.Dns
 				SubAddress = stringRepresentation[1];
 		}
 
-		internal override string RecordDataToString()
-		{
-			return IsdnAddress.ToMasterfileLabelRepresentation()
-			       + (String.IsNullOrEmpty(SubAddress) ? String.Empty : " " + SubAddress.ToMasterfileLabelRepresentation());
-		}
+		internal override string RecordDataToString() => IsdnAddress.ToMasterfileLabelRepresentation()
+		                                                 + (string.IsNullOrEmpty(SubAddress) ? string.Empty : " " + SubAddress.ToMasterfileLabelRepresentation());
 
-		protected internal override int MaximumRecordDataLength => 2 + IsdnAddress.Length + SubAddress.Length;
+	    protected internal override int MaximumRecordDataLength => 2 + IsdnAddress.Length + SubAddress.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

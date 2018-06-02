@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ARSoft.Tools.Net.Dns;
+using ARSoft.Tools.Net.Dns.DnsSec;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
 
@@ -46,12 +47,9 @@ namespace ARSoft.Tools.Net
 		///   Creates a new instance of the DomainName class
 		/// </summary>
 		/// <param name="labels">The labels of the DomainName</param>
-		public DomainName(string[] labels)
-		{
-			_labels = labels;
-		}
+		public DomainName(string[] labels) => _labels = labels;
 
-		internal DomainName(string label, DomainName parent)
+	    internal DomainName(string label, DomainName parent)
 		{
 			_labels = new string[1 + parent.LabelCount];
 
@@ -79,12 +77,9 @@ namespace ARSoft.Tools.Net
 		{
 			var newLabels = new string[LabelCount];
 
-			for (var i = 0; i < LabelCount; i++)
-			{
-				newLabels[i] = Labels[i].Add0x20Bits();
-			}
+			for (var i = 0; i < LabelCount; i++) newLabels[i] = Labels[i].Add0x20Bits();
 
-			return new DomainName(newLabels) { _hashCode = _hashCode };
+		    return new DomainName(newLabels) { _hashCode = _hashCode };
 		}
 
 		/// <summary>
@@ -174,12 +169,9 @@ namespace ARSoft.Tools.Net
 			return res;
 		}
 
-		internal DomainName GetNsec3HashName(NSec3HashAlgorithm algorithm, int iterations, byte[] salt, DomainName zoneApex)
-		{
-			return new DomainName(GetNSec3Hash(algorithm, iterations, salt).ToBase32HexString(), zoneApex);
-		}
+		internal DomainName GetNsec3HashName(NSec3HashAlgorithm algorithm, int iterations, byte[] salt, DomainName zoneApex) => new DomainName(GetNSec3Hash(algorithm, iterations, salt).ToBase32HexString(), zoneApex);
 
-		internal static DomainName ParseFromMasterfile(string s)
+	    internal static DomainName ParseFromMasterfile(string s)
 		{
 			if (s == ".")
 				return Root;
@@ -189,16 +181,15 @@ namespace ARSoft.Tools.Net
 			var lastOffset = 0;
 
 			for (var i = 0; i < s.Length; ++i)
-			{
-				if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
-				{
-					labels.Add(s.Substring(lastOffset, i - lastOffset).FromMasterfileLabelRepresentation());
-					lastOffset = i + 1;
-				}
-			}
-			labels.Add(s.Substring(lastOffset, s.Length - lastOffset).FromMasterfileLabelRepresentation());
+			    if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
+			    {
+			        labels.Add(s.Substring(lastOffset, i - lastOffset).FromMasterfileLabelRepresentation());
+			        lastOffset = i + 1;
+			    }
 
-			if (labels[labels.Count - 1] == String.Empty)
+		    labels.Add(s.Substring(lastOffset, s.Length - lastOffset).FromMasterfileLabelRepresentation());
+
+			if (labels[labels.Count - 1] == string.Empty)
 				labels.RemoveAt(labels.Count - 1);
 
 			return new DomainName(labels.ToArray());
@@ -242,23 +233,21 @@ namespace ARSoft.Tools.Net
 			string label;
 
 			for (var i = 0; i < s.Length; ++i)
-			{
-				if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
-				{
-					if (TryParseLabel(s.Substring(lastOffset, i - lastOffset), out label))
-					{
-						labels.Add(label);
-						lastOffset = i + 1;
-					}
-					else
-					{
-						name = null;
-						return false;
-					}
-				}
-			}
+			    if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
+			    {
+			        if (TryParseLabel(s.Substring(lastOffset, i - lastOffset), out label))
+			        {
+			            labels.Add(label);
+			            lastOffset = i + 1;
+			        }
+			        else
+			        {
+			            name = null;
+			            return false;
+			        }
+			    }
 
-			if (s.Length == lastOffset)
+		    if (s.Length == lastOffset)
 			{
 				// empty label --> name ends with dot
 			}
@@ -276,7 +265,7 @@ namespace ARSoft.Tools.Net
 			return true;
 		}
 
-		private static readonly IdnMapping _idnParser = new IdnMapping() { UseStd3AsciiRules = true };
+		private static readonly IdnMapping _idnParser = new IdnMapping { UseStd3AsciiRules = true };
 		private static readonly Regex _asciiNameRegex = new Regex("^[a-zA-Z0-9_-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
 		private static bool TryParseLabel(string s, out string label)
@@ -312,7 +301,7 @@ namespace ARSoft.Tools.Net
 			if (_toString != null)
 				return _toString;
 
-			return _toString = String.Join(".", _labels.Select(x => x.ToMasterfileLabelRepresentation(true))) + ".";
+			return _toString = string.Join(".", _labels.Select(x => x.ToMasterfileLabelRepresentation(true))) + ".";
 		}
 
 		private int? _hashCode;
@@ -330,14 +319,12 @@ namespace ARSoft.Tools.Net
 			var hash = LabelCount;
 
 			for (var i = 0; i < LabelCount; i++)
-			{
-				unchecked
-				{
-					hash = hash * 17 + _labels[i].ToLowerInvariant().GetHashCode();
-				}
-			}
+			    unchecked
+			    {
+			        hash = hash * 17 + _labels[i].ToLowerInvariant().GetHashCode();
+			    }
 
-			return (_hashCode = hash).Value;
+		    return (_hashCode = hash).Value;
 		}
 
 		/// <summary>
@@ -379,32 +366,23 @@ namespace ARSoft.Tools.Net
 		/// <param name="name1">The first name</param>
 		/// <param name="name2">The second name</param>
 		/// <returns>true, if the names are not identical</returns>
-		public static bool operator !=(DomainName name1, DomainName name2)
-		{
-			return !(name1 == name2);
-		}
+		public static bool operator !=(DomainName name1, DomainName name2) => !(name1 == name2);
 
-		/// <summary>
+	    /// <summary>
 		///   Checks, whether this name is equal to an other object (case insensitive)
 		/// </summary>
 		/// <param name="obj">The other object</param>
 		/// <returns>true, if the names are equal</returns>
-		public override bool Equals(object obj)
-		{
-			return Equals(obj as DomainName);
-		}
+		public override bool Equals(object obj) => Equals(obj as DomainName);
 
-		/// <summary>
+	    /// <summary>
 		///   Checks, whether this name is equal to an other name (case insensitive)
 		/// </summary>
 		/// <param name="other">The other name</param>
 		/// <returns>true, if the names are equal</returns>
-		public bool Equals(DomainName other)
-		{
-			return Equals(other, true);
-		}
+		public bool Equals(DomainName other) => Equals(other, true);
 
-		/// <summary>
+	    /// <summary>
 		///   Checks, whether this name is equal to an other name
 		/// </summary>
 		/// <param name="other">The other name</param>
@@ -424,12 +402,10 @@ namespace ARSoft.Tools.Net
 			var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
 			for (var i = 0; i < LabelCount; i++)
-			{
-				if (!String.Equals(_labels[i], other._labels[i], comparison))
-					return false;
-			}
+			    if (!string.Equals(_labels[i], other._labels[i], comparison))
+			        return false;
 
-			return true;
+		    return true;
 		}
 
 		/// <summary>
@@ -442,7 +418,7 @@ namespace ARSoft.Tools.Net
 		{
 			for (var i = 1; i <= Math.Min(LabelCount, other.LabelCount); i++)
 			{
-				var labelCompare = String.Compare(Labels[LabelCount - i].ToLowerInvariant(), other.Labels[other.LabelCount - i].ToLowerInvariant(), StringComparison.Ordinal);
+				var labelCompare = string.Compare(Labels[LabelCount - i].ToLowerInvariant(), other.Labels[other.LabelCount - i].ToLowerInvariant(), StringComparison.Ordinal);
 
 				if (labelCompare != 0)
 					return labelCompare;

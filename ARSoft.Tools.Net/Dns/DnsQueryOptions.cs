@@ -17,6 +17,7 @@
 #endregion
 
 using System;
+using ARSoft.Tools.Net.Dns.EDns;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -48,17 +49,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsEDnsEnabled
 		{
-			get { return EDnsOptions != null; }
-			set
+			get => EDnsOptions != null;
+		    set
 			{
 				if (value && EDnsOptions == null)
-				{
-					EDnsOptions = new OptRecord();
-				}
-				else if (!value)
-				{
-					EDnsOptions = null;
-				}
+				    EDnsOptions = new OptRecord();
+				else if (!value) EDnsOptions = null;
 			}
 		}
 
@@ -88,10 +84,7 @@ namespace ARSoft.Tools.Net.Dns
 				var ednsOptions = EDnsOptions;
 				if (ednsOptions == null)
 				{
-					if (value)
-					{
-						throw new ArgumentOutOfRangeException(nameof(value), "Setting DO flag is allowed in edns messages only");
-					}
+					if (value) throw new ArgumentOutOfRangeException(nameof(value), "Setting DO flag is allowed in edns messages only");
 				}
 				else
 				{

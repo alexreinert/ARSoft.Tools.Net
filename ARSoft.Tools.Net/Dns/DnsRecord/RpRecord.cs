@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Responsible person record</para>
@@ -73,13 +73,10 @@ namespace ARSoft.Tools.Net.Dns
 			TxtDomainName = ParseDomainName(origin, stringRepresentation[1]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return MailBox
-			       + " " + TxtDomainName;
-		}
+		internal override string RecordDataToString() => MailBox
+		                                                 + " " + TxtDomainName;
 
-		protected internal override int MaximumRecordDataLength => 4 + MailBox.MaximumRecordDataLength + TxtDomainName.MaximumRecordDataLength;
+	    protected internal override int MaximumRecordDataLength => 4 + MailBox.MaximumRecordDataLength + TxtDomainName.MaximumRecordDataLength;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

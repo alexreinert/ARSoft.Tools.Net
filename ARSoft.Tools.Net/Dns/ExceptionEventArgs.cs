@@ -30,9 +30,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public Exception Exception { get; set; }
 
-		internal ExceptionEventArgs(Exception exception)
-		{
-			Exception = exception;
-		}
+		internal ExceptionEventArgs(Exception exception) => Exception = exception;
 	}
 }

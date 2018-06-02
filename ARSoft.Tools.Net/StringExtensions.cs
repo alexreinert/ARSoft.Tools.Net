@@ -36,17 +36,11 @@ namespace ARSoft.Tools.Net
 				var key = k.Groups["key"].Value;
 
 				if (key == "#")
-				{
-					return @"\#";
-				}
+				    return @"\#";
 				else if (key.Length == 3)
-				{
-					return new String((char) Byte.Parse(key), 1);
-				}
+				    return new string((char) byte.Parse(key), 1);
 				else
-				{
-					return key;
-				}
+				    return key;
 			});
 		}
 
@@ -58,11 +52,8 @@ namespace ARSoft.Tools.Net
 			var sb = new StringBuilder();
 
 			foreach (var c in s)
-			{
 			    if (c < 32 || c > 126)
-			    {
 			        sb.Append(@"\" + ((int) c).ToString("000"));
-			    }
 			    else switch (c)
 			    {
 			        case '"':
@@ -78,9 +69,8 @@ namespace ARSoft.Tools.Net
 			            sb.Append(c);
 			            break;
 			    }
-			}
 
-			return sb.ToString();
+		    return sb.ToString();
 		}
 
 		private static readonly Random _random = new Random();
@@ -96,15 +86,10 @@ namespace ARSoft.Tools.Net
 				var current = s[i];
 
 				if (!isLower && current >= 'A' && current <= 'Z')
-				{
-					current = (char) (current + 0x20);
-				}
-				else if (isLower && current >= 'a' && current <= 'z')
-				{
-					current = (char) (current - 0x20);
-				}
+				    current = (char) (current + 0x20);
+				else if (isLower && current >= 'a' && current <= 'z') current = (char) (current - 0x20);
 
-				res[i] = current;
+			    res[i] = current;
 			}
 
 			return new string(res);

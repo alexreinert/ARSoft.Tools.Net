@@ -23,6 +23,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.DnsRecord;
+using ARSoft.Tools.Net.Dns.TSig;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -129,52 +131,44 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public void Stop()
 		{
-			if (_udpListenerCount > 0)
-			{
-				_udpListener.Close();
-			}
-			if (_tcpListenerCount > 0)
-			{
-				_tcpListener.Stop();
-			}
+			if (_udpListenerCount > 0) _udpListener.Close();
+		    if (_tcpListenerCount > 0) _tcpListener.Stop();
 		}
 
 		private async Task<DnsMessageBase> ProcessMessageAsync(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
 		{
 			if (query.TSigOptions != null)
-			{
-				switch (query.TSigOptions.ValidationResult)
-				{
-					case ReturnCode.BadKey:
-					case ReturnCode.BadSig:
-						query.IsQuery = false;
-						query.ReturnCode = ReturnCode.NotAuthoritive;
-						query.TSigOptions.Error = query.TSigOptions.ValidationResult;
-						query.TSigOptions.KeyData = null;
+			    switch (query.TSigOptions.ValidationResult)
+			    {
+			        case ReturnCode.BadKey:
+			        case ReturnCode.BadSig:
+			            query.IsQuery = false;
+			            query.ReturnCode = ReturnCode.NotAuthoritive;
+			            query.TSigOptions.Error = query.TSigOptions.ValidationResult;
+			            query.TSigOptions.KeyData = null;
 
 #pragma warning disable 4014
-						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
+			            InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
 #pragma warning restore 4014
 
-						return query;
+			            return query;
 
-					case ReturnCode.BadTime:
-						query.IsQuery = false;
-						query.ReturnCode = ReturnCode.NotAuthoritive;
-						query.TSigOptions.Error = query.TSigOptions.ValidationResult;
-						query.TSigOptions.OtherData = new byte[6];
-						var tmp = 0;
-						TSigRecord.EncodeDateTime(query.TSigOptions.OtherData, ref tmp, DateTime.Now);
+			        case ReturnCode.BadTime:
+			            query.IsQuery = false;
+			            query.ReturnCode = ReturnCode.NotAuthoritive;
+			            query.TSigOptions.Error = query.TSigOptions.ValidationResult;
+			            query.TSigOptions.OtherData = new byte[6];
+			            var tmp = 0;
+			            TSigRecord.EncodeDateTime(query.TSigOptions.OtherData, ref tmp, DateTime.Now);
 
 #pragma warning disable 4014
-						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
+			            InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
 #pragma warning restore 4014
 
-						return query;
-				}
-			}
+			            return query;
+			    }
 
-			var eventArgs = new QueryReceivedEventArgs(query, protocolType, remoteEndpoint);
+		    var eventArgs = new QueryReceivedEventArgs(query, protocolType, remoteEndpoint);
 			await QueryReceived.RaiseAsync(this, eventArgs);
 			return eventArgs.Response;
 		}
@@ -262,10 +256,7 @@ namespace ARSoft.Tools.Net.Dns
                 if (response is DnsMessage message)
                 {
                     var maxLength = 512;
-                    if (query.IsEDnsEnabled && message.IsEDnsEnabled)
-                    {
-                        maxLength = Math.Max(512, (int)message.EDnsOptions.UdpPayloadSize);
-                    }
+                    if (query.IsEDnsEnabled && message.IsEDnsEnabled) maxLength = Math.Max(512, (int)message.EDnsOptions.UdpPayloadSize);
 
                     while (length > maxLength)
                     {
@@ -273,12 +264,8 @@ namespace ARSoft.Tools.Net.Dns
                         if (message.IsEDnsEnabled && message.AdditionalRecords.Count > 1 || !message.IsEDnsEnabled && message.AdditionalRecords.Count > 0)
                         {
                             for (var i = message.AdditionalRecords.Count - 1; i >= 0; i--)
-                            {
                                 if (message.AdditionalRecords[i].RecordType != RecordType.Opt)
-                                {
                                     message.AdditionalRecords.RemoveAt(i);
-                                }
-                            }
 
                             length = message.Encode(false, originalMac, out buffer);
                             continue;
@@ -292,10 +279,7 @@ namespace ARSoft.Tools.Net.Dns
                                 savedLength += message.AuthorityRecords[i].MaximumLength;
                                 message.AuthorityRecords.RemoveAt(i);
 
-                                if (length - savedLength < maxLength)
-                                {
-                                    break;
-                                }
+                                if (length - savedLength < maxLength) break;
                             }
 
                             message.IsTruncated = true;
@@ -311,10 +295,7 @@ namespace ARSoft.Tools.Net.Dns
                                 savedLength += message.AnswerRecords[i].MaximumLength;
                                 message.AnswerRecords.RemoveAt(i);
 
-                                if (length - savedLength < maxLength)
-                                {
-                                    break;
-                                }
+                                if (length - savedLength < maxLength) break;
                             }
 
                             message.IsTruncated = true;
@@ -330,10 +311,7 @@ namespace ARSoft.Tools.Net.Dns
                                 savedLength += message.Questions[i].MaximumLength;
                                 message.Questions.RemoveAt(i);
 
-                                if (length - savedLength < maxLength)
-                                {
-                                    break;
-                                }
+                                if (length - savedLength < maxLength) break;
                             }
 
                             message.IsTruncated = true;
@@ -413,11 +391,9 @@ namespace ARSoft.Tools.Net.Dns
 
 						buffer = await ReadIntoBufferAsync(client, stream, length);
 						if (buffer == null) // client disconneted while reading or timeout
-						{
-							throw new Exception("Client disconnted or timed out while sending data");
-						}
+						    throw new Exception("Client disconnted or timed out while sending data");
 
-						DnsMessageBase query;
+					    DnsMessageBase query;
 						byte[] tsigMac;
 						try
 						{

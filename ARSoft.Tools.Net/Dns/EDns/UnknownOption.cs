@@ -17,7 +17,7 @@
 #endregion
 
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.EDns
 {
     /// <summary>
     ///   Unknown EDNS option
@@ -38,12 +38,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="type">Type of the option</param>
 		/// <param name="data">The data of the option</param>
 		public UnknownOption(EDnsOptionType type, byte[] data)
-			: this(type)
-		{
-			Data = data;
-		}
+			: this(type) => Data = data;
 
-		internal override void ParseData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
 			Data = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}

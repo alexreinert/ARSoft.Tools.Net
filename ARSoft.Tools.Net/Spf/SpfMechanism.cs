@@ -74,7 +74,7 @@ namespace ARSoft.Tools.Net.Spf
 
 			res.Append(EnumHelper<SpfMechanismType>.ToString(Type).ToLower());
 
-			if (!String.IsNullOrEmpty(Domain))
+			if (!string.IsNullOrEmpty(Domain))
 			{
 				res.Append(":");
 				res.Append(Domain);

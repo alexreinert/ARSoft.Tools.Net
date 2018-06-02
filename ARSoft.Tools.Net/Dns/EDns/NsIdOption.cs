@@ -17,7 +17,7 @@
 #endregion
 
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.EDns
 {
     /// <summary>
     ///   <para>Name server ID option</para>
@@ -40,12 +40,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   Creates a new instance of the NsIdOption class
 		/// </summary>
 		public NsIdOption(byte[] payload)
-			: this()
-		{
-			Payload = payload;
-		}
+			: this() => Payload = payload;
 
-		internal override void ParseData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
 			Payload = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}

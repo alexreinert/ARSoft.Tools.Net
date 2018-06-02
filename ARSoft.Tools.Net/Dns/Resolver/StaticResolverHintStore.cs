@@ -18,15 +18,16 @@
 
 using System.Collections.Generic;
 using System.Net;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
     ///   Implementation of IResolverHintStore, which uses statically linked hints
     /// </summary>
     public class StaticResolverHintStore : IResolverHintStore
 	{
-		private static readonly List<IPAddress> _rootServers = new List<IPAddress>()
+		private static readonly List<IPAddress> _rootServers = new List<IPAddress>
 		{
 			// a.root-servers.net
 			IPAddress.Parse("198.41.0.4"),
@@ -86,7 +87,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<IPAddress> RootServers => _rootServers;
 
-		private static readonly List<DsRecord> _rootKeys = new List<DsRecord>()
+		private static readonly List<DsRecord> _rootKeys = new List<DsRecord>
 		{
 			new DsRecord(DomainName.Root, RecordClass.INet, 0, 19036, DnsSecAlgorithm.RsaSha256, DnsSecDigestType.Sha256, "49AAC11D7B6F6446702E54A1607371607A1A41855200FD2CE1CDDE32F24E8FB5".FromBase16String()),
 			new DsRecord(DomainName.Root, RecordClass.INet, 0, 20326, DnsSecAlgorithm.RsaSha256, DnsSecDigestType.Sha256, "E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D".FromBase16String()),

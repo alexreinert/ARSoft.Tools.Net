@@ -17,7 +17,7 @@
 #endregion
 
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.EDns
 {
     /// <summary>
     ///   <para>Expire EDNS Option</para>
@@ -44,12 +44,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="soaExpire">The expiration of the SOA record in seconds</param>
 		public ExpireOption(int soaExpire)
-			: this()
-		{
-			SoaExpire = soaExpire;
-		}
+			: this() => SoaExpire = soaExpire;
 
-		internal override void ParseData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
 			if (length == 4)
 				SoaExpire = DnsMessageBase.ParseInt(resultData, ref startPosition);

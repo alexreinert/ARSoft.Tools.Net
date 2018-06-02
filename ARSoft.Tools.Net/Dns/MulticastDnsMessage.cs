@@ -17,6 +17,7 @@
 #endregion
 
 using System.Collections.Generic;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -30,12 +31,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="data">Buffer, that contains the message data</param>
 		/// <returns>A new instance of the MulticastDnsMessage class</returns>
-		public static MulticastDnsMessage Parse(byte[] data)
-		{
-			return Parse<MulticastDnsMessage>(data);
-		}
+		public static MulticastDnsMessage Parse(byte[] data) => Parse<MulticastDnsMessage>(data);
 
-		#region Header
+	    #region Header
 		/// <summary>
 		///   <para>Gets or sets the autoritive answer (AA) flag</para>
 		///   <para>
@@ -45,17 +43,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsAuthoritiveAnswer
 		{
-			get { return (Flags & 0x0400) != 0; }
-			set
+			get => (Flags & 0x0400) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0400;
-				}
+				    Flags |= 0x0400;
 				else
-				{
-					Flags &= 0xfbff;
-				}
+				    Flags &= 0xfbff;
 			}
 		}
 
@@ -68,17 +62,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsTruncated
 		{
-			get { return (Flags & 0x0200) != 0; }
-			set
+			get => (Flags & 0x0200) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0200;
-				}
+				    Flags |= 0x0200;
 				else
-				{
-					Flags &= 0xfdff;
-				}
+				    Flags &= 0xfdff;
 			}
 		}
 
@@ -91,17 +81,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsRecursionDesired
 		{
-			get { return (Flags & 0x0100) != 0; }
-			set
+			get => (Flags & 0x0100) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0100;
-				}
+				    Flags |= 0x0100;
 				else
-				{
-					Flags &= 0xfeff;
-				}
+				    Flags &= 0xfeff;
 			}
 		}
 
@@ -114,17 +100,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsRecursionAllowed
 		{
-			get { return (Flags & 0x0080) != 0; }
-			set
+			get => (Flags & 0x0080) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0080;
-				}
+				    Flags |= 0x0080;
 				else
-				{
-					Flags &= 0xff7f;
-				}
+				    Flags &= 0xff7f;
 			}
 		}
 
@@ -137,17 +119,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsAuthenticData
 		{
-			get { return (Flags & 0x0020) != 0; }
-			set
+			get => (Flags & 0x0020) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0020;
-				}
+				    Flags |= 0x0020;
 				else
-				{
-					Flags &= 0xffdf;
-				}
+				    Flags &= 0xffdf;
 			}
 		}
 
@@ -160,17 +138,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsCheckingDisabled
 		{
-			get { return (Flags & 0x0010) != 0; }
-			set
+			get => (Flags & 0x0010) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0010;
-				}
+				    Flags |= 0x0010;
 				else
-				{
-					Flags &= 0xffef;
-				}
+				    Flags &= 0xffef;
 			}
 		}
 		#endregion
@@ -180,8 +154,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public new List<DnsQuestion> Questions
 		{
-			get { return base.Questions; }
-			set { base.Questions = value ?? new List<DnsQuestion>(); }
+			get => base.Questions;
+		    set => base.Questions = value ?? new List<DnsQuestion>();
 		}
 
 		/// <summary>
@@ -189,8 +163,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public new List<DnsRecordBase> AnswerRecords
 		{
-			get { return base.AnswerRecords; }
-			set { base.AnswerRecords = value ?? new List<DnsRecordBase>(); }
+			get => base.AnswerRecords;
+		    set => base.AnswerRecords = value ?? new List<DnsRecordBase>();
 		}
 
 		/// <summary>
@@ -198,17 +172,14 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public new List<DnsRecordBase> AuthorityRecords
 		{
-			get { return base.AuthorityRecords; }
-			set { base.AuthorityRecords = value ?? new List<DnsRecordBase>(); }
+			get => base.AuthorityRecords;
+		    set => base.AuthorityRecords = value ?? new List<DnsRecordBase>();
 		}
 
 		internal override bool IsTcpUsingRequested => Questions.Count > 0 && (Questions[0].RecordType == RecordType.Axfr || Questions[0].RecordType == RecordType.Ixfr);
 
 		internal override bool IsTcpResendingRequested => IsTruncated;
 
-		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
-		{
-			return false;
-		}
+		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage) => false;
 	}
 }

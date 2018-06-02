@@ -40,19 +40,17 @@ namespace ARSoft.Tools.Net.Spf
 			res.Append("v=spf1");
 
 			if (Terms != null && Terms.Count > 0)
-			{
-				foreach (var term in Terms)
-				{
-					var modifier = term as SpfModifier;
-					if (modifier == null || modifier.Type != SpfModifierType.Unknown)
-					{
-						res.Append(" ");
-						res.Append(term);
-					}
-				}
-			}
+			    foreach (var term in Terms)
+			    {
+			        var modifier = term as SpfModifier;
+			        if (modifier == null || modifier.Type != SpfModifierType.Unknown)
+			        {
+			            res.Append(" ");
+			            res.Append(term);
+			        }
+			    }
 
-			return res.ToString();
+		    return res.ToString();
 		}
 
 		/// <summary>
@@ -60,12 +58,9 @@ namespace ARSoft.Tools.Net.Spf
 		/// </summary>
 		/// <param name="s"> Textual representation to check </param>
 		/// <returns> true in case of correct prefix </returns>
-		public static bool IsSpfRecord(string s)
-		{
-			return !String.IsNullOrEmpty(s) && s.StartsWith("v=spf1 ");
-		}
+		public static bool IsSpfRecord(string s) => !string.IsNullOrEmpty(s) && s.StartsWith("v=spf1 ");
 
-		/// <summary>
+	    /// <summary>
 		///   Tries to parse the textual representation of a SPF string
 		/// </summary>
 		/// <param name="s"> Textual representation to check </param>

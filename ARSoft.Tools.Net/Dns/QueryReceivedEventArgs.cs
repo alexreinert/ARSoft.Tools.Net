@@ -22,25 +22,26 @@ using System.Net.Sockets;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <inheritdoc />
 	/// <summary>
-	///   Event arguments of <see cref="DnsServer.QueryReceived" /> event.
+	///   Event arguments of <see cref="E:ARSoft.Tools.Net.Dns.DnsServer.QueryReceived" /> event.
 	/// </summary>
 	public class QueryReceivedEventArgs : EventArgs
 	{
 		/// <summary>
 		///   Original query, which the client provided
 		/// </summary>
-		public DnsMessageBase Query { get; private set; }
+		public DnsMessageBase Query { get; }
 
 		/// <summary>
 		///   Protocol used by the client
 		/// </summary>
-		public ProtocolType ProtocolType { get; private set; }
+		public ProtocolType ProtocolType { get; }
 
 		/// <summary>
 		///   Remote endpoint of the client
 		/// </summary>
-		public IPEndPoint RemoteEndpoint { get; private set; }
+		public IPEndPoint RemoteEndpoint { get; }
 
 		/// <summary>
 		///   The response, which should be sent to the client

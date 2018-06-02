@@ -34,21 +34,14 @@ namespace ARSoft.Tools.Net
 		{
 			var res = new Dictionary<char, byte>(isCaseIgnored ? 2 * alphabet.Length : alphabet.Length);
 
-			for (byte i = 0; i < alphabet.Length; i++)
-			{
-				res[alphabet[i]] = i;
-			}
+			for (byte i = 0; i < alphabet.Length; i++) res[alphabet[i]] = i;
 
-			if (isCaseIgnored)
-			{
-				alphabet = alphabet.ToLowerInvariant();
-				for (byte i = 0; i < alphabet.Length; i++)
-				{
-					res[alphabet[i]] = i;
-				}
-			}
+		    if (!isCaseIgnored) return res;
 
-			return res;
+		    alphabet = alphabet.ToLowerInvariant();
+		    for (byte i = 0; i < alphabet.Length; i++) res[alphabet[i]] = i;
+
+		    return res;
 		}
 		#endregion
 
@@ -62,12 +55,9 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="inData"> An Base16 encoded string. </param>
 		/// <returns> Decoded data </returns>
-		public static byte[] FromBase16String(this string inData)
-		{
-			return inData.ToCharArray().FromBase16CharArray(0, inData.Length);
-		}
+		public static byte[] FromBase16String(this string inData) => inData.ToCharArray().FromBase16CharArray(0, inData.Length);
 
-		/// <summary>
+	    /// <summary>
 		///   Decodes a Base16 char array as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
 		/// <param name="inData"> An Base16 encoded char array. </param>
@@ -81,12 +71,9 @@ namespace ARSoft.Tools.Net
 			var inPos = offset;
 			var outPos = 0;
 
-			while (inPos < offset + length)
-			{
-				res[outPos++] = (byte) ((_base16ReverseAlphabet[inData[inPos++]] << 4) + _base16ReverseAlphabet[inData[inPos++]]);
-			}
+			while (inPos < offset + length) res[outPos++] = (byte) ((_base16ReverseAlphabet[inData[inPos++]] << 4) + _base16ReverseAlphabet[inData[inPos++]]);
 
-			return res;
+		    return res;
 		}
 
 		/// <summary>
@@ -99,12 +86,9 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <returns> Encoded string </returns>
-		public static string ToBase16String(this byte[] inArray)
-		{
-			return inArray.ToBase16String(0, inArray.Length);
-		}
+		public static string ToBase16String(this byte[] inArray) => inArray.ToBase16String(0, inArray.Length);
 
-		/// <summary>
+	    /// <summary>
 		///   Converts a byte array to its corresponding Base16 encoding described in
 		///   <see
 		///     cref="!:http://tools.ietf.org/html/rfc4648">
@@ -144,24 +128,18 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="inData"> An Base32 encoded string. </param>
 		/// <returns> Decoded data </returns>
-		public static byte[] FromBase32String(this string inData)
-		{
-			return inData.ToCharArray().FromBase32CharArray(0, inData.Length);
-		}
+		public static byte[] FromBase32String(this string inData) => inData.ToCharArray().FromBase32CharArray(0, inData.Length);
 
-		/// <summary>
+	    /// <summary>
 		///   Decodes a Base32 char array as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
 		/// <param name="inData"> An Base32 encoded char array. </param>
 		/// <param name="offset"> An offset in inData. </param>
 		/// <param name="length"> The number of elements of inData to decode. </param>
 		/// <returns> Decoded data </returns>
-		public static byte[] FromBase32CharArray(this char[] inData, int offset, int length)
-		{
-			return inData.FromBase32CharArray(offset, length, _base32ReverseAlphabet);
-		}
+		public static byte[] FromBase32CharArray(this char[] inData, int offset, int length) => inData.FromBase32CharArray(offset, length, _base32ReverseAlphabet);
 
-		/// <summary>
+	    /// <summary>
 		///   Converts a byte array to its corresponding Base32 encoding described in
 		///   <see
 		///     cref="!:http://tools.ietf.org/html/rfc4648">
@@ -171,12 +149,9 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <returns> Encoded string </returns>
-		public static string ToBase32String(this byte[] inArray)
-		{
-			return inArray.ToBase32String(0, inArray.Length);
-		}
+		public static string ToBase32String(this byte[] inArray) => inArray.ToBase32String(0, inArray.Length);
 
-		/// <summary>
+	    /// <summary>
 		///   Converts a byte array to its corresponding Base32 encoding described in
 		///   <see
 		///     cref="!:http://tools.ietf.org/html/rfc4648">
@@ -188,12 +163,9 @@ namespace ARSoft.Tools.Net
 		/// <param name="offset"> An offset in inArray. </param>
 		/// <param name="length"> The number of elements of inArray to convert. </param>
 		/// <returns> Encoded string </returns>
-		public static string ToBase32String(this byte[] inArray, int offset, int length)
-		{
-			return inArray.ToBase32String(offset, length, _base32Alphabet);
-		}
+		public static string ToBase32String(this byte[] inArray, int offset, int length) => inArray.ToBase32String(offset, length, _base32Alphabet);
 
-		private const string _BASE32_HEX_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUV=";
+	    private const string _BASE32_HEX_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUV=";
 		private static readonly char[] _base32HexAlphabet = _BASE32_HEX_ALPHABET.ToCharArray();
 		private static readonly Dictionary<char, byte> _base32HexReverseAlphabet = GetAlphabet(_BASE32_HEX_ALPHABET, true);
 
@@ -202,24 +174,18 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="inData"> An Base32Hex encoded string. </param>
 		/// <returns> Decoded data </returns>
-		public static byte[] FromBase32HexString(this string inData)
-		{
-			return inData.ToCharArray().FromBase32HexCharArray(0, inData.Length);
-		}
+		public static byte[] FromBase32HexString(this string inData) => inData.ToCharArray().FromBase32HexCharArray(0, inData.Length);
 
-		/// <summary>
+	    /// <summary>
 		///   Decodes a Base32Hex char array as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
 		/// <param name="inData"> An Base32Hex encoded char array. </param>
 		/// <param name="offset"> An offset in inData. </param>
 		/// <param name="length"> The number of elements of inData to decode. </param>
 		/// <returns> Decoded data </returns>
-		public static byte[] FromBase32HexCharArray(this char[] inData, int offset, int length)
-		{
-			return inData.FromBase32CharArray(offset, length, _base32HexReverseAlphabet);
-		}
+		public static byte[] FromBase32HexCharArray(this char[] inData, int offset, int length) => inData.FromBase32CharArray(offset, length, _base32HexReverseAlphabet);
 
-		/// <summary>
+	    /// <summary>
 		///   Converts a byte array to its corresponding Base32Hex encoding described in
 		///   <see
 		///     cref="!:http://tools.ietf.org/html/rfc4648">
@@ -229,12 +195,9 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <returns> Encoded string </returns>
-		public static string ToBase32HexString(this byte[] inArray)
-		{
-			return inArray.ToBase32HexString(0, inArray.Length);
-		}
+		public static string ToBase32HexString(this byte[] inArray) => inArray.ToBase32HexString(0, inArray.Length);
 
-		/// <summary>
+	    /// <summary>
 		///   Converts a byte array to its corresponding Base32Hex encoding described in
 		///   <see
 		///     cref="!:http://tools.ietf.org/html/rfc4648">
@@ -246,12 +209,9 @@ namespace ARSoft.Tools.Net
 		/// <param name="offset"> An offset in inArray. </param>
 		/// <param name="length"> The number of elements of inArray to convert. </param>
 		/// <returns> Encoded string </returns>
-		public static string ToBase32HexString(this byte[] inArray, int offset, int length)
-		{
-			return inArray.ToBase32String(offset, length, _base32HexAlphabet);
-		}
+		public static string ToBase32HexString(this byte[] inArray, int offset, int length) => inArray.ToBase32String(offset, length, _base32HexAlphabet);
 
-		private static byte[] FromBase32CharArray(this char[] inData, int offset, int length, Dictionary<char, byte> alphabet)
+	    private static byte[] FromBase32CharArray(this IReadOnlyList<char> inData, int offset, int length, IReadOnlyDictionary<char, byte> alphabet)
 		{
 			var paddingCount = 0;
 			while (paddingCount < 6)
@@ -293,12 +253,9 @@ namespace ARSoft.Tools.Net
 
 			while (outPos < outSafeLength)
 			{
-				for (var i = 0; i < 8; i++)
-				{
-					buffer[i] = alphabet[inData[inPos++]];
-				}
+				for (var i = 0; i < 8; i++) buffer[i] = alphabet[inData[inPos++]];
 
-				res[outPos++] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
+			    res[outPos++] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
 				res[outPos++] = (byte) (((buffer[1] >> 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
 				res[outPos++] = (byte) (((buffer[3] << 4) & 0xf0) | ((buffer[4] >> 1) & 0x0f));
 				res[outPos++] = (byte) (((buffer[4] << 7) & 0x80) | (buffer[5] << 2) | ((buffer[6] >> 3) & 0x03));
@@ -307,12 +264,9 @@ namespace ARSoft.Tools.Net
 
 			if (remain > 0)
 			{
-				for (var i = 0; i < 8 - paddingCount; i++)
-				{
-					buffer[i] = alphabet[inData[inPos++]];
-				}
+				for (var i = 0; i < 8 - paddingCount; i++) buffer[i] = alphabet[inData[inPos++]];
 
-				switch (remain)
+			    switch (remain)
 				{
 					case 1:
 						res[outPos] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
@@ -338,7 +292,7 @@ namespace ARSoft.Tools.Net
 			return res;
 		}
 
-		private static string ToBase32String(this byte[] inArray, int offset, int length, char[] alphabet)
+		private static string ToBase32String(this IReadOnlyList<byte> inArray, int offset, int length, char[] alphabet)
 		{
 			var inRemain = length % 5;
 			var inSafeEnd = offset + length - inRemain;
@@ -419,24 +373,18 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="inData"> An Base64 encoded string. </param>
 		/// <returns> Decoded data </returns>
-		public static byte[] FromBase64String(this string inData)
-		{
-			return inData.ToCharArray().FromBase64CharArray(0, inData.Length);
-		}
+		public static byte[] FromBase64String(this string inData) => inData.ToCharArray().FromBase64CharArray(0, inData.Length);
 
-		/// <summary>
+	    /// <summary>
 		///   Decodes a Base64 char array as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
 		/// <param name="inData"> An Base64 encoded char array. </param>
 		/// <param name="offset"> An offset in inData. </param>
 		/// <param name="length"> The number of elements of inData to decode. </param>
 		/// <returns> Decoded data </returns>
-		public static byte[] FromBase64CharArray(this char[] inData, int offset, int length)
-		{
-			return inData.FromBase64CharArray(offset, length, _base64ReverseAlphabet);
-		}
+		public static byte[] FromBase64CharArray(this char[] inData, int offset, int length) => inData.FromBase64CharArray(offset, length, _base64ReverseAlphabet);
 
-		/// <summary>
+	    /// <summary>
 		///   Converts a byte array to its corresponding Base64 encoding described in
 		///   <see
 		///     cref="!:http://tools.ietf.org/html/rfc4648">
@@ -446,12 +394,9 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
 		/// <returns> Encoded string </returns>
-		public static string ToBase64String(this byte[] inArray)
-		{
-			return inArray.ToBase64String(0, inArray.Length);
-		}
+		public static string ToBase64String(this byte[] inArray) => inArray.ToBase64String(0, inArray.Length);
 
-		/// <summary>
+	    /// <summary>
 		///   Converts a byte array to its corresponding Base64 encoding described in
 		///   <see
 		///     cref="!:http://tools.ietf.org/html/rfc4648">
@@ -463,12 +408,9 @@ namespace ARSoft.Tools.Net
 		/// <param name="offset"> An offset in inArray. </param>
 		/// <param name="length"> The number of elements of inArray to convert. </param>
 		/// <returns> Encoded string </returns>
-		public static string ToBase64String(this byte[] inArray, int offset, int length)
-		{
-			return inArray.ToBase64String(offset, length, _base64Alphabet);
-		}
+		public static string ToBase64String(this byte[] inArray, int offset, int length) => inArray.ToBase64String(offset, length, _base64Alphabet);
 
-		private const string _BASE64_URL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_=";
+	    private const string _BASE64_URL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_=";
 		private static readonly char[] _base64UrlAlphabet = _BASE64_URL_ALPHABET.ToCharArray();
 		private static readonly Dictionary<char, byte> _base64UrlReverseAlphabet = GetAlphabet(_BASE64_URL_ALPHABET, false);
 
@@ -477,39 +419,18 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="inData"> An Base64Url encoded string. </param>
 		/// <returns> Decoded data </returns>
-		public static byte[] FromBase64UrlString(this string inData)
-		{
-			return inData.ToCharArray().FromBase64UrlCharArray(0, inData.Length);
-		}
+		public static byte[] FromBase64UrlString(this string inData) => inData.ToCharArray().FromBase64UrlCharArray(0, inData.Length);
 
-		/// <summary>
+	    /// <summary>
 		///   Decodes a Base64Url char array as described in <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see> .
 		/// </summary>
 		/// <param name="inData"> An Base64Url encoded char array. </param>
 		/// <param name="offset"> An offset in inData. </param>
 		/// <param name="length"> The number of elements of inData to decode. </param>
 		/// <returns> Decoded data </returns>
-		public static byte[] FromBase64UrlCharArray(this char[] inData, int offset, int length)
-		{
-			return inData.FromBase64CharArray(offset, length, _base64UrlReverseAlphabet);
-		}
+		public static byte[] FromBase64UrlCharArray(this char[] inData, int offset, int length) => inData.FromBase64CharArray(offset, length, _base64UrlReverseAlphabet);
 
-		/// <summary>
-		///   Converts a byte array to its corresponding Base64Url encoding described in
-		///   <see
-		///     cref="!:http://tools.ietf.org/html/rfc4648">
-		///     RFC 4648
-		///   </see>
-		///   .
-		/// </summary>
-		/// <param name="inArray"> An array of 8-bit unsigned integers. </param>
-		/// <returns> Encoded string </returns>
-		public static string ToBase64UrlString(this byte[] inArray)
-		{
-			return inArray.ToBase64UrlString(0, inArray.Length);
-		}
-
-		/// <summary>
+	    /// <summary>
 		///   Converts a byte array to its corresponding Base64Url encoding described in
 		///   <see
 		///     cref="!:http://tools.ietf.org/html/rfc4648">
@@ -521,76 +442,63 @@ namespace ARSoft.Tools.Net
 		/// <param name="offset"> An offset in inArray. </param>
 		/// <param name="length"> The number of elements of inArray to convert. </param>
 		/// <returns> Encoded string </returns>
-		public static string ToBase64UrlString(this byte[] inArray, int offset, int length)
-		{
-			return inArray.ToBase64String(offset, length, _base64UrlAlphabet);
-		}
+		public static string ToBase64UrlString(this byte[] inArray, int offset, int length) => inArray.ToBase64String(offset, length, _base64UrlAlphabet);
 
-		private static byte[] FromBase64CharArray(this char[] inData, int offset, int length, Dictionary<char, byte> alphabet)
-		{
-			int paddingCount;
-			int remain;
+	    private static byte[] FromBase64CharArray(this char[] inData, int offset, int length, Dictionary<char, byte> alphabet)
+	    {
+	        int paddingCount;
+	        int remain;
 
-			if (alphabet[inData[offset + length - 2]] == 64)
-			{
-				paddingCount = 2;
-				remain = 1;
-			}
-			else if (alphabet[inData[offset + length - 1]] == 64)
-			{
-				paddingCount = 1;
-				remain = 2;
-			}
-			else
-			{
-				paddingCount = 0;
-				remain = 0;
-			}
+	        if (alphabet[inData[offset + length - 2]] == 64)
+	        {
+	            paddingCount = 2;
+	            remain = 1;
+	        }
+	        else if (alphabet[inData[offset + length - 1]] == 64)
+	        {
+	            paddingCount = 1;
+	            remain = 2;
+	        }
+	        else
+	        {
+	            paddingCount = 0;
+	            remain = 0;
+	        }
 
-			var outSafeLength = (length - paddingCount) / 4 * 3;
+	        var outSafeLength = (length - paddingCount) / 4 * 3;
 
-			var res = new byte[outSafeLength + remain];
+	        var res = new byte[outSafeLength + remain];
 
-			var inPos = offset;
-			var outPos = 0;
+	        var inPos = offset;
+	        var outPos = 0;
 
-			var buffer = new byte[4];
+	        var buffer = new byte[4];
 
-			while (outPos < outSafeLength)
-			{
-				for (var i = 0; i < 4; i++)
-				{
-					buffer[i] = alphabet[inData[inPos++]];
-				}
+	        while (outPos < outSafeLength)
+	        {
+	            for (var i = 0; i < 4; i++) buffer[i] = alphabet[inData[inPos++]];
 
-				res[outPos++] = (byte) ((buffer[0] << 2) | ((buffer[1] >> 4) & 0x03));
-				res[outPos++] = (byte) (((buffer[1] << 4) & 0xf0) | ((buffer[2] >> 2) & 0x0f));
-				res[outPos++] = (byte) (((buffer[2] << 6) & 0xc0) | (buffer[3] & 0x3f));
-			}
+	            res[outPos++] = (byte) ((buffer[0] << 2) | ((buffer[1] >> 4) & 0x03));
+	            res[outPos++] = (byte) (((buffer[1] << 4) & 0xf0) | ((buffer[2] >> 2) & 0x0f));
+	            res[outPos++] = (byte) (((buffer[2] << 6) & 0xc0) | (buffer[3] & 0x3f));
+	        }
 
-			if (remain > 0)
-			{
-				for (var i = 0; i < 4 - paddingCount; i++)
-				{
-					buffer[i] = alphabet[inData[inPos++]];
-				}
+	        if (remain <= 0) return res;
+	        for (var i = 0; i < 4 - paddingCount; i++) buffer[i] = alphabet[inData[inPos++]];
 
-				switch (remain)
-				{
-					case 1:
-						res[outPos] = (byte) ((buffer[0] << 2) | ((buffer[1] >> 4) & 0x03));
-						break;
-					case 2:
-						res[outPos++] = (byte) ((buffer[0] << 2) | ((buffer[1] >> 4) & 0x03));
-						res[outPos] = (byte) (((buffer[1] << 4) & 0xf0) | ((buffer[2] >> 2) & 0x0f));
-						break;
-				}
-			}
+	        if (remain != 1)
+	        {
+	            if (remain != 2) return res;
+	            res[outPos++] = (byte) ((buffer[0] << 2) | ((buffer[1] >> 4) & 0x03));
+	            res[outPos] = (byte) (((buffer[1] << 4) & 0xf0) | ((buffer[2] >> 2) & 0x0f));
+	        }
+	        else
+	            res[outPos] = (byte) ((buffer[0] << 2) | ((buffer[1] >> 4) & 0x03));
 
-			return res;
-		}
+	        return res;
+	    }
 
-		private static string ToBase64String(this byte[] inArray, int offset, int length, char[] alphabet)
+	    private static string ToBase64String(this byte[] inArray, int offset, int length, char[] alphabet)
 		{
 			var inRemain = length % 3;
 			var inSafeEnd = offset + length - inRemain;

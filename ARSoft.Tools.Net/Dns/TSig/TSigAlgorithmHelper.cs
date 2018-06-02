@@ -18,7 +18,7 @@
 
 using System.Security.Cryptography;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.TSig
 {
     // ReSharper disable once InconsistentNaming
     internal class TSigAlgorithmHelper

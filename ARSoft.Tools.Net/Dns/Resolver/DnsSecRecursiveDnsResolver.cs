@@ -23,8 +23,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.Cache;
+using ARSoft.Tools.Net.Dns.DnsRecord;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
     ///   <para>Recursive resolver</para>
@@ -171,7 +174,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					IsResponseValidationEnabled = IsResponseValidationEnabled,
 					Is0x20ValidationEnabled = Is0x20ValidationEnabled
-				}.ResolveAsync(name, recordType, recordClass, new DnsQueryOptions()
+				}.ResolveAsync(name, recordType, recordClass, new DnsQueryOptions
 				{
 					IsRecursionDesired = false,
 					IsEDnsEnabled = true,
@@ -192,40 +195,32 @@ namespace ARSoft.Tools.Net.Dns
 						.ToList();
 
 					if (referalRecords.Count > 0)
-					{
-						if (referalRecords.GroupBy(x => x.Name).Count() == 1)
-						{
-							var newServers = referalRecords.Join(msg.AdditionalRecords.OfType<AddressRecordBase>(), x => x.NameServer, x => x.Name, (x, y) => new { y.Address, TimeToLive = Math.Min(x.TimeToLive, y.TimeToLive) }).ToList();
+					    if (referalRecords.GroupBy(x => x.Name).Count() == 1)
+					    {
+					        var newServers = referalRecords.Join(msg.AdditionalRecords.OfType<AddressRecordBase>(), x => x.NameServer, x => x.Name, (x, y) => new { y.Address, TimeToLive = Math.Min(x.TimeToLive, y.TimeToLive) }).ToList();
 
-							if (newServers.Count > 0)
-							{
-								var zone = referalRecords.First().Name;
+					        if (newServers.Count > 0)
+					        {
+					            var zone = referalRecords.First().Name;
 
-								foreach (var newServer in newServers)
-								{
-									_nameserverCache.Add(zone, newServer.Address, newServer.TimeToLive);
-								}
+					            foreach (var newServer in newServers) _nameserverCache.Add(zone, newServer.Address, newServer.TimeToLive);
 
-								continue;
-							}
-							else
-							{
-								var firstReferal = referalRecords.First();
+					            continue;
+					        }
+					        else
+					        {
+					            var firstReferal = referalRecords.First();
 
-								var newLookedUpServers = await ResolveHostWithTtlAsync(firstReferal.NameServer, state, token);
+					            var newLookedUpServers = await ResolveHostWithTtlAsync(firstReferal.NameServer, state, token);
 
-								foreach (var newServer in newLookedUpServers)
-								{
-									_nameserverCache.Add(firstReferal.Name, newServer.Item1, Math.Min(firstReferal.TimeToLive, newServer.Item2));
-								}
+					            foreach (var newServer in newLookedUpServers) _nameserverCache.Add(firstReferal.Name, newServer.Item1, Math.Min(firstReferal.TimeToLive, newServer.Item2));
 
-								if (newLookedUpServers.Count > 0)
-									continue;
-							}
-						}
-					}
+					            if (newLookedUpServers.Count > 0)
+					                continue;
+					        }
+					    }
 
-					// Response of best known server is not authoritive and has no referrals --> No chance to get a result
+				    // Response of best known server is not authoritive and has no referrals --> No chance to get a result
 					throw new Exception("Could not resolve " + name);
 				}
 			}
@@ -237,12 +232,9 @@ namespace ARSoft.Tools.Net.Dns
 		private async Task<DnsSecResult<T>> ResolveAsyncInternal<T>(DomainName name, RecordType recordType, RecordClass recordClass, State state, CancellationToken token)
 			where T : DnsRecordBase
 		{
-            if (_cache.TryGetRecords(name, recordType, recordClass, out DnsCacheRecordList<T> cachedResults))
-            {
-                return new DnsSecResult<T>(cachedResults, cachedResults.ValidationResult);
-            }
+            if (_cache.TryGetRecords(name, recordType, recordClass, out DnsCacheRecordList<T> cachedResults)) return new DnsSecResult<T>(cachedResults, cachedResults.ValidationResult);
 
-            if (_cache.TryGetRecords(name, RecordType.CName, recordClass, out DnsCacheRecordList<CNameRecord> cachedCNames))
+		    if (_cache.TryGetRecords(name, RecordType.CName, recordClass, out DnsCacheRecordList<CNameRecord> cachedCNames))
             {
                 var cNameResult = await ResolveAsyncInternal<T>(cachedCNames.First().CanonicalName, recordType, recordClass, state, token);
                 return new DnsSecResult<T>(cNameResult.Records, cachedCNames.ValidationResult == cNameResult.ValidationResult ? cachedCNames.ValidationResult : DnsSecValidationResult.Unsigned);
@@ -333,25 +325,16 @@ namespace ARSoft.Tools.Net.Dns
 
 			while (name.LabelCount > 0)
 			{
-                if (_nameserverCache.TryGetAddresses(name, out var cachedAddresses))
-                {
-                    return cachedAddresses.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ThenBy(x => rnd.Next());
-                }
+                if (_nameserverCache.TryGetAddresses(name, out var cachedAddresses)) return cachedAddresses.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ThenBy(x => rnd.Next());
 
-                name = name.GetParentName();
+			    name = name.GetParentName();
 			}
 
 			return _resolverHintStore.RootServers.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ThenBy(x => rnd.Next());
 		}
 
-		Task<DnsMessage> IInternalDnsSecResolver<State>.ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, State state, CancellationToken token)
-		{
-			return ResolveMessageAsync(name, recordType, recordClass, state, token);
-		}
+		Task<DnsMessage> IInternalDnsSecResolver<State>.ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, State state, CancellationToken token) => ResolveMessageAsync(name, recordType, recordClass, state, token);
 
-		Task<DnsSecResult<TRecord>> IInternalDnsSecResolver<State>.ResolveSecureAsync<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, State state, CancellationToken token)
-		{
-			return ResolveAsyncInternal<TRecord>(name, recordType, recordClass, state, token);
-		}
+	    Task<DnsSecResult<TRecord>> IInternalDnsSecResolver<State>.ResolveSecureAsync<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, State state, CancellationToken token) => ResolveAsyncInternal<TRecord>(name, recordType, recordClass, state, token);
 	}
 }

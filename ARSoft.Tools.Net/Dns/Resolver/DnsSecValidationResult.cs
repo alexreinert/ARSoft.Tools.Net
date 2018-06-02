@@ -16,7 +16,7 @@
 // limitations under the License.
 #endregion
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
 	/// <summary>
 	///   The result of a DNSSEC validation

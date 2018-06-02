@@ -17,7 +17,7 @@
 #endregion
 
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
     /// <summary>
     ///   Type of DNSSEC digest

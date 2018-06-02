@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Naming authority pointer record</para>
@@ -82,9 +82,9 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			Order = order;
 			Preference = preference;
-			Flags = flags ?? String.Empty;
-			Services = services ?? String.Empty;
-			RegExp = regExp ?? String.Empty;
+			Flags = flags ?? string.Empty;
+			Services = services ?? string.Empty;
+			RegExp = regExp ?? string.Empty;
 			Replacement = replacement ?? DomainName.Root;
 		}
 
@@ -103,25 +103,22 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 6)
 				throw new NotSupportedException();
 
-			Order = UInt16.Parse(stringRepresentation[0]);
-			Preference = UInt16.Parse(stringRepresentation[1]);
+			Order = ushort.Parse(stringRepresentation[0]);
+			Preference = ushort.Parse(stringRepresentation[1]);
 			Flags = stringRepresentation[2];
 			Services = stringRepresentation[3];
 			RegExp = stringRepresentation[4];
 			Replacement = ParseDomainName(origin, stringRepresentation[5]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Order
-			       + " " + Preference
-			       + " \"" + Flags.ToMasterfileLabelRepresentation() + "\""
-			       + " \"" + Services.ToMasterfileLabelRepresentation() + "\""
-			       + " \"" + RegExp.ToMasterfileLabelRepresentation() + "\""
-			       + " " + Replacement;
-		}
+		internal override string RecordDataToString() => Order
+		                                                 + " " + Preference
+		                                                 + " \"" + Flags.ToMasterfileLabelRepresentation() + "\""
+		                                                 + " \"" + Services.ToMasterfileLabelRepresentation() + "\""
+		                                                 + " \"" + RegExp.ToMasterfileLabelRepresentation() + "\""
+		                                                 + " " + Replacement;
 
-		protected internal override int MaximumRecordDataLength => Flags.Length + Services.Length + RegExp.Length + Replacement.MaximumRecordDataLength + 13;
+	    protected internal override int MaximumRecordDataLength => Flags.Length + Services.Length + RegExp.Length + Replacement.MaximumRecordDataLength + 13;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

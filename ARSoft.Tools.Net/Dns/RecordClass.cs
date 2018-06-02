@@ -97,7 +97,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		public static bool TryParseShortString(string s, out RecordClass recordClass, bool allowAny = true)
 		{
-			if (String.IsNullOrEmpty(s))
+			if (string.IsNullOrEmpty(s))
 			{
 				recordClass = RecordClass.Invalid;
 				return false;
@@ -135,14 +135,13 @@ namespace ARSoft.Tools.Net.Dns
 
 				default:
 					if (s.StartsWith("CLASS", StringComparison.InvariantCultureIgnoreCase))
-					{
-                        if (UInt16.TryParse(s.Substring(5), out var classValue))
-                        {
-                            recordClass = (RecordClass)classValue;
-                            return true;
-                        }
-                    }
-					recordClass = RecordClass.Invalid;
+					    if (ushort.TryParse(s.Substring(5), out var classValue))
+					    {
+					        recordClass = (RecordClass)classValue;
+					        return true;
+					    }
+
+				    recordClass = RecordClass.Invalid;
 					return false;
 			}
 		}

@@ -20,7 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 using ARSoft.Tools.Net.Dns.DynamicUpdate;
+using ARSoft.Tools.Net.Dns.EDns;
+using ARSoft.Tools.Net.Dns.TSig;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -42,8 +45,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<DnsRecordBase> AdditionalRecords
 		{
-			get { return _additionalRecords; }
-			set { _additionalRecords = value ?? new List<DnsRecordBase>(); }
+			get => _additionalRecords;
+		    set => _additionalRecords = value ?? new List<DnsRecordBase>();
 		}
 
 		internal abstract bool IsTcpUsingRequested { get; }
@@ -54,24 +57,20 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Gets or sets the transaction identifier (ID) of the message
 		/// </summary>
-		public ushort TransactionID { get; set; }
+		public ushort TransactionId { get; set; }
 
 		/// <summary>
 		///   Gets or sets the query (QR) flag
 		/// </summary>
 		public bool IsQuery
 		{
-			get { return (Flags & 0x8000) == 0; }
-			set
+			get => (Flags & 0x8000) == 0;
+		    set
 			{
 				if (value)
-				{
-					Flags &= 0x7fff;
-				}
+				    Flags &= 0x7fff;
 				else
-				{
-					Flags |= 0x8000;
-				}
+				    Flags |= 0x8000;
 			}
 		}
 
@@ -80,8 +79,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public OperationCode OperationCode
 		{
-			get { return (OperationCode) ((Flags & 0x7800) >> 11); }
-			set
+			get => (OperationCode) ((Flags & 0x7800) >> 11);
+		    set
 			{
 				var clearedOp = (ushort) (Flags & 0x8700);
 				Flags = (ushort) (clearedOp | (ushort) value << 11);
@@ -99,14 +98,9 @@ namespace ARSoft.Tools.Net.Dns
 
 				var ednsOptions = EDnsOptions;
 				if (ednsOptions == null)
-				{
-					return rcode;
-				}
+				    return rcode;
 				else
-				{
-					// ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
-					return rcode | ednsOptions.ExtendedReturnCode;
-				}
+				    return rcode | ednsOptions.ExtendedReturnCode;
 			}
 			set
 			{
@@ -115,20 +109,13 @@ namespace ARSoft.Tools.Net.Dns
 				if ((ushort) value > 15)
 				{
 					if (ednsOptions == null)
-					{
-						throw new ArgumentOutOfRangeException(nameof(value), "ReturnCodes greater than 15 only allowed in edns messages");
-					}
+					    throw new ArgumentOutOfRangeException(nameof(value), "ReturnCodes greater than 15 only allowed in edns messages");
 					else
-					{
-						ednsOptions.ExtendedReturnCode = value;
-					}
+					    ednsOptions.ExtendedReturnCode = value;
 				}
 				else
 				{
-					if (ednsOptions != null)
-					{
-						ednsOptions.ExtendedReturnCode = 0;
-					}
+					if (ednsOptions != null) ednsOptions.ExtendedReturnCode = 0;
 				}
 
 				var clearedOp = (ushort) (Flags & 0xfff0);
@@ -146,23 +133,16 @@ namespace ARSoft.Tools.Net.Dns
 			get
 			{
 				if (_additionalRecords != null)
-				{
-					return _additionalRecords.Any(record => record.RecordType == RecordType.Opt);
-				}
+				    return _additionalRecords.Any(record => record.RecordType == RecordType.Opt);
 				else
-				{
-					return false;
-				}
+				    return false;
 			}
 			set
 			{
 				if (value && !IsEDnsEnabled)
 				{
-					if (_additionalRecords == null)
-					{
-						_additionalRecords = new List<DnsRecordBase>();
-					}
-					_additionalRecords.Add(new OptRecord());
+					if (_additionalRecords == null) _additionalRecords = new List<DnsRecordBase>();
+				    _additionalRecords.Add(new OptRecord());
 				}
 				else if (!value && IsEDnsEnabled)
 				{
@@ -190,11 +170,8 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else
 				{
-					if (_additionalRecords == null)
-					{
-						_additionalRecords = new List<DnsRecordBase>();
-					}
-					_additionalRecords.Add(value);
+					if (_additionalRecords == null) _additionalRecords = new List<DnsRecordBase>();
+				    _additionalRecords.Add(value);
 				}
 			}
 		}
@@ -231,12 +208,9 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		internal static TMessage Parse<TMessage>(byte[] data)
-			where TMessage : DnsMessageBase, new()
-		{
-			return Parse<TMessage>(data, null, null);
-		}
+			where TMessage : DnsMessageBase, new() => Parse<TMessage>(data, null, null);
 
-		internal static TMessage Parse<TMessage>(byte[] data, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
+	    internal static TMessage Parse<TMessage>(byte[] data, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
 			where TMessage : DnsMessageBase, new()
 		{
 			var result = new TMessage();
@@ -248,7 +222,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			var currentPosition = 0;
 
-			TransactionID = ParseUShort(data, ref currentPosition);
+			TransactionId = ParseUShort(data, ref currentPosition);
 			Flags = ParseUShort(data, ref currentPosition);
 
 			int questionCount = ParseUShort(data, ref currentPosition);
@@ -299,13 +273,9 @@ namespace ARSoft.Tools.Net.Dns
 				// maxLength for the buffer to validate: Original (unsigned) dns message and encoded TSigOptions
 				// because of compression of keyname, the size of the signed message can not be used
 				var maxLength = TSigOptions.StartPosition + TSigOptions.MaximumLength;
-				if (originalMac != null)
-				{
-					// add length of mac on responses. MacSize not neccessary, this field is allready included in the size of the tsig options
-					maxLength += originalMac.Length;
-				}
+				if (originalMac != null) maxLength += originalMac.Length;
 
-				var validationBuffer = new byte[maxLength];
+			    var validationBuffer = new byte[maxLength];
 
 				var currentPosition = 0;
 
@@ -320,7 +290,7 @@ namespace ARSoft.Tools.Net.Dns
 				Buffer.BlockCopy(resultData, 0, validationBuffer, currentPosition, TSigOptions.StartPosition);
 
 				// update original transaction id and ar count in message
-				EncodeUShort(validationBuffer, currentPosition, TSigOptions.OriginalID);
+				EncodeUShort(validationBuffer, currentPosition, TSigOptions.OriginalId);
 				EncodeUShort(validationBuffer, currentPosition + 10, (ushort) _additionalRecords.Count);
 				currentPosition += TSigOptions.StartPosition;
 
@@ -349,10 +319,7 @@ namespace ARSoft.Tools.Net.Dns
 		#region Methods for parsing answer
 		private static void ParseSection(byte[] resultData, ref int currentPosition, List<DnsRecordBase> sectionList, int recordCount)
 		{
-			for (var i = 0; i < recordCount; i++)
-			{
-				sectionList.Add(ParseRecord(resultData, ref currentPosition));
-			}
+			for (var i = 0; i < recordCount; i++) sectionList.Add(ParseRecord(resultData, ref currentPosition));
 		}
 
 		private static DnsRecordBase ParseRecord(byte[] resultData, ref int currentPosition)
@@ -416,15 +383,11 @@ namespace ARSoft.Tools.Net.Dns
 			ushort res;
 
 			if (BitConverter.IsLittleEndian)
-			{
-				res = (ushort) ((resultData[currentPosition++] << 8) | resultData[currentPosition++]);
-			}
+			    res = (ushort) ((resultData[currentPosition++] << 8) | resultData[currentPosition++]);
 			else
-			{
-				res = (ushort) (resultData[currentPosition++] | (resultData[currentPosition++] << 8));
-			}
+			    res = (ushort) (resultData[currentPosition++] | (resultData[currentPosition++] << 8));
 
-			return res;
+		    return res;
 		}
 
 		internal static int ParseInt(byte[] resultData, ref int currentPosition)
@@ -432,15 +395,11 @@ namespace ARSoft.Tools.Net.Dns
 			int res;
 
 			if (BitConverter.IsLittleEndian)
-			{
-				res = (resultData[currentPosition++] << 24) | (resultData[currentPosition++] << 16) | (resultData[currentPosition++] << 8) | resultData[currentPosition++];
-			}
+			    res = (resultData[currentPosition++] << 24) | (resultData[currentPosition++] << 16) | (resultData[currentPosition++] << 8) | resultData[currentPosition++];
 			else
-			{
-				res = resultData[currentPosition++] | (resultData[currentPosition++] << 8) | (resultData[currentPosition++] << 16) | (resultData[currentPosition++] << 24);
-			}
+			    res = resultData[currentPosition++] | (resultData[currentPosition++] << 8) | (resultData[currentPosition++] << 16) | (resultData[currentPosition++] << 24);
 
-			return res;
+		    return res;
 		}
 
 		internal static uint ParseUInt(byte[] resultData, ref int currentPosition)
@@ -448,15 +407,11 @@ namespace ARSoft.Tools.Net.Dns
 			uint res;
 
 			if (BitConverter.IsLittleEndian)
-			{
-				res = ((uint) resultData[currentPosition++] << 24) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 8) | resultData[currentPosition++];
-			}
+			    res = ((uint) resultData[currentPosition++] << 24) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 8) | resultData[currentPosition++];
 			else
-			{
-				res = resultData[currentPosition++] | ((uint) resultData[currentPosition++] << 8) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 24);
-			}
+			    res = resultData[currentPosition++] | ((uint) resultData[currentPosition++] << 8) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 24);
 
-			return res;
+		    return res;
 		}
 
 		internal static ulong ParseULong(byte[] resultData, ref int currentPosition)
@@ -464,15 +419,11 @@ namespace ARSoft.Tools.Net.Dns
 			ulong res;
 
 			if (BitConverter.IsLittleEndian)
-			{
-				res = ((ulong) ParseUInt(resultData, ref currentPosition) << 32) | ParseUInt(resultData, ref currentPosition);
-			}
+			    res = ((ulong) ParseUInt(resultData, ref currentPosition) << 32) | ParseUInt(resultData, ref currentPosition);
 			else
-			{
-				res = ParseUInt(resultData, ref currentPosition) | ((ulong) ParseUInt(resultData, ref currentPosition) << 32);
-			}
+			    res = ParseUInt(resultData, ref currentPosition) | ((ulong) ParseUInt(resultData, ref currentPosition) << 32);
 
-			return res;
+		    return res;
 		}
 
 		private static DomainName ParseDomainName(byte[] resultData, int currentPosition, out int uncompressedLabelBytes)
@@ -505,15 +456,11 @@ namespace ARSoft.Tools.Net.Dns
 
 					int pointer;
 					if (BitConverter.IsLittleEndian)
-					{
-						pointer = (ushort) (((currentByte - 192) << 8) | resultData[currentPosition]);
-					}
+					    pointer = (ushort) (((currentByte - 192) << 8) | resultData[currentPosition]);
 					else
-					{
-						pointer = (ushort) ((currentByte - 192) | (resultData[currentPosition] << 8));
-					}
+					    pointer = (ushort) ((currentByte - 192) | (resultData[currentPosition] << 8));
 
-					currentPosition = pointer;
+				    currentPosition = pointer;
 				}
 				else if (currentByte == 65)
 				{
@@ -535,12 +482,9 @@ namespace ARSoft.Tools.Net.Dns
 						if (isInUncompressedSpace)
 							uncompressedLabelBytes += 1;
 
-						if (length < 8)
-						{
-							currentByte &= (byte) (0xff >> (8 - length));
-						}
+						if (length < 8) currentByte &= (byte) (0xff >> (8 - length));
 
-						sb.Append(currentByte.ToString("x2"));
+					    sb.Append(currentByte.ToString("x2"));
 
 						length = length - 8;
 					} while (length > 0);
@@ -589,19 +533,11 @@ namespace ARSoft.Tools.Net.Dns
 		#region Serializing
 		protected virtual void PrepareEncoding() {}
 
-		internal int Encode(bool addLengthPrefix, out byte[] messageData)
-		{
+		internal int Encode(bool addLengthPrefix, out byte[] messageData) => Encode(addLengthPrefix, null, false, out messageData, out var newTSigMac);
 
-            return Encode(addLengthPrefix, null, false, out messageData, out var newTSigMac);
-        }
+	    internal int Encode(bool addLengthPrefix, byte[] originalTsigMac, out byte[] messageData) => Encode(addLengthPrefix, originalTsigMac, false, out messageData, out var newTSigMac);
 
-		internal int Encode(bool addLengthPrefix, byte[] originalTsigMac, out byte[] messageData)
-		{
-
-            return Encode(addLengthPrefix, originalTsigMac, false, out messageData, out var newTSigMac);
-        }
-
-		internal int Encode(bool addLengthPrefix, byte[] originalTsigMac, bool isSubSequentResponse, out byte[] messageData, out byte[] newTSigMac)
+	    internal int Encode(bool addLengthPrefix, byte[] originalTsigMac, bool isSubSequentResponse, out byte[] messageData, out byte[] newTSigMac)
 		{
 			PrepareEncoding();
 
@@ -635,31 +571,19 @@ namespace ARSoft.Tools.Net.Dns
 
 			var domainNames = new Dictionary<DomainName, ushort>();
 
-			EncodeUShort(messageData, ref currentPosition, TransactionID);
+			EncodeUShort(messageData, ref currentPosition, TransactionId);
 			EncodeUShort(messageData, ref currentPosition, Flags);
 			EncodeUShort(messageData, ref currentPosition, (ushort) Questions.Count);
 			EncodeUShort(messageData, ref currentPosition, (ushort) AnswerRecords.Count);
 			EncodeUShort(messageData, ref currentPosition, (ushort) AuthorityRecords.Count);
 			EncodeUShort(messageData, ref currentPosition, (ushort) _additionalRecords.Count);
 
-			foreach (var question in Questions)
-			{
-				question.Encode(messageData, offset, ref currentPosition, domainNames);
-			}
-			foreach (var record in AnswerRecords)
-			{
-				record.Encode(messageData, offset, ref currentPosition, domainNames);
-			}
-			foreach (var record in AuthorityRecords)
-			{
-				record.Encode(messageData, offset, ref currentPosition, domainNames);
-			}
-			foreach (var record in _additionalRecords)
-			{
-				record.Encode(messageData, offset, ref currentPosition, domainNames);
-			}
+			foreach (var question in Questions) question.Encode(messageData, offset, ref currentPosition, domainNames);
+		    foreach (var record in AnswerRecords) record.Encode(messageData, offset, ref currentPosition, domainNames);
+		    foreach (var record in AuthorityRecords) record.Encode(messageData, offset, ref currentPosition, domainNames);
+		    foreach (var record in _additionalRecords) record.Encode(messageData, offset, ref currentPosition, domainNames);
 
-			if (TSigOptions == null)
+		    if (TSigOptions == null)
 			{
 				newTSigMac = null;
 			}
@@ -671,7 +595,7 @@ namespace ARSoft.Tools.Net.Dns
 					Buffer.BlockCopy(originalTsigMac, 0, messageData, messageOffset + 2, originalTsigMac.Length);
 				}
 
-				EncodeUShort(messageData, offset, TSigOptions.OriginalID);
+				EncodeUShort(messageData, offset, TSigOptions.OriginalId);
 
 				var tsigVariablesPosition = currentPosition;
 
@@ -704,7 +628,7 @@ namespace ARSoft.Tools.Net.Dns
 					newTSigMac = new byte[] { };
 				}
 
-				EncodeUShort(messageData, offset, TransactionID);
+				EncodeUShort(messageData, offset, TransactionId);
 				EncodeUShort(messageData, offset + 10, (ushort) (_additionalRecords.Count + 1));
 
 				TSigOptions.Encode(messageData, offset, ref currentPosition, domainNames, newTSigMac);
@@ -849,10 +773,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static void EncodeByteArray(byte[] messageData, ref int currentPosition, byte[] data)
 		{
-			if (data != null)
-			{
-				EncodeByteArray(messageData, ref currentPosition, data, data.Length);
-			}
+			if (data != null) EncodeByteArray(messageData, ref currentPosition, data, data.Length);
 		}
 
 		internal static void EncodeByteArray(byte[] messageData, ref int currentPosition, byte[] data, int length)

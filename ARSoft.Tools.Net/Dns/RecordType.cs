@@ -802,16 +802,13 @@ namespace ARSoft.Tools.Net.Dns
 	{
 		public static string ToShortString(this RecordType recordType)
 		{
-            if (!EnumHelper<RecordType>.Names.TryGetValue(recordType, out var res))
-            {
-                return "TYPE" + (int)recordType;
-            }
-            return res.ToUpper();
+            if (!EnumHelper<RecordType>.Names.TryGetValue(recordType, out var res)) return "TYPE" + (int)recordType;
+		    return res.ToUpper();
 		}
 
 		public static bool TryParseShortString(string s, out RecordType recordType)
 		{
-			if (String.IsNullOrEmpty(s))
+			if (string.IsNullOrEmpty(s))
 			{
 				recordType = RecordType.Invalid;
 				return false;
@@ -821,32 +818,29 @@ namespace ARSoft.Tools.Net.Dns
 				return true;
 
 			if (s.StartsWith("TYPE", StringComparison.InvariantCultureIgnoreCase))
-			{
-                if (UInt16.TryParse(s.Substring(4), out var classValue))
-                {
-                    recordType = (RecordType)classValue;
-                    return true;
-                }
-            }
-			recordType = RecordType.Invalid;
+			    if (ushort.TryParse(s.Substring(4), out var classValue))
+			    {
+			        recordType = (RecordType)classValue;
+			        return true;
+			    }
+
+		    recordType = RecordType.Invalid;
 			return false;
 		}
 
 		public static RecordType ParseShortString(string s)
 		{
-			if (String.IsNullOrEmpty(s))
+			if (string.IsNullOrEmpty(s))
 				throw new ArgumentOutOfRangeException(nameof(s));
 
             if (EnumHelper<RecordType>.TryParse(s, true, out var recordType))
                 return recordType;
 
             if (s.StartsWith("TYPE", StringComparison.InvariantCultureIgnoreCase))
-			{
-                if (UInt16.TryParse(s.Substring(4), out var classValue))
+                if (ushort.TryParse(s.Substring(4), out var classValue))
                     return (RecordType)classValue;
-            }
 
-			throw new ArgumentOutOfRangeException(nameof(s));
+		    throw new ArgumentOutOfRangeException(nameof(s));
 		}
 	}
 }

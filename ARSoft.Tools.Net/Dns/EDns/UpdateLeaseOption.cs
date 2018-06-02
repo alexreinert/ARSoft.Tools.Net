@@ -18,7 +18,7 @@
 
 using System;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.EDns
 {
     /// <summary>
     ///   <para>Update lease option</para>
@@ -41,12 +41,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   Creates a new instance of the UpdateLeaseOption class
 		/// </summary>
 		public UpdateLeaseOption(TimeSpan leaseTime)
-			: this()
-		{
-			LeaseTime = leaseTime;
-		}
+			: this() => LeaseTime = leaseTime;
 
-		internal override void ParseData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
 			LeaseTime = TimeSpan.FromSeconds(DnsMessageBase.ParseInt(resultData, ref startPosition));
 		}

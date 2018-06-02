@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>X.25 PSDN address record</para>
@@ -44,12 +44,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="x25Address"> PSDN (Public Switched Data Network) address </param>
 		public X25Record(DomainName name, int timeToLive, string x25Address)
-			: base(name, RecordType.X25, RecordClass.INet, timeToLive)
-		{
-			X25Address = x25Address ?? String.Empty;
-		}
+			: base(name, RecordType.X25, RecordClass.INet, timeToLive) => X25Address = x25Address ?? string.Empty;
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			X25Address += DnsMessageBase.ParseText(resultData, ref startPosition);
 		}
@@ -62,12 +59,9 @@ namespace ARSoft.Tools.Net.Dns
 			X25Address = stringRepresentation[0];
 		}
 
-		internal override string RecordDataToString()
-		{
-			return X25Address.ToMasterfileLabelRepresentation();
-		}
+		internal override string RecordDataToString() => X25Address.ToMasterfileLabelRepresentation();
 
-		protected internal override int MaximumRecordDataLength => 1 + X25Address.Length;
+	    protected internal override int MaximumRecordDataLength => 1 + X25Address.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

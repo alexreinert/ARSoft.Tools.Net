@@ -22,8 +22,10 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.Cache;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
     ///   <para>Stub resolver</para>
@@ -47,12 +49,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   Provides a new instance using a custom <see cref="DnsClient">DNS client</see>
 		/// </summary>
 		/// <param name="dnsClient"> The <see cref="DnsClient">DNS client</see> to use </param>
-		public DnsStubResolver(DnsClient dnsClient)
-		{
-			_dnsClient = dnsClient;
-		}
+		public DnsStubResolver(DnsClient dnsClient) => _dnsClient = dnsClient;
 
-		/// <summary>
+	    /// <summary>
 		///   Provides a new instance using a list of custom DNS servers and a default query timeout of 10 seconds
 		/// </summary>
 		/// <param name="servers"> The list of servers to use </param>
@@ -81,19 +80,13 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-            if (_cache.TryGetRecords(name, recordType, recordClass, out List<T> records))
-            {
-                return records;
-            }
+            if (_cache.TryGetRecords(name, recordType, recordClass, out List<T> records)) return records;
 
-            var msg = _dnsClient.Resolve(name, recordType, recordClass);
+		    var msg = _dnsClient.Resolve(name, recordType, recordClass);
 
-			if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain)
-			{
-				throw new Exception("DNS request failed");
-			}
+			if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain) throw new Exception("DNS request failed");
 
-			var cName = msg.AnswerRecords.Where(x => x.RecordType == RecordType.CName && x.RecordClass == recordClass && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
+		    var cName = msg.AnswerRecords.Where(x => x.RecordType == RecordType.CName && x.RecordClass == recordClass && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
 
 			if (cName != null)
 			{
@@ -135,19 +128,13 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-            if (_cache.TryGetRecords(name, recordType, recordClass, out List<T> records))
-            {
-                return records;
-            }
+            if (_cache.TryGetRecords(name, recordType, recordClass, out List<T> records)) return records;
 
-            var msg = await _dnsClient.ResolveAsync(name, recordType, recordClass, null, token);
+		    var msg = await _dnsClient.ResolveAsync(name, recordType, recordClass, null, token);
 
-			if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain)
-			{
-				throw new Exception("DNS request failed");
-			}
+			if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain) throw new Exception("DNS request failed");
 
-			var cName = msg.AnswerRecords.Where(x => x.RecordType == RecordType.CName && x.RecordClass == recordClass && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
+		    var cName = msg.AnswerRecords.Where(x => x.RecordType == RecordType.CName && x.RecordClass == recordClass && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
 
 			if (cName != null)
 			{

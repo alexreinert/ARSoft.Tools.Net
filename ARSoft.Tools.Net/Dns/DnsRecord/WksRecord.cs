@@ -22,7 +22,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Well known services record</para>
@@ -80,14 +80,10 @@ namespace ARSoft.Tools.Net.Dns
 				var octet = resultData[currentPosition++];
 
 				for (var bit = 0; bit < 8; bit++)
-				{
-					if ((octet & (1 << Math.Abs(bit - 7))) != 0)
-					{
-						Ports.Add((ushort) (octetNumber * 8 + bit));
-					}
-				}
+				    if ((octet & (1 << Math.Abs(bit - 7))) != 0)
+				        Ports.Add((ushort) (octetNumber * 8 + bit));
 
-				octetNumber++;
+			    octetNumber++;
 			}
 		}
 
@@ -97,14 +93,14 @@ namespace ARSoft.Tools.Net.Dns
 				throw new FormatException();
 
 			Address = IPAddress.Parse(stringRepresentation[0]);
-			Ports = stringRepresentation.Skip(1).Select(UInt16.Parse).ToList();
+			Ports = stringRepresentation.Skip(1).Select(ushort.Parse).ToList();
 		}
 
 		internal override string RecordDataToString()
 		{
 			return Address
 			       + " " + (byte) Protocol
-			       + " " + String.Join(" ", Ports.Select(port => port.ToString()));
+			       + " " + string.Join(" ", Ports.Select(port => port.ToString()));
 		}
 
 		protected internal override int MaximumRecordDataLength => 5 + Ports.Max() / 8 + 1;

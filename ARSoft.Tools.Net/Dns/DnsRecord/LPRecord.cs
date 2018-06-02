@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>LP</para>
@@ -69,16 +69,13 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
 
-			Preference = UInt16.Parse(stringRepresentation[0]);
+			Preference = ushort.Parse(stringRepresentation[0]);
 			FQDN = ParseDomainName(origin, stringRepresentation[1]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Preference + " " + FQDN;
-		}
+		internal override string RecordDataToString() => Preference + " " + FQDN;
 
-		protected internal override int MaximumRecordDataLength => 4 + FQDN.MaximumRecordDataLength;
+	    protected internal override int MaximumRecordDataLength => 4 + FQDN.MaximumRecordDataLength;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

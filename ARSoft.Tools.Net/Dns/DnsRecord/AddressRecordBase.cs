@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   Base record class for storing host to ip allocation (ARecord and AaaaRecord)
@@ -35,12 +35,9 @@ namespace ARSoft.Tools.Net.Dns
 		protected AddressRecordBase() {}
 
 		protected AddressRecordBase(DomainName name, RecordType recordType, int timeToLive, IPAddress address)
-			: base(name, recordType, RecordClass.INet, timeToLive)
-		{
-			Address = address;
-		}
+			: base(name, recordType, RecordClass.INet, timeToLive) => Address = address;
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			Address = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref startPosition, MaximumRecordDataLength));
 		}
@@ -53,12 +50,9 @@ namespace ARSoft.Tools.Net.Dns
 			Address = IPAddress.Parse(stringRepresentation[0]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Address.ToString();
-		}
+		internal override string RecordDataToString() => Address.ToString();
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+	    protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
 		}

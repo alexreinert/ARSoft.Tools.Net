@@ -17,8 +17,9 @@
 #endregion
 
 using System.Collections.Generic;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
 	/// <summary>
 	///   The response of a secure DNS resolver
@@ -29,12 +30,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   The result of the validation process
 		/// </summary>
-		public DnsSecValidationResult ValidationResult { get; private set; }
+		public DnsSecValidationResult ValidationResult { get; }
 
 		/// <summary>
 		///   The records representing the response
 		/// </summary>
-		public List<T> Records { get; private set; }
+		public List<T> Records { get; }
 
 		internal DnsSecResult(List<T> records, DnsSecValidationResult validationResult)
 		{

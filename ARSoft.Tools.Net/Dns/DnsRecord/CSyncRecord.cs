@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Child-to-Parent Synchronization</para>
@@ -88,13 +88,9 @@ namespace ARSoft.Tools.Net.Dns
 			Flags = flags;
 
 			if (types == null || types.Count == 0)
-			{
-				Types = new List<RecordType>();
-			}
+			    Types = new List<RecordType>();
 			else
-			{
-				Types = types.Distinct().OrderBy(x => x).ToList();
-			}
+			    Types = types.Distinct().OrderBy(x => x).ToList();
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
@@ -119,12 +115,8 @@ namespace ARSoft.Tools.Net.Dns
 					var bitmap = resultData[currentPosition++];
 
 					for (var bit = 0; bit < 8; bit++)
-					{
-						if ((bitmap & (1 << Math.Abs(bit - 7))) != 0)
-						{
-							types.Add((RecordType) (windowNumber * 256 + i * 8 + bit));
-						}
-					}
+					    if ((bitmap & (1 << Math.Abs(bit - 7))) != 0)
+					        types.Add((RecordType) (windowNumber * 256 + i * 8 + bit));
 				}
 			}
 			return types;
@@ -135,18 +127,15 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 3)
 				throw new FormatException();
 
-			SerialNumber = UInt32.Parse(stringRepresentation[0]);
-			Flags = (CSyncFlags) UInt16.Parse(stringRepresentation[1]);
+			SerialNumber = uint.Parse(stringRepresentation[0]);
+			Flags = (CSyncFlags) ushort.Parse(stringRepresentation[1]);
 			Types = stringRepresentation.Skip(2).Select(RecordTypeHelper.ParseShortString).ToList();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return SerialNumber
-			       + " " + (ushort) Flags + " " + String.Join(" ", Types.Select(RecordTypeHelper.ToShortString));
-		}
+		internal override string RecordDataToString() => SerialNumber
+		                                                 + " " + (ushort) Flags + " " + string.Join(" ", Types.Select(RecordTypeHelper.ToShortString));
 
-		protected internal override int MaximumRecordDataLength => 7 + GetMaximumTypeBitmapLength(Types);
+	    protected internal override int MaximumRecordDataLength => 7 + GetMaximumTypeBitmapLength(Types);
 
 		internal static int GetMaximumTypeBitmapLength(List<RecordType> types)
 		{

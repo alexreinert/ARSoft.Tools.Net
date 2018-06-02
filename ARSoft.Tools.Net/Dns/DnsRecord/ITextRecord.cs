@@ -17,7 +17,7 @@
 #endregion
 
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     internal interface ITextRecord
 	{

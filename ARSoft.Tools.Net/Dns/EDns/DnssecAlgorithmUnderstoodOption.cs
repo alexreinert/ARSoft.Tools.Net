@@ -17,8 +17,9 @@
 #endregion
 
 using System.Collections.Generic;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.EDns
 {
     /// <summary>
     ///   <para>DNSSEC Algorithm Understood option</para>
@@ -42,28 +43,19 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="algorithms">The list of algorithms</param>
 		public DnssecAlgorithmUnderstoodOption(List<DnsSecAlgorithm> algorithms)
-			: this()
-		{
-			Algorithms = algorithms;
-		}
+			: this() => Algorithms = algorithms;
 
-		internal override void ParseData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
 			Algorithms = new List<DnsSecAlgorithm>(length);
-			for (var i = 0; i < length; i++)
-			{
-				Algorithms.Add((DnsSecAlgorithm) resultData[startPosition++]);
-			}
+			for (var i = 0; i < length; i++) Algorithms.Add((DnsSecAlgorithm) resultData[startPosition++]);
 		}
 
 		internal override ushort DataLength => (ushort) (Algorithms?.Count ?? 0);
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{
-			foreach (var algorithm in Algorithms)
-			{
-				messageData[currentPosition++] = (byte) algorithm;
-			}
+			foreach (var algorithm in Algorithms) messageData[currentPosition++] = (byte) algorithm;
 		}
 	}
 }

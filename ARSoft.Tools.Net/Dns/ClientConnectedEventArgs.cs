@@ -22,20 +22,21 @@ using System.Net.Sockets;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <inheritdoc />
 	/// <summary>
-	///   Event arguments of <see cref="DnsServer.ClientConnected" /> event.
+	///   Event arguments of <see cref="E:ARSoft.Tools.Net.Dns.DnsServer.ClientConnected" /> event.
 	/// </summary>
 	public class ClientConnectedEventArgs : EventArgs
 	{
 		/// <summary>
 		///   Protocol used by the client
 		/// </summary>
-		public ProtocolType ProtocolType { get; private set; }
+		public ProtocolType ProtocolType { get; }
 
 		/// <summary>
 		///   Remote endpoint of the client
 		/// </summary>
-		public IPEndPoint RemoteEndpoint { get; private set; }
+		public IPEndPoint RemoteEndpoint { get; }
 
 		/// <summary>
 		///   If true, the client connection will be refused

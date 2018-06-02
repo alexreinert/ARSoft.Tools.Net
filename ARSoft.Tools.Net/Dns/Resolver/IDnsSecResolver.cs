@@ -18,8 +18,9 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
     ///   Interface of a DNSSEC validating resolver

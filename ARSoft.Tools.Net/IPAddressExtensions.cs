@@ -28,7 +28,7 @@ namespace ARSoft.Tools.Net
     /// <summary>
     ///   Extension class for the <see cref="IPAddress" /> class
     /// </summary>
-    public static class IPAddressExtensions
+    public static class IpAddressExtensions
 	{
 		/// <summary>
 		///   Reverses the order of the bytes of an IPAddress
@@ -43,12 +43,9 @@ namespace ARSoft.Tools.Net
 			var addressBytes = ipAddress.GetAddressBytes();
 			var res = new byte[addressBytes.Length];
 
-			for (var i = 0; i < res.Length; i++)
-			{
-				res[i] = addressBytes[addressBytes.Length - i - 1];
-			}
+			for (var i = 0; i < res.Length; i++) res[i] = addressBytes[addressBytes.Length - i - 1];
 
-			return new IPAddress(res);
+		    return new IPAddress(res);
 		}
 
 		/// <summary>
@@ -72,12 +69,9 @@ namespace ARSoft.Tools.Net
 			var ipAddressBytes = ipAddress.GetAddressBytes();
 			var netmaskBytes = netmask.GetAddressBytes();
 
-			for (var i = 0; i < netmaskBytes.Length; i++)
-			{
-				resultBytes[i] = (byte) (ipAddressBytes[i] & netmaskBytes[i]);
-			}
+			for (var i = 0; i < netmaskBytes.Length; i++) resultBytes[i] = (byte) (ipAddressBytes[i] & netmaskBytes[i]);
 
-			return new IPAddress(resultBytes);
+		    return new IPAddress(resultBytes);
 		}
 
 		/// <summary>
@@ -100,22 +94,17 @@ namespace ARSoft.Tools.Net
 			var ipAddressBytes = ipAddress.GetAddressBytes();
 
 			for (var i = 0; i < ipAddressBytes.Length; i++)
-			{
-				if (netmask >= 8)
-				{
-					netmask -= 8;
-				}
-				else
-				{
-					if (BitConverter.IsLittleEndian)
-					{
-						ipAddressBytes[i] &= ReverseBitOrder((byte) ~(255 << netmask));
-					}
-					netmask = 0;
-				}
-			}
+			    if (netmask >= 8)
+			    {
+			        netmask -= 8;
+			    }
+			    else
+			    {
+			        if (BitConverter.IsLittleEndian) ipAddressBytes[i] &= ReverseBitOrder((byte) ~(255 << netmask));
+			        netmask = 0;
+			    }
 
-			return new IPAddress(ipAddressBytes);
+		    return new IPAddress(ipAddressBytes);
 		}
 
 		/// <summary>
@@ -176,12 +165,9 @@ namespace ARSoft.Tools.Net
 
 				var labelPos = 0;
 
-				for (var i = addressBytes.Length - 1; i >= 0; i--)
-				{
-					labels[labelPos++] = addressBytes[i].ToString();
-				}
+				for (var i = addressBytes.Length - 1; i >= 0; i--) labels[labelPos++] = addressBytes[i].ToString();
 
-				labels[labelPos++] = "in-addr";
+			    labels[labelPos++] = "in-addr";
 				labels[labelPos] = "arpa";
 
 				return new DomainName(labels);
@@ -221,13 +207,9 @@ namespace ARSoft.Tools.Net
 				throw new ArgumentNullException(nameof(ipAddress));
 
 			if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
-			{
-				return ipAddress.GetNetworkAddress(4).Equals(_ipv4MulticastNetworkAddress);
-			}
+			    return ipAddress.GetNetworkAddress(4).Equals(_ipv4MulticastNetworkAddress);
 			else
-			{
-				return ipAddress.GetNetworkAddress(8).Equals(_ipv6MulticastNetworkAddress);
-			}
+			    return ipAddress.GetNetworkAddress(8).Equals(_ipv6MulticastNetworkAddress);
 		}
 
 		/// <summary>
@@ -265,12 +247,9 @@ namespace ARSoft.Tools.Net
 		{
 			byte result = 0;
 
-			for (var i = 0; i < 8; i++)
-			{
-				result |= (byte) ((((1 << i) & value) >> i) << (7 - i));
-			}
+			for (var i = 0; i < 8; i++) result |= (byte) ((((1 << i) & value) >> i) << (7 - i));
 
-			return result;
+		    return result;
 		}
 	}
 }

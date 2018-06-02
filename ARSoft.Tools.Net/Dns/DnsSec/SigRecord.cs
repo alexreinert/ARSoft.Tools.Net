@@ -20,8 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
     /// <summary>
     ///   <para>Security signature record</para>
@@ -139,30 +140,27 @@ namespace ARSoft.Tools.Net.Dns
 				throw new FormatException();
 
 			TypeCovered = RecordTypeHelper.ParseShortString(stringRepresentation[0]);
-			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
-			Labels = Byte.Parse(stringRepresentation[2]);
-			OriginalTimeToLive = Int32.Parse(stringRepresentation[3]);
+			Algorithm = (DnsSecAlgorithm) byte.Parse(stringRepresentation[1]);
+			Labels = byte.Parse(stringRepresentation[2]);
+			OriginalTimeToLive = int.Parse(stringRepresentation[3]);
 			SignatureExpiration = DateTime.ParseExact(stringRepresentation[4], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
 			SignatureInception = DateTime.ParseExact(stringRepresentation[5], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-			KeyTag = UInt16.Parse(stringRepresentation[6]);
+			KeyTag = ushort.Parse(stringRepresentation[6]);
 			SignersName = ParseDomainName(origin, stringRepresentation[7]);
-			Signature = String.Join(String.Empty, stringRepresentation.Skip(8)).FromBase64String();
+			Signature = string.Join(string.Empty, stringRepresentation.Skip(8)).FromBase64String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return TypeCovered.ToShortString()
-			       + " " + (byte) Algorithm
-			       + " " + Labels
-			       + " " + OriginalTimeToLive
-			       + " " + SignatureExpiration.ToString("yyyyMMddHHmmss")
-			       + " " + SignatureInception.ToString("yyyyMMddHHmmss")
-			       + " " + KeyTag
-			       + " " + SignersName
-			       + " " + Signature.ToBase64String();
-		}
+		internal override string RecordDataToString() => TypeCovered.ToShortString()
+		                                                 + " " + (byte) Algorithm
+		                                                 + " " + Labels
+		                                                 + " " + OriginalTimeToLive
+		                                                 + " " + SignatureExpiration.ToString("yyyyMMddHHmmss")
+		                                                 + " " + SignatureInception.ToString("yyyyMMddHHmmss")
+		                                                 + " " + KeyTag
+		                                                 + " " + SignersName
+		                                                 + " " + Signature.ToBase64String();
 
-		protected internal override int MaximumRecordDataLength => 20 + SignersName.MaximumRecordDataLength + Signature.Length;
+	    protected internal override int MaximumRecordDataLength => 20 + SignersName.MaximumRecordDataLength + Signature.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

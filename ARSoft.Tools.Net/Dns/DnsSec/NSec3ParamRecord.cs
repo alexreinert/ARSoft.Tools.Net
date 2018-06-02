@@ -18,8 +18,9 @@
 
 using System;
 using System.Collections.Generic;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
     /// <summary>
     ///   <para>Hashed next owner parameter record</para>
@@ -85,21 +86,18 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 4)
 				throw new FormatException();
 
-			HashAlgorithm = (NSec3HashAlgorithm) Byte.Parse(stringRepresentation[0]);
-			Flags = Byte.Parse(stringRepresentation[1]);
-			Iterations = UInt16.Parse(stringRepresentation[2]);
+			HashAlgorithm = (NSec3HashAlgorithm) byte.Parse(stringRepresentation[0]);
+			Flags = byte.Parse(stringRepresentation[1]);
+			Iterations = ushort.Parse(stringRepresentation[2]);
 			Salt = stringRepresentation[3] == "-" ? new byte[] { } : stringRepresentation[3].FromBase16String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return (byte) HashAlgorithm
-			       + " " + Flags
-			       + " " + Iterations
-			       + " " + (Salt.Length == 0 ? "-" : Salt.ToBase16String());
-		}
+		internal override string RecordDataToString() => (byte) HashAlgorithm
+		                                                 + " " + Flags
+		                                                 + " " + Iterations
+		                                                 + " " + (Salt.Length == 0 ? "-" : Salt.ToBase16String());
 
-		protected internal override int MaximumRecordDataLength => 5 + Salt.Length;
+	    protected internal override int MaximumRecordDataLength => 5 + Salt.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
 	/// <summary>
 	///   Base record class for storing text labels (TxtRecord and SpfRecord)
@@ -30,18 +30,15 @@ namespace ARSoft.Tools.Net.Dns
 		protected TextRecordBase() {}
 
 		protected TextRecordBase(DomainName name, RecordType recordType, int timeToLive, string textData)
-			: this(name, recordType, timeToLive, new List<string> { textData ?? String.Empty }) {}
+			: this(name, recordType, timeToLive, new List<string> { textData ?? string.Empty }) {}
 
 		protected TextRecordBase(DomainName name, RecordType recordType, int timeToLive, IEnumerable<string> textParts)
-			: base(name, recordType, RecordClass.INet, timeToLive)
-		{
-			TextParts = new List<string>(textParts);
-		}
+			: base(name, recordType, RecordClass.INet, timeToLive) => TextParts = new List<string>(textParts);
 
-		/// <summary>
+	    /// <summary>
 		///   Text data
 		/// </summary>
-		public string TextData => String.Join(String.Empty, TextParts);
+		public string TextData => string.Join(string.Empty, TextParts);
 
 		/// <summary>
 		///   The single parts of the text data
@@ -58,12 +55,9 @@ namespace ARSoft.Tools.Net.Dns
 			var endPosition = startPosition + length;
 
 			var textParts = new List<string>();
-			while (startPosition < endPosition)
-			{
-				textParts.Add(DnsMessageBase.ParseText(resultData, ref startPosition));
-			}
+			while (startPosition < endPosition) textParts.Add(DnsMessageBase.ParseText(resultData, ref startPosition));
 
-			TextParts = textParts;
+		    TextParts = textParts;
 		}
 
 		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
@@ -76,15 +70,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return String.Join(" ", TextParts.Select(x => "\"" + x.ToMasterfileLabelRepresentation() + "\""));
+			return string.Join(" ", TextParts.Select(x => "\"" + x.ToMasterfileLabelRepresentation() + "\""));
 		}
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			foreach (var part in TextParts)
-			{
-				DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, part);
-			}
+			foreach (var part in TextParts) DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, part);
 		}
 	}
 }

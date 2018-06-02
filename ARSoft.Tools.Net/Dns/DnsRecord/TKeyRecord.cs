@@ -18,8 +18,9 @@
 
 using System;
 using System.Collections.Generic;
+using ARSoft.Tools.Net.Dns.TSig;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Transaction key</para>
@@ -161,18 +162,15 @@ namespace ARSoft.Tools.Net.Dns
 			throw new NotSupportedException();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return TSigAlgorithmHelper.GetDomainName(Algorithm)
-			       + " " + (int) (Inception - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
-			       + " " + (int) (Expiration - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
-			       + " " + (ushort) Mode
-			       + " " + (ushort) Error
-			       + " " + Key.ToBase64String()
-			       + " " + OtherData.ToBase64String();
-		}
+		internal override string RecordDataToString() => TSigAlgorithmHelper.GetDomainName(Algorithm)
+		                                                 + " " + (int) (Inception - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
+		                                                 + " " + (int) (Expiration - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
+		                                                 + " " + (ushort) Mode
+		                                                 + " " + (ushort) Error
+		                                                 + " " + Key.ToBase64String()
+		                                                 + " " + OtherData.ToBase64String();
 
-		protected internal override int MaximumRecordDataLength => 18 + TSigAlgorithmHelper.GetDomainName(Algorithm).MaximumRecordDataLength + Key.Length + OtherData.Length;
+	    protected internal override int MaximumRecordDataLength => 18 + TSigAlgorithmHelper.GetDomainName(Algorithm).MaximumRecordDataLength + Key.Length + OtherData.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

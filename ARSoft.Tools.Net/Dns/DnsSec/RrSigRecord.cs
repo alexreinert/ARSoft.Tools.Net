@@ -20,8 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
     /// <summary>
     ///   <para>Record signature record</para>
@@ -152,30 +153,27 @@ namespace ARSoft.Tools.Net.Dns
 				throw new FormatException();
 
 			TypeCovered = RecordTypeHelper.ParseShortString(stringRepresentation[0]);
-			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
-			Labels = Byte.Parse(stringRepresentation[2]);
-			OriginalTimeToLive = Int32.Parse(stringRepresentation[3]);
+			Algorithm = (DnsSecAlgorithm) byte.Parse(stringRepresentation[1]);
+			Labels = byte.Parse(stringRepresentation[2]);
+			OriginalTimeToLive = int.Parse(stringRepresentation[3]);
 			SignatureExpiration = DateTime.ParseExact(stringRepresentation[4], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 			SignatureInception = DateTime.ParseExact(stringRepresentation[5], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
-			KeyTag = UInt16.Parse(stringRepresentation[6]);
+			KeyTag = ushort.Parse(stringRepresentation[6]);
 			SignersName = ParseDomainName(origin, stringRepresentation[7]);
-			Signature = String.Join(String.Empty, stringRepresentation.Skip(8)).FromBase64String();
+			Signature = string.Join(string.Empty, stringRepresentation.Skip(8)).FromBase64String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return TypeCovered.ToShortString()
-			       + " " + (byte) Algorithm
-			       + " " + Labels
-			       + " " + OriginalTimeToLive
-			       + " " + SignatureExpiration.ToUniversalTime().ToString("yyyyMMddHHmmss")
-			       + " " + SignatureInception.ToUniversalTime().ToString("yyyyMMddHHmmss")
-			       + " " + KeyTag
-			       + " " + SignersName
-			       + " " + Signature.ToBase64String();
-		}
+		internal override string RecordDataToString() => TypeCovered.ToShortString()
+		                                                 + " " + (byte) Algorithm
+		                                                 + " " + Labels
+		                                                 + " " + OriginalTimeToLive
+		                                                 + " " + SignatureExpiration.ToUniversalTime().ToString("yyyyMMddHHmmss")
+		                                                 + " " + SignatureInception.ToUniversalTime().ToString("yyyyMMddHHmmss")
+		                                                 + " " + KeyTag
+		                                                 + " " + SignersName
+		                                                 + " " + Signature.ToBase64String();
 
-		protected internal override int MaximumRecordDataLength => 20 + SignersName.MaximumRecordDataLength + Signature.Length;
+	    protected internal override int MaximumRecordDataLength => 20 + SignersName.MaximumRecordDataLength + Signature.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
@@ -229,18 +227,12 @@ namespace ARSoft.Tools.Net.Dns
 			foreach (var record in records.OrderBy(x => x))
 			{
 				if (record.Name.LabelCount == Labels)
-				{
-					DnsMessageBase.EncodeDomainName(messageData, 0, ref length, record.Name, null, true);
-				}
+				    DnsMessageBase.EncodeDomainName(messageData, 0, ref length, record.Name, null, true);
 				else if (record.Name.LabelCount > Labels)
-				{
-					DnsMessageBase.EncodeDomainName(messageData, 0, ref length, DomainName.Asterisk + record.Name.GetParentName(record.Name.LabelCount - Labels), null, true);
-				}
+				    DnsMessageBase.EncodeDomainName(messageData, 0, ref length, DomainName.Asterisk + record.Name.GetParentName(record.Name.LabelCount - Labels), null, true);
 				else
-				{
-					throw new Exception("Encoding of records with less labels than RrSigRecord is not allowed");
-				}
-				DnsMessageBase.EncodeUShort(messageData, ref length, (ushort) record.RecordType);
+				    throw new Exception("Encoding of records with less labels than RrSigRecord is not allowed");
+			    DnsMessageBase.EncodeUShort(messageData, ref length, (ushort) record.RecordType);
 				DnsMessageBase.EncodeUShort(messageData, ref length, (ushort) record.RecordClass);
 				DnsMessageBase.EncodeInt(messageData, ref length, OriginalTimeToLive);
 

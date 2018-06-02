@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>L32</para>
@@ -68,16 +68,13 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
 
-			Preference = UInt16.Parse(stringRepresentation[0]);
-			Locator32 = UInt32.Parse(stringRepresentation[1]);
+			Preference = ushort.Parse(stringRepresentation[0]);
+			Locator32 = uint.Parse(stringRepresentation[1]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Preference + " " + new IPAddress(Locator32);
-		}
+		internal override string RecordDataToString() => Preference + " " + new IPAddress(Locator32);
 
-		protected internal override int MaximumRecordDataLength => 6;
+	    protected internal override int MaximumRecordDataLength => 6;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

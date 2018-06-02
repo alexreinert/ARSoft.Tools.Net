@@ -18,7 +18,7 @@
 
 using System;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
 	[Flags]
 	public enum DnsKeyFlags : ushort

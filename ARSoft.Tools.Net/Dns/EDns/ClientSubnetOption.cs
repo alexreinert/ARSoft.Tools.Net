@@ -20,7 +20,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.EDns
 {
     /// <summary>
     ///   <para>EDNS0 Client Subnet Option</para>
@@ -100,9 +100,6 @@ namespace ARSoft.Tools.Net.Dns
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, data, GetAddressLength());
 		}
 
-		private int GetAddressLength()
-		{
-			return (int) Math.Ceiling(SourceNetmask / 8d);
-		}
+		private int GetAddressLength() => (int) Math.Ceiling(SourceNetmask / 8d);
 	}
 }

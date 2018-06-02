@@ -19,8 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Certificate storage record</para>
@@ -189,21 +190,18 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 4)
 				throw new FormatException();
 
-			Type = (CertType) UInt16.Parse(stringRepresentation[0]);
-			KeyTag = UInt16.Parse(stringRepresentation[1]);
-			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
-			Certificate = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
+			Type = (CertType) ushort.Parse(stringRepresentation[0]);
+			KeyTag = ushort.Parse(stringRepresentation[1]);
+			Algorithm = (DnsSecAlgorithm) byte.Parse(stringRepresentation[2]);
+			Certificate = string.Join(string.Empty, stringRepresentation.Skip(3)).FromBase64String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return (ushort) Type
-			       + " " + KeyTag
-			       + " " + (byte) Algorithm
-			       + " " + Certificate.ToBase64String();
-		}
+		internal override string RecordDataToString() => (ushort) Type
+		                                                 + " " + KeyTag
+		                                                 + " " + (byte) Algorithm
+		                                                 + " " + Certificate.ToBase64String();
 
-		protected internal override int MaximumRecordDataLength => 5 + Certificate.Length;
+	    protected internal override int MaximumRecordDataLength => 5 + Certificate.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

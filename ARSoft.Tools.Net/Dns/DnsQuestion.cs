@@ -59,20 +59,14 @@ namespace ARSoft.Tools.Net.Dns
 		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			if (!_hashCode.HasValue)
-			{
-				_hashCode = ToString().GetHashCode();
-			}
+			if (!_hashCode.HasValue) _hashCode = ToString().GetHashCode();
 
-			return _hashCode.Value;
+		    return _hashCode.Value;
 		}
 
-		public override bool Equals(object obj)
-		{
-			return Equals(obj as DnsQuestion);
-		}
+		public override bool Equals(object obj) => Equals(obj as DnsQuestion);
 
-		public bool Equals(DnsQuestion other)
+	    public bool Equals(DnsQuestion other)
 		{
 			if (other == null)
 				return false;

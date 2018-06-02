@@ -22,7 +22,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>IPsec key storage</para>
@@ -175,7 +175,7 @@ namespace ARSoft.Tools.Net.Dns
 			switch (GatewayType)
 			{
 				case IpSecGatewayType.None:
-					Gateway = String.Empty;
+					Gateway = string.Empty;
 					break;
 				case IpSecGatewayType.IpV4:
 					Gateway = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref currentPosition, 4)).ToString();
@@ -195,23 +195,20 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 5)
 				throw new FormatException();
 
-			Precedence = Byte.Parse(stringRepresentation[0]);
-			GatewayType = (IpSecGatewayType) Byte.Parse(stringRepresentation[1]);
-			Algorithm = (IpSecAlgorithm) Byte.Parse(stringRepresentation[2]);
+			Precedence = byte.Parse(stringRepresentation[0]);
+			GatewayType = (IpSecGatewayType) byte.Parse(stringRepresentation[1]);
+			Algorithm = (IpSecAlgorithm) byte.Parse(stringRepresentation[2]);
 			Gateway = stringRepresentation[3];
-			PublicKey = String.Join(String.Empty, stringRepresentation.Skip(4)).FromBase64String();
+			PublicKey = string.Join(string.Empty, stringRepresentation.Skip(4)).FromBase64String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Precedence
-			       + " " + (byte) GatewayType
-			       + " " + (byte) Algorithm
-			       + " " + GatewayToString()
-			       + " " + PublicKey.ToBase64String();
-		}
+		internal override string RecordDataToString() => Precedence
+		                                                 + " " + (byte) GatewayType
+		                                                 + " " + (byte) Algorithm
+		                                                 + " " + GatewayToString()
+		                                                 + " " + PublicKey.ToBase64String();
 
-		private string GatewayToString()
+	    private string GatewayToString()
 		{
 			switch (GatewayType)
 			{

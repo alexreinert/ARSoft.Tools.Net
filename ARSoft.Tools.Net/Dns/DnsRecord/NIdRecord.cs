@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>NID</para>
@@ -38,7 +38,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   The Node ID
 		/// </summary>
-		public ulong NodeID { get; private set; }
+		public ulong NodeId { get; private set; }
 
 		internal NIdRecord() {}
 
@@ -48,18 +48,18 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain name of the host </param>
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="preference"> The preference </param>
-		/// <param name="nodeID"> The Node ID </param>
-		public NIdRecord(DomainName name, int timeToLive, ushort preference, ulong nodeID)
+		/// <param name="nodeId"> The Node ID </param>
+		public NIdRecord(DomainName name, int timeToLive, ushort preference, ulong nodeId)
 			: base(name, RecordType.NId, RecordClass.INet, timeToLive)
 		{
 			Preference = preference;
-			NodeID = nodeID;
+			NodeId = nodeId;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			Preference = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			NodeID = DnsMessageBase.ParseULong(resultData, ref startPosition);
+			NodeId = DnsMessageBase.ParseULong(resultData, ref startPosition);
 		}
 
 		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
@@ -67,27 +67,27 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
 
-			Preference = UInt16.Parse(stringRepresentation[0]);
+			Preference = ushort.Parse(stringRepresentation[0]);
 
-			var nodeIDParts = stringRepresentation[1].Split(':');
+			var nodeIdParts = stringRepresentation[1].Split(':');
 
-			if (nodeIDParts.Length != 4)
+			if (nodeIdParts.Length != 4)
 				throw new FormatException();
 
 			for (var i = 0; i < 4; i++)
 			{
-				if (nodeIDParts[i].Length != 4)
+				if (nodeIdParts[i].Length != 4)
 					throw new FormatException();
 
-				NodeID = NodeID << 16;
-				NodeID |= Convert.ToUInt16(nodeIDParts[i], 16);
+				NodeId = NodeId << 16;
+				NodeId |= Convert.ToUInt16(nodeIdParts[i], 16);
 			}
 		}
 
 		internal override string RecordDataToString()
 		{
-			var nodeID = NodeID.ToString("x16");
-			return Preference + " " + nodeID.Substring(0, 4) + ":" + nodeID.Substring(4, 4) + ":" + nodeID.Substring(8, 4) + ":" + nodeID.Substring(12);
+			var nodeId = NodeId.ToString("x16");
+			return Preference + " " + nodeId.Substring(0, 4) + ":" + nodeId.Substring(4, 4) + ":" + nodeId.Substring(8, 4) + ":" + nodeId.Substring(12);
 		}
 
 		protected internal override int MaximumRecordDataLength => 10;
@@ -95,7 +95,7 @@ namespace ARSoft.Tools.Net.Dns
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
-			DnsMessageBase.EncodeULong(messageData, ref currentPosition, NodeID);
+			DnsMessageBase.EncodeULong(messageData, ref currentPosition, NodeId);
 		}
 	}
 }

@@ -67,25 +67,20 @@ namespace ARSoft.Tools.Net
 				return false;
 
 			if (client.Client.Poll(0, SelectMode.SelectRead))
-			{
-				if (client.Connected)
-				{
-					var b = new byte[1];
-					try
-					{
-						if (client.Client.Receive(b, SocketFlags.Peek) == 0)
-						{
-							return false;
-						}
-					}
-					catch
-					{
-						return false;
-					}
-				}
-			}
+			    if (client.Connected)
+			    {
+			        var b = new byte[1];
+			        try
+			        {
+			            if (client.Client.Receive(b, SocketFlags.Peek) == 0) return false;
+			        }
+			        catch
+			        {
+			            return false;
+			        }
+			    }
 
-			return true;
+		    return true;
 		}
 	}
 }

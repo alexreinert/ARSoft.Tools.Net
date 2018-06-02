@@ -23,11 +23,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using ARSoft.Tools.Net.Dns.DnsRecord;
+using ARSoft.Tools.Net.Dns.DnsSec;
 using Org.BouncyCastle.Crypto.Prng;
 using Org.BouncyCastle.Security;
 
 namespace ARSoft.Tools.Net.Dns
 {
+	/// <inheritdoc />
 	/// <summary>
 	///   Class representing a DNS zone
 	/// </summary>
@@ -97,7 +100,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name">The name of the zone</param>
 		/// <param name="zoneFile">Stream containing the zone master data</param>
 		/// <returns>A new instance of the Zone class</returns>
-		public static Zone ParseMasterFile(DomainName name, Stream zoneFile)
+		public virtual Zone ParseMasterFile(DomainName name, Stream zoneFile)
 		{
 			using (var reader = new StreamReader(zoneFile))
 			{
@@ -112,15 +115,13 @@ namespace ARSoft.Tools.Net.Dns
 			var soa = (SoaRecord) records.SingleOrDefault(x => x.RecordType == RecordType.Soa);
 
 			if (soa != null)
-			{
-				records.ForEach(x =>
-				{
-					if (x.TimeToLive == 0)
-						x.TimeToLive = soa.NegativeCachingTTL;
-				});
-			}
+			    records.ForEach(x =>
+			    {
+			        if (x.TimeToLive == 0)
+			            x.TimeToLive = soa.NegativeCachingTTL;
+			    });
 
-			return new Zone(name, records);
+		    return new Zone(name, records);
 		}
 
 		private static List<DnsRecordBase> ParseRecords(StreamReader reader, DomainName origin, int ttl, DnsRecordBase lastRecord)
@@ -131,191 +132,161 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				var line = ReadRecordLine(reader);
 
-				if (!String.IsNullOrEmpty(line))
-				{
-					var parts = _lineSplitterRegex.Matches(line).Cast<Match>().Select(x => x.Groups.Cast<Group>().Last(g => g.Success).Value.FromMasterfileLabelRepresentation()).ToArray();
+			    if (string.IsNullOrEmpty(line)) continue;
+			    var parts = _lineSplitterRegex.Matches(line).Cast<Match>().Select(x => x.Groups.Cast<Group>().Last(g => g.Success).Value.FromMasterfileLabelRepresentation()).ToArray();
 
-					if (parts[0].Equals("$origin", StringComparison.InvariantCultureIgnoreCase))
-					{
-						origin = DomainName.ParseFromMasterfile(parts[1]);
-					}
-					if (parts[0].Equals("$ttl", StringComparison.InvariantCultureIgnoreCase))
-					{
-						ttl = Int32.Parse(parts[1]);
-					}
-					if (parts[0].Equals("$include", StringComparison.InvariantCultureIgnoreCase))
-					{
-						var fileStream = reader.BaseStream as FileStream;
+			    if (parts[0].Equals("$origin", StringComparison.InvariantCultureIgnoreCase)) origin = DomainName.ParseFromMasterfile(parts[1]);
+			    if (parts[0].Equals("$ttl", StringComparison.InvariantCultureIgnoreCase)) ttl = int.Parse(parts[1]);
+			    if (parts[0].Equals("$include", StringComparison.InvariantCultureIgnoreCase))
+			    {
+			        var fileStream = reader.BaseStream as FileStream;
 
-						if (fileStream == null)
-							throw new NotSupportedException("Includes only supported when loading files");
+			        if (fileStream == null)
+			            throw new NotSupportedException("Includes only supported when loading files");
 
-						// ReSharper disable once AssignNullToNotNullAttribute
-						var path = Path.Combine(new FileInfo(fileStream.Name).DirectoryName, parts[1]);
+			        // ReSharper disable once AssignNullToNotNullAttribute
+			        var path = Path.Combine(new FileInfo(fileStream.Name).DirectoryName, parts[1]);
 
-						var includeOrigin = parts.Length > 2 ? DomainName.ParseFromMasterfile(parts[2]) : origin;
+			        var includeOrigin = parts.Length > 2 ? DomainName.ParseFromMasterfile(parts[2]) : origin;
 
-						using (var includeReader = new StreamReader(path))
-						{
-							records.AddRange(ParseRecords(includeReader, includeOrigin, ttl, lastRecord));
-						}
-					}
-					else
-					{
-						string domainString;
-						RecordType recordType;
-						RecordClass recordClass;
-                        string[] rrData;
+			        using (var includeReader = new StreamReader(path))
+			        {
+			            records.AddRange(ParseRecords(includeReader, includeOrigin, ttl, lastRecord));
+			        }
+			    }
+			    else
+			    {
+			        string domainString;
+			        RecordType recordType;
+			        RecordClass recordClass;
+			        string[] rrData;
 
-                        if (Int32.TryParse(parts[0], out var recordTtl))
-						{
-							// no domain, starts with ttl
-							if (RecordClassHelper.TryParseShortString(parts[1], out recordClass, false))
-							{
-								// second is record class
-								domainString = null;
-								recordType = RecordTypeHelper.ParseShortString(parts[2]);
-								rrData = parts.Skip(3).ToArray();
-							}
-							else
-							{
-								// no record class
-								domainString = null;
-								recordClass = RecordClass.Invalid;
-								recordType = RecordTypeHelper.ParseShortString(parts[1]);
-								rrData = parts.Skip(2).ToArray();
-							}
-						}
-						else if (RecordClassHelper.TryParseShortString(parts[0], out recordClass, false))
-						{
-							// no domain, starts with record class
-							if (Int32.TryParse(parts[1], out recordTtl))
-							{
-								// second is ttl
-								domainString = null;
-								recordType = RecordTypeHelper.ParseShortString(parts[2]);
-								rrData = parts.Skip(3).ToArray();
-							}
-							else
-							{
-								// no ttl
-								recordTtl = 0;
-								domainString = null;
-								recordType = RecordTypeHelper.ParseShortString(parts[1]);
-								rrData = parts.Skip(2).ToArray();
-							}
-						}
-						else if (RecordTypeHelper.TryParseShortString(parts[0], out recordType))
-						{
-							// no domain, start with record type
-							recordTtl = 0;
-							recordClass = RecordClass.Invalid;
-							domainString = null;
-							rrData = parts.Skip(2).ToArray();
-						}
-						else
-						{
-							domainString = parts[0];
+			        if (int.TryParse(parts[0], out var recordTtl))
+			        {
+			            // no domain, starts with ttl
+			            if (RecordClassHelper.TryParseShortString(parts[1], out recordClass, false))
+			            {
+			                // second is record class
+			                domainString = null;
+			                recordType = RecordTypeHelper.ParseShortString(parts[2]);
+			                rrData = parts.Skip(3).ToArray();
+			            }
+			            else
+			            {
+			                // no record class
+			                domainString = null;
+			                recordClass = RecordClass.Invalid;
+			                recordType = RecordTypeHelper.ParseShortString(parts[1]);
+			                rrData = parts.Skip(2).ToArray();
+			            }
+			        }
+			        else if (RecordClassHelper.TryParseShortString(parts[0], out recordClass, false))
+			        {
+			            // no domain, starts with record class
+			            if (int.TryParse(parts[1], out recordTtl))
+			            {
+			                // second is ttl
+			                domainString = null;
+			                recordType = RecordTypeHelper.ParseShortString(parts[2]);
+			                rrData = parts.Skip(3).ToArray();
+			            }
+			            else
+			            {
+			                // no ttl
+			                recordTtl = 0;
+			                domainString = null;
+			                recordType = RecordTypeHelper.ParseShortString(parts[1]);
+			                rrData = parts.Skip(2).ToArray();
+			            }
+			        }
+			        else if (RecordTypeHelper.TryParseShortString(parts[0], out recordType))
+			        {
+			            // no domain, start with record type
+			            recordTtl = 0;
+			            recordClass = RecordClass.Invalid;
+			            domainString = null;
+			            rrData = parts.Skip(2).ToArray();
+			        }
+			        else
+			        {
+			            domainString = parts[0];
 
-							if (Int32.TryParse(parts[1], out recordTtl))
-							{
-								// domain, second is ttl
-								if (RecordClassHelper.TryParseShortString(parts[2], out recordClass, false))
-								{
-									// third is record class
-									recordType = RecordTypeHelper.ParseShortString(parts[3]);
-									rrData = parts.Skip(4).ToArray();
-								}
-								else
-								{
-									// no record class
-									recordClass = RecordClass.Invalid;
-									recordType = RecordTypeHelper.ParseShortString(parts[2]);
-									rrData = parts.Skip(3).ToArray();
-								}
-							}
-							else if (RecordClassHelper.TryParseShortString(parts[1], out recordClass, false))
-							{
-								// domain, second is record class
-								if (Int32.TryParse(parts[2], out recordTtl))
-								{
-									// third is ttl
-									recordType = RecordTypeHelper.ParseShortString(parts[3]);
-									rrData = parts.Skip(4).ToArray();
-								}
-								else
-								{
-									// no ttl
-									recordTtl = 0;
-									recordType = RecordTypeHelper.ParseShortString(parts[2]);
-									rrData = parts.Skip(3).ToArray();
-								}
-							}
-							else
-							{
-								// domain with record type
-								recordType = RecordTypeHelper.ParseShortString(parts[1]);
-								recordTtl = 0;
-								recordClass = RecordClass.Invalid;
-								rrData = parts.Skip(2).ToArray();
-							}
-						}
+			            if (int.TryParse(parts[1], out recordTtl))
+			            {
+			                // domain, second is ttl
+			                if (RecordClassHelper.TryParseShortString(parts[2], out recordClass, false))
+			                {
+			                    // third is record class
+			                    recordType = RecordTypeHelper.ParseShortString(parts[3]);
+			                    rrData = parts.Skip(4).ToArray();
+			                }
+			                else
+			                {
+			                    // no record class
+			                    recordClass = RecordClass.Invalid;
+			                    recordType = RecordTypeHelper.ParseShortString(parts[2]);
+			                    rrData = parts.Skip(3).ToArray();
+			                }
+			            }
+			            else if (RecordClassHelper.TryParseShortString(parts[1], out recordClass, false))
+			            {
+			                // domain, second is record class
+			                if (int.TryParse(parts[2], out recordTtl))
+			                {
+			                    // third is ttl
+			                    recordType = RecordTypeHelper.ParseShortString(parts[3]);
+			                    rrData = parts.Skip(4).ToArray();
+			                }
+			                else
+			                {
+			                    // no ttl
+			                    recordTtl = 0;
+			                    recordType = RecordTypeHelper.ParseShortString(parts[2]);
+			                    rrData = parts.Skip(3).ToArray();
+			                }
+			            }
+			            else
+			            {
+			                // domain with record type
+			                recordType = RecordTypeHelper.ParseShortString(parts[1]);
+			                recordTtl = 0;
+			                recordClass = RecordClass.Invalid;
+			                rrData = parts.Skip(2).ToArray();
+			            }
+			        }
 
-						DomainName domain;
-						if (String.IsNullOrEmpty(domainString))
-						{
-							domain = lastRecord.Name;
-						}
-						else if (domainString == "@")
-						{
-							domain = origin;
-						}
-						else if (domainString.EndsWith("."))
-						{
-							domain = DomainName.ParseFromMasterfile(domainString);
-						}
-						else
-						{
-							domain = DomainName.ParseFromMasterfile(domainString) + origin;
-						}
+			        DomainName domain;
+			        if (string.IsNullOrEmpty(domainString))
+			            domain = lastRecord.Name;
+			        else if (domainString == "@")
+			            domain = origin;
+			        else if (domainString.EndsWith("."))
+			            domain = DomainName.ParseFromMasterfile(domainString);
+			        else
+			            domain = DomainName.ParseFromMasterfile(domainString) + origin;
 
-						if (recordClass == RecordClass.Invalid)
-						{
-							recordClass = lastRecord.RecordClass;
-						}
+			        if (recordClass == RecordClass.Invalid) recordClass = lastRecord.RecordClass;
 
-						if (recordType == RecordType.Invalid)
-						{
-							recordType = lastRecord.RecordType;
-						}
+			        if (recordType == RecordType.Invalid) recordType = lastRecord.RecordType;
 
-						if (recordTtl == 0)
-						{
-							recordTtl = ttl;
-						}
-						else
-						{
-							ttl = recordTtl;
-						}
+			        if (recordTtl == 0)
+			            recordTtl = ttl;
+			        else
+			            ttl = recordTtl;
 
-						lastRecord = DnsRecordBase.Create(recordType);
-						lastRecord.RecordType = recordType;
-						lastRecord.Name = domain;
-						lastRecord.RecordClass = recordClass;
-						lastRecord.TimeToLive = recordTtl;
+			        lastRecord = DnsRecordBase.Create(recordType);
+			        lastRecord.RecordType = recordType;
+			        lastRecord.Name = domain;
+			        lastRecord.RecordClass = recordClass;
+			        lastRecord.TimeToLive = recordTtl;
 
-						if (rrData.Length > 0 && rrData[0] == @"\#")
-						{
-							lastRecord.ParseUnknownRecordData(rrData);
-						}
-						else
-						{
-							lastRecord.ParseRecordData(origin, rrData);
-						}
+			        if (rrData.Length > 0 && rrData[0] == @"\#")
+			            lastRecord.ParseUnknownRecordData(rrData);
+			        else
+			            lastRecord.ParseRecordData(origin, rrData);
 
-						records.Add(lastRecord);
-					}
-				}
+			        records.Add(lastRecord);
+			    }
 			}
 
 			return records;
@@ -326,36 +297,34 @@ namespace ARSoft.Tools.Net.Dns
 			var line = ReadLineWithoutComment(reader);
 
 			int bracketPos;
-			if ((bracketPos = line.IndexOf('(')) != -1)
-			{
-				var sb = new StringBuilder();
+		    if ((bracketPos = line.IndexOf('(')) == -1) return line;
+		    var sb = new StringBuilder();
 
-				sb.Append(line.Substring(0, bracketPos));
-				sb.Append(" ");
-				sb.Append(line.Substring(bracketPos + 1));
+		    sb.Append(line.Substring(0, bracketPos));
+		    sb.Append(" ");
+		    sb.Append(line.Substring(bracketPos + 1));
 
-				while (true)
-				{
-					sb.Append(" ");
+		    while (true)
+		    {
+		        sb.Append(" ");
 
-					line = ReadLineWithoutComment(reader);
+		        line = ReadLineWithoutComment(reader);
 
-					if ((bracketPos = line.IndexOf(')')) == -1)
-					{
-						sb.Append(line);
-					}
-					else
-					{
-						sb.Append(line.Substring(0, bracketPos));
-						sb.Append(" ");
-						sb.Append(line.Substring(bracketPos + 1));
-						line = sb.ToString();
-						break;
-					}
-				}
-			}
+		        if ((bracketPos = line.IndexOf(')')) == -1)
+		        {
+		            sb.Append(line);
+		        }
+		        else
+		        {
+		            sb.Append(line.Substring(0, bracketPos));
+		            sb.Append(" ");
+		            sb.Append(line.Substring(bracketPos + 1));
+		            line = sb.ToString();
+		            break;
+		        }
+		    }
 
-			return line;
+		    return line;
 		}
 
 		private static string ReadLineWithoutComment(StreamReader reader)
@@ -393,14 +362,11 @@ namespace ARSoft.Tools.Net.Dns
 			var keySigningKeys = keys.Where(x => x.IsSecureEntryPoint).ToList();
 			var zoneSigningKeys = keys.Where(x => !x.IsSecureEntryPoint).ToList();
 
-			if (nsec3Algorithm == 0)
-			{
-				return SignWithNSec(inception, expiration, zoneSigningKeys, keySigningKeys);
-			}
-			else
-			{
-				return SignWithNSec3(inception, expiration, zoneSigningKeys, keySigningKeys, nsec3Algorithm, nsec3Iterations, nsec3Salt, nsec3OptOut);
-			}
+		    return nsec3Algorithm == 0
+		        ? SignWithNSec(inception, expiration, zoneSigningKeys, keySigningKeys)
+		        : SignWithNSec3(inception, expiration, zoneSigningKeys, keySigningKeys, nsec3Algorithm, nsec3Iterations,
+		            nsec3Salt, nsec3OptOut);
+
 		}
 
 		private Zone SignWithNSec(DateTime inception, DateTime expiration, List<DnsKeyRecord> zoneSigningKeys, List<DnsKeyRecord> keySigningKeys)
@@ -431,17 +397,11 @@ namespace ARSoft.Tools.Net.Dns
 
 					recordTypes.Add(RecordType.RrSig);
 
-					foreach (var key in zoneSigningKeys)
-					{
-						res.Add(new RrSigRecord(records, key, inception, expiration));
-					}
-					if (records[0].RecordType == RecordType.DnsKey)
-					{
-						foreach (var key in keySigningKeys)
-						{
-							res.Add(new RrSigRecord(records, key, inception, expiration));
-						}
-					}
+					foreach (var key in zoneSigningKeys) res.Add(new RrSigRecord(records, key, inception, expiration));
+				    if (records[0].RecordType != RecordType.DnsKey) continue;
+
+				    foreach (var key in keySigningKeys)
+				        res.Add(new RrSigRecord(records, key, inception, expiration));
 				}
 
 				recordTypes.Add(RecordType.NSec);
@@ -449,10 +409,7 @@ namespace ARSoft.Tools.Net.Dns
 				var nsecRecord = new NSecRecord(recordsByName[i].Item1, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, recordsByName[(i + 1) % recordsByName.Count].Item1, recordTypes);
 				res.Add(nsecRecord);
 
-				foreach (var key in zoneSigningKeys)
-				{
-					res.Add(new RrSigRecord(new List<DnsRecordBase>() { nsecRecord }, key, inception, expiration));
-				}
+				foreach (var key in zoneSigningKeys) res.Add(new RrSigRecord(new List<DnsRecordBase> { nsecRecord }, key, inception, expiration));
 			}
 
 			res.AddRange(glueRecords);
@@ -501,17 +458,10 @@ namespace ARSoft.Tools.Net.Dns
 
 			        recordTypes.Add(RecordType.RrSig);
 
-			        foreach (var key in zoneSigningKeys)
-			        {
+			        foreach (var key in zoneSigningKeys) res.Add(new RrSigRecord(records, key, inception, expiration));
+			        if (records[0].RecordType != RecordType.DnsKey) continue;
+			        foreach (var key in keySigningKeys)
 			            res.Add(new RrSigRecord(records, key, inception, expiration));
-			        }
-			        if (records[0].RecordType == RecordType.DnsKey)
-			        {
-			            foreach (var key in keySigningKeys)
-			            {
-			                res.Add(new RrSigRecord(records, key, inception, expiration));
-			            }
-			        }
 			    }
 
 			    var hash = t.Item1.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
@@ -522,13 +472,11 @@ namespace ARSoft.Tools.Net.Dns
 			    {
 			        var possibleNonTerminal = currentName.GetParentName(j);
 
-			        if (!allNames.Contains(possibleNonTerminal))
-			        {
-			            hash = possibleNonTerminal.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
-			            nSec3Records.Add(new NSec3Record(DomainName.ParseFromMasterfile(hash.ToBase32HexString()) + Name, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, hash, new List<RecordType>()));
+			        if (allNames.Contains(possibleNonTerminal)) continue;
+			        hash = possibleNonTerminal.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
+			        nSec3Records.Add(new NSec3Record(DomainName.ParseFromMasterfile(hash.ToBase32HexString()) + Name, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, hash, new List<RecordType>()));
 
-			            allNames.Add(possibleNonTerminal);
-			        }
+			        allNames.Add(possibleNonTerminal);
 			    }
 			}
 
@@ -536,21 +484,17 @@ namespace ARSoft.Tools.Net.Dns
 
 			var firstNextHashedOwnerName = nSec3Records[0].NextHashedOwnerName;
 
-			for (var i = 1; i < nSec3Records.Count; i++)
-			{
-				nSec3Records[i - 1].NextHashedOwnerName = nSec3Records[i].NextHashedOwnerName;
-			}
+		    for (var i = 1; i < nSec3Records.Count; i++)
+		        nSec3Records[i - 1].NextHashedOwnerName = nSec3Records[i].NextHashedOwnerName;
 
-			nSec3Records[nSec3Records.Count - 1].NextHashedOwnerName = firstNextHashedOwnerName;
+		    nSec3Records[nSec3Records.Count - 1].NextHashedOwnerName = firstNextHashedOwnerName;
 
 			foreach (var nSec3Record in nSec3Records)
 			{
 				res.Add(nSec3Record);
 
-				foreach (var key in zoneSigningKeys)
-				{
-					res.Add(new RrSigRecord(new List<DnsRecordBase>() { nSec3Record }, key, inception, expiration));
-				}
+			    foreach (var key in zoneSigningKeys)
+			        res.Add(new RrSigRecord(new List<DnsRecordBase> {nSec3Record}, key, inception, expiration));
 			}
 
 			res.AddRange(unsignedRecords);
@@ -559,6 +503,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 
+		/// <inheritdoc />
 		/// <summary>
 		///   Adds a record to the end of the Zone
 		/// </summary>
@@ -577,6 +522,7 @@ namespace ARSoft.Tools.Net.Dns
 			_records.AddRange(items);
 		}
 
+		/// <inheritdoc />
 		/// <summary>
 		///   Removes all records from the zone
 		/// </summary>
@@ -590,12 +536,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="item">Item which should be searched</param>
 		/// <returns>true, if the item is in the zone; otherwise, false</returns>
-		public bool Contains(DnsRecordBase item)
-		{
-			return _records.Contains(item);
-		}
+		public bool Contains(DnsRecordBase item) => _records.Contains(item);
 
-		/// <summary>
+	    /// <summary>
 		///   Copies the entire Zone to a compatible array
 		/// </summary>
 		/// <param name="array">Array to which the records should be copied</param>
@@ -610,38 +553,30 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public int Count => _records.Count;
 
+		/// <inheritdoc />
 		/// <summary>
 		///   A value indicating whether the Zone is readonly
 		/// </summary>
 		/// <returns>false</returns>
-		bool ICollection<DnsRecordBase>.IsReadOnly => false;
+		bool ICollection<DnsRecordBase>.IsReadOnly { get; } = false;
 
-		/// <summary>
+	    /// <summary>
 		///   Removes a record from the Zone
 		/// </summary>
 		/// <param name="item">Item to be removed</param>
 		/// <returns>true, if the record was removed from the Zone; otherwise, false</returns>
-		public bool Remove(DnsRecordBase item)
-		{
-			return _records.Remove(item);
-		}
+		public bool Remove(DnsRecordBase item) => _records.Remove(item);
 
-		/// <summary>
+	    /// <summary>
 		///   Returns an enumerator that iterates through the records of the Zone
 		/// </summary>
 		/// <returns>An enumerator that iterates through the records of the Zone</returns>
-		public IEnumerator<DnsRecordBase> GetEnumerator()
-		{
-			return _records.GetEnumerator();
-		}
+		public IEnumerator<DnsRecordBase> GetEnumerator() => _records.GetEnumerator();
 
-		/// <summary>
+	    /// <summary>
 		///   Returns an enumerator that iterates through the records of the Zone
 		/// </summary>
 		/// <returns>An enumerator that iterates through the records of the Zone</returns>
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 }

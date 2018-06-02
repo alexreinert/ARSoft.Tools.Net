@@ -31,7 +31,7 @@ namespace ARSoft.Tools.Net.Spf
 	///     <see cref="!:http://tools.ietf.org/html/rfc4406">RFC 4406</see>
 	///   </para>
 	/// </summary>
-	public class SenderIDRecord : SpfRecordBase
+	public class SenderIdRecord : SpfRecordBase
 	{
 		private static readonly Regex _prefixRegex = new Regex(@"^v=spf((?<version>1)|(?<version>2)\.(?<minor>\d)/(?<scopes>(([a-z0-9]+,)*[a-z0-9]+)))$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -48,7 +48,7 @@ namespace ARSoft.Tools.Net.Spf
 		/// <summary>
 		///   List of Scopes of the SenderID record
 		/// </summary>
-		public List<SenderIDScope> Scopes { get; set; }
+		public List<SenderIdScope> Scopes { get; set; }
 
 		/// <summary>
 		///   Returns the textual representation of the SenderID record
@@ -69,23 +69,21 @@ namespace ARSoft.Tools.Net.Spf
 				res.Append(".");
 				res.Append(MinorVersion);
 				res.Append("/");
-				res.Append(String.Join(",", Scopes.Where(s => s != SenderIDScope.Unknown).Select(s => EnumHelper<SenderIDScope>.ToString(s).ToLower())));
+				res.Append(string.Join(",", Scopes.Where(s => s != SenderIdScope.Unknown).Select(s => EnumHelper<SenderIdScope>.ToString(s).ToLower())));
 			}
 
 			if (Terms != null && Terms.Count > 0)
-			{
-				foreach (var term in Terms)
-				{
-					var modifier = term as SpfModifier;
-					if (modifier == null || modifier.Type != SpfModifierType.Unknown)
-					{
-						res.Append(" ");
-						res.Append(term);
-					}
-				}
-			}
+			    foreach (var term in Terms)
+			    {
+			        var modifier = term as SpfModifier;
+			        if (modifier == null || modifier.Type != SpfModifierType.Unknown)
+			        {
+			            res.Append(" ");
+			            res.Append(term);
+			        }
+			    }
 
-			return res.ToString();
+		    return res.ToString();
 		}
 
 		/// <summary>
@@ -94,31 +92,24 @@ namespace ARSoft.Tools.Net.Spf
 		/// <param name="s"> Textual representation to check </param>
 		/// <param name="scope"> Scope, which should be matched </param>
 		/// <returns> true in case of correct prefix </returns>
-		public static bool IsSenderIDRecord(string s, SenderIDScope scope)
+		public static bool IsSenderIdRecord(string s, SenderIdScope scope)
 		{
-			if (String.IsNullOrEmpty(s))
+			if (string.IsNullOrEmpty(s))
 				return false;
 
 			var terms = s.Split(new[] { ' ' }, 2);
 
 			if (terms.Length < 2)
 				return false;
-            if (!TryParsePrefix(terms[0], out var version, out var minor, out var scopes))
-            {
-                return false;
-            }
+            if (!TryParsePrefix(terms[0], out var version, out var minor, out var scopes)) return false;
 
-            if (version == 1 && (scope == SenderIDScope.MFrom || scope == SenderIDScope.Pra))
-			{
-				return true;
-			}
-			else
-			{
-				return scopes.Contains(scope);
-			}
+		    if (version == 1 && (scope == SenderIdScope.MFrom || scope == SenderIdScope.Pra))
+		        return true;
+		    else
+		        return scopes.Contains(scope);
 		}
 
-		private static bool TryParsePrefix(string prefix, out int version, out int minor, out List<SenderIDScope> scopes)
+		private static bool TryParsePrefix(string prefix, out int version, out int minor, out List<SenderIdScope> scopes)
 		{
 			var match = _prefixRegex.Match(prefix);
 			if (!match.Success)
@@ -130,9 +121,9 @@ namespace ARSoft.Tools.Net.Spf
 				return false;
 			}
 
-			version = Int32.Parse(match.Groups["version"].Value);
-			minor = Int32.Parse("0" + match.Groups["minor"].Value);
-			scopes = match.Groups["scopes"].Value.Split(',').Select(t => EnumHelper<SenderIDScope>.Parse(t, true, SenderIDScope.Unknown)).ToList();
+			version = int.Parse(match.Groups["version"].Value);
+			minor = int.Parse("0" + match.Groups["minor"].Value);
+			scopes = match.Groups["scopes"].Value.Split(',').Select(t => EnumHelper<SenderIdScope>.Parse(t, true, SenderIdScope.Unknown)).ToList();
 
 			return true;
 		}
@@ -143,9 +134,9 @@ namespace ARSoft.Tools.Net.Spf
 		/// <param name="s"> Textual representation to check </param>
 		/// <param name="value"> Parsed SenderID record in case of successful parsing </param>
 		/// <returns> true in case of successful parsing </returns>
-		public static bool TryParse(string s, out SenderIDRecord value)
+		public static bool TryParse(string s, out SenderIdRecord value)
 		{
-			if (String.IsNullOrEmpty(s))
+			if (string.IsNullOrEmpty(s))
 			{
 				value = null;
 				return false;
@@ -167,7 +158,7 @@ namespace ARSoft.Tools.Net.Spf
             if (TryParseTerms(terms, out var parsedTerms))
             {
                 value =
-                    new SenderIDRecord
+                    new SenderIdRecord
                     {
                         Version = version,
                         MinorVersion = minor,

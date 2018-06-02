@@ -18,7 +18,7 @@
 
 using System.IO;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
     ///   Updateable Resolver HintStore using a local zone file for the hints
@@ -31,12 +31,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   Creates a new instance of the ZoneFileResolverHintStore class
 		/// </summary>
 		/// <param name="fileName">The path to the local zone file containing the hints</param>
-		public ZoneFileResolverHintStore(string fileName)
-		{
-			_fileName = fileName;
-		}
+		public ZoneFileResolverHintStore(string fileName) => _fileName = fileName;
 
-		/// <summary>
+	    /// <summary>
 		///   Saves the hints to the local file
 		/// </summary>
 		/// <param name="zone">The zone to save</param>
@@ -44,10 +41,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			using (var writer = new StreamWriter(_fileName))
 			{
-				foreach (var record in zone)
-				{
-					writer.WriteLine(record.ToString());
-				}
+				foreach (var record in zone) writer.WriteLine(record.ToString());
 			}
 		}
 

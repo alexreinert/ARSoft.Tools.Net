@@ -18,7 +18,7 @@
 
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   Represent a dns record, which is not directly supported by this library
@@ -41,12 +41,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="recordData"> Binary data of the RDATA section of the record </param>
 		public UnknownRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] recordData)
-			: base(name, recordType, recordClass, timeToLive)
-		{
-			RecordData = recordData ?? new byte[] { };
-		}
+			: base(name, recordType, recordClass, timeToLive) => RecordData = recordData ?? new byte[] { };
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
@@ -56,12 +53,9 @@ namespace ARSoft.Tools.Net.Dns
 			ParseUnknownRecordData(stringRepresentation);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return @"\# " + (RecordData == null ? "0" : RecordData.Length + " " + RecordData.ToBase16String());
-		}
+		internal override string RecordDataToString() => @"\# " + (RecordData == null ? "0" : RecordData.Length + " " + RecordData.ToBase16String());
 
-		protected internal override int MaximumRecordDataLength => RecordData.Length;
+	    protected internal override int MaximumRecordDataLength => RecordData.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

@@ -18,7 +18,7 @@
 
 using System.Net.NetworkInformation;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.EDns
 {
     /// <summary>
     ///   <para>EDNS0 Owner Option</para>

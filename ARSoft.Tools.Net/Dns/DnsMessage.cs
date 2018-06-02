@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -31,12 +32,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="data">Buffer, that contains the message data</param>
 		/// <returns>A new instance of the DnsMessage class</returns>
-		public static DnsMessage Parse(byte[] data)
-		{
-			return Parse<DnsMessage>(data);
-		}
+		public static DnsMessage Parse(byte[] data) => Parse<DnsMessage>(data);
 
-		#region Header
+	    #region Header
 		/// <summary>
 		///   <para>Gets or sets the autoritive answer (AA) flag</para>
 		///   <para>
@@ -46,17 +44,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsAuthoritiveAnswer
 		{
-			get { return (Flags & 0x0400) != 0; }
-			set
+			get => (Flags & 0x0400) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0400;
-				}
+				    Flags |= 0x0400;
 				else
-				{
-					Flags &= 0xfbff;
-				}
+				    Flags &= 0xfbff;
 			}
 		}
 
@@ -69,17 +63,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsTruncated
 		{
-			get { return (Flags & 0x0200) != 0; }
-			set
+			get => (Flags & 0x0200) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0200;
-				}
+				    Flags |= 0x0200;
 				else
-				{
-					Flags &= 0xfdff;
-				}
+				    Flags &= 0xfdff;
 			}
 		}
 
@@ -92,17 +82,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsRecursionDesired
 		{
-			get { return (Flags & 0x0100) != 0; }
-			set
+			get => (Flags & 0x0100) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0100;
-				}
+				    Flags |= 0x0100;
 				else
-				{
-					Flags &= 0xfeff;
-				}
+				    Flags &= 0xfeff;
 			}
 		}
 
@@ -115,17 +101,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsRecursionAllowed
 		{
-			get { return (Flags & 0x0080) != 0; }
-			set
+			get => (Flags & 0x0080) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0080;
-				}
+				    Flags |= 0x0080;
 				else
-				{
-					Flags &= 0xff7f;
-				}
+				    Flags &= 0xff7f;
 			}
 		}
 
@@ -138,17 +120,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsAuthenticData
 		{
-			get { return (Flags & 0x0020) != 0; }
-			set
+			get => (Flags & 0x0020) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0020;
-				}
+				    Flags |= 0x0020;
 				else
-				{
-					Flags &= 0xffdf;
-				}
+				    Flags &= 0xffdf;
 			}
 		}
 
@@ -161,17 +139,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsCheckingDisabled
 		{
-			get { return (Flags & 0x0010) != 0; }
-			set
+			get => (Flags & 0x0010) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0010;
-				}
+				    Flags |= 0x0010;
 				else
-				{
-					Flags &= 0xffef;
-				}
+				    Flags &= 0xffef;
 			}
 		}
 		#endregion
@@ -181,8 +155,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public new List<DnsQuestion> Questions
 		{
-			get { return base.Questions; }
-			set { base.Questions = value ?? new List<DnsQuestion>(); }
+			get => base.Questions;
+		    set => base.Questions = value ?? new List<DnsQuestion>();
 		}
 
 		/// <summary>
@@ -190,8 +164,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public new List<DnsRecordBase> AnswerRecords
 		{
-			get { return base.AnswerRecords; }
-			set { base.AnswerRecords = value ?? new List<DnsRecordBase>(); }
+			get => base.AnswerRecords;
+		    set => base.AnswerRecords = value ?? new List<DnsRecordBase>();
 		}
 
 		/// <summary>
@@ -199,8 +173,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public new List<DnsRecordBase> AuthorityRecords
 		{
-			get { return base.AuthorityRecords; }
-			set { base.AuthorityRecords = value ?? new List<DnsRecordBase>(); }
+			get => base.AuthorityRecords;
+		    set => base.AuthorityRecords = value ?? new List<DnsRecordBase>();
 		}
 
 		/// <summary>
@@ -224,10 +198,7 @@ namespace ARSoft.Tools.Net.Dns
 				var ednsOptions = EDnsOptions;
 				if (ednsOptions == null)
 				{
-					if (value)
-					{
-						throw new ArgumentOutOfRangeException(nameof(value), "Setting DO flag is allowed in edns messages only");
-					}
+					if (value) throw new ArgumentOutOfRangeException(nameof(value), "Setting DO flag is allowed in edns messages only");
 				}
 				else
 				{
@@ -242,9 +213,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns>A new instance of the DnsMessage as response to the current instance</returns>
 		public DnsMessage CreateResponseInstance()
 		{
-			var result = new DnsMessage()
+			var result = new DnsMessage
 			{
-				TransactionID = TransactionID,
+				TransactionId = TransactionId,
 				IsEDnsEnabled = IsEDnsEnabled,
 				IsQuery = false,
 				OperationCode = OperationCode,
@@ -269,12 +240,9 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
 		{
-			if (isSubsequentResponseMessage)
-			{
-				return AnswerRecords.Count > 0 && AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa;
-			}
+			if (isSubsequentResponseMessage) return AnswerRecords.Count > 0 && AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa;
 
-			if (Questions.Count == 0)
+		    if (Questions.Count == 0)
 				return false;
 
 			if (Questions[0].RecordType != RecordType.Axfr && Questions[0].RecordType != RecordType.Ixfr)

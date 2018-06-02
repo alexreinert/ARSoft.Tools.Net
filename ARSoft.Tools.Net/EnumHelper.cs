@@ -45,7 +45,7 @@ namespace ARSoft.Tools.Net
 
 		public static bool TryParse(string s, bool ignoreCase, out T value)
 		{
-			if (String.IsNullOrEmpty(s))
+			if (string.IsNullOrEmpty(s))
 			{
 				value = default(T);
 				return false;
@@ -54,19 +54,13 @@ namespace ARSoft.Tools.Net
 			return _values.TryGetValue(ignoreCase ? s.ToLower() : s, out value);
 		}
 
-		public static string ToString(T value)
-		{
-            return _names.TryGetValue(value, out var res) ? res : Convert.ToInt64(value).ToString();
-        }
+		public static string ToString(T value) => _names.TryGetValue(value, out var res) ? res : Convert.ToInt64(value).ToString();
 
-		public static Dictionary<T, string> Names => _names;
+	    public static Dictionary<T, string> Names => _names;
 
-		internal static T Parse(string s, bool ignoreCase, T defaultValue)
-		{
-            return TryParse(s, ignoreCase, out var res) ? res : defaultValue;
-        }
+		internal static T Parse(string s, bool ignoreCase, T defaultValue) => TryParse(s, ignoreCase, out var res) ? res : defaultValue;
 
-		internal static T Parse(string s, bool ignoreCase)
+	    internal static T Parse(string s, bool ignoreCase)
 		{
 
             if (TryParse(s, ignoreCase, out var res))

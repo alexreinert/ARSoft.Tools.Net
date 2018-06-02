@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Canonical name for an alias</para>
@@ -44,12 +44,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="canonicalName"> Canocical name for the alias of the host </param>
 		public CNameRecord(DomainName name, int timeToLive, DomainName canonicalName)
-			: base(name, RecordType.CName, RecordClass.INet, timeToLive)
-		{
-			CanonicalName = canonicalName ?? DomainName.Root;
-		}
+			: base(name, RecordType.CName, RecordClass.INet, timeToLive) => CanonicalName = canonicalName ?? DomainName.Root;
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			CanonicalName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
@@ -62,12 +59,9 @@ namespace ARSoft.Tools.Net.Dns
 			CanonicalName = ParseDomainName(origin, stringRepresentation[0]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return CanonicalName.ToString();
-		}
+		internal override string RecordDataToString() => CanonicalName.ToString();
 
-		protected internal override int MaximumRecordDataLength => CanonicalName.MaximumRecordDataLength + 2;
+	    protected internal override int MaximumRecordDataLength => CanonicalName.MaximumRecordDataLength + 2;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

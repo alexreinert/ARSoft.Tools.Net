@@ -22,8 +22,11 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.Cache;
+using ARSoft.Tools.Net.Dns.DnsRecord;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
     ///   <para>Self validating security aware stub resolver</para>
@@ -134,31 +137,25 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-            if (_cache.TryGetRecords(name, recordType, recordClass, out DnsCacheRecordList<T> cacheResult))
-            {
-                return new DnsSecResult<T>(cacheResult, cacheResult.ValidationResult);
-            }
+            if (_cache.TryGetRecords(name, recordType, recordClass, out DnsCacheRecordList<T> cacheResult)) return new DnsSecResult<T>(cacheResult, cacheResult.ValidationResult);
 
-            var msg = await _dnsClient.ResolveAsync(name, recordType, recordClass, new DnsQueryOptions()
-			{
+		    var msg = await _dnsClient.ResolveAsync(name, recordType, recordClass, new DnsQueryOptions
+		    {
 				IsEDnsEnabled = true,
 				IsDnsSecOk = true,
 				IsCheckingDisabled = true,
 				IsRecursionDesired = true
 			}, token);
 
-			if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain)
-			{
-				throw new Exception("DNS request failed");
-			}
+			if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain) throw new Exception("DNS request failed");
 
-			DnsSecValidationResult validationResult;
+		    DnsSecValidationResult validationResult;
 
 			var cName = msg.AnswerRecords.Where(x => x.RecordType == RecordType.CName && x.RecordClass == recordClass && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
 
 			if (cName != null)
 			{
-				var cNameValidationResult = await _validator.ValidateAsync(name, RecordType.CName, recordClass, msg, new List<CNameRecord>() { cName }, null, token);
+				var cNameValidationResult = await _validator.ValidateAsync(name, RecordType.CName, recordClass, msg, new List<CNameRecord> { cName }, null, token);
 				if (cNameValidationResult == DnsSecValidationResult.Bogus || cNameValidationResult == DnsSecValidationResult.Indeterminate)
 					throw new DnsSecValidationException("CNAME record could not be validated");
 
@@ -205,14 +202,8 @@ namespace ARSoft.Tools.Net.Dns
 			_cache = new DnsCache();
 		}
 
-		Task<DnsMessage> IInternalDnsSecResolver<object>.ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, object state, CancellationToken token)
-		{
-			return _dnsClient.ResolveAsync(name, RecordType.Ds, recordClass, new DnsQueryOptions() { IsEDnsEnabled = true, IsDnsSecOk = true, IsCheckingDisabled = true, IsRecursionDesired = true }, token);
-		}
+		Task<DnsMessage> IInternalDnsSecResolver<object>.ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, object state, CancellationToken token) => _dnsClient.ResolveAsync(name, RecordType.Ds, recordClass, new DnsQueryOptions { IsEDnsEnabled = true, IsDnsSecOk = true, IsCheckingDisabled = true, IsRecursionDesired = true }, token);
 
-		Task<DnsSecResult<TRecord>> IInternalDnsSecResolver<object>.ResolveSecureAsync<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, object state, CancellationToken token)
-		{
-			return ResolveSecureAsync<TRecord>(name, recordType, recordClass, token);
-		}
+	    Task<DnsSecResult<TRecord>> IInternalDnsSecResolver<object>.ResolveSecureAsync<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, object state, CancellationToken token) => ResolveSecureAsync<TRecord>(name, recordType, recordClass, token);
 	}
 }

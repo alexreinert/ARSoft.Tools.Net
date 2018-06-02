@@ -19,8 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.EDns
 {
     /// <summary>
     ///   <para>OPT record</para>
@@ -36,8 +37,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public ushort UdpPayloadSize
 		{
-			get { return (ushort) RecordClass; }
-			set { RecordClass = (RecordClass) value; }
+			get => (ushort) RecordClass;
+		    set => RecordClass = (RecordClass) value;
 		}
 
 		/// <summary>
@@ -45,8 +46,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public ReturnCode ExtendedReturnCode
 		{
-			get { return (ReturnCode) ((TimeToLive & 0xff000000) >> 20); }
-			set
+			get => (ReturnCode) ((TimeToLive & 0xff000000) >> 20);
+		    set
 			{
 				var clearedTtl = TimeToLive & 0x00ffffff;
 				TimeToLive = clearedTtl | ((int) value << 20);
@@ -58,8 +59,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte Version
 		{
-			get { return (byte) ((TimeToLive & 0x00ff0000) >> 16); }
-			set
+			get => (byte) ((TimeToLive & 0x00ff0000) >> 16);
+		    set
 			{
 				var clearedTtl = (int) ((uint) TimeToLive & 0xff00ffff);
 				TimeToLive = clearedTtl | (value << 16);
@@ -77,17 +78,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsDnsSecOk
 		{
-			get { return (TimeToLive & 0x8000) != 0; }
-			set
+			get => (TimeToLive & 0x8000) != 0;
+		    set
 			{
 				if (value)
-				{
-					TimeToLive |= 0x8000;
-				}
+				    TimeToLive |= 0x8000;
 				else
-				{
-					TimeToLive &= 0x7fff;
-				}
+				    TimeToLive &= 0x7fff;
 			}
 		}
 
@@ -180,12 +177,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   Returns the textual representation of the OptRecord
 		/// </summary>
 		/// <returns> The textual representation </returns>
-		public override string ToString()
-		{
-			return RecordDataToString();
-		}
+		public override string ToString() => RecordDataToString();
 
-		internal override string RecordDataToString()
+	    internal override string RecordDataToString()
 		{
 			var flags = IsDnsSecOk ? "DO" : "";
 			return $"; EDNS version: {Version}; flags: {flags}; udp: {UdpPayloadSize}";
@@ -196,27 +190,21 @@ namespace ARSoft.Tools.Net.Dns
 			get
 			{
 				if (Options == null || Options.Count == 0)
-				{
-					return 0;
-				}
+				    return 0;
 				else
-				{
-					return Options.Sum(option => option.DataLength + 4);
-				}
+				    return Options.Sum(option => option.DataLength + 4);
 			}
 		}
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
 			if (Options != null && Options.Count != 0)
-			{
-				foreach (var option in Options)
-				{
-					DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) option.Type);
-					DnsMessageBase.EncodeUShort(messageData, ref currentPosition, option.DataLength);
-					option.EncodeData(messageData, ref currentPosition);
-				}
-			}
+			    foreach (var option in Options)
+			    {
+			        DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) option.Type);
+			        DnsMessageBase.EncodeUShort(messageData, ref currentPosition, option.DataLength);
+			        option.EncodeData(messageData, ref currentPosition);
+			    }
 		}
 	}
 }

@@ -17,6 +17,7 @@
 #endregion
 
 using System;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
@@ -30,12 +31,9 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		protected PrequisiteBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive)
 			: base(name, recordType, recordClass, timeToLive) {}
 
-		internal override string RecordDataToString()
-		{
-			return null;
-		}
+		internal override string RecordDataToString() => null;
 
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
+	    internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			throw new NotSupportedException();
 		}

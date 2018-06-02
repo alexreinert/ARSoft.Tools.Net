@@ -26,6 +26,8 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns;
+using ARSoft.Tools.Net.Dns.DnsRecord;
+using ARSoft.Tools.Net.Dns.Resolver;
 
 namespace ARSoft.Tools.Net.Net
 {
@@ -62,31 +64,27 @@ namespace ARSoft.Tools.Net.Net
 
 		private bool ValidateRemoteCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
 		{
-			IsAuthenticatedByDane = false;
+		    IsAuthenticatedByDane = false;
 
-			switch (_tlsaRecords.ValidationResult)
-			{
-				case DnsSecValidationResult.Signed:
-					if (_tlsaRecords.Records.Count == 0)
-						return !_enforceTlsaValidation && sslPolicyErrors == SslPolicyErrors.None;
+		    switch (_tlsaRecords.ValidationResult)
+		    {
+		        case DnsSecValidationResult.Signed when _tlsaRecords.Records.Count == 0:
+		            return !_enforceTlsaValidation && sslPolicyErrors == SslPolicyErrors.None;
+		        case DnsSecValidationResult.Signed:
+		            foreach (var tlsaRecord in _tlsaRecords.Records)
+		            {
+		                if (!ValidateCertificateByTlsa(tlsaRecord, certificate, chain, sslPolicyErrors)) continue;
 
-					foreach (var tlsaRecord in _tlsaRecords.Records)
-					{
-						if (ValidateCertificateByTlsa(tlsaRecord, certificate, chain, sslPolicyErrors))
-						{
-							IsAuthenticatedByDane = true;
-							return true;
-						}
-					}
+		                IsAuthenticatedByDane = true;
+		                return true;
+		            }
 
-					return false;
-
-				case DnsSecValidationResult.Bogus:
-					return false;
-
-				default:
-					return !_enforceTlsaValidation && sslPolicyErrors == SslPolicyErrors.None;
-			}
+		            return false;
+		        case DnsSecValidationResult.Bogus:
+		            return false;
+		        default:
+		            return !_enforceTlsaValidation && sslPolicyErrors == SslPolicyErrors.None;
+		    }
 		}
 
 		private bool ValidateCertificateByTlsa(TlsaRecord tlsaRecord, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -110,12 +108,9 @@ namespace ARSoft.Tools.Net.Net
 			}
 		}
 
-		private bool ValidateCertificateByTlsa(TlsaRecord tlsaRecord, X509Certificate certificate)
-		{
-			return TlsaRecord.GetCertificateAssocicationData(tlsaRecord.Selector, tlsaRecord.MatchingType, certificate).SequenceEqual(tlsaRecord.CertificateAssociationData);
-		}
+		private bool ValidateCertificateByTlsa(TlsaRecord tlsaRecord, X509Certificate certificate) => TlsaRecord.GetCertificateAssocicationData(tlsaRecord.Selector, tlsaRecord.MatchingType, certificate).SequenceEqual(tlsaRecord.CertificateAssociationData);
 
-		/// <summary>
+	    /// <summary>
 		///   Closes the current stream and releases any resources.
 		/// </summary>
 		public override void Close()
@@ -174,12 +169,9 @@ namespace ARSoft.Tools.Net.Net
 		/// <param name="offset"></param>
 		/// <param name="origin"></param>
 		/// <returns></returns>
-		public override long Seek(long offset, SeekOrigin origin)
-		{
-			return _sslStream.Seek(offset, origin);
-		}
+		public override long Seek(long offset, SeekOrigin origin) => _sslStream.Seek(offset, origin);
 
-		/// <summary>
+	    /// <summary>
 		///   Causes any buffered data to be written to the underlying device.
 		/// </summary>
 		public override void Flush()
@@ -197,12 +189,9 @@ namespace ARSoft.Tools.Net.Net
 		/// </param>
 		/// <param name="count">A Int32 that contains the maximum number of bytes to read from this stream.</param>
 		/// <returns>A Int32 value that specifies the number of bytes read. When there is no more data to be read, returns 0.</returns>
-		public override int Read(byte[] buffer, int offset, int count)
-		{
-			return _sslStream.Read(buffer, offset, count);
-		}
+		public override int Read(byte[] buffer, int offset, int count) => _sslStream.Read(buffer, offset, count);
 
-		/// <summary>
+	    /// <summary>
 		///   Writes data to this stream.
 		/// </summary>
 		/// <param name="buffer">A Byte array that supplies the bytes written to the stream.</param>
@@ -231,22 +220,16 @@ namespace ARSoft.Tools.Net.Net
 		///   passed to the asyncCallback delegate when the operation completes.
 		/// </param>
 		/// <returns>An IAsyncResult object that indicates the status of the asynchronous operation.</returns>
-		public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback asyncCallback, object asyncState)
-		{
-			return _sslStream.BeginRead(buffer, offset, count, asyncCallback, asyncState);
-		}
+		public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback asyncCallback, object asyncState) => _sslStream.BeginRead(buffer, offset, count, asyncCallback, asyncState);
 
-		/// <summary>
+	    /// <summary>
 		///   Ends an asynchronous read operation started with a previous call to BeginRead.
 		/// </summary>
 		/// <param name="asyncResult">An IAsyncResult instance returned by a call to BeginRead</param>
 		/// <returns>A Int32 value that specifies the number of bytes read from the underlying stream.</returns>
-		public override int EndRead(IAsyncResult asyncResult)
-		{
-			return _sslStream.EndRead(asyncResult);
-		}
+		public override int EndRead(IAsyncResult asyncResult) => _sslStream.EndRead(asyncResult);
 
-		/// <summary>
+	    /// <summary>
 		///   Begins an asynchronous write operation that writes Bytes from the specified buffer to the stream.
 		/// </summary>
 		/// <param name="buffer">A Byte array that supplies the bytes to be written to the stream.</param>
@@ -261,12 +244,9 @@ namespace ARSoft.Tools.Net.Net
 		///   passed to the asyncCallback delegate when the operation completes.
 		/// </param>
 		/// <returns>An IAsyncResult object indicating the status of the asynchronous operation.</returns>
-		public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback asyncCallback, object asyncState)
-		{
-			return _sslStream.BeginWrite(buffer, offset, count, asyncCallback, asyncState);
-		}
+		public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback asyncCallback, object asyncState) => _sslStream.BeginWrite(buffer, offset, count, asyncCallback, asyncState);
 
-		/// <summary>
+	    /// <summary>
 		///   Ends an asynchronous write operation started with a previous call to BeginWrite.
 		/// </summary>
 		/// <param name="asyncResult">An IAsyncResult instance returned by a call to BeginWrite</param>
@@ -387,8 +367,8 @@ namespace ARSoft.Tools.Net.Net
 		/// </summary>
 		public override int ReadTimeout
 		{
-			get { return _sslStream.ReadTimeout; }
-			set { _sslStream.ReadTimeout = value; }
+			get => _sslStream.ReadTimeout;
+		    set => _sslStream.ReadTimeout = value;
 		}
 
 		/// <summary>
@@ -396,8 +376,8 @@ namespace ARSoft.Tools.Net.Net
 		/// </summary>
 		public override int WriteTimeout
 		{
-			get { return _sslStream.WriteTimeout; }
-			set { _sslStream.WriteTimeout = value; }
+			get => _sslStream.WriteTimeout;
+		    set => _sslStream.WriteTimeout = value;
 		}
 
 		/// <summary>
@@ -410,8 +390,8 @@ namespace ARSoft.Tools.Net.Net
 		/// </summary>
 		public override long Position
 		{
-			get { return _sslStream.Position; }
-			set { _sslStream.Position = value; }
+			get => _sslStream.Position;
+		    set => _sslStream.Position = value;
 		}
 
 		/// <summary>

@@ -20,8 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsSec;
+using ARSoft.Tools.Net.Dns.EDns;
+using ARSoft.Tools.Net.Dns.TSig;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   Base class representing a dns record
@@ -52,13 +55,9 @@ namespace ARSoft.Tools.Net.Dns
 		internal static DnsRecordBase Create(RecordType type, byte[] resultData, int recordDataPosition)
 		{
 			if (type == RecordType.Key && resultData[recordDataPosition + 3] == (byte) DnsSecAlgorithm.DiffieHellman)
-			{
-				return new DiffieHellmanKeyRecord();
-			}
+			    return new DiffieHellmanKeyRecord();
 			else
-			{
-				return Create(type);
-			}
+			    return Create(type);
 		}
 
 		internal static DnsRecordBase Create(RecordType type)
@@ -193,7 +192,7 @@ namespace ARSoft.Tools.Net.Dns
 		public override string ToString()
 		{
 			var recordData = RecordDataToString();
-			return Name + " " + TimeToLive + " " + RecordClass.ToShortString() + " " + RecordType.ToShortString() + (String.IsNullOrEmpty(recordData) ? "" : " " + recordData);
+			return Name + " " + TimeToLive + " " + RecordClass.ToShortString() + " " + RecordType.ToShortString() + (string.IsNullOrEmpty(recordData) ? "" : " " + recordData);
 		}
 		#endregion
 
@@ -210,9 +209,9 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation[0] != @"\#")
 				throw new FormatException();
 
-			var length = Int32.Parse(stringRepresentation[1]);
+			var length = int.Parse(stringRepresentation[1]);
 
-			var byteData = String.Join("", stringRepresentation.Skip(2)).FromBase16String();
+			var byteData = string.Join("", stringRepresentation.Skip(2)).FromBase16String();
 
 			if (length != byteData.Length)
 				throw new FormatException();
@@ -222,7 +221,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected DomainName ParseDomainName(DomainName origin, string name)
 		{
-			if (String.IsNullOrEmpty(name))
+			if (string.IsNullOrEmpty(name))
 				throw new ArgumentException("Name must be provided", nameof(name));
 
 			if (name.EndsWith("."))
@@ -269,12 +268,9 @@ namespace ARSoft.Tools.Net.Dns
 		#endregion
 
 		internal T Clone<T>()
-			where T : DnsRecordBase
-		{
-			return (T) MemberwiseClone();
-		}
+			where T : DnsRecordBase => (T) MemberwiseClone();
 
-		public int CompareTo(DnsRecordBase other)
+	    public int CompareTo(DnsRecordBase other)
 		{
 			var compare = Name.CompareTo(other.Name);
 			if (compare != 0)
@@ -315,20 +311,14 @@ namespace ARSoft.Tools.Net.Dns
 		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			if (!_hashCode.HasValue)
-			{
-				_hashCode = ToString().GetHashCode();
-			}
+			if (!_hashCode.HasValue) _hashCode = ToString().GetHashCode();
 
-			return _hashCode.Value;
+		    return _hashCode.Value;
 		}
 
-		public override bool Equals(object obj)
-		{
-			return Equals(obj as DnsRecordBase);
-		}
+		public override bool Equals(object obj) => Equals(obj as DnsRecordBase);
 
-		public bool Equals(DnsRecordBase other)
+	    public bool Equals(DnsRecordBase other)
 		{
 			if (other == null)
 				return false;

@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Route through record</para>
@@ -61,7 +61,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
 
-			Preference = UInt16.Parse(stringRepresentation[0]);
+			Preference = ushort.Parse(stringRepresentation[0]);
 			IntermediateHost = ParseDomainName(origin, stringRepresentation[1]);
 		}
 
@@ -71,13 +71,10 @@ namespace ARSoft.Tools.Net.Dns
 			IntermediateHost = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Preference
-			       + " " + IntermediateHost;
-		}
+		internal override string RecordDataToString() => Preference
+		                                                 + " " + IntermediateHost;
 
-		protected internal override int MaximumRecordDataLength => IntermediateHost.MaximumRecordDataLength + 4;
+	    protected internal override int MaximumRecordDataLength => IntermediateHost.MaximumRecordDataLength + 4;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

@@ -20,10 +20,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
     /// <summary>
     ///   <para>Delegation signer</para>
@@ -105,21 +106,18 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 4)
 				throw new FormatException();
 
-			KeyTag = UInt16.Parse(stringRepresentation[0]);
-			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
-			DigestType = (DnsSecDigestType) Byte.Parse(stringRepresentation[2]);
-			Digest = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase16String();
+			KeyTag = ushort.Parse(stringRepresentation[0]);
+			Algorithm = (DnsSecAlgorithm) byte.Parse(stringRepresentation[1]);
+			DigestType = (DnsSecDigestType) byte.Parse(stringRepresentation[2]);
+			Digest = string.Join(string.Empty, stringRepresentation.Skip(3)).FromBase16String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return KeyTag
-			       + " " + (byte) Algorithm
-			       + " " + (byte) DigestType
-			       + " " + Digest.ToBase16String();
-		}
+		internal override string RecordDataToString() => KeyTag
+		                                                 + " " + (byte) Algorithm
+		                                                 + " " + (byte) DigestType
+		                                                 + " " + Digest.ToBase16String();
 
-		protected internal override int MaximumRecordDataLength => 4 + Digest.Length;
+	    protected internal override int MaximumRecordDataLength => 4 + Digest.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

@@ -22,7 +22,7 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Address prefixes record</para>
@@ -99,15 +99,12 @@ namespace ARSoft.Tools.Net.Dns
 			///   Returns the textual representation of an address prefix
 			/// </summary>
 			/// <returns> The textual representation </returns>
-			public override string ToString()
-			{
-				return (IsNegated ? "!" : "")
-				       + (ushort) AddressFamily
-				       + ":" + Address
-				       + "/" + Prefix;
-			}
+			public override string ToString() => (IsNegated ? "!" : "")
+			                                     + (ushort) AddressFamily
+			                                     + ":" + Address
+			                                     + "/" + Prefix;
 
-			internal static AddressPrefix Parse(string s)
+		    internal static AddressPrefix Parse(string s)
 			{
 				var groups = _parserRegex.Match(s).Groups;
 
@@ -116,7 +113,7 @@ namespace ARSoft.Tools.Net.Dns
 				if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && groups["fam"].Value != "1")
 					throw new FormatException();
 
-				return new AddressPrefix(groups["isneg"].Success, address, Byte.Parse(groups["pref"].Value));
+				return new AddressPrefix(groups["isneg"].Success, address, byte.Parse(groups["pref"].Value));
 			}
 		}
 
@@ -134,12 +131,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="prefixes"> List of address prefixes covered by this record </param>
 		public AplRecord(DomainName name, int timeToLive, List<AddressPrefix> prefixes)
-			: base(name, RecordType.Apl, RecordClass.INet, timeToLive)
-		{
-			Prefixes = prefixes ?? new List<AddressPrefix>();
-		}
+			: base(name, RecordType.Apl, RecordClass.INet, timeToLive) => Prefixes = prefixes ?? new List<AddressPrefix>();
 
-		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
 		{
 			var endPosition = currentPosition + length;
 
@@ -175,7 +169,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return String.Join(" ", Prefixes.Select(p => p.ToString()));
+			return string.Join(" ", Prefixes.Select(p => p.ToString()));
 		}
 
 		protected internal override int MaximumRecordDataLength => Prefixes.Count * 20;
@@ -194,11 +188,9 @@ namespace ARSoft.Tools.Net.Dns
 				var addressData = addressPrefix.Address.GetNetworkAddress(addressPrefix.Prefix).GetAddressBytes();
 				var length = addressData.Length;
 				for (; length > 0; length--)
-				{
-					if (addressData[length - 1] != 0)
-						break;
-				}
-				messageData[currentPosition++] |= (byte) length;
+				    if (addressData[length - 1] != 0)
+				        break;
+			    messageData[currentPosition++] |= (byte) length;
 				DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, addressData, length);
 			}
 		}

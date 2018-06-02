@@ -19,9 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
+	/// <inheritdoc />
 	/// <summary>
 	///   <para>Child DNS Key record</para>
 	///   <para>
@@ -54,7 +56,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Binary data of the private key
 		/// </summary>
-		public byte[] PrivateKey { get; private set; }
+		public byte[] PrivateKey { get; }
 
 		/// <summary>
 		///   <para>Record holds a DNS zone key</para>
@@ -67,17 +69,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsZoneKey
 		{
-			get { return (Flags & DnsKeyFlags.Zone) == DnsKeyFlags.Zone; }
-			set
+			get => (Flags & DnsKeyFlags.Zone) == DnsKeyFlags.Zone;
+		    set
 			{
 				if (value)
-				{
-					Flags |= DnsKeyFlags.Zone;
-				}
+				    Flags |= DnsKeyFlags.Zone;
 				else
-				{
-					Flags &= ~DnsKeyFlags.Zone;
-				}
+				    Flags &= ~DnsKeyFlags.Zone;
 			}
 		}
 
@@ -92,17 +90,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsSecureEntryPoint
 		{
-			get { return (Flags & DnsKeyFlags.SecureEntryPoint) == DnsKeyFlags.SecureEntryPoint; }
-			set
+			get => (Flags & DnsKeyFlags.SecureEntryPoint) == DnsKeyFlags.SecureEntryPoint;
+		    set
 			{
 				if (value)
-				{
-					Flags |= DnsKeyFlags.SecureEntryPoint;
-				}
+				    Flags |= DnsKeyFlags.SecureEntryPoint;
 				else
-				{
-					Flags &= ~DnsKeyFlags.SecureEntryPoint;
-				}
+				    Flags &= ~DnsKeyFlags.SecureEntryPoint;
 			}
 		}
 
@@ -115,17 +109,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsRevoked
 		{
-			get { return (Flags & DnsKeyFlags.Revoke) == DnsKeyFlags.Revoke; }
-			set
+			get => (Flags & DnsKeyFlags.Revoke) == DnsKeyFlags.Revoke;
+		    set
 			{
 				if (value)
-				{
-					Flags |= DnsKeyFlags.Revoke;
-				}
+				    Flags |= DnsKeyFlags.Revoke;
 				else
-				{
-					Flags &= ~DnsKeyFlags.Revoke;
-				}
+				    Flags &= ~DnsKeyFlags.Revoke;
 			}
 		}
 
@@ -148,12 +138,9 @@ namespace ARSoft.Tools.Net.Dns
 
 			ulong ac = 0;
 
-			for (var i = 0; i < currentPosition; ++i)
-			{
-				ac += (i & 1) == 1 ? buffer[i] : (ulong) buffer[i] << 8;
-			}
+			for (var i = 0; i < currentPosition; ++i) ac += (i & 1) == 1 ? buffer[i] : (ulong) buffer[i] << 8;
 
-			ac += (ac >> 16) & 0xFFFF;
+		    ac += (ac >> 16) & 0xFFFF;
 
 			var res = (ushort) (ac & 0xffff);
 
@@ -209,21 +196,18 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 4)
 				throw new FormatException();
 
-			Flags = (DnsKeyFlags) UInt16.Parse(stringRepresentation[0]);
-			Protocol = Byte.Parse(stringRepresentation[1]);
-			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
-			PublicKey = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
+			Flags = (DnsKeyFlags) ushort.Parse(stringRepresentation[0]);
+			Protocol = byte.Parse(stringRepresentation[1]);
+			Algorithm = (DnsSecAlgorithm) byte.Parse(stringRepresentation[2]);
+			PublicKey = string.Join(string.Empty, stringRepresentation.Skip(3)).FromBase64String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return (ushort) Flags
-			       + " " + Protocol
-			       + " " + (byte) Algorithm
-			       + " " + PublicKey.ToBase64String();
-		}
+		internal override string RecordDataToString() => (ushort) Flags
+		                                                 + " " + Protocol
+		                                                 + " " + (byte) Algorithm
+		                                                 + " " + PublicKey.ToBase64String();
 
-		protected internal override int MaximumRecordDataLength => 4 + PublicKey.Length;
+	    protected internal override int MaximumRecordDataLength => 4 + PublicKey.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

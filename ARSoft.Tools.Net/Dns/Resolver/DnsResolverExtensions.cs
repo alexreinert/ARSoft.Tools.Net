@@ -21,8 +21,9 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
     ///   Extension methods for DNS resolvers
@@ -56,12 +57,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="resolver"> The resolver instance, that should be used for queries </param>
 		/// <param name="name"> Host name, that should be queried </param>
 		/// <returns> A list of matching host addresses </returns>
-		public static List<IPAddress> ResolveHost(this IDnsResolver resolver, string name)
-		{
-			return resolver.ResolveHost(DomainName.Parse(name));
-		}
+		public static List<IPAddress> ResolveHost(this IDnsResolver resolver, string name) => resolver.ResolveHost(DomainName.Parse(name));
 
-		/// <summary>
+	    /// <summary>
 		///   Queries a dns resolver for IP addresses of a host as an asynchronous operation.
 		/// </summary>
 		/// <param name="resolver"> The resolver instance, that should be used for queries </param>
@@ -90,12 +88,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Host name, that should be queried </param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> A list of matching host addresses </returns>
-		public static Task<List<IPAddress>> ResolveHostAsync(this IDnsResolver resolver, string name, CancellationToken token = default(CancellationToken))
-		{
-			return resolver.ResolveHostAsync(DomainName.Parse(name), token);
-		}
+		public static Task<List<IPAddress>> ResolveHostAsync(this IDnsResolver resolver, string name, CancellationToken token = default(CancellationToken)) => resolver.ResolveHostAsync(DomainName.Parse(name), token);
 
-		/// <summary>
+	    /// <summary>
 		///   Queries a dns resolver for reverse name of an IP address.
 		/// </summary>
 		/// <param name="resolver"> The resolver instance, that should be used for queries </param>
@@ -130,12 +125,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="recordClass"> Class the should be queried </param>
 		/// <returns> A list of matching <see cref="DnsRecordBase">records</see> </returns>
 		public static List<T> Resolve<T>(this IDnsResolver resolver, string name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet)
-			where T : DnsRecordBase
-		{
-			return resolver.Resolve<T>(DomainName.Parse(name), recordType, recordClass);
-		}
+			where T : DnsRecordBase => resolver.Resolve<T>(DomainName.Parse(name), recordType, recordClass);
 
-		/// <summary>
+	    /// <summary>
 		///   Queries a dns resolver for specified records as an asynchronous operation.
 		/// </summary>
 		/// <typeparam name="T"> Type of records, that should be returned </typeparam>
@@ -146,9 +138,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> A list of matching <see cref="DnsRecordBase">records</see> </returns>
 		public static Task<List<T>> ResolveAsync<T>(this IDnsResolver resolver, string name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, CancellationToken token = default(CancellationToken))
-			where T : DnsRecordBase
-		{
-			return resolver.ResolveAsync<T>(DomainName.Parse(name), recordType, recordClass, token);
-		}
+			where T : DnsRecordBase => resolver.ResolveAsync<T>(DomainName.Parse(name), recordType, recordClass, token);
 	}
 }

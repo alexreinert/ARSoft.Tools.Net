@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Uniform Resource Identifier</para>
@@ -60,7 +60,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			Priority = priority;
 			Weight = weight;
-			Target = target ?? String.Empty;
+			Target = target ?? string.Empty;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -75,18 +75,15 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 3)
 				throw new FormatException();
 
-			Priority = UInt16.Parse(stringRepresentation[0]);
-			Weight = UInt16.Parse(stringRepresentation[1]);
+			Priority = ushort.Parse(stringRepresentation[0]);
+			Weight = ushort.Parse(stringRepresentation[1]);
 			Target = stringRepresentation[2];
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Priority + " " + Weight
-			       + " \"" + Target + "\"";
-		}
+		internal override string RecordDataToString() => Priority + " " + Weight
+		                                                 + " \"" + Target + "\"";
 
-		protected internal override int MaximumRecordDataLength => Target.Length + 4;
+	    protected internal override int MaximumRecordDataLength => Target.Length + 4;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

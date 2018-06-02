@@ -20,8 +20,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsRecord;
+using ARSoft.Tools.Net.Dns.Resolver;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Cache
 {
     internal class DnsCacheRecordList<T> : List<T>
 	{
@@ -47,25 +49,17 @@ namespace ARSoft.Tools.Net.Dns
 			}
 
 
-			public override int GetHashCode()
-			{
-				return _hashCode;
-			}
+			public override int GetHashCode() => _hashCode;
 
-			public override bool Equals(object obj)
+		    public override bool Equals(object obj)
 			{
-				var other = obj as CacheKey;
-
-				if (other == null)
+			    if (!(obj is CacheKey other))
 					return false;
 
 				return _recordType == other._recordType && _recordClass == other._recordClass && _name.Equals(other._name);
 			}
 
-			public override string ToString()
-			{
-				return _name + " " + _recordClass.ToShortString() + " " + _recordType.ToShortString();
-			}
+			public override string ToString() => _name + " " + _recordClass.ToShortString() + " " + _recordType.ToShortString();
 		}
 
 		private class CacheValue
@@ -177,10 +171,8 @@ namespace ARSoft.Tools.Net.Dns
 			var utcNow = DateTime.UtcNow;
 
 			foreach (var kvp in _cache)
-			{
-                if (kvp.Value.ExpireDateUtc < utcNow)
-                    _cache.TryRemove(kvp.Key, out var tmp);
-            }
+			    if (kvp.Value.ExpireDateUtc < utcNow)
+			        _cache.TryRemove(kvp.Key, out var tmp);
 		}
 	}
 }

@@ -27,6 +27,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns;
+using ARSoft.Tools.Net.Dns.DnsRecord;
+using ARSoft.Tools.Net.Dns.Resolver;
 
 namespace ARSoft.Tools.Net.Spf
 {
@@ -60,7 +62,7 @@ namespace ARSoft.Tools.Net.Spf
 		///   IP address of the computer validating the record
 		///   <para>Default is the first IP the computer</para>
 		/// </summary>
-		public IPAddress LocalIP { get; set; }
+		public IPAddress LocalIp { get; set; }
 
 		/// <summary>
 		///   Name of the computer validating the record
@@ -100,12 +102,9 @@ namespace ARSoft.Tools.Net.Spf
 		/// <param name="sender"> The "MAIL FROM" or "HELO" identity </param>
 		/// <param name="expandExplanation"> A value indicating if the explanation should be retrieved in case of Fail</param>
 		/// <returns> The result of the evaluation </returns>
-		public ValidationResult CheckHost(IPAddress ip, string domain, string sender, bool expandExplanation = false)
-		{
-			return CheckHost(ip, DomainName.Parse(domain), sender, expandExplanation);
-		}
+		public ValidationResult CheckHost(IPAddress ip, string domain, string sender, bool expandExplanation = false) => CheckHost(ip, DomainName.Parse(domain), sender, expandExplanation);
 
-		/// <summary>
+	    /// <summary>
 		///   Validates the record(s)
 		/// </summary>
 		/// <param name="ip"> The IP address of the SMTP client that is emitting the mail </param>
@@ -114,12 +113,9 @@ namespace ARSoft.Tools.Net.Spf
 		/// <param name="expandExplanation"> A value indicating if the explanation should be retrieved in case of Fail</param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> The result of the evaluation </returns>
-		public Task<ValidationResult> CheckHostAsync(IPAddress ip, DomainName domain, string sender, bool expandExplanation = false, CancellationToken token = default(CancellationToken))
-		{
-			return CheckHostInternalAsync(ip, domain, sender, expandExplanation, new State(), token);
-		}
+		public Task<ValidationResult> CheckHostAsync(IPAddress ip, DomainName domain, string sender, bool expandExplanation = false, CancellationToken token = default(CancellationToken)) => CheckHostInternalAsync(ip, domain, sender, expandExplanation, new State(), token);
 
-		/// <summary>
+	    /// <summary>
 		///   Validates the record(s)
 		/// </summary>
 		/// <param name="ip"> The IP address of the SMTP client that is emitting the mail </param>
@@ -128,12 +124,9 @@ namespace ARSoft.Tools.Net.Spf
 		/// <param name="expandExplanation"> A value indicating if the explanation should be retrieved in case of Fail</param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> The result of the evaluation </returns>
-		public Task<ValidationResult> CheckHostAsync(IPAddress ip, string domain, string sender, bool expandExplanation = false, CancellationToken token = default(CancellationToken))
-		{
-			return CheckHostAsync(ip, DomainName.Parse(domain), sender, expandExplanation, token);
-		}
+		public Task<ValidationResult> CheckHostAsync(IPAddress ip, string domain, string sender, bool expandExplanation = false, CancellationToken token = default(CancellationToken)) => CheckHostAsync(ip, DomainName.Parse(domain), sender, expandExplanation, token);
 
-		protected class LoadRecordResult
+	    protected class LoadRecordResult
 		{
 			public bool CouldBeLoaded { get; internal set; }
 			public T Record { get; internal set; }
@@ -142,42 +135,31 @@ namespace ARSoft.Tools.Net.Spf
 
 		private async Task<ValidationResult> CheckHostInternalAsync(IPAddress ip, DomainName domain, string sender, bool expandExplanation, State state, CancellationToken token)
 		{
-			if (domain == null || domain.Equals(DomainName.Root))
-			{
-				return new ValidationResult() { Result = SpfQualifier.None, Explanation = String.Empty };
-			}
+			if (domain == null || domain.Equals(DomainName.Root)) return new ValidationResult { Result = SpfQualifier.None, Explanation = string.Empty };
 
-			if (String.IsNullOrEmpty(sender))
-			{
-				sender = "postmaster@unknown";
-			}
-			else if (!sender.Contains('@'))
-			{
-				sender = "postmaster@" + sender;
-			}
+		    if (string.IsNullOrEmpty(sender))
+		        sender = "postmaster@unknown";
+		    else if (!sender.Contains('@')) sender = "postmaster@" + sender;
 
-			var loadResult = await LoadRecordsAsync(domain, token);
+		    var loadResult = await LoadRecordsAsync(domain, token);
 
-			if (!loadResult.CouldBeLoaded)
-			{
-				return new ValidationResult() { Result = loadResult.ErrorResult, Explanation = String.Empty };
-			}
+			if (!loadResult.CouldBeLoaded) return new ValidationResult { Result = loadResult.ErrorResult, Explanation = string.Empty };
 
-			var record = loadResult.Record;
+		    var record = loadResult.Record;
 
 			if (record.Terms == null || record.Terms.Count == 0)
-				return new ValidationResult() { Result = SpfQualifier.Neutral, Explanation = String.Empty };
+				return new ValidationResult { Result = SpfQualifier.Neutral, Explanation = string.Empty };
 
 			if (record.Terms.OfType<SpfModifier>().GroupBy(m => m.Type).Where(g => g.Key == SpfModifierType.Exp || g.Key == SpfModifierType.Redirect).Any(g => g.Count() > 1))
-				return new ValidationResult() { Result = SpfQualifier.PermError, Explanation = String.Empty };
+				return new ValidationResult { Result = SpfQualifier.PermError, Explanation = string.Empty };
 
-			var result = new ValidationResult() { Result = loadResult.ErrorResult };
+			var result = new ValidationResult { Result = loadResult.ErrorResult };
 
 			#region Evaluate mechanism
 			foreach (var mechanism in record.Terms.OfType<SpfMechanism>())
 			{
 				if (state.DnsLookupCount > DnsLookupLimit)
-					return new ValidationResult() { Result = SpfQualifier.PermError, Explanation = String.Empty };
+					return new ValidationResult { Result = SpfQualifier.PermError, Explanation = string.Empty };
 
 				var qualifier = await CheckMechanismAsync(mechanism, ip, domain, sender, state, token);
 
@@ -196,9 +178,9 @@ namespace ARSoft.Tools.Net.Spf
 				if (redirectModifier != null)
 				{
 					if (++state.DnsLookupCount > 10)
-						return new ValidationResult() { Result = SpfQualifier.PermError, Explanation = String.Empty };
+						return new ValidationResult { Result = SpfQualifier.PermError, Explanation = string.Empty };
 
-					var redirectDomain = await ExpandDomainAsync(redirectModifier.Domain ?? String.Empty, ip, domain, sender, token);
+					var redirectDomain = await ExpandDomainAsync(redirectModifier.Domain ?? string.Empty, ip, domain, sender, token);
 
 					if (redirectDomain == null || redirectDomain == DomainName.Root || redirectDomain.Equals(domain))
 					{
@@ -222,7 +204,7 @@ namespace ARSoft.Tools.Net.Spf
 
 					if (target == null || target.Equals(DomainName.Root))
 					{
-						result.Explanation = String.Empty;
+						result.Explanation = string.Empty;
 					}
 					else
 					{
@@ -230,10 +212,7 @@ namespace ARSoft.Tools.Net.Spf
 						if (dnsResult != null && dnsResult.ReturnCode == ReturnCode.NoError)
 						{
 							var txtRecord = dnsResult.Records.FirstOrDefault();
-							if (txtRecord != null)
-							{
-								result.Explanation = (await ExpandMacroAsync(txtRecord.TextData, ip, domain, sender, token)).ToString();
-							}
+							if (txtRecord != null) result.Explanation = (await ExpandMacroAsync(txtRecord.TextData, ip, domain, sender, token)).ToString();
 						}
 					}
 				}
@@ -257,23 +236,20 @@ namespace ARSoft.Tools.Net.Spf
 					if (++state.DnsLookupCount > 10)
 						return SpfQualifier.PermError;
 
-					var aMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
+					var aMechanismDomain = string.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
 
 					var isAMatch = await IsIpMatchAsync(aMechanismDomain, ip, mechanism.Prefix, mechanism.Prefix6, token);
 					if (!isAMatch.HasValue)
 						return SpfQualifier.TempError;
 
-					if (isAMatch.Value)
-					{
-						return mechanism.Qualifier;
-					}
-					break;
+					if (isAMatch.Value) return mechanism.Qualifier;
+				    break;
 
 				case SpfMechanismType.Mx:
 					if (++state.DnsLookupCount > 10)
 						return SpfQualifier.PermError;
 
-					var mxMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
+					var mxMechanismDomain = string.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
 
 					var dnsMxResult = await ResolveDnsAsync<MxRecord>(mxMechanismDomain, RecordType.Mx, token);
 					if (dnsMxResult == null || dnsMxResult.ReturnCode != ReturnCode.NoError && dnsMxResult.ReturnCode != ReturnCode.NxDomain)
@@ -290,10 +266,7 @@ namespace ARSoft.Tools.Net.Spf
 						if (!isMxMatch.HasValue)
 							return SpfQualifier.TempError;
 
-						if (isMxMatch.Value)
-						{
-							return mechanism.Qualifier;
-						}
+						if (isMxMatch.Value) return mechanism.Qualifier;
 					}
 					break;
 
@@ -309,10 +282,7 @@ namespace ARSoft.Tools.Net.Spf
 							if (mechanism.Prefix.Value < 0 || mechanism.Prefix.Value > (compareAddress.AddressFamily == AddressFamily.InterNetworkV6 ? 128 : 32))
 								return SpfQualifier.PermError;
 
-							if (ip.GetNetworkAddress(mechanism.Prefix.Value).Equals(compareAddress.GetNetworkAddress(mechanism.Prefix.Value)))
-							{
-								return mechanism.Qualifier;
-							}
+							if (ip.GetNetworkAddress(mechanism.Prefix.Value).Equals(compareAddress.GetNetworkAddress(mechanism.Prefix.Value))) return mechanism.Qualifier;
 						}
 						else if (ip.Equals(compareAddress))
 						{
@@ -334,7 +304,7 @@ namespace ARSoft.Tools.Net.Spf
 					if (dnsPtrResult == null || dnsPtrResult.ReturnCode != ReturnCode.NoError && dnsPtrResult.ReturnCode != ReturnCode.NxDomain)
 						return SpfQualifier.TempError;
 
-					var ptrMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
+					var ptrMechanismDomain = string.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
 
 					var ptrCheckedCount = 0;
 					foreach (var ptrRecord in dnsPtrResult.Records)
@@ -344,10 +314,8 @@ namespace ARSoft.Tools.Net.Spf
 
 						var isPtrMatch = await IsIpMatchAsync(ptrRecord.PointerDomainName, ip, 0, 0, token);
 						if (isPtrMatch.HasValue && isPtrMatch.Value)
-						{
-							if (ptrRecord.PointerDomainName.Equals(ptrMechanismDomain) || ptrRecord.PointerDomainName.IsSubDomainOf(ptrMechanismDomain))
-								return mechanism.Qualifier;
-						}
+						    if (ptrRecord.PointerDomainName.Equals(ptrMechanismDomain) || ptrRecord.PointerDomainName.IsSubDomainOf(ptrMechanismDomain))
+						        return mechanism.Qualifier;
 					}
 					break;
 
@@ -355,29 +323,26 @@ namespace ARSoft.Tools.Net.Spf
 					if (++state.DnsLookupCount > 10)
 						return SpfQualifier.PermError;
 
-					if (String.IsNullOrEmpty(mechanism.Domain))
+					if (string.IsNullOrEmpty(mechanism.Domain))
 						return SpfQualifier.PermError;
 
-					var existsMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
+					var existsMechanismDomain = string.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
 
 					var dnsAResult = await ResolveDnsAsync<ARecord>(existsMechanismDomain, RecordType.A, token);
 					if (dnsAResult == null || dnsAResult.ReturnCode != ReturnCode.NoError && dnsAResult.ReturnCode != ReturnCode.NxDomain)
 						return SpfQualifier.TempError;
 
-					if (dnsAResult.Records.Count(record => record.RecordType == RecordType.A) > 0)
-					{
-						return mechanism.Qualifier;
-					}
-					break;
+					if (dnsAResult.Records.Count(record => record.RecordType == RecordType.A) > 0) return mechanism.Qualifier;
+				    break;
 
 				case SpfMechanismType.Include:
 					if (++state.DnsLookupCount > 10)
 						return SpfQualifier.PermError;
 
-					if (String.IsNullOrEmpty(mechanism.Domain))
+					if (string.IsNullOrEmpty(mechanism.Domain))
 						return SpfQualifier.PermError;
 
-					var includeMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
+					var includeMechanismDomain = string.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
 
 					if (includeMechanismDomain.Equals(domain))
 						return SpfQualifier.PermError;
@@ -435,20 +400,18 @@ namespace ARSoft.Tools.Net.Spf
 				return null;
 
 			foreach (var dnsRecord in dnsResult.Records)
-			{
-				if (prefix.HasValue)
-				{
-					if (ipAddress.Equals(dnsRecord.Address.GetNetworkAddress(prefix.Value)))
-						return true;
-				}
-				else
-				{
-					if (ipAddress.Equals(dnsRecord.Address))
-						return true;
-				}
-			}
+			    if (prefix.HasValue)
+			    {
+			        if (ipAddress.Equals(dnsRecord.Address.GetNetworkAddress(prefix.Value)))
+			            return true;
+			    }
+			    else
+			    {
+			        if (ipAddress.Equals(dnsRecord.Address))
+			            return true;
+			    }
 
-			return false;
+		    return false;
 		}
 
 		protected class DnsResolveResult<TRecord>
@@ -482,7 +445,7 @@ namespace ARSoft.Tools.Net.Spf
 		{
 			var expanded = await ExpandMacroAsync(pattern, ip, domain, sender, token);
 
-			if (String.IsNullOrEmpty(expanded))
+			if (string.IsNullOrEmpty(expanded))
 				return DomainName.Root;
 
 			return DomainName.Parse(expanded);
@@ -490,34 +453,25 @@ namespace ARSoft.Tools.Net.Spf
 
 		private async Task<string> ExpandMacroAsync(string pattern, IPAddress ip, DomainName domain, string sender, CancellationToken token)
 		{
-			if (String.IsNullOrEmpty(pattern))
-				return String.Empty;
+			if (string.IsNullOrEmpty(pattern))
+				return string.Empty;
 
 			var match = _parseMacroRegex.Match(pattern);
-			if (!match.Success)
-			{
-				return pattern;
-			}
+			if (!match.Success) return pattern;
 
-			var sb = new StringBuilder();
+		    var sb = new StringBuilder();
 			var pos = 0;
 			do
 			{
-				if (match.Index != pos)
-				{
-					sb.Append(pattern, pos, match.Index - pos);
-				}
-				pos = match.Index + match.Length;
+				if (match.Index != pos) sb.Append(pattern, pos, match.Index - pos);
+			    pos = match.Index + match.Length;
 				sb.Append(await ExpandMacroAsync(match, ip, domain, sender, token));
 				match = match.NextMatch();
 			} while (match.Success);
 
-			if (pos < pattern.Length)
-			{
-				sb.Append(pattern, pos, pattern.Length - pos);
-			}
+			if (pos < pattern.Length) sb.Append(pattern, pos, pattern.Length - pos);
 
-			return sb.ToString();
+		    return sb.ToString();
 		}
 
 		private async Task<string> ExpandMacroAsync(Match pattern, IPAddress ip, DomainName domain, string sender, CancellationToken token)
@@ -550,18 +504,15 @@ namespace ARSoft.Tools.Net.Spf
 							letter = domain.ToString();
 							break;
 						case "i":
-							letter = String.Join(".", ip.GetAddressBytes().Select(b => b.ToString()));
+							letter = string.Join(".", ip.GetAddressBytes().Select(b => b.ToString()));
 							break;
 						case "p":
 							letter = "unknown";
 
 							var dnsResult = await ResolveDnsAsync<PtrRecord>(ip.GetReverseLookupDomain(), RecordType.Ptr, token);
-							if (dnsResult == null || dnsResult.ReturnCode != ReturnCode.NoError && dnsResult.ReturnCode != ReturnCode.NxDomain)
-							{
-								break;
-							}
+							if (dnsResult == null || dnsResult.ReturnCode != ReturnCode.NoError && dnsResult.ReturnCode != ReturnCode.NxDomain) break;
 
-							var ptrCheckedCount = 0;
+						    var ptrCheckedCount = 0;
 							foreach (var ptrRecord in dnsResult.Records)
 							{
 								if (++ptrCheckedCount == 10)
@@ -593,7 +544,7 @@ namespace ARSoft.Tools.Net.Spf
 							break;
 						case "c":
 							var address =
-								LocalIP
+								LocalIp
 								?? NetworkInterface.GetAllNetworkInterfaces()
 									.Where(n => n.OperationalStatus == OperationalStatus.Up && n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
 									.SelectMany(n => n.GetIPProperties().UnicastAddresses)
@@ -625,18 +576,15 @@ namespace ARSoft.Tools.Net.Spf
 					if (pattern.Groups["reverse"].Value == "r")
 						parts = parts.Reverse().ToArray();
 
-					var count = Int32.MaxValue;
-					if (!String.IsNullOrEmpty(pattern.Groups["count"].Value))
-					{
-						count = Int32.Parse(pattern.Groups["count"].Value);
-					}
+					var count = int.MaxValue;
+					if (!string.IsNullOrEmpty(pattern.Groups["count"].Value)) count = int.Parse(pattern.Groups["count"].Value);
 
-					if (count < 1)
+				    if (count < 1)
 						return null;
 
 					count = Math.Min(count, parts.Length);
 
-					return String.Join(".", parts, parts.Length - count, count);
+					return string.Join(".", parts, parts.Length - count, count);
 			}
 		}
 	}

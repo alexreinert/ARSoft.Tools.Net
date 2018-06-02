@@ -18,8 +18,9 @@
 
 using System;
 using System.Collections.Generic;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.TSig
 {
     /// <summary>
     ///   <para>Transaction signature record</para>
@@ -54,7 +55,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Original ID of message
 		/// </summary>
-		public ushort OriginalID { get; private set; }
+		public ushort OriginalId { get; private set; }
 
 		/// <summary>
 		///   Error field
@@ -85,18 +86,18 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="algorithm"> Algorithm of the key </param>
 		/// <param name="timeSigned"> Time when the data was signed </param>
 		/// <param name="fudge"> Timespan errors permitted </param>
-		/// <param name="originalID"> Original ID of message </param>
+		/// <param name="originalId"> Original ID of message </param>
 		/// <param name="error"> Error field </param>
 		/// <param name="otherData"> Binary other data </param>
 		/// <param name="keyData"> Binary data of the key </param>
-		public TSigRecord(DomainName name, TSigAlgorithm algorithm, DateTime timeSigned, TimeSpan fudge, ushort originalID, ReturnCode error, byte[] otherData, byte[] keyData)
+		public TSigRecord(DomainName name, TSigAlgorithm algorithm, DateTime timeSigned, TimeSpan fudge, ushort originalId, ReturnCode error, byte[] otherData, byte[] keyData)
 			: base(name, RecordType.TSig, RecordClass.Any, 0)
 		{
 			Algorithm = algorithm;
 			TimeSigned = timeSigned;
 			Fudge = fudge;
 			Mac = new byte[] { };
-			OriginalID = originalID;
+			OriginalId = originalId;
 			Error = error;
 			OtherData = otherData ?? new byte[] { };
 			KeyData = keyData;
@@ -109,7 +110,7 @@ namespace ARSoft.Tools.Net.Dns
 			Fudge = TimeSpan.FromSeconds(DnsMessageBase.ParseUShort(resultData, ref startPosition));
 			int macSize = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			Mac = DnsMessageBase.ParseByteData(resultData, ref startPosition, macSize);
-			OriginalID = DnsMessageBase.ParseUShort(resultData, ref startPosition);
+			OriginalId = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			Error = (ReturnCode) DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			int otherDataSize = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			OtherData = DnsMessageBase.ParseByteData(resultData, ref startPosition, otherDataSize);
@@ -120,20 +121,17 @@ namespace ARSoft.Tools.Net.Dns
 			throw new NotSupportedException();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return TSigAlgorithmHelper.GetDomainName(Algorithm)
-			       + " " + (int) (TimeSigned - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
-			       + " " + (ushort) Fudge.TotalSeconds
-			       + " " + Mac.Length
-			       + " " + Mac.ToBase64String()
-			       + " " + OriginalID
-			       + " " + (ushort) Error
-			       + " " + OtherData.Length
-			       + " " + OtherData.ToBase64String();
-		}
+		internal override string RecordDataToString() => TSigAlgorithmHelper.GetDomainName(Algorithm)
+		                                                 + " " + (int) (TimeSigned - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
+		                                                 + " " + (ushort) Fudge.TotalSeconds
+		                                                 + " " + Mac.Length
+		                                                 + " " + Mac.ToBase64String()
+		                                                 + " " + OriginalId
+		                                                 + " " + (ushort) Error
+		                                                 + " " + OtherData.Length
+		                                                 + " " + OtherData.ToBase64String();
 
-		protected internal override int MaximumRecordDataLength => TSigAlgorithmHelper.GetDomainName(Algorithm).MaximumRecordDataLength + 18 + TSigAlgorithmHelper.GetHashSize(Algorithm) + OtherData.Length;
+	    protected internal override int MaximumRecordDataLength => TSigAlgorithmHelper.GetDomainName(Algorithm).MaximumRecordDataLength + 18 + TSigAlgorithmHelper.GetHashSize(Algorithm) + OtherData.Length;
 
 		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, byte[] mac)
 		{
@@ -150,7 +148,7 @@ namespace ARSoft.Tools.Net.Dns
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Fudge.TotalSeconds);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) mac.Length);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, mac);
-			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, OriginalID);
+			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, OriginalId);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Error);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) OtherData.Length);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, OtherData);
@@ -190,15 +188,11 @@ namespace ARSoft.Tools.Net.Dns
 			long timeStamp;
 
 			if (BitConverter.IsLittleEndian)
-			{
-				timeStamp = (buffer[currentPosition++] << 40) | (buffer[currentPosition++] << 32) | buffer[currentPosition++] << 24 | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 8) | buffer[currentPosition++];
-			}
+			    timeStamp = (buffer[currentPosition++] << 40) | (buffer[currentPosition++] << 32) | buffer[currentPosition++] << 24 | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 8) | buffer[currentPosition++];
 			else
-			{
-				timeStamp = buffer[currentPosition++] | (buffer[currentPosition++] << 8) | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 24) | (buffer[currentPosition++] << 32) | (buffer[currentPosition++] << 40);
-			}
+			    timeStamp = buffer[currentPosition++] | (buffer[currentPosition++] << 8) | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 24) | (buffer[currentPosition++] << 32) | (buffer[currentPosition++] << 40);
 
-			return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timeStamp).ToLocalTime();
+		    return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timeStamp).ToLocalTime();
 		}
 	}
 }

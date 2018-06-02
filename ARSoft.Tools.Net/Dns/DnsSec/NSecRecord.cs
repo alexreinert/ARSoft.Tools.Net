@@ -19,8 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
     /// <summary>
     ///   <para>Next owner</para>
@@ -59,13 +60,9 @@ namespace ARSoft.Tools.Net.Dns
 			NextDomainName = nextDomainName ?? DomainName.Root;
 
 			if (types == null || types.Count == 0)
-			{
-				Types = new List<RecordType>();
-			}
+			    Types = new List<RecordType>();
 			else
-			{
-				Types = types.Distinct().OrderBy(x => x).ToList();
-			}
+			    Types = types.Distinct().OrderBy(x => x).ToList();
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
@@ -90,12 +87,8 @@ namespace ARSoft.Tools.Net.Dns
 					var bitmap = resultData[currentPosition++];
 
 					for (var bit = 0; bit < 8; bit++)
-					{
-						if ((bitmap & (1 << Math.Abs(bit - 7))) != 0)
-						{
-							types.Add((RecordType) (windowNumber * 256 + i * 8 + bit));
-						}
-					}
+					    if ((bitmap & (1 << Math.Abs(bit - 7))) != 0)
+					        types.Add((RecordType) (windowNumber * 256 + i * 8 + bit));
 				}
 			}
 			return types;
@@ -110,13 +103,10 @@ namespace ARSoft.Tools.Net.Dns
 			Types = stringRepresentation.Skip(1).Select(RecordTypeHelper.ParseShortString).ToList();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return NextDomainName
-			       + " " + String.Join(" ", Types.Select(RecordTypeHelper.ToShortString));
-		}
+		internal override string RecordDataToString() => NextDomainName
+		                                                 + " " + string.Join(" ", Types.Select(RecordTypeHelper.ToShortString));
 
-		protected internal override int MaximumRecordDataLength => 2 + NextDomainName.MaximumRecordDataLength + GetMaximumTypeBitmapLength(Types);
+	    protected internal override int MaximumRecordDataLength => 2 + NextDomainName.MaximumRecordDataLength + GetMaximumTypeBitmapLength(Types);
 
 		internal static int GetMaximumTypeBitmapLength(List<RecordType> types)
 		{
@@ -190,10 +180,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		internal bool IsCovering(DomainName name, DomainName zone)
-		{
-			return name.CompareTo(Name) > 0 && name.CompareTo(NextDomainName) < 0 // within zone
-			       || name.CompareTo(Name) > 0 && NextDomainName.Equals(zone); // behind zone
-		}
+		internal bool IsCovering(DomainName name, DomainName zone) => name.CompareTo(Name) > 0 && name.CompareTo(NextDomainName) < 0 // within zone
+		                                                              || name.CompareTo(Name) > 0 && NextDomainName.Equals(zone);
 	}
 }

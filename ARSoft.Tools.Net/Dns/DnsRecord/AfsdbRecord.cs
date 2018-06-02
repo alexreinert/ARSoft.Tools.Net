@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>AFS data base location</para>
@@ -93,17 +93,14 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
 
-			SubType = (AfsSubType) Byte.Parse(stringRepresentation[0]);
+			SubType = (AfsSubType) byte.Parse(stringRepresentation[0]);
 			Hostname = ParseDomainName(origin, stringRepresentation[1]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return (byte) SubType
-			       + " " + Hostname;
-		}
+		internal override string RecordDataToString() => (byte) SubType
+		                                                 + " " + Hostname;
 
-		protected internal override int MaximumRecordDataLength => Hostname.MaximumRecordDataLength + 4;
+	    protected internal override int MaximumRecordDataLength => Hostname.MaximumRecordDataLength + 4;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

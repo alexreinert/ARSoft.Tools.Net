@@ -19,8 +19,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using ARSoft.Tools.Net.Dns.DnsRecord;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
     ///   Base class for a ResolverHintStore, which has an updateable local storage for the hints
@@ -41,7 +43,7 @@ namespace ARSoft.Tools.Net.Dns
 				EnsureInit();
 				return _rootServers;
 			}
-			private set { _rootServers = value; }
+			private set => _rootServers = value;
 		}
 
 		/// <summary>
@@ -54,7 +56,7 @@ namespace ARSoft.Tools.Net.Dns
 				EnsureInit();
 				return _rootKeys;
 			}
-			private set { _rootKeys = value; }
+			private set => _rootKeys = value;
 		}
 
 		/// <summary>
@@ -83,14 +85,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void EnsureInit()
 		{
-			if (!_isInitiated)
-			{
-				var zone = Load();
+		    if (_isInitiated) return;
+		    var zone = Load();
 
-				LoadZoneInternal(zone);
+		    LoadZoneInternal(zone);
 
-				_isInitiated = true;
-			}
+		    _isInitiated = true;
 		}
 
 		private void LoadZoneInternal(Zone zone)

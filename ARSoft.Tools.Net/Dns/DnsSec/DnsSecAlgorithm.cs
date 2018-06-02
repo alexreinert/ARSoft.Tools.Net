@@ -18,7 +18,7 @@
 
 using System;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
     /// <summary>
     ///   DNSSEC algorithm type

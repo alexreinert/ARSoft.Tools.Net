@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>EUI64</para>
@@ -45,19 +45,16 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="address"> The EUI48 address</param>
 		public Eui64Record(DomainName name, int timeToLive, byte[] address)
-			: base(name, RecordType.Eui64, RecordClass.INet, timeToLive)
-		{
-			Address = address ?? new byte[8];
-		}
+			: base(name, RecordType.Eui64, RecordClass.INet, timeToLive) => Address = address ?? new byte[8];
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			Address = DnsMessageBase.ParseByteData(resultData, ref startPosition, 8);
 		}
 
 		internal override string RecordDataToString()
 		{
-			return String.Join("-", Address.Select(x => x.ToString("x2")).ToArray());
+			return string.Join("-", Address.Select(x => x.ToString("x2")).ToArray());
 		}
 
 		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)

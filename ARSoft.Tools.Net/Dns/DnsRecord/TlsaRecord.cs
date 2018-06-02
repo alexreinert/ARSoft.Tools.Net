@@ -24,7 +24,7 @@ using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using X509Certificate = System.Security.Cryptography.X509Certificates.X509Certificate;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>TLSA</para>
@@ -276,21 +276,18 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 4)
 				throw new FormatException();
 
-			CertificateUsage = (TlsaCertificateUsage) Byte.Parse(stringRepresentation[0]);
-			Selector = (TlsaSelector) Byte.Parse(stringRepresentation[1]);
-			MatchingType = (TlsaMatchingType) Byte.Parse(stringRepresentation[2]);
-			CertificateAssociationData = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase16String();
+			CertificateUsage = (TlsaCertificateUsage) byte.Parse(stringRepresentation[0]);
+			Selector = (TlsaSelector) byte.Parse(stringRepresentation[1]);
+			MatchingType = (TlsaMatchingType) byte.Parse(stringRepresentation[2]);
+			CertificateAssociationData = string.Join(string.Empty, stringRepresentation.Skip(3)).FromBase16String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return (byte) CertificateUsage
-			       + " " + (byte) Selector
-			       + " " + (byte) MatchingType
-			       + " " + String.Join(String.Empty, CertificateAssociationData.ToBase16String());
-		}
+		internal override string RecordDataToString() => (byte) CertificateUsage
+		                                                 + " " + (byte) Selector
+		                                                 + " " + (byte) MatchingType
+		                                                 + " " + string.Join(string.Empty, CertificateAssociationData.ToBase16String());
 
-		protected internal override int MaximumRecordDataLength => 3 + CertificateAssociationData.Length;
+	    protected internal override int MaximumRecordDataLength => 3 + CertificateAssociationData.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

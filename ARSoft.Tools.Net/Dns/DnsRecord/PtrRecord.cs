@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Domain name pointer</para>
@@ -44,12 +44,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="pointerDomainName"> Domain name the address points to </param>
 		public PtrRecord(DomainName name, int timeToLive, DomainName pointerDomainName)
-			: base(name, RecordType.Ptr, RecordClass.INet, timeToLive)
-		{
-			PointerDomainName = pointerDomainName ?? DomainName.Root;
-		}
+			: base(name, RecordType.Ptr, RecordClass.INet, timeToLive) => PointerDomainName = pointerDomainName ?? DomainName.Root;
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			PointerDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
@@ -62,12 +59,9 @@ namespace ARSoft.Tools.Net.Dns
 			PointerDomainName = ParseDomainName(origin, stringRepresentation[0]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return PointerDomainName.ToString();
-		}
+		internal override string RecordDataToString() => PointerDomainName.ToString();
 
-		protected internal override int MaximumRecordDataLength => PointerDomainName.MaximumRecordDataLength + 2;
+	    protected internal override int MaximumRecordDataLength => PointerDomainName.MaximumRecordDataLength + 2;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

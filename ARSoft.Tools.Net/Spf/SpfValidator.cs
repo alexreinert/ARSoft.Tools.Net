@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
 namespace ARSoft.Tools.Net.Spf
 {
@@ -31,29 +32,20 @@ namespace ARSoft.Tools.Net.Spf
 		protected override async Task<LoadRecordResult> LoadRecordsAsync(DomainName domain, CancellationToken token)
 		{
 			var dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, token);
-			if (dnsResult == null || dnsResult.ReturnCode != ReturnCode.NoError && dnsResult.ReturnCode != ReturnCode.NxDomain)
-			{
-				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError };
-			}
+			if (dnsResult == null || dnsResult.ReturnCode != ReturnCode.NoError && dnsResult.ReturnCode != ReturnCode.NxDomain) return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError };
 
-			var spfTextRecords = dnsResult.Records
+		    var spfTextRecords = dnsResult.Records
 				.Select(r => r.TextData)
 				.Where(SpfRecord.IsSpfRecord)
 				.ToList();
 
 
             if (spfTextRecords.Count == 0)
-            {
-                return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.None };
-            }
+                return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.None };
             else if (spfTextRecords.Count > 1 || !SpfRecord.TryParse(spfTextRecords[0], out var record))
-            {
-                return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
-            }
+                return new LoadRecordResult { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
             else
-            {
-                return new LoadRecordResult() { CouldBeLoaded = true, Record = record };
-            }
-        }
+                return new LoadRecordResult { CouldBeLoaded = true, Record = record };
+		}
 	}
 }

@@ -17,8 +17,9 @@
 #endregion
 
 using System.Collections.Generic;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
     /// <summary>
     ///   <para>Security Key</para>
@@ -191,8 +192,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public KeyTypeFlag Type
 		{
-			get { return (KeyTypeFlag) (Flags & 0xc000); }
-			set
+			get => (KeyTypeFlag) (Flags & 0xc000);
+		    set
 			{
 				var clearedOp = (ushort) (Flags & 0x3fff);
 				Flags = (ushort) (clearedOp | (ushort) value);
@@ -204,17 +205,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsExtendedFlag
 		{
-			get { return (Flags & 0x1000) != 0; }
-			set
+			get => (Flags & 0x1000) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x1000;
-				}
+				    Flags |= 0x1000;
 				else
-				{
-					Flags &= 0xefff;
-				}
+				    Flags &= 0xefff;
 			}
 		}
 
@@ -223,8 +220,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public NameTypeFlag NameType
 		{
-			get { return (NameTypeFlag) (Flags & 0x0300); }
-			set
+			get => (NameTypeFlag) (Flags & 0x0300);
+		    set
 			{
 				var clearedOp = (ushort) (Flags & 0xfcff);
 				Flags = (ushort) (clearedOp | (ushort) value);
@@ -236,17 +233,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsZoneSignatory
 		{
-			get { return (Flags & 0x0008) != 0; }
-			set
+			get => (Flags & 0x0008) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0008;
-				}
+				    Flags |= 0x0008;
 				else
-				{
-					Flags &= 0xfff7;
-				}
+				    Flags &= 0xfff7;
 			}
 		}
 
@@ -255,17 +248,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsStrongSignatory
 		{
-			get { return (Flags & 0x0004) != 0; }
-			set
+			get => (Flags & 0x0004) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0004;
-				}
+				    Flags |= 0x0004;
 				else
-				{
-					Flags &= 0xfffb;
-				}
+				    Flags &= 0xfffb;
 			}
 		}
 
@@ -274,17 +263,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsUniqueSignatory
 		{
-			get { return (Flags & 0x0002) != 0; }
-			set
+			get => (Flags & 0x0002) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0002;
-				}
+				    Flags |= 0x0002;
 				else
-				{
-					Flags &= 0xfffd;
-				}
+				    Flags &= 0xfffd;
 			}
 		}
 
@@ -293,17 +278,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsGeneralSignatory
 		{
-			get { return (Flags & 0x0001) != 0; }
-			set
+			get => (Flags & 0x0001) != 0;
+		    set
 			{
 				if (value)
-				{
-					Flags |= 0x0001;
-				}
+				    Flags |= 0x0001;
 				else
-				{
-					Flags &= 0xfffe;
-				}
+				    Flags &= 0xfffe;
 			}
 		}
 		#endregion
@@ -328,15 +309,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected abstract void ParsePublicKey(byte[] resultData, int startPosition, int length);
 
-		internal override sealed string RecordDataToString()
-		{
-			return Flags
-			       + " " + (byte) Protocol
-			       + " " + (byte) Algorithm
-			       + " " + PublicKeyToString();
-		}
+		internal override sealed string RecordDataToString() => Flags
+		                                                        + " " + (byte) Protocol
+		                                                        + " " + (byte) Algorithm
+		                                                        + " " + PublicKeyToString();
 
-		protected abstract string PublicKeyToString();
+	    protected abstract string PublicKeyToString();
 
 		protected internal override sealed int MaximumRecordDataLength => 4 + MaximumPublicKeyLength;
 

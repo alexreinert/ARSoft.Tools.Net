@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
     /// <summary>
     ///   <para>Security Key record</para>
@@ -54,12 +54,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="algorithm"> Algorithm of the key </param>
 		/// <param name="publicKey"> Binary data of the public key </param>
 		public KeyRecord(DomainName name, RecordClass recordClass, int timeToLive, ushort flags, ProtocolType protocol, DnsSecAlgorithm algorithm, byte[] publicKey)
-			: base(name, recordClass, timeToLive, flags, protocol, algorithm)
-		{
-			PublicKey = publicKey ?? new byte[] { };
-		}
+			: base(name, recordClass, timeToLive, flags, protocol, algorithm) => PublicKey = publicKey ?? new byte[] { };
 
-		protected override void ParsePublicKey(byte[] resultData, int startPosition, int length)
+	    protected override void ParsePublicKey(byte[] resultData, int startPosition, int length)
 		{
 			PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
 		}
@@ -69,15 +66,12 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 1)
 				throw new FormatException();
 
-			PublicKey = String.Join(String.Empty, stringRepresentation).FromBase64String();
+			PublicKey = string.Join(string.Empty, stringRepresentation).FromBase64String();
 		}
 
-		protected override string PublicKeyToString()
-		{
-			return PublicKey.ToBase64String();
-		}
+		protected override string PublicKeyToString() => PublicKey.ToBase64String();
 
-		protected override int MaximumPublicKeyLength => PublicKey.Length;
+	    protected override int MaximumPublicKeyLength => PublicKey.Length;
 
 		protected override void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
 		{

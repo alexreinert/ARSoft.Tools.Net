@@ -17,6 +17,7 @@
 #endregion
 
 using System.Collections.Generic;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
@@ -45,19 +46,13 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		/// <param name="record"> Record that should be deleted </param>
 		public DeleteRecordUpdate(DnsRecordBase record)
-			: base(record.Name, record.RecordType, RecordClass.None, 0)
-		{
-			Record = record;
-		}
+			: base(record.Name, record.RecordType, RecordClass.None, 0) => Record = record;
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
 
-		internal override string RecordDataToString()
-		{
-			return Record?.RecordDataToString();
-		}
+		internal override string RecordDataToString() => Record?.RecordDataToString();
 
-		protected internal override int MaximumRecordDataLength => Record?.MaximumRecordDataLength ?? 0;
+	    protected internal override int MaximumRecordDataLength => Record?.MaximumRecordDataLength ?? 0;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

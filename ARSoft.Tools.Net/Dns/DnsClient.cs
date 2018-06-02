@@ -39,15 +39,15 @@ namespace ARSoft.Tools.Net.Dns
 		///   Returns a default instance of the DnsClient, which uses the configured dns servers of the executing computer and a
 		///   query timeout of 10 seconds.
 		/// </summary>
-		public static DnsClient Default { get; private set; }
+		public static DnsClient Default { get; }
 
 		/// <summary>
 		///   Gets or sets a value indicationg whether queries can be sent using UDP.
 		/// </summary>
 		public new bool IsUdpEnabled
 		{
-			get { return base.IsUdpEnabled; }
-			set { base.IsUdpEnabled = value; }
+			get => base.IsUdpEnabled;
+		    set => base.IsUdpEnabled = value;
 		}
 
 		/// <summary>
@@ -55,16 +55,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public new bool IsTcpEnabled
 		{
-			get { return base.IsTcpEnabled; }
-			set { base.IsTcpEnabled = value; }
+			get => base.IsTcpEnabled;
+		    set => base.IsTcpEnabled = value;
 		}
 
-		static DnsClient()
-		{
-			Default = new DnsClient(GetLocalConfiguredDnsServers(), 10000) { IsResponseValidationEnabled = true };
-		}
+		static DnsClient() => Default = new DnsClient(GetLocalConfiguredDnsServers(), 10000) { IsResponseValidationEnabled = true };
 
-		/// <summary>
+	    /// <summary>
 		///   Provides a new instance with custom dns server and query timeout
 		/// </summary>
 		/// <param name="dnsServer"> The IPAddress of the dns server to use </param>
@@ -99,7 +96,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-			var message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
+			var message = new DnsMessage { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
 
 			if (options == null)
 			{
@@ -132,7 +129,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-			var message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
+			var message = new DnsMessage { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
 
 			if (options == null)
 			{
@@ -228,30 +225,24 @@ namespace ARSoft.Tools.Net.Dns
 			try
 			{
 				foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
-				{
-					if (nic.OperationalStatus == OperationalStatus.Up && nic.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-					{
-						foreach (var dns in nic.GetIPProperties().DnsAddresses)
-						{
-							// only use servers defined in draft-ietf-ipngwg-dns-discovery if they are in the same subnet
-							// fec0::/10 is marked deprecated in RFC 3879, so nobody should use these addresses
-							if (dns.AddressFamily == AddressFamily.InterNetworkV6)
-							{
-								var unscoped = new IPAddress(dns.GetAddressBytes());
-								if (unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::1"))
-								    || unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::2"))
-								    || unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::3")))
-								{
-									if (!nic.GetIPProperties().UnicastAddresses.Any(x => x.Address.GetNetworkAddress(10).Equals(IPAddress.Parse("fec0::"))))
-										continue;
-								}
-							}
+				    if (nic.OperationalStatus == OperationalStatus.Up && nic.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+				        foreach (var dns in nic.GetIPProperties().DnsAddresses)
+				        {
+				            // only use servers defined in draft-ietf-ipngwg-dns-discovery if they are in the same subnet
+				            // fec0::/10 is marked deprecated in RFC 3879, so nobody should use these addresses
+				            if (dns.AddressFamily == AddressFamily.InterNetworkV6)
+				            {
+				                var unscoped = new IPAddress(dns.GetAddressBytes());
+				                if (unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::1"))
+				                    || unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::2"))
+				                    || unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::3")))
+				                    if (!nic.GetIPProperties().UnicastAddresses.Any(x => x.Address.GetNetworkAddress(10).Equals(IPAddress.Parse("fec0::"))))
+				                        continue;
+				            }
 
-							if (!res.Contains(dns))
-								res.Add(dns);
-						}
-					}
-				}
+				            if (!res.Contains(dns))
+				                res.Add(dns);
+				        }
 			}
 			catch (Exception e)
 			{
@@ -260,35 +251,27 @@ namespace ARSoft.Tools.Net.Dns
 
 			// try parsing resolv.conf since getting data by NetworkInterface is not supported on non-windows mono
 			if (res.Count == 0 && (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX))
-			{
-				try
-				{
-					using (var reader = File.OpenText("/etc/resolv.conf"))
-					{
-						string line;
-						while ((line = reader.ReadLine()) != null)
-						{
-							var commentStart = line.IndexOf('#');
-							if (commentStart != -1)
-							{
-								line = line.Substring(0, commentStart);
-							}
+			    try
+			    {
+			        using (var reader = File.OpenText("/etc/resolv.conf"))
+			        {
+			            string line;
+			            while ((line = reader.ReadLine()) != null)
+			            {
+			                var commentStart = line.IndexOf('#');
+			                if (commentStart != -1) line = line.Substring(0, commentStart);
 
-							var lineData = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                            if (lineData.Length == 2 && lineData[0] == "nameserver" && IPAddress.TryParse(lineData[1], out var dns))
-                            {
-                                res.Add(dns);
-                            }
-                        }
-					}
-				}
-				catch (Exception e)
-				{
-					Trace.TraceError("/etc/resolv.conf could not be parsed: " + e);
-				}
-			}
+			                var lineData = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+			                if (lineData.Length == 2 && lineData[0] == "nameserver" && IPAddress.TryParse(lineData[1], out var dns)) res.Add(dns);
+			            }
+			        }
+			    }
+			    catch (Exception e)
+			    {
+			        Trace.TraceError("/etc/resolv.conf could not be parsed: " + e);
+			    }
 
-			if (res.Count == 0)
+		    if (res.Count == 0)
 			{
 				// fallback: use the public dns-resolvers of google
 				res.Add(IPAddress.Parse("2001:4860:4860::8844"));

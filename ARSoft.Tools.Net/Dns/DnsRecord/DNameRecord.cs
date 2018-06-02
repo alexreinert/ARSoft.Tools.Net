@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>DNS Name Redirection record</para>
@@ -44,12 +44,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="target"> Target of the redirection </param>
 		public DNameRecord(DomainName name, int timeToLive, DomainName target)
-			: base(name, RecordType.DName, RecordClass.INet, timeToLive)
-		{
-			Target = target ?? DomainName.Root;
-		}
+			: base(name, RecordType.DName, RecordClass.INet, timeToLive) => Target = target ?? DomainName.Root;
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
 			Target = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
 		}
@@ -62,12 +59,9 @@ namespace ARSoft.Tools.Net.Dns
 			Target = ParseDomainName(origin, stringRepresentation[0]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Target.ToString();
-		}
+		internal override string RecordDataToString() => Target.ToString();
 
-		protected internal override int MaximumRecordDataLength => Target.MaximumRecordDataLength + 2;
+	    protected internal override int MaximumRecordDataLength => Target.MaximumRecordDataLength + 2;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

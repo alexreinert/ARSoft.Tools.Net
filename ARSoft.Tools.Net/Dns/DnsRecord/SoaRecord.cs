@@ -16,10 +16,9 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Start of zone of authority record</para>
@@ -120,25 +119,22 @@ namespace ARSoft.Tools.Net.Dns
 			MasterName = ParseDomainName(origin, stringRepresentation[0]);
 			ResponsibleName = ParseDomainName(origin, stringRepresentation[1]);
 
-			SerialNumber = UInt32.Parse(stringRepresentation[2]);
-			RefreshInterval = Int32.Parse(stringRepresentation[3]);
-			RetryInterval = Int32.Parse(stringRepresentation[4]);
-			ExpireInterval = Int32.Parse(stringRepresentation[5]);
-			NegativeCachingTTL = Int32.Parse(stringRepresentation[6]);
+			SerialNumber = uint.Parse(stringRepresentation[2]);
+			RefreshInterval = int.Parse(stringRepresentation[3]);
+			RetryInterval = int.Parse(stringRepresentation[4]);
+			ExpireInterval = int.Parse(stringRepresentation[5]);
+			NegativeCachingTTL = int.Parse(stringRepresentation[6]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return MasterName
-			       + " " + ResponsibleName
-			       + " " + SerialNumber
-			       + " " + RefreshInterval
-			       + " " + RetryInterval
-			       + " " + ExpireInterval
-			       + " " + NegativeCachingTTL;
-		}
+		internal override string RecordDataToString() => MasterName
+		                                                 + " " + ResponsibleName
+		                                                 + " " + SerialNumber
+		                                                 + " " + RefreshInterval
+		                                                 + " " + RetryInterval
+		                                                 + " " + ExpireInterval
+		                                                 + " " + NegativeCachingTTL;
 
-		protected internal override int MaximumRecordDataLength => MasterName.MaximumRecordDataLength + ResponsibleName.MaximumRecordDataLength + 24;
+	    protected internal override int MaximumRecordDataLength => MasterName.MaximumRecordDataLength + ResponsibleName.MaximumRecordDataLength + 24;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

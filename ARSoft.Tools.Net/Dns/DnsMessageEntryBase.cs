@@ -47,30 +47,21 @@ namespace ARSoft.Tools.Net.Dns
 		///   Returns the textual representation
 		/// </summary>
 		/// <returns> Textual representation </returns>
-		public override string ToString()
-		{
-			return Name + " " + RecordType + " " + RecordClass;
-		}
+		public override string ToString() => Name + " " + RecordType + " " + RecordClass;
 
-		private int? _hashCode;
+	    private int? _hashCode;
 
 		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			if (!_hashCode.HasValue)
-			{
-				_hashCode = ToString().GetHashCode();
-			}
+			if (!_hashCode.HasValue) _hashCode = ToString().GetHashCode();
 
-			return _hashCode.Value;
+		    return _hashCode.Value;
 		}
 
-		public override bool Equals(object obj)
-		{
-			return Equals(obj as DnsMessageEntryBase);
-		}
+		public override bool Equals(object obj) => Equals(obj as DnsMessageEntryBase);
 
-		public bool Equals(DnsMessageEntryBase other)
+	    public bool Equals(DnsMessageEntryBase other)
 		{
 			if (other == null)
 				return false;

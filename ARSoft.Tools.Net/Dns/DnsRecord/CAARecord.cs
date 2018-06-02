@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>CAA</para>
@@ -76,17 +76,14 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 3)
 				throw new FormatException();
 
-			Flags = Byte.Parse(stringRepresentation[0]);
+			Flags = byte.Parse(stringRepresentation[0]);
 			Tag = stringRepresentation[1];
 			Value = stringRepresentation[2];
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Flags + " " + Tag.ToMasterfileLabelRepresentation() + " " + Value.ToMasterfileLabelRepresentation();
-		}
+		internal override string RecordDataToString() => Flags + " " + Tag.ToMasterfileLabelRepresentation() + " " + Value.ToMasterfileLabelRepresentation();
 
-		protected internal override int MaximumRecordDataLength => 2 + Tag.Length + Value.Length;
+	    protected internal override int MaximumRecordDataLength => 2 + Tag.Length + Value.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

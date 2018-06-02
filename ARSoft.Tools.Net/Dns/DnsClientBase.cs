@@ -115,12 +115,9 @@ namespace ARSoft.Tools.Net.Dns
 						if (!ValidateResponse(message, result))
 							continue;
 
-						if (result.ReturnCode == ReturnCode.ServerFailure && i != endpointInfos.Count - 1)
-						{
-							continue;
-						}
+						if (result.ReturnCode == ReturnCode.ServerFailure && i != endpointInfos.Count - 1) continue;
 
-						if (result.IsTcpResendingRequested)
+					    if (result.IsTcpResendingRequested)
 						{
 							resultData = QueryByTcp(responderAddress, messageData, messageLength, ref tcpClient, ref tcpStream, out responderAddress);
 							if (resultData != null)
@@ -139,10 +136,7 @@ namespace ARSoft.Tools.Net.Dns
 
 								if (tcpResult.ReturnCode == ReturnCode.ServerFailure)
 								{
-									if (i != endpointInfos.Count - 1)
-									{
-										continue;
-									}
+									if (i != endpointInfos.Count - 1) continue;
 								}
 								else
 								{
@@ -225,50 +219,40 @@ namespace ARSoft.Tools.Net.Dns
 			where TMessage : DnsMessageBase
 		{
 			if (IsResponseValidationEnabled)
-			{
-				if (result.ReturnCode == ReturnCode.NoError || result.ReturnCode == ReturnCode.NxDomain)
-				{
-					if (message.TransactionID != result.TransactionID)
-						return false;
+			    if (result.ReturnCode == ReturnCode.NoError || result.ReturnCode == ReturnCode.NxDomain)
+			    {
+			        if (message.TransactionId != result.TransactionId)
+			            return false;
 
-					if (message.Questions == null || result.Questions == null)
-						return false;
+			        if (message.Questions == null || result.Questions == null)
+			            return false;
 
-					if (message.Questions.Count != result.Questions.Count)
-						return false;
+			        if (message.Questions.Count != result.Questions.Count)
+			            return false;
 
-					for (var j = 0; j < message.Questions.Count; j++)
-					{
-						var queryQuestion = message.Questions[j];
-						var responseQuestion = result.Questions[j];
+			        for (var j = 0; j < message.Questions.Count; j++)
+			        {
+			            var queryQuestion = message.Questions[j];
+			            var responseQuestion = result.Questions[j];
 
-						if (queryQuestion.RecordClass != responseQuestion.RecordClass
-						    || queryQuestion.RecordType != responseQuestion.RecordType
-						    || !queryQuestion.Name.Equals(responseQuestion.Name, false))
-						{
-							return false;
-						}
-					}
-				}
-			}
+			            if (queryQuestion.RecordClass != responseQuestion.RecordClass
+			                || queryQuestion.RecordType != responseQuestion.RecordType
+			                || !queryQuestion.Name.Equals(responseQuestion.Name, false))
+			                return false;
+			        }
+			    }
 
-			return true;
+		    return true;
 		}
 
 		private void PrepareMessage<TMessage>(TMessage message, out int messageLength, out byte[] messageData, out DnsServer.SelectTsigKey tsigKeySelector, out byte[] tsigOriginalMac)
 			where TMessage : DnsMessageBase, new()
 		{
-			if (message.TransactionID == 0)
-			{
-				message.TransactionID = (ushort) _secureRandom.Next(1, 0xffff);
-			}
+			if (message.TransactionId == 0) message.TransactionId = (ushort) _secureRandom.Next(1, 0xffff);
 
-			if (Is0x20ValidationEnabled)
-			{
-				message.Questions.ForEach(q => q.Name = q.Name.Add0x20Bits());
-			}
+		    if (Is0x20ValidationEnabled) message.Questions.ForEach(q => q.Name = q.Name.Add0x20Bits());
 
-			messageLength = message.Encode(false, out messageData);
+		    messageLength = message.Encode(false, out messageData);
 
 			if (message.TSigOptions != null)
 			{
@@ -320,13 +304,9 @@ namespace ARSoft.Tools.Net.Dns
 		private void PrepareAndBindUdpSocket(DnsClientEndpointInfo endpointInfo, Socket udpClient)
 		{
 			if (endpointInfo.IsMulticast)
-			{
-				udpClient.Bind(new IPEndPoint(endpointInfo.LocalAddress, 0));
-			}
+			    udpClient.Bind(new IPEndPoint(endpointInfo.LocalAddress, 0));
 			else
-			{
-				udpClient.Connect(endpointInfo.ServerAddress, _port);
-			}
+			    udpClient.Connect(endpointInfo.ServerAddress, _port);
 		}
 
 		private byte[] QueryByTcp(IPAddress nameServer, byte[] messageData, int messageLength, ref TcpClient tcpClient, ref NetworkStream tcpStream, out IPAddress responderAddress)
@@ -457,13 +437,9 @@ namespace ARSoft.Tools.Net.Dns
 							}
 
 							if (tcpResult.ReturnCode == ReturnCode.ServerFailure)
-							{
-								return result;
-							}
+							    return result;
 							else
-							{
-								result = tcpResult;
-							}
+							    result = tcpResult;
 						}
 					}
 
@@ -513,17 +489,15 @@ namespace ARSoft.Tools.Net.Dns
 				finally
 				{
 					if (resultData != null)
-					{
-						try
-						{
-							resultData.TcpStream?.Dispose();
-							resultData.TcpClient?.Close();
-						}
-						catch
-						{
-							// ignored
-						}
-					}
+					    try
+					    {
+					        resultData.TcpStream?.Dispose();
+					        resultData.TcpClient?.Close();
+					    }
+					    catch
+					    {
+					        // ignored
+					    }
 				}
 			}
 
@@ -535,34 +509,30 @@ namespace ARSoft.Tools.Net.Dns
 			try
 			{
 				if (endpointInfo.IsMulticast)
-				{
-					using (var udpClient = new UdpClient(new IPEndPoint(endpointInfo.LocalAddress, 0)))
-					{
-						var serverEndpoint = new IPEndPoint(endpointInfo.ServerAddress, _port);
-						await udpClient.SendAsync(messageData, messageLength, serverEndpoint);
+				    using (var udpClient = new UdpClient(new IPEndPoint(endpointInfo.LocalAddress, 0)))
+				    {
+				        var serverEndpoint = new IPEndPoint(endpointInfo.ServerAddress, _port);
+				        await udpClient.SendAsync(messageData, messageLength, serverEndpoint);
 
-						udpClient.Client.SendTimeout = QueryTimeout;
-						udpClient.Client.ReceiveTimeout = QueryTimeout;
+				        udpClient.Client.SendTimeout = QueryTimeout;
+				        udpClient.Client.ReceiveTimeout = QueryTimeout;
 
-						var response = await udpClient.ReceiveAsync(QueryTimeout, token);
-						return new QueryResponse(response.Buffer, response.RemoteEndPoint.Address);
-					}
-				}
+				        var response = await udpClient.ReceiveAsync(QueryTimeout, token);
+				        return new QueryResponse(response.Buffer, response.RemoteEndPoint.Address);
+				    }
 				else
-				{
-					using (var udpClient = new UdpClient(endpointInfo.LocalAddress.AddressFamily))
-					{
-						udpClient.Connect(endpointInfo.ServerAddress, _port);
+				    using (var udpClient = new UdpClient(endpointInfo.LocalAddress.AddressFamily))
+				    {
+				        udpClient.Connect(endpointInfo.ServerAddress, _port);
 
-						udpClient.Client.SendTimeout = QueryTimeout;
-						udpClient.Client.ReceiveTimeout = QueryTimeout;
+				        udpClient.Client.SendTimeout = QueryTimeout;
+				        udpClient.Client.ReceiveTimeout = QueryTimeout;
 
-						await udpClient.SendAsync(messageData, messageLength);
+				        await udpClient.SendAsync(messageData, messageLength);
 
-						var response = await udpClient.ReceiveAsync(QueryTimeout, token);
-						return new QueryResponse(response.Buffer, response.RemoteEndPoint.Address);
-					}
-				}
+				        var response = await udpClient.ReceiveAsync(QueryTimeout, token);
+				        return new QueryResponse(response.Buffer, response.RemoteEndPoint.Address);
+				    }
 			}
 			catch (Exception e)
 			{
@@ -609,12 +579,9 @@ namespace ARSoft.Tools.Net.Dns
 						SendTimeout = QueryTimeout
 					};
 
-					if (!await tcpClient.TryConnectAsync(nameServer, _port, QueryTimeout, token))
-					{
-						return null;
-					}
+					if (!await tcpClient.TryConnectAsync(nameServer, _port, QueryTimeout, token)) return null;
 
-					tcpStream = tcpClient.GetStream();
+				    tcpStream = tcpClient.GetStream();
 				}
 
 				var tmp = 0;
@@ -699,7 +666,7 @@ namespace ARSoft.Tools.Net.Dns
 				while (true)
 				{
 					TMessage result;
-					var response = await udpClient.ReceiveAsync(Int32.MaxValue, token);
+					var response = await udpClient.ReceiveAsync(int.MaxValue, token);
 
 					try
 					{
@@ -741,29 +708,25 @@ namespace ARSoft.Tools.Net.Dns
 						s =>
 						{
 							if (s.IsMulticast())
-							{
-								return localIPs
-									.Where(l => l.AddressFamily == s.AddressFamily)
-									.Select(
-										l => new DnsClientEndpointInfo
-										{
-											IsMulticast = true,
-											ServerAddress = s,
-											LocalAddress = l
-										});
-							}
+							    return localIPs
+							        .Where(l => l.AddressFamily == s.AddressFamily)
+							        .Select(
+							            l => new DnsClientEndpointInfo
+							            {
+							                IsMulticast = true,
+							                ServerAddress = s,
+							                LocalAddress = l
+							            });
 							else
-							{
-								return new[]
-								{
-									new DnsClientEndpointInfo
-									{
-										IsMulticast = false,
-										ServerAddress = s,
-										LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
-									}
-								};
-							}
+							    return new[]
+							    {
+							        new DnsClientEndpointInfo
+							        {
+							            IsMulticast = false,
+							            ServerAddress = s,
+							            LocalAddress = s.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any
+							        }
+							    };
 						}).ToList();
 			}
 			else

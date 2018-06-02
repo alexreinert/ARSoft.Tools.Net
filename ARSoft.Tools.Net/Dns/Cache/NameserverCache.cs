@@ -21,7 +21,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Cache
 {
     internal class NameserverCache
 	{
@@ -36,16 +36,11 @@ namespace ARSoft.Tools.Net.Dns
 				Address = address;
 			}
 
-			public override int GetHashCode()
-			{
-				return Address.GetHashCode();
-			}
+			public override int GetHashCode() => Address.GetHashCode();
 
-			public override bool Equals(object obj)
+		    public override bool Equals(object obj)
 			{
-				var second = obj as CacheValue;
-
-				if (second == null)
+			    if (!(obj is CacheValue second))
 					return false;
 
 				return Address.Equals(second.Address);
@@ -58,17 +53,13 @@ namespace ARSoft.Tools.Net.Dns
 		{
 
             if (_cache.TryGetValue(zoneName, out var addresses))
-            {
                 lock (addresses)
                 {
                     addresses.Add(new CacheValue(timeToLive, address));
                 }
-            }
             else
-            {
-                _cache.TryAdd(zoneName, new HashSet<CacheValue>() { new CacheValue(timeToLive, address) });
-            }
-        }
+                _cache.TryAdd(zoneName, new HashSet<CacheValue> { new CacheValue(timeToLive, address) });
+		}
 
 		public bool TryGetAddresses(DomainName zoneName, out List<IPAddress> addresses)
 		{
@@ -82,16 +73,10 @@ namespace ARSoft.Tools.Net.Dns
                 lock (cacheValues)
                 {
                     foreach (var cacheValue in cacheValues)
-                    {
                         if (cacheValue.ExpireDateUtc < utcNow)
-                        {
                             needsCleanup = true;
-                        }
                         else
-                        {
                             addresses.Add(cacheValue.Address);
-                        }
-                    }
 
                     if (needsCleanup)
                     {
@@ -116,15 +101,13 @@ namespace ARSoft.Tools.Net.Dns
 			var utcNow = DateTime.UtcNow;
 
 			foreach (var kvp in _cache)
-			{
-				lock (kvp.Value)
-				{
+			    lock (kvp.Value)
+			    {
 
-                    kvp.Value.RemoveWhere(x => x.ExpireDateUtc < utcNow);
-                    if (kvp.Value.Count == 0)
-						_cache.TryRemove(kvp.Key, out var tmp);
-				}
-			}
+			        kvp.Value.RemoveWhere(x => x.ExpireDateUtc < utcNow);
+			        if (kvp.Value.Count == 0)
+			            _cache.TryRemove(kvp.Key, out var tmp);
+			    }
 		}
 	}
 }

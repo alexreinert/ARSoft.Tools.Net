@@ -18,8 +18,9 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
     ///   Extension methods for DNSSEC resolvers
@@ -36,12 +37,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="recordClass"> Class the should be queried </param>
 		/// <returns> The validating result and a list of matching <see cref="DnsRecordBase">records</see> </returns>
 		public static DnsSecResult<T> ResolveSecure<T>(this IDnsSecResolver resolver, string name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet)
-			where T : DnsRecordBase
-		{
-			return resolver.ResolveSecure<T>(DomainName.Parse(name), recordType, recordClass);
-		}
+			where T : DnsRecordBase => resolver.ResolveSecure<T>(DomainName.Parse(name), recordType, recordClass);
 
-		/// <summary>
+	    /// <summary>
 		///   Queries a dns resolver for specified records as an asynchronous operation.
 		/// </summary>
 		/// <typeparam name="T"> Type of records, that should be returned </typeparam>
@@ -52,9 +50,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> A list of matching <see cref="DnsRecordBase">records</see> </returns>
 		public static Task<DnsSecResult<T>> ResolveSecureAsync<T>(this IDnsSecResolver resolver, string name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, CancellationToken token = default(CancellationToken))
-			where T : DnsRecordBase
-		{
-			return resolver.ResolveSecureAsync<T>(DomainName.Parse(name), recordType, recordClass, token);
-		}
+			where T : DnsRecordBase => resolver.ResolveSecureAsync<T>(DomainName.Parse(name), recordType, recordClass, token);
 	}
 }

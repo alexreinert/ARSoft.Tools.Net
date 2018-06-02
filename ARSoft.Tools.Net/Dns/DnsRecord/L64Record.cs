@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>L64</para>
@@ -67,8 +67,8 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
 
-			Preference = UInt16.Parse(stringRepresentation[0]);
-			Locator64 = UInt64.Parse(stringRepresentation[1]);
+			Preference = ushort.Parse(stringRepresentation[0]);
+			Locator64 = ulong.Parse(stringRepresentation[1]);
 		}
 
 		internal override string RecordDataToString()

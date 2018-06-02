@@ -17,6 +17,7 @@
 #endregion
 
 using System;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {

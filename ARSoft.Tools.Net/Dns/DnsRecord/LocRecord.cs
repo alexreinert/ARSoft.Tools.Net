@@ -22,7 +22,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Location information</para>
@@ -91,10 +91,10 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				IsNegative = isNegative;
 
-				Degrees = Int32.Parse(degrees);
-				Minutes = Int32.Parse(minutes.PadLeft(1, '0'));
-				Seconds = Int32.Parse(seconds.PadLeft(1, '0'));
-				Milliseconds = Int32.Parse(milliseconds.PadRight(3, '0'));
+				Degrees = int.Parse(degrees);
+				Minutes = int.Parse(minutes.PadLeft(1, '0'));
+				Seconds = int.Parse(seconds.PadLeft(1, '0'));
+				Milliseconds = int.Parse(milliseconds.PadRight(3, '0'));
 			}
 
 			/// <summary>
@@ -123,7 +123,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			private string ToDegreeString()
 			{
-				var res = String.Empty;
+				var res = string.Empty;
 
 				if (Milliseconds != 0)
 					res = "." + Milliseconds.ToString().PadLeft(3, '0').TrimEnd('0');
@@ -139,15 +139,9 @@ namespace ARSoft.Tools.Net.Dns
 				return res;
 			}
 
-			internal string ToLatitudeString()
-			{
-				return ToDegreeString() + " " + (IsNegative ? "S" : "N");
-			}
+			internal string ToLatitudeString() => ToDegreeString() + " " + (IsNegative ? "S" : "N");
 
-			internal string ToLongitudeString()
-			{
-				return ToDegreeString() + " " + (IsNegative ? "W" : "E");
-			}
+		    internal string ToLongitudeString() => ToDegreeString() + " " + (IsNegative ? "W" : "E");
 		}
 
 		/// <summary>
@@ -225,7 +219,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
 		{
 			var groups = _parserRegex
-				.Match(String.Join(" ", stringRepresentation))
+				.Match(string.Join(" ", stringRepresentation))
 				.Groups;
 
 			var latNegative = groups["lat"].Value.Equals("S", StringComparison.InvariantCultureIgnoreCase);
@@ -234,25 +228,22 @@ namespace ARSoft.Tools.Net.Dns
 			var longNegative = groups["long"].Value.Equals("W", StringComparison.InvariantCultureIgnoreCase);
 			Longitude = new Degree(longNegative, groups["longd"].Value, groups["longm"].Value, groups["longs"].Value, groups["longms"].Value);
 
-			Altitude = Double.Parse(groups["alt"].Value, CultureInfo.InvariantCulture);
-			Size = String.IsNullOrEmpty(groups["size"].Value) ? 1 : Double.Parse(groups["size"].Value, CultureInfo.InvariantCulture);
-			HorizontalPrecision = String.IsNullOrEmpty(groups["hp"].Value) ? 10000 : Double.Parse(groups["hp"].Value, CultureInfo.InvariantCulture);
-			VerticalPrecision = String.IsNullOrEmpty(groups["vp"].Value) ? 10 : Double.Parse(groups["vp"].Value, CultureInfo.InvariantCulture);
+			Altitude = double.Parse(groups["alt"].Value, CultureInfo.InvariantCulture);
+			Size = string.IsNullOrEmpty(groups["size"].Value) ? 1 : double.Parse(groups["size"].Value, CultureInfo.InvariantCulture);
+			HorizontalPrecision = string.IsNullOrEmpty(groups["hp"].Value) ? 10000 : double.Parse(groups["hp"].Value, CultureInfo.InvariantCulture);
+			VerticalPrecision = string.IsNullOrEmpty(groups["vp"].Value) ? 10 : double.Parse(groups["vp"].Value, CultureInfo.InvariantCulture);
 		}
 
 		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
-		internal override string RecordDataToString()
-		{
-			return Latitude.ToLatitudeString()
-			       + " "
-			       + Longitude.ToLongitudeString()
-			       + " " + Altitude.ToString(CultureInfo.InvariantCulture) + "m"
-			       + (Size != 1 || HorizontalPrecision != 10000 || VerticalPrecision != 10 ? " " + Size + "m" : "")
-			       + (HorizontalPrecision != 10000 || VerticalPrecision != 10 ? " " + HorizontalPrecision + "m" : "")
-			       + (VerticalPrecision != 10 ? " " + VerticalPrecision + "m" : "");
-		}
+		internal override string RecordDataToString() => Latitude.ToLatitudeString()
+		                                                 + " "
+		                                                 + Longitude.ToLongitudeString()
+		                                                 + " " + Altitude.ToString(CultureInfo.InvariantCulture) + "m"
+		                                                 + (Size != 1 || HorizontalPrecision != 10000 || VerticalPrecision != 10 ? " " + Size + "m" : "")
+		                                                 + (HorizontalPrecision != 10000 || VerticalPrecision != 10 ? " " + HorizontalPrecision + "m" : "")
+		                                                 + (VerticalPrecision != 10 ? " " + VerticalPrecision + "m" : "");
 
-		protected internal override int MaximumRecordDataLength => 16;
+	    protected internal override int MaximumRecordDataLength => 16;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
@@ -281,12 +272,10 @@ namespace ARSoft.Tools.Net.Dns
 
 			int exponent;
 			for (exponent = 0; exponent < 9; exponent++)
-			{
-				if (centimeters < _powerOften[exponent + 1])
-					break;
-			}
+			    if (centimeters < _powerOften[exponent + 1])
+			        break;
 
-			var mantissa = (int) (centimeters / _powerOften[exponent]);
+		    var mantissa = (int) (centimeters / _powerOften[exponent]);
 			if (mantissa > 9)
 				mantissa = 9;
 
@@ -334,12 +323,9 @@ namespace ARSoft.Tools.Net.Dns
 		#region Convert Altitude
 		private const int _ALTITUDE_REFERENCE = 10000000;
 
-		private static double ConvertAltitude(int altitude)
-		{
-			return (altitude < _ALTITUDE_REFERENCE ? (_ALTITUDE_REFERENCE - altitude) * -1 : altitude - _ALTITUDE_REFERENCE) / 100d;
-		}
+		private static double ConvertAltitude(int altitude) => (altitude < _ALTITUDE_REFERENCE ? (_ALTITUDE_REFERENCE - altitude) * -1 : altitude - _ALTITUDE_REFERENCE) / 100d;
 
-		private static int ConvertAltitude(double altitude)
+	    private static int ConvertAltitude(double altitude)
 		{
 			var centimeter = (int) (altitude * 100);
 			return centimeter > 0 ? _ALTITUDE_REFERENCE + centimeter : centimeter + _ALTITUDE_REFERENCE;

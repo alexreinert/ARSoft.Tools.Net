@@ -18,7 +18,7 @@
 
 using System.Net;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   Interface for host address providing <see cref="DnsRecordBase">records</see>

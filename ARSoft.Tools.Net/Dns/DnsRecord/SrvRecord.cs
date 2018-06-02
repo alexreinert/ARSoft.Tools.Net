@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Server selector</para>
@@ -83,21 +83,18 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 4)
 				throw new FormatException();
 
-			Priority = UInt16.Parse(stringRepresentation[0]);
-			Weight = UInt16.Parse(stringRepresentation[1]);
-			Port = UInt16.Parse(stringRepresentation[2]);
+			Priority = ushort.Parse(stringRepresentation[0]);
+			Weight = ushort.Parse(stringRepresentation[1]);
+			Port = ushort.Parse(stringRepresentation[2]);
 			Target = ParseDomainName(origin, stringRepresentation[3]);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Priority
-			       + " " + Weight
-			       + " " + Port
-			       + " " + Target;
-		}
+		internal override string RecordDataToString() => Priority
+		                                                 + " " + Weight
+		                                                 + " " + Port
+		                                                 + " " + Target;
 
-		protected internal override int MaximumRecordDataLength => Target.MaximumRecordDataLength + 8;
+	    protected internal override int MaximumRecordDataLength => Target.MaximumRecordDataLength + 8;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

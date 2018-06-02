@@ -21,8 +21,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.DnsRecord;
+using ARSoft.Tools.Net.Dns.Resolver;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsSec
 {
 	internal class DnsSecValidator<TState>
 	{
@@ -43,12 +45,9 @@ namespace ARSoft.Tools.Net.Dns
 				.Union(msg.AuthorityRecords.OfType<RrSigRecord>())
 				.Where(x => name.IsEqualOrSubDomainOf(x.SignersName) && x.SignatureInception <= DateTime.Now && x.SignatureExpiration >= DateTime.Now).ToList();
 
-			if (rrSigRecords.Count == 0)
-			{
-				return await ValidateOptOut(name, recordClass, state, token) ? DnsSecValidationResult.Unsigned : DnsSecValidationResult.Bogus;
-			}
+			if (rrSigRecords.Count == 0) return await ValidateOptOut(name, recordClass, state, token) ? DnsSecValidationResult.Unsigned : DnsSecValidationResult.Bogus;
 
-			var zoneApex = rrSigRecords.OrderByDescending(x => x.Labels).First().SignersName;
+		    var zoneApex = rrSigRecords.OrderByDescending(x => x.Labels).First().SignersName;
 
 			if (resultRecords.Count != 0)
 				return await ValidateRrSigAsync(name, recordType, recordClass, resultRecords, rrSigRecords, zoneApex, msg, state, token);
@@ -62,12 +61,9 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				var msg = await _resolver.ResolveMessageAsync(name, RecordType.Ds, recordClass, state, token);
 
-				if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain)
-				{
-					throw new Exception("DNS request failed");
-				}
+				if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain) throw new Exception("DNS request failed");
 
-				var rrSigRecords = msg
+			    var rrSigRecords = msg
 					.AnswerRecords.OfType<RrSigRecord>()
 					.Union(msg.AuthorityRecords.OfType<RrSigRecord>())
 					.Where(x => name.IsEqualOrSubDomainOf(x.SignersName) && x.SignatureInception <= DateTime.Now && x.SignatureExpiration >= DateTime.Now).ToList();
@@ -124,12 +120,9 @@ namespace ARSoft.Tools.Net.Dns
 
 			while (true)
 			{
-				if (current.Equals(stop))
-				{
-					return DnsSecValidationResult.Signed;
-				}
+				if (current.Equals(stop)) return DnsSecValidationResult.Signed;
 
-				var nsecRecord = nsecRecords.FirstOrDefault(x => x.Name.Equals(current));
+			    var nsecRecord = nsecRecords.FirstOrDefault(x => x.Name.Equals(current));
 				if (nsecRecord != null)
 				{
 					return nsecRecord.Types.Contains(recordType) ? DnsSecValidationResult.Bogus : DnsSecValidationResult.Signed;
@@ -168,12 +161,9 @@ namespace ARSoft.Tools.Net.Dns
 				return DnsSecValidationResult.Unsigned;
 
 			var directMatch = nsecRecords.FirstOrDefault(x => x.Name.Equals(hashedName));
-			if (directMatch != null)
-			{
-				return directMatch.Types.Contains(recordType) ? DnsSecValidationResult.Bogus : DnsSecValidationResult.Signed;
-			}
+			if (directMatch != null) return directMatch.Types.Contains(recordType) ? DnsSecValidationResult.Bogus : DnsSecValidationResult.Signed;
 
-			// find closest encloser
+		    // find closest encloser
 			var current = name;
 			var previousHashedName = hashedName;
 

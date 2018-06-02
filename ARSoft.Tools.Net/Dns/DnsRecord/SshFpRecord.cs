@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>SSH key fingerprint record</para>
@@ -152,19 +152,16 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 3)
 				throw new FormatException();
 
-			Algorithm = (SshFpAlgorithm) Byte.Parse(stringRepresentation[0]);
-			FingerPrintType = (SshFpFingerPrintType) Byte.Parse(stringRepresentation[1]);
-			FingerPrint = String.Join("", stringRepresentation.Skip(2)).FromBase16String();
+			Algorithm = (SshFpAlgorithm) byte.Parse(stringRepresentation[0]);
+			FingerPrintType = (SshFpFingerPrintType) byte.Parse(stringRepresentation[1]);
+			FingerPrint = string.Join("", stringRepresentation.Skip(2)).FromBase16String();
 		}
 
-		internal override string RecordDataToString()
-		{
-			return (byte) Algorithm
-			       + " " + (byte) FingerPrintType
-			       + " " + FingerPrint.ToBase16String();
-		}
+		internal override string RecordDataToString() => (byte) Algorithm
+		                                                 + " " + (byte) FingerPrintType
+		                                                 + " " + FingerPrint.ToBase16String();
 
-		protected internal override int MaximumRecordDataLength => 2 + FingerPrint.Length;
+	    protected internal override int MaximumRecordDataLength => 2 + FingerPrint.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

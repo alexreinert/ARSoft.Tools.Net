@@ -18,6 +18,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using ARSoft.Tools.Net.Dns.DnsRecord;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
@@ -35,20 +36,14 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		/// <param name="data">Buffer, that contains the message data</param>
 		/// <returns>A new instance of the DnsUpdateMessage class</returns>
-		public static DnsUpdateMessage Parse(byte[] data)
-		{
-			return Parse<DnsUpdateMessage>(data);
-		}
+		public static DnsUpdateMessage Parse(byte[] data) => Parse<DnsUpdateMessage>(data);
 
-		/// <summary>
+	    /// <summary>
 		///   Creates a new instance of the DnsUpdateMessage class
 		/// </summary>
-		public DnsUpdateMessage()
-		{
-			OperationCode = OperationCode.Update;
-		}
+		public DnsUpdateMessage() => OperationCode = OperationCode.Update;
 
-		private List<PrequisiteBase> _prequisites;
+	    private List<PrequisiteBase> _prequisites;
 		private List<UpdateBase> _updates;
 
 		/// <summary>
@@ -56,8 +51,8 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		public DomainName ZoneName
 		{
-			get { return Questions.Count > 0 ? Questions[0].Name : null; }
-			set { Questions = new List<DnsQuestion>() { new DnsQuestion(value, RecordType.Soa, RecordClass.INet) }; }
+			get => Questions.Count > 0 ? Questions[0].Name : null;
+		    set => Questions = new List<DnsQuestion> { new DnsQuestion(value, RecordType.Soa, RecordClass.INet) };
 		}
 
 		/// <summary>
@@ -65,8 +60,8 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		public List<PrequisiteBase> Prequisites
 		{
-			get { return _prequisites ?? (_prequisites = new List<PrequisiteBase>()); }
-			set { _prequisites = value; }
+			get => _prequisites ?? (_prequisites = new List<PrequisiteBase>());
+		    set => _prequisites = value;
 		}
 
 		/// <summary>
@@ -74,8 +69,8 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		public List<UpdateBase> Updates
 		{
-			get { return _updates ?? (_updates = new List<UpdateBase>()); }
-			set { _updates = value; }
+			get => _updates ?? (_updates = new List<UpdateBase>());
+		    set => _updates = value;
 		}
 
 		/// <summary>
@@ -84,9 +79,9 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// <returns>A new instance of the DnsUpdateMessage as response to the current instance</returns>
 		public DnsUpdateMessage CreateResponseInstance()
 		{
-			var result = new DnsUpdateMessage()
+			var result = new DnsUpdateMessage
 			{
-				TransactionID = TransactionID,
+				TransactionId = TransactionId,
 				IsEDnsEnabled = IsEDnsEnabled,
 				IsQuery = false,
 				OperationCode = OperationCode,
@@ -106,12 +101,9 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		internal override bool IsTcpResendingRequested => false;
 
-		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
-		{
-			return false;
-		}
+		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage) => false;
 
-		protected override void PrepareEncoding()
+	    protected override void PrepareEncoding()
 		{
 			AnswerRecords = Prequisites?.Cast<DnsRecordBase>().ToList() ?? new List<DnsRecordBase>();
 			AuthorityRecords = Updates?.Cast<DnsRecordBase>().ToList() ?? new List<DnsRecordBase>();
@@ -124,29 +116,17 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 					record =>
 					{
 						if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
-						{
-							return new RecordExistsPrequisite(record.Name, record.RecordType);
-						}
+						    return new RecordExistsPrequisite(record.Name, record.RecordType);
 						else if (record.RecordClass == RecordClass.Any)
-						{
-							return new RecordExistsPrequisite(record);
-						}
+						    return new RecordExistsPrequisite(record);
 						else if (record.RecordClass == RecordClass.None && record.RecordDataLength == 0)
-						{
-							return new RecordNotExistsPrequisite(record.Name, record.RecordType);
-						}
+						    return new RecordNotExistsPrequisite(record.Name, record.RecordType);
 						else if (record.RecordClass == RecordClass.Any && record.RecordType == RecordType.Any)
-						{
-							return new NameIsInUsePrequisite(record.Name);
-						}
+						    return new NameIsInUsePrequisite(record.Name);
 						else if (record.RecordClass == RecordClass.None && record.RecordType == RecordType.Any)
-						{
-							return new NameIsNotInUsePrequisite(record.Name);
-						}
+						    return new NameIsNotInUsePrequisite(record.Name);
 						else
-						{
-							return null;
-						}
+						    return null;
 					}).Where(prequisite => prequisite != null).ToList();
 
 			Updates =
@@ -154,25 +134,15 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 					record =>
 					{
 						if (record.TimeToLive != 0)
-						{
-							return new AddRecordUpdate(record);
-						}
+						    return new AddRecordUpdate(record);
 						else if (record.RecordType == RecordType.Any && record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
-						{
-							return new DeleteAllRecordsUpdate(record.Name);
-						}
+						    return new DeleteAllRecordsUpdate(record.Name);
 						else if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
-						{
-							return new DeleteRecordUpdate(record.Name, record.RecordType);
-						}
+						    return new DeleteRecordUpdate(record.Name, record.RecordType);
 						else if (record.RecordClass == RecordClass.None)
-						{
-							return new DeleteRecordUpdate(record);
-						}
+						    return new DeleteRecordUpdate(record);
 						else
-						{
-							return null;
-						}
+						    return null;
 					}).Where(update => update != null).ToList();
 		}
 	}

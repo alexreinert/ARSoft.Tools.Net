@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Host identity protocol</para>
@@ -81,10 +81,7 @@ namespace ARSoft.Tools.Net.Dns
 			Hit = DnsMessageBase.ParseByteData(resultData, ref currentPosition, hitLength);
 			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, publicKeyLength);
 			RendezvousServers = new List<DomainName>();
-			while (currentPosition < endPosition)
-			{
-				RendezvousServers.Add(DnsMessageBase.ParseDomainName(resultData, ref currentPosition));
-			}
+			while (currentPosition < endPosition) RendezvousServers.Add(DnsMessageBase.ParseDomainName(resultData, ref currentPosition));
 		}
 
 		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
@@ -92,7 +89,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 3)
 				throw new FormatException();
 
-			Algorithm = (IpSecKeyRecord.IpSecAlgorithm) Byte.Parse(stringRepresentation[0]);
+			Algorithm = (IpSecKeyRecord.IpSecAlgorithm) byte.Parse(stringRepresentation[0]);
 			Hit = stringRepresentation[1].FromBase16String();
 			PublicKey = stringRepresentation[2].FromBase64String();
 			RendezvousServers = stringRepresentation.Skip(3).Select(x => ParseDomainName(origin, x)).ToList();
@@ -103,7 +100,7 @@ namespace ARSoft.Tools.Net.Dns
 			return (byte) Algorithm
 			       + " " + Hit.ToBase16String()
 			       + " " + PublicKey.ToBase64String()
-			       + " " + String.Join(" ", RendezvousServers.Select(s => s.ToString()));
+			       + " " + string.Join(" ", RendezvousServers.Select(s => s.ToString()));
 		}
 
 		protected internal override int MaximumRecordDataLength
@@ -125,10 +122,7 @@ namespace ARSoft.Tools.Net.Dns
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) PublicKey.Length);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Hit);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
-			foreach (var server in RendezvousServers)
-			{
-				DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, server, null, false);
-			}
+			foreach (var server in RendezvousServers) DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, server, null, false);
 		}
 	}
 }

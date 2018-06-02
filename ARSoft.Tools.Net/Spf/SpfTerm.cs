@@ -31,7 +31,7 @@ namespace ARSoft.Tools.Net.Spf
 
 		internal static bool TryParse(string s, out SpfTerm value)
 		{
-			if (String.IsNullOrEmpty(s))
+			if (string.IsNullOrEmpty(s))
 			{
 				value = null;
 				return false;
@@ -68,18 +68,12 @@ namespace ARSoft.Tools.Net.Spf
                 mechanism.Domain = match.Groups["domain"].Value;
 
 				var tmpPrefix = match.Groups["prefix"].Value;
-                if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out var prefix))
-                {
-                    mechanism.Prefix = prefix;
-                }
+                if (!string.IsNullOrEmpty(tmpPrefix) && int.TryParse(tmpPrefix, out var prefix)) mechanism.Prefix = prefix;
 
-                tmpPrefix = match.Groups["prefix6"].Value;
-				if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out prefix))
-				{
-					mechanism.Prefix6 = prefix;
-				}
+			    tmpPrefix = match.Groups["prefix6"].Value;
+				if (!string.IsNullOrEmpty(tmpPrefix) && int.TryParse(tmpPrefix, out prefix)) mechanism.Prefix6 = prefix;
 
-				value = mechanism;
+			    value = mechanism;
 				return true;
 			}
 			#endregion

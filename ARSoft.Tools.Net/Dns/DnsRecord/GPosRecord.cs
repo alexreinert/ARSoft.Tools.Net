@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Geographical position</para>
@@ -66,9 +66,9 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
 		{
-			Longitude = Double.Parse(DnsMessageBase.ParseText(resultData, ref currentPosition), CultureInfo.InvariantCulture);
-			Latitude = Double.Parse(DnsMessageBase.ParseText(resultData, ref currentPosition), CultureInfo.InvariantCulture);
-			Altitude = Double.Parse(DnsMessageBase.ParseText(resultData, ref currentPosition), CultureInfo.InvariantCulture);
+			Longitude = double.Parse(DnsMessageBase.ParseText(resultData, ref currentPosition), CultureInfo.InvariantCulture);
+			Latitude = double.Parse(DnsMessageBase.ParseText(resultData, ref currentPosition), CultureInfo.InvariantCulture);
+			Altitude = double.Parse(DnsMessageBase.ParseText(resultData, ref currentPosition), CultureInfo.InvariantCulture);
 		}
 
 		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
@@ -76,19 +76,16 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length != 3)
 				throw new FormatException();
 
-			Longitude = Double.Parse(stringRepresentation[0], CultureInfo.InvariantCulture);
-			Latitude = Double.Parse(stringRepresentation[1], CultureInfo.InvariantCulture);
-			Altitude = Double.Parse(stringRepresentation[2], CultureInfo.InvariantCulture);
+			Longitude = double.Parse(stringRepresentation[0], CultureInfo.InvariantCulture);
+			Latitude = double.Parse(stringRepresentation[1], CultureInfo.InvariantCulture);
+			Altitude = double.Parse(stringRepresentation[2], CultureInfo.InvariantCulture);
 		}
 
-		internal override string RecordDataToString()
-		{
-			return Longitude.ToString(CultureInfo.InvariantCulture)
-			       + " " + Latitude.ToString(CultureInfo.InvariantCulture)
-			       + " " + Altitude.ToString(CultureInfo.InvariantCulture);
-		}
+		internal override string RecordDataToString() => Longitude.ToString(CultureInfo.InvariantCulture)
+		                                                 + " " + Latitude.ToString(CultureInfo.InvariantCulture)
+		                                                 + " " + Altitude.ToString(CultureInfo.InvariantCulture);
 
-		protected internal override int MaximumRecordDataLength => 3 + Longitude.ToString(CultureInfo.InvariantCulture).Length + Latitude.ToString(CultureInfo.InvariantCulture).Length + Altitude.ToString(CultureInfo.InvariantCulture).Length;
+	    protected internal override int MaximumRecordDataLength => 3 + Longitude.ToString(CultureInfo.InvariantCulture).Length + Latitude.ToString(CultureInfo.InvariantCulture).Length + Altitude.ToString(CultureInfo.InvariantCulture).Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

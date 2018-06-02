@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
     ///   <para>Host information</para>
@@ -52,8 +52,8 @@ namespace ARSoft.Tools.Net.Dns
 		public HInfoRecord(DomainName name, int timeToLive, string cpu, string operatingSystem)
 			: base(name, RecordType.HInfo, RecordClass.INet, timeToLive)
 		{
-			Cpu = cpu ?? String.Empty;
-			OperatingSystem = operatingSystem ?? String.Empty;
+			Cpu = cpu ?? string.Empty;
+			OperatingSystem = operatingSystem ?? string.Empty;
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
@@ -71,13 +71,10 @@ namespace ARSoft.Tools.Net.Dns
 			OperatingSystem = stringRepresentation[1];
 		}
 
-		internal override string RecordDataToString()
-		{
-			return "\"" + Cpu.ToMasterfileLabelRepresentation() + "\""
-			       + " \"" + OperatingSystem.ToMasterfileLabelRepresentation() + "\"";
-		}
+		internal override string RecordDataToString() => "\"" + Cpu.ToMasterfileLabelRepresentation() + "\""
+		                                                 + " \"" + OperatingSystem.ToMasterfileLabelRepresentation() + "\"";
 
-		protected internal override int MaximumRecordDataLength => 2 + Cpu.Length + OperatingSystem.Length;
+	    protected internal override int MaximumRecordDataLength => 2 + Cpu.Length + OperatingSystem.Length;
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{

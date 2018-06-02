@@ -21,5 +21,5 @@ using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net
 {
-	public delegate Task AsyncEventHandler<T>(object sender, T eventArgs) where T : EventArgs;
+	public delegate Task AsyncEventHandler<in T>(object sender, T eventArgs) where T : EventArgs;
 }
