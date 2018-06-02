@@ -19,11 +19,14 @@
 #endregion
 
 
+using System;
+
 namespace ARSoft.Tools.Net.Dns
 {
     /// <summary>
     ///     Result of a dns request
     /// </summary>
+    [Flags]
     public enum ReturnCode : ushort
     {
         /// <summary>

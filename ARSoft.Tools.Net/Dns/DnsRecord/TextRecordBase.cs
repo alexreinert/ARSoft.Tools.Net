@@ -47,10 +47,8 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
         /// </summary>
         public IEnumerable<string> TextParts { get; protected set; }
 
-        protected internal override int MaximumRecordDataLength
-        {
-            get { return TextParts.Sum(p => p.Length + p.Length / 255 + (p.Length % 255 == 0 ? 0 : 1)); }
-        }
+        protected internal override int MaximumRecordDataLength =>
+            TextParts.Sum(p => p.Length + p.Length / 255 + (p.Length % 255 == 0 ? 0 : 1));
 
         /// <summary>
         ///     Text data

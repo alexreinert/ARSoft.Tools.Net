@@ -105,7 +105,7 @@ namespace ARSoft.Tools.Net.Spf
 
             if (terms.Length < 2)
                 return false;
-            if (!TryParsePrefix(terms[0], out var version, out var minor, out var scopes)) return false;
+            if (!TryParsePrefix(terms[0], out var version, out _, out var scopes)) return false;
 
             if (version == 1 && (scope == SenderIdScope.MFrom || scope == SenderIdScope.Pra))
                 return true;

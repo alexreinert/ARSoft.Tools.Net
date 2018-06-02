@@ -77,7 +77,7 @@ namespace ARSoft.Tools.Net.Dns.Resolver
 
             foreach (var nsRecord in nameServer)
             {
-                zone.AddRange(resolver.Resolve<ARecord>(nsRecord.NameServer, RecordType.A));
+                zone.AddRange(resolver.Resolve<ARecord>(nsRecord.NameServer));
                 zone.AddRange(resolver.Resolve<AaaaRecord>(nsRecord.NameServer, RecordType.Aaaa));
             }
 

@@ -46,7 +46,7 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
         /// <param name="refreshInterval"> Seconds before the zone should be refreshed </param>
         /// <param name="retryInterval"> Seconds that should be elapsed before retry of failed transfer </param>
         /// <param name="expireInterval"> Seconds that can elapse before the zone is no longer authorative </param>
-        /// <param name="negativeCachingTTL">
+        /// <param name="negativeCachingTtl">
         ///     <para>Seconds a negative answer could be cached</para>
         ///     <para>
         ///         Defined in
@@ -55,7 +55,7 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
         /// </param>
         // ReSharper disable once InconsistentNaming
         public SoaRecord(DomainName name, int timeToLive, DomainName masterName, DomainName responsibleName,
-            uint serialNumber, int refreshInterval, int retryInterval, int expireInterval, int negativeCachingTTL)
+            uint serialNumber, int refreshInterval, int retryInterval, int expireInterval, int negativeCachingTtl)
             : base(name, RecordType.Soa, RecordClass.INet, timeToLive)
         {
             MasterName = masterName ?? DomainName.Root;
@@ -64,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns.DnsRecord
             RefreshInterval = refreshInterval;
             RetryInterval = retryInterval;
             ExpireInterval = expireInterval;
-            NegativeCachingTTL = negativeCachingTTL;
+            NegativeCachingTTL = negativeCachingTtl;
         }
 
         /// <summary>
