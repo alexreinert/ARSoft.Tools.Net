@@ -20,14 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Base class representing a dns record
-	/// </summary>
-	public abstract class DnsRecordBase : DnsMessageEntryBase, IComparable<DnsRecordBase>, IEquatable<DnsRecordBase>
+    /// <summary>
+    ///   Base class representing a dns record
+    /// </summary>
+    public abstract class DnsRecordBase : DnsMessageEntryBase, IComparable<DnsRecordBase>, IEquatable<DnsRecordBase>
 	{
 		internal int StartPosition { get; set; }
 		internal ushort RecordDataLength { get; set; }
@@ -52,7 +51,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static DnsRecordBase Create(RecordType type, byte[] resultData, int recordDataPosition)
 		{
-			if ((type == RecordType.Key) && (resultData[recordDataPosition + 3] == (byte) DnsSecAlgorithm.DiffieHellman))
+			if (type == RecordType.Key && resultData[recordDataPosition + 3] == (byte) DnsSecAlgorithm.DiffieHellman)
 			{
 				return new DiffieHellmanKeyRecord();
 			}

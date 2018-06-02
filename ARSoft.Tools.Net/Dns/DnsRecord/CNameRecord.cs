@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Canonical name for an alias</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-	///   </para>
-	/// </summary>
-	public class CNameRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Canonical name for an alias</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+    ///   </para>
+    /// </summary>
+    public class CNameRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Canonical name

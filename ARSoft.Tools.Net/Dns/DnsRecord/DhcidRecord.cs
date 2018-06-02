@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Dynamic Host Configuration Protocol (DHCP) Information record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4701">RFC 4701</see>
-	///   </para>
-	/// </summary>
-	public class DhcidRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Dynamic Host Configuration Protocol (DHCP) Information record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4701">RFC 4701</see>
+    ///   </para>
+    /// </summary>
+    public class DhcidRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Record data

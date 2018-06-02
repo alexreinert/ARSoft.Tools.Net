@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>X.400 mail mapping information record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2163">RFC 2163</see>
-	///   </para>
-	/// </summary>
-	public class PxRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>X.400 mail mapping information record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc2163">RFC 2163</see>
+    ///   </para>
+    /// </summary>
+    public class PxRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Preference of the record

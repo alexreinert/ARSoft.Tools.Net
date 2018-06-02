@@ -16,21 +16,17 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Name server ID option</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc5001">RFC 5001</see>
-	///   </para>
-	/// </summary>
-	public class NsIdOption : EDnsOptionBase
+    /// <summary>
+    ///   <para>Name server ID option</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc5001">RFC 5001</see>
+    ///   </para>
+    /// </summary>
+    public class NsIdOption : EDnsOptionBase
 	{
 		/// <summary>
 		///   Binary data of the payload

@@ -16,17 +16,13 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   Scope of a SenderID record
-	/// </summary>
-	public enum SenderIDScope
+    /// <summary>
+    ///   Scope of a SenderID record
+    /// </summary>
+    public enum SenderIDScope
 	{
 		/// <summary>
 		///   Unknown scope

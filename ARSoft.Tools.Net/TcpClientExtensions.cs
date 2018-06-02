@@ -17,17 +17,14 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net
 {
-	internal static class TcpClientExtensions
+    internal static class TcpClientExtensions
 	{
 		public static bool TryConnect(this TcpClient tcpClient, IPEndPoint endPoint, int timeout)
 		{

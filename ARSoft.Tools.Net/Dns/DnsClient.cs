@@ -24,17 +24,16 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns.DynamicUpdate;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Provides a client for querying dns records
-	/// </summary>
-	public class DnsClient : DnsClientBase
+    /// <summary>
+    ///   Provides a client for querying dns records
+    /// </summary>
+    public class DnsClient : DnsClientBase
 	{
 		/// <summary>
 		///   Returns a default instance of the DnsClient, which uses the configured dns servers of the executing computer and a
@@ -162,7 +161,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (message == null)
 				throw new ArgumentNullException(nameof(message));
 
-			if ((message.Questions == null) || (message.Questions.Count == 0))
+			if (message.Questions == null || message.Questions.Count == 0)
 				throw new ArgumentException("At least one question must be provided", nameof(message));
 
 			return SendMessage<DnsMessage>(message);
@@ -179,7 +178,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (message == null)
 				throw new ArgumentNullException(nameof(message));
 
-			if ((message.Questions == null) || (message.Questions.Count == 0))
+			if (message.Questions == null || message.Questions.Count == 0)
 				throw new ArgumentException("At least one question must be provided", nameof(message));
 
 			return SendMessageAsync<DnsMessage>(message, token);
@@ -230,7 +229,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
 				{
-					if ((nic.OperationalStatus == OperationalStatus.Up) && (nic.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+					if (nic.OperationalStatus == OperationalStatus.Up && nic.NetworkInterfaceType != NetworkInterfaceType.Loopback)
 					{
 						foreach (var dns in nic.GetIPProperties().DnsAddresses)
 						{
@@ -260,7 +259,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 
 			// try parsing resolv.conf since getting data by NetworkInterface is not supported on non-windows mono
-			if ((res.Count == 0) && ((Environment.OSVersion.Platform == PlatformID.Unix) || (Environment.OSVersion.Platform == PlatformID.MacOSX)))
+			if (res.Count == 0 && (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX))
 			{
 				try
 				{
@@ -276,7 +275,7 @@ namespace ARSoft.Tools.Net.Dns
 							}
 
 							var lineData = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                            if ((lineData.Length == 2) && (lineData[0] == "nameserver") && (IPAddress.TryParse(lineData[1], out var dns)))
+                            if (lineData.Length == 2 && lineData[0] == "nameserver" && IPAddress.TryParse(lineData[1], out var dns))
                             {
                                 res.Add(dns);
                             }

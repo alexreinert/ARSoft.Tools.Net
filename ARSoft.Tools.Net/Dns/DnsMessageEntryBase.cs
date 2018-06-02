@@ -17,17 +17,14 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Base class for a dns name identity
-	/// </summary>
-	public abstract class DnsMessageEntryBase : IEquatable<DnsMessageEntryBase>
+    /// <summary>
+    ///   Base class for a dns name identity
+    /// </summary>
+    public abstract class DnsMessageEntryBase : IEquatable<DnsMessageEntryBase>
 	{
 		/// <summary>
 		///   Domain name

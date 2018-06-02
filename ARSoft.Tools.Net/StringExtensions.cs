@@ -57,30 +57,27 @@ namespace ARSoft.Tools.Net
 
 			var sb = new StringBuilder();
 
-			for (var i = 0; i < s.Length; i++)
+			foreach (var c in s)
 			{
-				var c = s[i];
-
-				if ((c < 32) || (c > 126))
-				{
-					sb.Append(@"\" + ((int) c).ToString("000"));
-				}
-				else if (c == '"')
-				{
-					sb.Append(@"\""");
-				}
-				else if (c == '\\')
-				{
-					sb.Append(@"\\");
-				}
-				else if ((c == '.') && encodeDots)
-				{
-					sb.Append(@"\.");
-				}
-				else
-				{
-					sb.Append(c);
-				}
+			    if (c < 32 || c > 126)
+			    {
+			        sb.Append(@"\" + ((int) c).ToString("000"));
+			    }
+			    else switch (c)
+			    {
+			        case '"':
+			            sb.Append(@"\""");
+			            break;
+			        case '\\':
+			            sb.Append(@"\\");
+			            break;
+			        case '.' when encodeDots:
+			            sb.Append(@"\.");
+			            break;
+			        default:
+			            sb.Append(c);
+			            break;
+			    }
 			}
 
 			return sb.ToString();

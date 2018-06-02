@@ -16,20 +16,18 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Extension methods for DNS resolvers
-	/// </summary>
-	public static class DnsResolverExtensions
+    /// <summary>
+    ///   Extension methods for DNS resolvers
+    /// </summary>
+    public static class DnsResolverExtensions
 	{
 		/// <summary>
 		///   Queries a dns resolver for IP addresses of a host.

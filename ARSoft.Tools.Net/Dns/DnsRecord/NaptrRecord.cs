@@ -18,23 +18,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Naming authority pointer record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2915">RFC 2915</see>
-	///     ,
-	///     <see cref="!:http://tools.ietf.org/html/rfc2168">RFC 2168</see>
-	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc3403">RFC 3403</see>
-	///   </para>
-	/// </summary>
-	public class NaptrRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Naming authority pointer record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc2915">RFC 2915</see>
+    ///     ,
+    ///     <see cref="!:http://tools.ietf.org/html/rfc2168">RFC 2168</see>
+    ///     and
+    ///     <see cref="!:http://tools.ietf.org/html/rfc3403">RFC 3403</see>
+    ///   </para>
+    /// </summary>
+    public class NaptrRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Order of the record

@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Responsible person record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
-	///   </para>
-	/// </summary>
-	public class RpRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Responsible person record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+    ///   </para>
+    /// </summary>
+    public class RpRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Mail address of responsable person, the @ should be replaced by a dot

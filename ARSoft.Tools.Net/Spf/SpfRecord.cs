@@ -17,20 +17,18 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   <para>Parsed instance of the textual representation of a SPF record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4408">RFC 4408</see>
-	///   </para>
-	/// </summary>
-	public class SpfRecord : SpfRecordBase
+    /// <summary>
+    ///   <para>Parsed instance of the textual representation of a SPF record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4408">RFC 4408</see>
+    ///   </para>
+    /// </summary>
+    public class SpfRecord : SpfRecordBase
 	{
 		/// <summary>
 		///   Returns the textual representation of a SPF record
@@ -41,12 +39,12 @@ namespace ARSoft.Tools.Net.Spf
 			var res = new StringBuilder();
 			res.Append("v=spf1");
 
-			if ((Terms != null) && (Terms.Count > 0))
+			if (Terms != null && Terms.Count > 0)
 			{
 				foreach (var term in Terms)
 				{
 					var modifier = term as SpfModifier;
-					if ((modifier == null) || (modifier.Type != SpfModifierType.Unknown))
+					if (modifier == null || modifier.Type != SpfModifierType.Unknown)
 					{
 						res.Append(" ");
 						res.Append(term);

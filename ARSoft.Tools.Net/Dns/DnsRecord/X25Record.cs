@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>X.25 PSDN address record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
-	///   </para>
-	/// </summary>
-	public class X25Record : DnsRecordBase
+    /// <summary>
+    ///   <para>X.25 PSDN address record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+    ///   </para>
+    /// </summary>
+    public class X25Record : DnsRecordBase
 	{
 		/// <summary>
 		///   PSDN (Public Switched Data Network) address

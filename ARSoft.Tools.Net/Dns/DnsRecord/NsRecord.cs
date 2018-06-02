@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Authoritatitve name server record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-	///   </para>
-	/// </summary>
-	public class NsRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Authoritatitve name server record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+    ///   </para>
+    /// </summary>
+    public class NsRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Name of the authoritatitve nameserver for the zone

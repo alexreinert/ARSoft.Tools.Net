@@ -16,17 +16,13 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Result of a dns request
-	/// </summary>
-	public enum ReturnCode : ushort
+    /// <summary>
+    ///   Result of a dns request
+    /// </summary>
+    public enum ReturnCode : ushort
 	{
 		/// <summary>
 		///   <para>No error</para>

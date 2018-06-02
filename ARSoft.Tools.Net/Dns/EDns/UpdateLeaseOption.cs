@@ -17,20 +17,17 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Update lease option</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://files.dns-sd.org/draft-sekar-dns-ul.txt">draft-sekar-dns-ul</see>
-	///   </para>
-	/// </summary>
-	public class UpdateLeaseOption : EDnsOptionBase
+    /// <summary>
+    ///   <para>Update lease option</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://files.dns-sd.org/draft-sekar-dns-ul.txt">draft-sekar-dns-ul</see>
+    ///   </para>
+    /// </summary>
+    public class UpdateLeaseOption : EDnsOptionBase
 	{
 		/// <summary>
 		///   Desired lease (request) or granted lease (response)

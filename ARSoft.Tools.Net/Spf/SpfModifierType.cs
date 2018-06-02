@@ -16,17 +16,13 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   Type of the spf modifier
-	/// </summary>
-	public enum SpfModifierType
+    /// <summary>
+    ///   Type of the spf modifier
+    /// </summary>
+    public enum SpfModifierType
 	{
 		/// <summary>
 		///   Unknown mechanism

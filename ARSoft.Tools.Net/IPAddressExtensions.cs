@@ -17,7 +17,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -26,10 +25,10 @@ using System.Text;
 
 namespace ARSoft.Tools.Net
 {
-	/// <summary>
-	///   Extension class for the <see cref="IPAddress" /> class
-	/// </summary>
-	public static class IPAddressExtensions
+    /// <summary>
+    ///   Extension class for the <see cref="IPAddress" /> class
+    /// </summary>
+    public static class IPAddressExtensions
 	{
 		/// <summary>
 		///   Reverses the order of the bytes of an IPAddress
@@ -92,10 +91,10 @@ namespace ARSoft.Tools.Net
 			if (ipAddress == null)
 				throw new ArgumentNullException(nameof(ipAddress));
 
-			if ((ipAddress.AddressFamily == AddressFamily.InterNetwork) && ((netmask < 0) || (netmask > 32)))
+			if (ipAddress.AddressFamily == AddressFamily.InterNetwork && (netmask < 0 || netmask > 32))
 				throw new ArgumentException("Netmask have to be in range of 0 to 32 on IPv4 addresses", nameof(netmask));
 
-			if ((ipAddress.AddressFamily == AddressFamily.InterNetworkV6) && ((netmask < 0) || (netmask > 128)))
+			if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6 && (netmask < 0 || netmask > 128))
 				throw new ArgumentException("Netmask have to be in range of 0 to 128 on IPv6 addresses", nameof(netmask));
 
 			var ipAddressBytes = ipAddress.GetAddressBytes();

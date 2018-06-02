@@ -16,17 +16,13 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
-	/// <summary>
-	///   Delete all records action
-	/// </summary>
-	public class DeleteAllRecordsUpdate : DeleteRecordUpdate
+    /// <summary>
+    ///   Delete all records action
+    /// </summary>
+    public class DeleteAllRecordsUpdate : DeleteRecordUpdate
 	{
 		internal DeleteAllRecordsUpdate() {}
 

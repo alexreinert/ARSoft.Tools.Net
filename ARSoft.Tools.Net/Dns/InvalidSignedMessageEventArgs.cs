@@ -17,18 +17,15 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Event arguments of <see cref="DnsServer.InvalidSignedMessageReceived" /> event.
-	/// </summary>
-	public class InvalidSignedMessageEventArgs : EventArgs
+    /// <summary>
+    ///   Event arguments of <see cref="DnsServer.InvalidSignedMessageReceived" /> event.
+    /// </summary>
+    public class InvalidSignedMessageEventArgs : EventArgs
 	{
 		/// <summary>
 		///   Original message, which the client provided

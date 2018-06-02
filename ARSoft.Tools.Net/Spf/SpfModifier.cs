@@ -16,17 +16,14 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   Represents a single modifier term in a SPF record
-	/// </summary>
-	public class SpfModifier : SpfTerm
+    /// <summary>
+    ///   Represents a single modifier term in a SPF record
+    /// </summary>
+    public class SpfModifier : SpfTerm
 	{
 		/// <summary>
 		///   Type of the modifier

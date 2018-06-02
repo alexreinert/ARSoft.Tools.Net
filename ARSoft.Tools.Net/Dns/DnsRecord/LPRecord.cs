@@ -18,20 +18,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>LP</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc6742">RFC 6742</see>
-	///   </para>
-	/// </summary>
-	// ReSharper disable once InconsistentNaming
-	public class LPRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>LP</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc6742">RFC 6742</see>
+    ///   </para>
+    /// </summary>
+    // ReSharper disable once InconsistentNaming
+    public class LPRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   The preference

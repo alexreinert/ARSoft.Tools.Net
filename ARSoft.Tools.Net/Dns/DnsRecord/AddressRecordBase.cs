@@ -18,16 +18,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Base record class for storing host to ip allocation (ARecord and AaaaRecord)
-	/// </summary>
-	public abstract class AddressRecordBase : DnsRecordBase, IAddressRecord
+    /// <summary>
+    ///   Base record class for storing host to ip allocation (ARecord and AaaaRecord)
+    /// </summary>
+    public abstract class AddressRecordBase : DnsRecordBase, IAddressRecord
 	{
 		/// <summary>
 		///   IP address of the host

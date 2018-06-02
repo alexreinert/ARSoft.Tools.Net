@@ -41,7 +41,7 @@ namespace ARSoft.Tools.Net.Dns
 			var rrSigRecords = msg
 				.AnswerRecords.OfType<RrSigRecord>()
 				.Union(msg.AuthorityRecords.OfType<RrSigRecord>())
-				.Where(x => name.IsEqualOrSubDomainOf(x.SignersName) && (x.SignatureInception <= DateTime.Now) && (x.SignatureExpiration >= DateTime.Now)).ToList();
+				.Where(x => name.IsEqualOrSubDomainOf(x.SignersName) && x.SignatureInception <= DateTime.Now && x.SignatureExpiration >= DateTime.Now).ToList();
 
 			if (rrSigRecords.Count == 0)
 			{
@@ -62,7 +62,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				var msg = await _resolver.ResolveMessageAsync(name, RecordType.Ds, recordClass, state, token);
 
-				if ((msg == null) || ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain)))
+				if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain)
 				{
 					throw new Exception("DNS request failed");
 				}
@@ -70,14 +70,14 @@ namespace ARSoft.Tools.Net.Dns
 				var rrSigRecords = msg
 					.AnswerRecords.OfType<RrSigRecord>()
 					.Union(msg.AuthorityRecords.OfType<RrSigRecord>())
-					.Where(x => name.IsEqualOrSubDomainOf(x.SignersName) && (x.SignatureInception <= DateTime.Now) && (x.SignatureExpiration >= DateTime.Now)).ToList();
+					.Where(x => name.IsEqualOrSubDomainOf(x.SignersName) && x.SignatureInception <= DateTime.Now && x.SignatureExpiration >= DateTime.Now).ToList();
 
 				if (rrSigRecords.Count != 0)
 				{
 					var zoneApex = rrSigRecords.OrderByDescending(x => x.Labels).First().SignersName;
 
 					var nonExistenceValidation = await ValidateNonExistenceAsync(name, RecordType.Ds, recordClass, rrSigRecords, name, zoneApex, msg, state, token);
-					if ((nonExistenceValidation != DnsSecValidationResult.Bogus) && (nonExistenceValidation != DnsSecValidationResult.Indeterminate))
+					if (nonExistenceValidation != DnsSecValidationResult.Bogus && nonExistenceValidation != DnsSecValidationResult.Indeterminate)
 						return true;
 				}
 
@@ -96,10 +96,10 @@ namespace ARSoft.Tools.Net.Dns
 			if (nsec3Res == DnsSecValidationResult.Signed)
 				return nsec3Res;
 
-			if ((nsecRes == DnsSecValidationResult.Unsigned) || (nsec3Res == DnsSecValidationResult.Unsigned))
+			if (nsecRes == DnsSecValidationResult.Unsigned || nsec3Res == DnsSecValidationResult.Unsigned)
 				return DnsSecValidationResult.Unsigned;
 
-			if ((nsecRes == DnsSecValidationResult.Bogus) || (nsec3Res == DnsSecValidationResult.Bogus))
+			if (nsecRes == DnsSecValidationResult.Bogus || nsec3Res == DnsSecValidationResult.Bogus)
 				return DnsSecValidationResult.Bogus;
 
 			return DnsSecValidationResult.Indeterminate;
@@ -164,7 +164,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			var hashedName = name.GetNsec3HashName(nsec3Parameter.HashAlgorithm, nsec3Parameter.Iterations, nsec3Parameter.Salt, zoneApex);
 
-			if (recordType == RecordType.Ds && nsecRecords.Any(x => (x.Flags == 1) && (x.IsCovering(hashedName))))
+			if (recordType == RecordType.Ds && nsecRecords.Any(x => x.Flags == 1 && x.IsCovering(hashedName)))
 				return DnsSecValidationResult.Unsigned;
 
 			var directMatch = nsecRecords.FirstOrDefault(x => x.Name.Equals(hashedName));
@@ -198,11 +198,11 @@ namespace ARSoft.Tools.Net.Dns
 				var wildcardHashName = (DomainName.Asterisk + current).GetNsec3HashName(nsec3Parameter.HashAlgorithm, nsec3Parameter.Iterations, nsec3Parameter.Salt, zoneApex);
 
 				var wildcardDirectMatch = nsecRecords.FirstOrDefault(x => x.Name.Equals(wildcardHashName));
-				if ((wildcardDirectMatch != null) && (!wildcardDirectMatch.Types.Contains(recordType)))
+				if (wildcardDirectMatch != null && !wildcardDirectMatch.Types.Contains(recordType))
 					return wildcardDirectMatch.Types.Contains(recordType) ? DnsSecValidationResult.Bogus : DnsSecValidationResult.Signed;
 
 				var wildcardCoveringMatch = nsecRecords.FirstOrDefault(x => x.IsCovering(wildcardHashName));
-				return (wildcardCoveringMatch != null) ? DnsSecValidationResult.Signed : DnsSecValidationResult.Bogus;
+				return wildcardCoveringMatch != null ? DnsSecValidationResult.Signed : DnsSecValidationResult.Bogus;
 			}
 			else
 			{
@@ -215,13 +215,13 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			var res = DnsSecValidationResult.Bogus;
 
-			foreach (var record in rrSigRecords.Where(x => x.Name.Equals(name) && (x.TypeCovered == recordType)))
+			foreach (var record in rrSigRecords.Where(x => x.Name.Equals(name) && x.TypeCovered == recordType))
 			{
 				res = await VerifyAsync(record, resultRecords, recordClass, state, token);
 				if (res == DnsSecValidationResult.Signed)
 				{
-					if ((record.Labels == name.LabelCount)
-					    || ((name.Labels[0] == "*") && (record.Labels == name.LabelCount - 1)))
+					if (record.Labels == name.LabelCount
+					    || name.Labels[0] == "*" && record.Labels == name.LabelCount - 1)
 						return DnsSecValidationResult.Signed;
 
 					if (await ValidateNonExistenceAsync(name, recordType, recordClass, rrSigRecords, DomainName.Asterisk + record.Name.GetParentName(record.Name.LabelCount - record.Labels), zoneApex, msg, state, token) == DnsSecValidationResult.Signed)
@@ -247,7 +247,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					var dsRecordResults = await _resolver.ResolveSecureAsync<DsRecord>(rrSigRecord.SignersName, RecordType.Ds, recordClass, state, token);
 
-					if ((dsRecordResults.ValidationResult == DnsSecValidationResult.Bogus) || (dsRecordResults.ValidationResult == DnsSecValidationResult.Indeterminate))
+					if (dsRecordResults.ValidationResult == DnsSecValidationResult.Bogus || dsRecordResults.ValidationResult == DnsSecValidationResult.Indeterminate)
 						throw new DnsSecValidationException("DS records could not be retrieved");
 
 					if (dsRecordResults.ValidationResult == DnsSecValidationResult.Unsigned)
@@ -262,7 +262,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				var dnsKeyRecordResults = await _resolver.ResolveSecureAsync<DnsKeyRecord>(rrSigRecord.SignersName, RecordType.DnsKey, recordClass, state, token);
 
-				if ((dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Bogus) || (dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Indeterminate))
+				if (dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Bogus || dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Indeterminate)
 					throw new DnsSecValidationException("DNSKEY records could not be retrieved");
 
 				if (dnsKeyRecordResults.ValidationResult == DnsSecValidationResult.Unsigned)

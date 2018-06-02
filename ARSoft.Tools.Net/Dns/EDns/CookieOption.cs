@@ -39,7 +39,7 @@ namespace ARSoft.Tools.Net.Dns
 			get { return _clientCookie; }
 			private set
 			{
-				if ((value == null) || (value.Length != 8))
+				if (value == null || value.Length != 8)
 					throw new ArgumentException("Client cookie must contain 8 bytes");
 				_clientCookie = value;
 			}

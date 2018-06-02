@@ -18,20 +18,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Transaction signature record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2845">RFC 2845</see>
-	///   </para>
-	/// </summary>
-	// ReSharper disable once InconsistentNaming
-	public class TSigRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Transaction signature record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc2845">RFC 2845</see>
+    ///   </para>
+    /// </summary>
+    // ReSharper disable once InconsistentNaming
+    public class TSigRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Algorithm of the key
@@ -193,11 +191,11 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (BitConverter.IsLittleEndian)
 			{
-				timeStamp = ((buffer[currentPosition++] << 40) | (buffer[currentPosition++] << 32) | buffer[currentPosition++] << 24 | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 8) | buffer[currentPosition++]);
+				timeStamp = (buffer[currentPosition++] << 40) | (buffer[currentPosition++] << 32) | buffer[currentPosition++] << 24 | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 8) | buffer[currentPosition++];
 			}
 			else
 			{
-				timeStamp = (buffer[currentPosition++] | (buffer[currentPosition++] << 8) | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 24) | (buffer[currentPosition++] << 32) | (buffer[currentPosition++] << 40));
+				timeStamp = buffer[currentPosition++] | (buffer[currentPosition++] << 8) | (buffer[currentPosition++] << 16) | (buffer[currentPosition++] << 24) | (buffer[currentPosition++] << 32) | (buffer[currentPosition++] << 40);
 			}
 
 			return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timeStamp).ToLocalTime();

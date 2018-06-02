@@ -16,18 +16,15 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Interface to provide hints used by resolvers
-	/// </summary>
-	public interface IResolverHintStore
+    /// <summary>
+    ///   Interface to provide hints used by resolvers
+    /// </summary>
+    public interface IResolverHintStore
 	{
 		/// <summary>
 		///   List of hints to the root servers

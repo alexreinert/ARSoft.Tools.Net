@@ -21,20 +21,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Recursive resolver</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-	///   </para>
-	/// </summary>
-	public class DnsSecRecursiveDnsResolver : IDnsSecResolver, IInternalDnsSecResolver<DnsSecRecursiveDnsResolver.State>
+    /// <summary>
+    ///   <para>Recursive resolver</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+    ///   </para>
+    /// </summary>
+    public class DnsSecRecursiveDnsResolver : IDnsSecResolver, IInternalDnsSecResolver<DnsSecRecursiveDnsResolver.State>
 	{
 		private class State
 		{
@@ -180,14 +179,14 @@ namespace ARSoft.Tools.Net.Dns
 					IsCheckingDisabled = true
 				}, token);
 
-				if ((msg != null) && ((msg.ReturnCode == ReturnCode.NoError) || (msg.ReturnCode == ReturnCode.NxDomain)))
+				if (msg != null && (msg.ReturnCode == ReturnCode.NoError || msg.ReturnCode == ReturnCode.NxDomain))
 				{
 					if (msg.IsAuthoritiveAnswer)
 						return msg;
 
 					var referalRecords = msg.AuthorityRecords
 						.Where(x =>
-							(x.RecordType == RecordType.Ns)
+							x.RecordType == RecordType.Ns
 							&& (name.Equals(x.Name) || name.IsSubDomainOf(x.Name)))
 						.OfType<NsRecord>()
 						.ToList();
@@ -252,22 +251,22 @@ namespace ARSoft.Tools.Net.Dns
             var msg = await ResolveMessageAsync(name, recordType, recordClass, state, token);
 
 			// check for cname
-			var cNameRecords = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
+			var cNameRecords = msg.AnswerRecords.Where(x => x.RecordType == RecordType.CName && x.RecordClass == recordClass && x.Name.Equals(name)).ToList();
 			if (cNameRecords.Count > 0)
 			{
 				var cNameValidationResult = await _validator.ValidateAsync(name, RecordType.CName, recordClass, msg, cNameRecords, state, token);
-				if ((cNameValidationResult == DnsSecValidationResult.Bogus) || (cNameValidationResult == DnsSecValidationResult.Indeterminate))
+				if (cNameValidationResult == DnsSecValidationResult.Bogus || cNameValidationResult == DnsSecValidationResult.Indeterminate)
 					throw new DnsSecValidationException("CNAME record could not be validated");
 
 				_cache.Add(name, RecordType.CName, recordClass, cNameRecords, cNameValidationResult, cNameRecords.Min(x => x.TimeToLive));
 
 				var canonicalName = ((CNameRecord) cNameRecords.First()).CanonicalName;
 
-				var matchingAdditionalRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(canonicalName)).ToList();
+				var matchingAdditionalRecords = msg.AnswerRecords.Where(x => x.RecordType == recordType && x.RecordClass == recordClass && x.Name.Equals(canonicalName)).ToList();
 				if (matchingAdditionalRecords.Count > 0)
 				{
 					var matchingValidationResult = await _validator.ValidateAsync(canonicalName, recordType, recordClass, msg, matchingAdditionalRecords, state, token);
-					if ((matchingValidationResult == DnsSecValidationResult.Bogus) || (matchingValidationResult == DnsSecValidationResult.Indeterminate))
+					if (matchingValidationResult == DnsSecValidationResult.Bogus || matchingValidationResult == DnsSecValidationResult.Indeterminate)
 						throw new DnsSecValidationException("CNAME matching records could not be validated");
 
 					var validationResult = cNameValidationResult == matchingValidationResult ? cNameValidationResult : DnsSecValidationResult.Unsigned;
@@ -281,11 +280,11 @@ namespace ARSoft.Tools.Net.Dns
 			}
 
 			// check for "normal" answer
-			var answerRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
+			var answerRecords = msg.AnswerRecords.Where(x => x.RecordType == recordType && x.RecordClass == recordClass && x.Name.Equals(name)).ToList();
 			if (answerRecords.Count > 0)
 			{
 				var validationResult = await _validator.ValidateAsync(name, recordType, recordClass, msg, answerRecords, state, token);
-				if ((validationResult == DnsSecValidationResult.Bogus) || (validationResult == DnsSecValidationResult.Indeterminate))
+				if (validationResult == DnsSecValidationResult.Bogus || validationResult == DnsSecValidationResult.Indeterminate)
 					throw new DnsSecValidationException("Response records could not be validated");
 
 				_cache.Add(name, recordType, recordClass, answerRecords, validationResult, answerRecords.Min(x => x.TimeToLive));
@@ -295,7 +294,7 @@ namespace ARSoft.Tools.Net.Dns
 			// check for negative answer
 			var soaRecord = msg.AuthorityRecords
 				.Where(x =>
-					(x.RecordType == RecordType.Soa)
+					x.RecordType == RecordType.Soa
 					&& (name.Equals(x.Name) || name.IsSubDomainOf(x.Name)))
 				.OfType<SoaRecord>()
 				.FirstOrDefault();
@@ -303,7 +302,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (soaRecord != null)
 			{
 				var validationResult = await _validator.ValidateAsync(name, recordType, recordClass, msg, answerRecords, state, token);
-				if ((validationResult == DnsSecValidationResult.Bogus) || (validationResult == DnsSecValidationResult.Indeterminate))
+				if (validationResult == DnsSecValidationResult.Bogus || validationResult == DnsSecValidationResult.Indeterminate)
 					throw new DnsSecValidationException("Negative answer could not be validated");
 
 				_cache.Add(name, recordType, recordClass, new List<DnsRecordBase>(), validationResult, soaRecord.NegativeCachingTTL);

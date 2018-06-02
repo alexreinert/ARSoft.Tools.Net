@@ -18,21 +18,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>AFS data base location</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
-	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc5864">RFC 5864</see>
-	///   </para>
-	/// </summary>
-	public class AfsdbRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>AFS data base location</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+    ///     and
+    ///     <see cref="!:http://tools.ietf.org/html/rfc5864">RFC 5864</see>
+    ///   </para>
+    /// </summary>
+    public class AfsdbRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   AFS database subtype

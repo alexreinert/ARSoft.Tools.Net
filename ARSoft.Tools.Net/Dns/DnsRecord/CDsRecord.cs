@@ -19,18 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Child Delegation signer</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc7344">RFC 7344</see>
-	///   </para>
-	/// </summary>
-	public class CDsRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Child Delegation signer</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc7344">RFC 7344</see>
+    ///   </para>
+    /// </summary>
+    public class CDsRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Key tag

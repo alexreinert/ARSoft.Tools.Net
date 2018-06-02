@@ -19,15 +19,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   A single entry of the Question section of a dns query
-	/// </summary>
-	public class DnsQuestion : DnsMessageEntryBase, IEquatable<DnsQuestion>
+    /// <summary>
+    ///   A single entry of the Question section of a dns query
+    /// </summary>
+    public class DnsQuestion : DnsMessageEntryBase, IEquatable<DnsQuestion>
 	{
 		/// <summary>
 		///   Creates a new instance of the DnsQuestion class

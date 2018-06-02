@@ -16,17 +16,13 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Base class of EDNS options
-	/// </summary>
-	public abstract class EDnsOptionBase
+    /// <summary>
+    ///   Base class of EDNS options
+    /// </summary>
+    public abstract class EDnsOptionBase
 	{
 		/// <summary>
 		///   Type of the option

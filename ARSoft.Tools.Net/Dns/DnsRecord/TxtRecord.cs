@@ -16,21 +16,18 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Text strings</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-	///   </para>
-	/// </summary>
-	public class TxtRecord : TextRecordBase
+    /// <summary>
+    ///   <para>Text strings</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+    ///   </para>
+    /// </summary>
+    public class TxtRecord : TextRecordBase
 	{
 		internal TxtRecord() {}
 

@@ -18,12 +18,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net
 {
-	internal static class EnumHelper<T>
+    internal static class EnumHelper<T>
 		where T : struct
 	{
 		private static readonly Dictionary<T, string> _names;
@@ -53,7 +51,7 @@ namespace ARSoft.Tools.Net
 				return false;
 			}
 
-			return _values.TryGetValue((ignoreCase ? s.ToLower() : s), out value);
+			return _values.TryGetValue(ignoreCase ? s.ToLower() : s, out value);
 		}
 
 		public static string ToString(T value)

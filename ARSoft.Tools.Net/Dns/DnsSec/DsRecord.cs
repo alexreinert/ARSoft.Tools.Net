@@ -20,22 +20,21 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Delegation signer</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
-	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc3658">RFC 3658</see>
-	///   </para>
-	/// </summary>
-	public class DsRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Delegation signer</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+    ///     and
+    ///     <see cref="!:http://tools.ietf.org/html/rfc3658">RFC 3658</see>
+    ///   </para>
+    /// </summary>
+    public class DsRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Key tag

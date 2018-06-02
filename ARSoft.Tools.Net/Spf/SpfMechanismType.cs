@@ -16,17 +16,13 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   Type of spf mechanism
-	/// </summary>
-	public enum SpfMechanismType
+    /// <summary>
+    ///   Type of spf mechanism
+    /// </summary>
+    public enum SpfMechanismType
 	{
 		/// <summary>
 		///   Unknown mechanism

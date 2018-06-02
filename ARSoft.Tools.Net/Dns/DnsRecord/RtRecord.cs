@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Route through record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
-	///   </para>
-	/// </summary>
-	public class RtRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Route through record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+    ///   </para>
+    /// </summary>
+    public class RtRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Preference of the record

@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>L64</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc6742">RFC 6742</see>
-	///   </para>
-	/// </summary>
-	public class L64Record : DnsRecordBase
+    /// <summary>
+    ///   <para>L64</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc6742">RFC 6742</see>
+    ///   </para>
+    /// </summary>
+    public class L64Record : DnsRecordBase
 	{
 		/// <summary>
 		///   The preference

@@ -16,25 +16,22 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   Validator for SPF records
-	/// </summary>
-	public class SpfValidator : ValidatorBase<SpfRecord>
+    /// <summary>
+    ///   Validator for SPF records
+    /// </summary>
+    public class SpfValidator : ValidatorBase<SpfRecord>
 	{
 		protected override async Task<LoadRecordResult> LoadRecordsAsync(DomainName domain, CancellationToken token)
 		{
 			var dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, token);
-			if ((dnsResult == null) || ((dnsResult.ReturnCode != ReturnCode.NoError) && (dnsResult.ReturnCode != ReturnCode.NxDomain)))
+			if (dnsResult == null || dnsResult.ReturnCode != ReturnCode.NoError && dnsResult.ReturnCode != ReturnCode.NxDomain)
 			{
 				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError };
 			}
@@ -49,7 +46,7 @@ namespace ARSoft.Tools.Net.Spf
             {
                 return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.None };
             }
-            else if ((spfTextRecords.Count > 1) || !SpfRecord.TryParse(spfTextRecords[0], out var record))
+            else if (spfTextRecords.Count > 1 || !SpfRecord.TryParse(spfTextRecords[0], out var record))
             {
                 return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
             }

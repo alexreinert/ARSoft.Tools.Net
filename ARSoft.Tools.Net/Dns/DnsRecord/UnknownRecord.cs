@@ -16,17 +16,14 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Represent a dns record, which is not directly supported by this library
-	/// </summary>
-	public class UnknownRecord : DnsRecordBase
+    /// <summary>
+    ///   Represent a dns record, which is not directly supported by this library
+    /// </summary>
+    public class UnknownRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Binary data of the RDATA section of the record
@@ -61,7 +58,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return @"\# " + ((RecordData == null) ? "0" : RecordData.Length + " " + RecordData.ToBase16String());
+			return @"\# " + (RecordData == null ? "0" : RecordData.Length + " " + RecordData.ToBase16String());
 		}
 
 		protected internal override int MaximumRecordDataLength => RecordData.Length;

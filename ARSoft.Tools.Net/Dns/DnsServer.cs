@@ -19,19 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Provides a base dns server interface
-	/// </summary>
-	public class DnsServer : IDisposable
+    /// <summary>
+    ///   Provides a base dns server interface
+    /// </summary>
+    public class DnsServer : IDisposable
 	{
 		/// <summary>
 		///   Represents the method, that will be called to get the keydata for processing a tsig signed message
@@ -185,10 +183,10 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			lock (_listenerLock)
 			{
-				if ((_udpListener.Client == null) || !_udpListener.Client.IsBound) // server is stopped
+				if (_udpListener.Client == null || !_udpListener.Client.IsBound) // server is stopped
 					return;
 
-			    if ((_availableUdpListener <= 0) || _hasActiveUdpListener) return;
+			    if (_availableUdpListener <= 0 || _hasActiveUdpListener) return;
 
 			    _availableUdpListener--;
 			    _hasActiveUdpListener = true;
@@ -259,95 +257,94 @@ namespace ARSoft.Tools.Net.Dns
 
 				var length = response.Encode(false, originalMac, out buffer);
 
-				#region Truncating
-				var message = response as DnsMessage;
+                #region Truncating
 
-				if (message != null)
-				{
-					var maxLength = 512;
-					if (query.IsEDnsEnabled && message.IsEDnsEnabled)
-					{
-						maxLength = Math.Max(512, (int) message.EDnsOptions.UdpPayloadSize);
-					}
+                if (response is DnsMessage message)
+                {
+                    var maxLength = 512;
+                    if (query.IsEDnsEnabled && message.IsEDnsEnabled)
+                    {
+                        maxLength = Math.Max(512, (int)message.EDnsOptions.UdpPayloadSize);
+                    }
 
-					while (length > maxLength)
-					{
-						// First step: remove data from additional records except the opt record
-						if ((message.IsEDnsEnabled && (message.AdditionalRecords.Count > 1)) || (!message.IsEDnsEnabled && (message.AdditionalRecords.Count > 0)))
-						{
-							for (var i = message.AdditionalRecords.Count - 1; i >= 0; i--)
-							{
-								if (message.AdditionalRecords[i].RecordType != RecordType.Opt)
-								{
-									message.AdditionalRecords.RemoveAt(i);
-								}
-							}
+                    while (length > maxLength)
+                    {
+                        // First step: remove data from additional records except the opt record
+                        if (message.IsEDnsEnabled && message.AdditionalRecords.Count > 1 || !message.IsEDnsEnabled && message.AdditionalRecords.Count > 0)
+                        {
+                            for (var i = message.AdditionalRecords.Count - 1; i >= 0; i--)
+                            {
+                                if (message.AdditionalRecords[i].RecordType != RecordType.Opt)
+                                {
+                                    message.AdditionalRecords.RemoveAt(i);
+                                }
+                            }
 
-							length = message.Encode(false, originalMac, out buffer);
-							continue;
-						}
+                            length = message.Encode(false, originalMac, out buffer);
+                            continue;
+                        }
 
-						var savedLength = 0;
-						if (message.AuthorityRecords.Count > 0)
-						{
-							for (var i = message.AuthorityRecords.Count - 1; i >= 0; i--)
-							{
-								savedLength += message.AuthorityRecords[i].MaximumLength;
-								message.AuthorityRecords.RemoveAt(i);
+                        var savedLength = 0;
+                        if (message.AuthorityRecords.Count > 0)
+                        {
+                            for (var i = message.AuthorityRecords.Count - 1; i >= 0; i--)
+                            {
+                                savedLength += message.AuthorityRecords[i].MaximumLength;
+                                message.AuthorityRecords.RemoveAt(i);
 
-								if ((length - savedLength) < maxLength)
-								{
-									break;
-								}
-							}
+                                if (length - savedLength < maxLength)
+                                {
+                                    break;
+                                }
+                            }
 
-							message.IsTruncated = true;
+                            message.IsTruncated = true;
 
-							length = message.Encode(false, originalMac, out buffer);
-							continue;
-						}
+                            length = message.Encode(false, originalMac, out buffer);
+                            continue;
+                        }
 
-						if (message.AnswerRecords.Count > 0)
-						{
-							for (var i = message.AnswerRecords.Count - 1; i >= 0; i--)
-							{
-								savedLength += message.AnswerRecords[i].MaximumLength;
-								message.AnswerRecords.RemoveAt(i);
+                        if (message.AnswerRecords.Count > 0)
+                        {
+                            for (var i = message.AnswerRecords.Count - 1; i >= 0; i--)
+                            {
+                                savedLength += message.AnswerRecords[i].MaximumLength;
+                                message.AnswerRecords.RemoveAt(i);
 
-								if ((length - savedLength) < maxLength)
-								{
-									break;
-								}
-							}
+                                if (length - savedLength < maxLength)
+                                {
+                                    break;
+                                }
+                            }
 
-							message.IsTruncated = true;
+                            message.IsTruncated = true;
 
-							length = message.Encode(false, originalMac, out buffer);
-							continue;
-						}
+                            length = message.Encode(false, originalMac, out buffer);
+                            continue;
+                        }
 
-						if (message.Questions.Count > 0)
-						{
-							for (var i = message.Questions.Count - 1; i >= 0; i--)
-							{
-								savedLength += message.Questions[i].MaximumLength;
-								message.Questions.RemoveAt(i);
+                        if (message.Questions.Count > 0)
+                        {
+                            for (var i = message.Questions.Count - 1; i >= 0; i--)
+                            {
+                                savedLength += message.Questions[i].MaximumLength;
+                                message.Questions.RemoveAt(i);
 
-								if ((length - savedLength) < maxLength)
-								{
-									break;
-								}
-							}
+                                if (length - savedLength < maxLength)
+                                {
+                                    break;
+                                }
+                            }
 
-							message.IsTruncated = true;
+                            message.IsTruncated = true;
 
-							length = message.Encode(false, originalMac, out buffer);
-						}
-					}
-				}
-				#endregion
+                            length = message.Encode(false, originalMac, out buffer);
+                        }
+                    }
+                }
+                #endregion
 
-				await _udpListener.SendAsync(buffer, length, receiveResult.RemoteEndPoint);
+                await _udpListener.SendAsync(buffer, length, receiveResult.RemoteEndPoint);
 			}
 			catch (Exception ex)
 			{
@@ -367,10 +364,10 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			lock (_listenerLock)
 			{
-				if ((_tcpListener.Server == null) || !_tcpListener.Server.IsBound) // server is stopped
+				if (_tcpListener.Server == null || !_tcpListener.Server.IsBound) // server is stopped
 					return;
 
-			    if ((_availableTcpListener <= 0) || _hasActiveTcpListener) return;
+			    if (_availableTcpListener <= 0 || _hasActiveTcpListener) return;
 			    _availableTcpListener--;
 			    _hasActiveTcpListener = true;
 			    HandleTcpListenerAsync();
@@ -457,7 +454,7 @@ namespace ARSoft.Tools.Net.Dns
 						}
 						else
 						{
-							if ((response.Questions.Count == 0) || (response.Questions[0].RecordType != RecordType.Axfr))
+							if (response.Questions.Count == 0 || response.Questions[0].RecordType != RecordType.Axfr)
 							{
 								OnExceptionThrownAsync(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
 

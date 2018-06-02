@@ -19,18 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>SSH key fingerprint record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4255">RFC 4255</see>
-	///   </para>
-	/// </summary>
-	public class SshFpRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>SSH key fingerprint record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4255">RFC 4255</see>
+    ///   </para>
+    /// </summary>
+    public class SshFpRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Algorithm of the fingerprint

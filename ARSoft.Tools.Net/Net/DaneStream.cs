@@ -17,7 +17,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -25,17 +24,16 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns;
 
 namespace ARSoft.Tools.Net.Net
 {
-	/// <summary>
-	///   Provides a stream used for client-server communication that uses SSL/TLS and DANE/TLSA validation to authenticate
-	///   the server.
-	/// </summary>
-	public class DaneStream : AuthenticatedStream
+    /// <summary>
+    ///   Provides a stream used for client-server communication that uses SSL/TLS and DANE/TLSA validation to authenticate
+    ///   the server.
+    /// </summary>
+    public class DaneStream : AuthenticatedStream
 	{
 		private readonly IDnsSecResolver _resolver;
 		private readonly bool _enforceTlsaValidation;
@@ -70,7 +68,7 @@ namespace ARSoft.Tools.Net.Net
 			{
 				case DnsSecValidationResult.Signed:
 					if (_tlsaRecords.Records.Count == 0)
-						return !_enforceTlsaValidation && (sslPolicyErrors == SslPolicyErrors.None);
+						return !_enforceTlsaValidation && sslPolicyErrors == SslPolicyErrors.None;
 
 					foreach (var tlsaRecord in _tlsaRecords.Records)
 					{
@@ -87,7 +85,7 @@ namespace ARSoft.Tools.Net.Net
 					return false;
 
 				default:
-					return !_enforceTlsaValidation && (sslPolicyErrors == SslPolicyErrors.None);
+					return !_enforceTlsaValidation && sslPolicyErrors == SslPolicyErrors.None;
 			}
 		}
 
@@ -96,16 +94,16 @@ namespace ARSoft.Tools.Net.Net
 			switch (tlsaRecord.CertificateUsage)
 			{
 				case TlsaRecord.TlsaCertificateUsage.PkixTA:
-					return chain.ChainElements.Cast<X509ChainElement>().Any(x => ValidateCertificateByTlsa(tlsaRecord, x.Certificate)) && (sslPolicyErrors == SslPolicyErrors.None);
+					return chain.ChainElements.Cast<X509ChainElement>().Any(x => ValidateCertificateByTlsa(tlsaRecord, x.Certificate)) && sslPolicyErrors == SslPolicyErrors.None;
 
 				case TlsaRecord.TlsaCertificateUsage.PkixEE:
-					return ValidateCertificateByTlsa(tlsaRecord, certificate) && (sslPolicyErrors == SslPolicyErrors.None);
+					return ValidateCertificateByTlsa(tlsaRecord, certificate) && sslPolicyErrors == SslPolicyErrors.None;
 
 				case TlsaRecord.TlsaCertificateUsage.DaneTA:
-					return chain.ChainElements.Cast<X509ChainElement>().Any(x => ValidateCertificateByTlsa(tlsaRecord, x.Certificate)) && ((sslPolicyErrors | SslPolicyErrors.RemoteCertificateChainErrors) == SslPolicyErrors.RemoteCertificateChainErrors);
+					return chain.ChainElements.Cast<X509ChainElement>().Any(x => ValidateCertificateByTlsa(tlsaRecord, x.Certificate)) && (sslPolicyErrors | SslPolicyErrors.RemoteCertificateChainErrors) == SslPolicyErrors.RemoteCertificateChainErrors;
 
 				case TlsaRecord.TlsaCertificateUsage.DaneEE:
-					return ValidateCertificateByTlsa(tlsaRecord, certificate) && ((sslPolicyErrors | SslPolicyErrors.RemoteCertificateChainErrors) == SslPolicyErrors.RemoteCertificateChainErrors);
+					return ValidateCertificateByTlsa(tlsaRecord, certificate) && (sslPolicyErrors | SslPolicyErrors.RemoteCertificateChainErrors) == SslPolicyErrors.RemoteCertificateChainErrors;
 
 				default:
 					throw new NotSupportedException();

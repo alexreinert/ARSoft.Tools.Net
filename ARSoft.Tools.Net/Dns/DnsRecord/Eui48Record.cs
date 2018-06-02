@@ -19,18 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>EUI48</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc7043">RFC 7043</see>
-	///   </para>
-	/// </summary>
-	public class Eui48Record : DnsRecordBase
+    /// <summary>
+    ///   <para>EUI48</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc7043">RFC 7043</see>
+    ///   </para>
+    /// </summary>
+    public class Eui48Record : DnsRecordBase
 	{
 		/// <summary>
 		///   IP address of the host

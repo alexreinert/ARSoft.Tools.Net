@@ -16,17 +16,13 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net
 {
-	internal static class UdpClientExtensions
+    internal static class UdpClientExtensions
 	{
 		public static async Task<UdpReceiveResult> ReceiveAsync(this UdpClient udpClient, int timeout, CancellationToken token)
 		{

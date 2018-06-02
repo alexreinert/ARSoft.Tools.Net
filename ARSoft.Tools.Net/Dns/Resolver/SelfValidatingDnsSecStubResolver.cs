@@ -20,22 +20,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Self validating security aware stub resolver</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4033">RFC 4033</see>,
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
-	///     and <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
-	///   </para>
-	/// </summary>
-	public class SelfValidatingInternalDnsSecStubResolver : IDnsSecResolver, IInternalDnsSecResolver<object>
+    /// <summary>
+    ///   <para>Self validating security aware stub resolver</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4033">RFC 4033</see>,
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+    ///     and <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+    ///   </para>
+    /// </summary>
+    public class SelfValidatingInternalDnsSecStubResolver : IDnsSecResolver, IInternalDnsSecResolver<object>
 	{
 		private readonly DnsClient _dnsClient;
 		private DnsCache _cache;
@@ -148,26 +147,26 @@ namespace ARSoft.Tools.Net.Dns
 				IsRecursionDesired = true
 			}, token);
 
-			if ((msg == null) || ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain)))
+			if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain)
 			{
 				throw new Exception("DNS request failed");
 			}
 
 			DnsSecValidationResult validationResult;
 
-			var cName = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
+			var cName = msg.AnswerRecords.Where(x => x.RecordType == RecordType.CName && x.RecordClass == recordClass && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
 
 			if (cName != null)
 			{
 				var cNameValidationResult = await _validator.ValidateAsync(name, RecordType.CName, recordClass, msg, new List<CNameRecord>() { cName }, null, token);
-				if ((cNameValidationResult == DnsSecValidationResult.Bogus) || (cNameValidationResult == DnsSecValidationResult.Indeterminate))
+				if (cNameValidationResult == DnsSecValidationResult.Bogus || cNameValidationResult == DnsSecValidationResult.Indeterminate)
 					throw new DnsSecValidationException("CNAME record could not be validated");
 
-				var records = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(cName.CanonicalName)).OfType<T>().ToList();
+				var records = msg.AnswerRecords.Where(x => x.RecordType == recordType && x.RecordClass == recordClass && x.Name.Equals(cName.CanonicalName)).OfType<T>().ToList();
 				if (records.Count > 0)
 				{
 					var recordsValidationResult = await _validator.ValidateAsync(cName.CanonicalName, recordType, recordClass, msg, records, null, token);
-					if ((recordsValidationResult == DnsSecValidationResult.Bogus) || (recordsValidationResult == DnsSecValidationResult.Indeterminate))
+					if (recordsValidationResult == DnsSecValidationResult.Bogus || recordsValidationResult == DnsSecValidationResult.Indeterminate)
 						throw new DnsSecValidationException("CNAME matching records could not be validated");
 
 					validationResult = cNameValidationResult == recordsValidationResult ? cNameValidationResult : DnsSecValidationResult.Unsigned;
@@ -185,11 +184,11 @@ namespace ARSoft.Tools.Net.Dns
 				return new DnsSecResult<T>(cNameResults.Records, validationResult);
 			}
 
-			var res = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<T>().ToList();
+			var res = msg.AnswerRecords.Where(x => x.RecordType == recordType && x.RecordClass == recordClass && x.Name.Equals(name)).OfType<T>().ToList();
 
 			validationResult = await _validator.ValidateAsync(name, recordType, recordClass, msg, res, null, token);
 
-			if ((validationResult == DnsSecValidationResult.Bogus) || (validationResult == DnsSecValidationResult.Indeterminate))
+			if (validationResult == DnsSecValidationResult.Bogus || validationResult == DnsSecValidationResult.Indeterminate)
 				throw new DnsSecValidationException("Response records could not be validated");
 
 			if (res.Count > 0)

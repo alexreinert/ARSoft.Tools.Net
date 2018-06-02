@@ -153,7 +153,7 @@ namespace ARSoft.Tools.Net.Dns
 						// ReSharper disable once AssignNullToNotNullAttribute
 						var path = Path.Combine(new FileInfo(fileStream.Name).DirectoryName, parts[1]);
 
-						var includeOrigin = (parts.Length > 2) ? DomainName.ParseFromMasterfile(parts[2]) : origin;
+						var includeOrigin = parts.Length > 2 ? DomainName.ParseFromMasterfile(parts[2]) : origin;
 
 						using (var includeReader = new StreamReader(path))
 						{
@@ -304,7 +304,7 @@ namespace ARSoft.Tools.Net.Dns
 						lastRecord.RecordClass = recordClass;
 						lastRecord.TimeToLive = recordTtl;
 
-						if ((rrData.Length > 0) && (rrData[0] == @"\#"))
+						if (rrData.Length > 0 && rrData[0] == @"\#")
 						{
 							lastRecord.ParseUnknownRecordData(rrData);
 						}
@@ -378,16 +378,16 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns>A signed zone</returns>
 		public Zone Sign(List<DnsKeyRecord> keys, DateTime inception, DateTime expiration, NSec3HashAlgorithm nsec3Algorithm = 0, int nsec3Iterations = 10, byte[] nsec3Salt = null, bool nsec3OptOut = false)
 		{
-			if ((keys == null) || (keys.Count == 0))
+			if (keys == null || keys.Count == 0)
 				throw new Exception("No DNS Keys were provided");
 
 			if (!keys.All(x => x.IsZoneKey))
 				throw new Exception("No DNS key with Zone Key Flag were provided");
 
-			if (keys.Any(x => (x.PrivateKey == null) || (x.PrivateKey.Length == 0)))
+			if (keys.Any(x => x.PrivateKey == null || x.PrivateKey.Length == 0))
 				throw new Exception("For at least one DNS key no Private Key was provided");
 
-			if (keys.Any(x => (x.Protocol != 3) || ((nsec3Algorithm != 0) ? !x.Algorithm.IsCompatibleWithNSec3() : !x.Algorithm.IsCompatibleWithNSec())))
+			if (keys.Any(x => x.Protocol != 3 || (nsec3Algorithm != 0 ? !x.Algorithm.IsCompatibleWithNSec3() : !x.Algorithm.IsCompatibleWithNSec())))
 				throw new Exception("At least one invalid DNS key was provided");
 
 			var keySigningKeys = keys.Where(x => x.IsSecureEntryPoint).ToList();
@@ -406,7 +406,7 @@ namespace ARSoft.Tools.Net.Dns
 		private Zone SignWithNSec(DateTime inception, DateTime expiration, List<DnsKeyRecord> zoneSigningKeys, List<DnsKeyRecord> keySigningKeys)
 		{
 			var soaRecord = _records.OfType<SoaRecord>().First();
-			var subZones = _records.Where(x => (x.RecordType == RecordType.Ns) && (x.Name != Name)).Select(x => x.Name).Distinct().ToList();
+			var subZones = _records.Where(x => x.RecordType == RecordType.Ns && x.Name != Name).Select(x => x.Name).Distinct().ToList();
 			var glueRecords = _records.Where(x => subZones.Any(y => x.Name.IsSubDomainOf(y))).ToList();
 			var recordsByName = _records.Except(glueRecords).Union(zoneSigningKeys).Union(keySigningKeys).GroupBy(x => x.Name).Select(x => new Tuple<DomainName, List<DnsRecordBase>>(x.Key, x.OrderBy(y => y.RecordType == RecordType.Soa ? -1 : (int) y.RecordType).ToList())).OrderBy(x => x.Item1).ToList();
 
@@ -426,7 +426,7 @@ namespace ARSoft.Tools.Net.Dns
 					res.AddRange(records);
 
 					// do not sign nameserver delegations for sub zones
-					if ((records[0].RecordType == RecordType.Ns) && (currentName != Name))
+					if (records[0].RecordType == RecordType.Ns && currentName != Name)
 						continue;
 
 					recordTypes.Add(RecordType.RrSig);
@@ -463,11 +463,11 @@ namespace ARSoft.Tools.Net.Dns
 		private Zone SignWithNSec3(DateTime inception, DateTime expiration, List<DnsKeyRecord> zoneSigningKeys, List<DnsKeyRecord> keySigningKeys, NSec3HashAlgorithm nsec3Algorithm, int nsec3Iterations, byte[] nsec3Salt, bool nsec3OptOut)
 		{
 			var soaRecord = _records.OfType<SoaRecord>().First();
-			var subZoneNameserver = _records.Where(x => (x.RecordType == RecordType.Ns) && (x.Name != Name)).ToList();
+			var subZoneNameserver = _records.Where(x => x.RecordType == RecordType.Ns && x.Name != Name).ToList();
 			var subZones = subZoneNameserver.Select(x => x.Name).Distinct().ToList();
 			var unsignedRecords = _records.Where(x => subZones.Any(y => x.Name.IsSubDomainOf(y))).ToList(); // glue records
 			if (nsec3OptOut)
-				unsignedRecords = unsignedRecords.Union(subZoneNameserver.Where(x => !_records.Any(y => (y.RecordType == RecordType.Ds) && (y.Name == x.Name)))).ToList(); // delegations without DS record
+				unsignedRecords = unsignedRecords.Union(subZoneNameserver.Where(x => !_records.Any(y => y.RecordType == RecordType.Ds && y.Name == x.Name))).ToList(); // delegations without DS record
 			var recordsByName = _records.Except(unsignedRecords).Union(zoneSigningKeys).Union(keySigningKeys).GroupBy(x => x.Name).Select(x => new Tuple<DomainName, List<DnsRecordBase>>(x.Key, x.OrderBy(y => y.RecordType == RecordType.Soa ? -1 : (int) y.RecordType).ToList())).OrderBy(x => x.Item1).ToList();
 
 			var nsec3RecordFlags = (byte) (nsec3OptOut ? 1 : 0);
@@ -482,54 +482,54 @@ namespace ARSoft.Tools.Net.Dns
 
 			var allNames = new HashSet<DomainName>();
 
-			for (var i = 0; i < recordsByName.Count; i++)
+			foreach (var t in recordsByName)
 			{
-				var recordTypes = new List<RecordType>();
+			    var recordTypes = new List<RecordType>();
 
-				var currentName = recordsByName[i].Item1;
+			    var currentName = t.Item1;
 
-				foreach (var recordsByType in recordsByName[i].Item2.GroupBy(x => x.RecordType))
-				{
-					var records = recordsByType.ToList();
+			    foreach (var recordsByType in t.Item2.GroupBy(x => x.RecordType))
+			    {
+			        var records = recordsByType.ToList();
 
-					recordTypes.Add(recordsByType.Key);
-					res.AddRange(records);
+			        recordTypes.Add(recordsByType.Key);
+			        res.AddRange(records);
 
-					// do not sign nameserver delegations for sub zones
-					if ((records[0].RecordType == RecordType.Ns) && (currentName != Name))
-						continue;
+			        // do not sign nameserver delegations for sub zones
+			        if (records[0].RecordType == RecordType.Ns && currentName != Name)
+			            continue;
 
-					recordTypes.Add(RecordType.RrSig);
+			        recordTypes.Add(RecordType.RrSig);
 
-					foreach (var key in zoneSigningKeys)
-					{
-						res.Add(new RrSigRecord(records, key, inception, expiration));
-					}
-					if (records[0].RecordType == RecordType.DnsKey)
-					{
-						foreach (var key in keySigningKeys)
-						{
-							res.Add(new RrSigRecord(records, key, inception, expiration));
-						}
-					}
-				}
+			        foreach (var key in zoneSigningKeys)
+			        {
+			            res.Add(new RrSigRecord(records, key, inception, expiration));
+			        }
+			        if (records[0].RecordType == RecordType.DnsKey)
+			        {
+			            foreach (var key in keySigningKeys)
+			            {
+			                res.Add(new RrSigRecord(records, key, inception, expiration));
+			            }
+			        }
+			    }
 
-				var hash = recordsByName[i].Item1.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
-				nSec3Records.Add(new NSec3Record(DomainName.ParseFromMasterfile(hash.ToBase32HexString()) + Name, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, hash, recordTypes));
+			    var hash = t.Item1.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
+			    nSec3Records.Add(new NSec3Record(DomainName.ParseFromMasterfile(hash.ToBase32HexString()) + Name, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, hash, recordTypes));
 
-				allNames.Add(currentName);
-				for (var j = currentName.LabelCount - Name.LabelCount; j > 0; j--)
-				{
-					var possibleNonTerminal = currentName.GetParentName(j);
+			    allNames.Add(currentName);
+			    for (var j = currentName.LabelCount - Name.LabelCount; j > 0; j--)
+			    {
+			        var possibleNonTerminal = currentName.GetParentName(j);
 
-					if (!allNames.Contains(possibleNonTerminal))
-					{
-						hash = possibleNonTerminal.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
-						nSec3Records.Add(new NSec3Record(DomainName.ParseFromMasterfile(hash.ToBase32HexString()) + Name, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, hash, new List<RecordType>()));
+			        if (!allNames.Contains(possibleNonTerminal))
+			        {
+			            hash = possibleNonTerminal.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
+			            nSec3Records.Add(new NSec3Record(DomainName.ParseFromMasterfile(hash.ToBase32HexString()) + Name, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, hash, new List<RecordType>()));
 
-						allNames.Add(possibleNonTerminal);
-					}
-				}
+			            allNames.Add(possibleNonTerminal);
+			        }
+			    }
 			}
 
 			nSec3Records = nSec3Records.OrderBy(x => x.Name).ToList();

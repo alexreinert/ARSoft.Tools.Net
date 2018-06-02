@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Org.BouncyCastle.Asn1.CryptoPro;
 using Org.BouncyCastle.Asn1.Nist;
 using Org.BouncyCastle.Asn1.Sec;
@@ -31,22 +30,21 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Prng;
 using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.Math;
-using Org.BouncyCastle.Math.EC;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>DNS Key record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
-	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
-	///   </para>
-	/// </summary>
-	public class DnsKeyRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>DNS Key record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+    ///     and
+    ///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+    ///   </para>
+    /// </summary>
+    public class DnsKeyRecord : DnsRecordBase
 	{
 		private static readonly SecureRandom _secureRandom = new SecureRandom(new CryptoApiRandomGenerator());
 
@@ -169,7 +167,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			for (var i = 0; i < currentPosition; ++i)
 			{
-				ac += ((i & 1) == 1) ? buffer[i] : (ulong) buffer[i] << 8;
+				ac += (i & 1) == 1 ? buffer[i] : (ulong) buffer[i] << 8;
 			}
 
 			ac += (ac >> 16) & 0xFFFF;
@@ -500,7 +498,7 @@ namespace ARSoft.Tools.Net.Dns
 				case DnsSecAlgorithm.RsaSha256:
 				case DnsSecAlgorithm.RsaSha512:
 					if (keyStrength == 0)
-						keyStrength = (flags == (DnsKeyFlags.Zone | DnsKeyFlags.SecureEntryPoint)) ? 2048 : 1024;
+						keyStrength = flags == (DnsKeyFlags.Zone | DnsKeyFlags.SecureEntryPoint) ? 2048 : 1024;
 
 					var rsaKeyGen = new RsaKeyPairGenerator();
 					rsaKeyGen.Init(new KeyGenerationParameters(_secureRandom, keyStrength));

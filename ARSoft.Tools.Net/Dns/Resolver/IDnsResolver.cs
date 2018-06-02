@@ -16,19 +16,16 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Interface of a DNS resolver
-	/// </summary>
-	public interface IDnsResolver
+    /// <summary>
+    ///   Interface of a DNS resolver
+    /// </summary>
+    public interface IDnsResolver
 	{
 		/// <summary>
 		///   Queries a dns resolver for specified records.

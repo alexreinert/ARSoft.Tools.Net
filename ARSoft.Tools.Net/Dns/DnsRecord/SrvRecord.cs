@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Server selector</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2782">RFC 2782</see>
-	///   </para>
-	/// </summary>
-	public class SrvRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Server selector</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc2782">RFC 2782</see>
+    ///   </para>
+    /// </summary>
+    public class SrvRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Priority of the record

@@ -19,18 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Certificate storage record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
-	///   </para>
-	/// </summary>
-	public class CertRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Certificate storage record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+    ///   </para>
+    /// </summary>
+    public class CertRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Type of cert

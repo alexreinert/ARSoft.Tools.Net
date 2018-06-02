@@ -72,12 +72,12 @@ namespace ARSoft.Tools.Net.Spf
 				res.Append(String.Join(",", Scopes.Where(s => s != SenderIDScope.Unknown).Select(s => EnumHelper<SenderIDScope>.ToString(s).ToLower())));
 			}
 
-			if ((Terms != null) && (Terms.Count > 0))
+			if (Terms != null && Terms.Count > 0)
 			{
 				foreach (var term in Terms)
 				{
 					var modifier = term as SpfModifier;
-					if ((modifier == null) || (modifier.Type != SpfModifierType.Unknown))
+					if (modifier == null || modifier.Type != SpfModifierType.Unknown)
 					{
 						res.Append(" ");
 						res.Append(term);
@@ -108,7 +108,7 @@ namespace ARSoft.Tools.Net.Spf
                 return false;
             }
 
-            if ((version == 1) && ((scope == SenderIDScope.MFrom) || (scope == SenderIDScope.Pra)))
+            if (version == 1 && (scope == SenderIDScope.MFrom || scope == SenderIDScope.Pra))
 			{
 				return true;
 			}

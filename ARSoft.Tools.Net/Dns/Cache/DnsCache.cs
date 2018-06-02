@@ -20,11 +20,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	internal class DnsCacheRecordList<T> : List<T>
+    internal class DnsCacheRecordList<T> : List<T>
 	{
 		public DnsSecValidationResult ValidationResult { get; set; }
 	}
@@ -60,7 +59,7 @@ namespace ARSoft.Tools.Net.Dns
 				if (other == null)
 					return false;
 
-				return (_recordType == other._recordType) && (_recordClass == other._recordClass) && (_name.Equals(other._name));
+				return _recordType == other._recordType && _recordClass == other._recordClass && _name.Equals(other._name);
 			}
 
 			public override string ToString()

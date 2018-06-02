@@ -17,16 +17,13 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   DNS record class
-	/// </summary>
-	public enum RecordClass : ushort
+    /// <summary>
+    ///   DNS record class
+    /// </summary>
+    public enum RecordClass : ushort
 	{
 		/// <summary>
 		///   Invalid record class

@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>ISDN address</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
-	///   </para>
-	/// </summary>
-	public class IsdnRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>ISDN address</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+    ///   </para>
+    /// </summary>
+    public class IsdnRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   ISDN number
@@ -72,7 +70,7 @@ namespace ARSoft.Tools.Net.Dns
 			var endPosition = currentPosition + length;
 
 			IsdnAddress = DnsMessageBase.ParseText(resultData, ref currentPosition);
-			SubAddress = (currentPosition < endPosition) ? DnsMessageBase.ParseText(resultData, ref currentPosition) : String.Empty;
+			SubAddress = currentPosition < endPosition ? DnsMessageBase.ParseText(resultData, ref currentPosition) : String.Empty;
 		}
 
 		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)

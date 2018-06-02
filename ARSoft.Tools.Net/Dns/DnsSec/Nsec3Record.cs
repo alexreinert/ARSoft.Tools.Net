@@ -19,18 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Hashed next owner
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc5155">RFC 5155</see>
-	///   </para>
-	/// </summary>
-	public class NSec3Record : DnsRecordBase
+    /// <summary>
+    ///   Hashed next owner
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc5155">RFC 5155</see>
+    ///   </para>
+    /// </summary>
+    public class NSec3Record : DnsRecordBase
 	{
 		/// <summary>
 		///   Algorithm of hash
@@ -85,7 +84,7 @@ namespace ARSoft.Tools.Net.Dns
 			Salt = salt ?? new byte[] { };
 			NextHashedOwnerName = nextHashedOwnerName ?? new byte[] { };
 
-			if ((types == null) || (types.Count == 0))
+			if (types == null || types.Count == 0)
 			{
 				Types = new List<RecordType>();
 			}
@@ -117,7 +116,7 @@ namespace ARSoft.Tools.Net.Dns
 			HashAlgorithm = (NSec3HashAlgorithm) Byte.Parse(stringRepresentation[0]);
 			Flags = Byte.Parse(stringRepresentation[1]);
 			Iterations = UInt16.Parse(stringRepresentation[2]);
-			Salt = (stringRepresentation[3] == "-") ? new byte[] { } : stringRepresentation[3].FromBase16String();
+			Salt = stringRepresentation[3] == "-" ? new byte[] { } : stringRepresentation[3].FromBase16String();
 			NextHashedOwnerName = stringRepresentation[4].FromBase32HexString();
 			Types = stringRepresentation.Skip(5).Select(RecordTypeHelper.ParseShortString).ToList();
 		}
@@ -127,7 +126,7 @@ namespace ARSoft.Tools.Net.Dns
 			return (byte) HashAlgorithm
 			       + " " + Flags
 			       + " " + Iterations
-			       + " " + ((Salt.Length == 0) ? "-" : Salt.ToBase16String())
+			       + " " + (Salt.Length == 0 ? "-" : Salt.ToBase16String())
 			       + " " + NextHashedOwnerName.ToBase32HexString()
 			       + " " + String.Join(" ", Types.Select(RecordTypeHelper.ToShortString));
 		}
@@ -152,7 +151,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			var nextDomainName = new DomainName(NextHashedOwnerName.ToBase32HexString(), name.GetParentName());
 
-			return ((name.CompareTo(Name) > 0) && (name.CompareTo(nextDomainName) < 0));
+			return name.CompareTo(Name) > 0 && name.CompareTo(nextDomainName) < 0;
 		}
 	}
 }

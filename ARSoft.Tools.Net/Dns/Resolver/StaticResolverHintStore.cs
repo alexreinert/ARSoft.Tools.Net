@@ -16,16 +16,15 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
 using System.Net;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Implementation of IResolverHintStore, which uses statically linked hints
-	/// </summary>
-	public class StaticResolverHintStore : IResolverHintStore
+    /// <summary>
+    ///   Implementation of IResolverHintStore, which uses statically linked hints
+    /// </summary>
+    public class StaticResolverHintStore : IResolverHintStore
 	{
 		private static readonly List<IPAddress> _rootServers = new List<IPAddress>()
 		{

@@ -18,21 +18,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Sender Policy Framework</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4408">RFC 4408</see>
-	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc7208">RFC 7208</see>
-	///   </para>
-	/// </summary>
-	[Obsolete]
+    /// <summary>
+    ///   <para>Sender Policy Framework</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4408">RFC 4408</see>
+    ///     and
+    ///     <see cref="!:http://tools.ietf.org/html/rfc7208">RFC 7208</see>
+    ///   </para>
+    /// </summary>
+    [Obsolete]
 	public class SpfRecord : TextRecordBase
 	{
 		internal SpfRecord() {}

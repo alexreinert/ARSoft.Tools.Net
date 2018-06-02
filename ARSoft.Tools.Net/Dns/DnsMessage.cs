@@ -18,15 +18,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Message returned as result to a dns query
-	/// </summary>
-	public class DnsMessage : DnsMessageBase
+    /// <summary>
+    ///   Message returned as result to a dns query
+    /// </summary>
+    public class DnsMessage : DnsMessageBase
 	{
 		/// <summary>
 		///   Parses a the contents of a byte array as DnsMessage
@@ -184,7 +182,7 @@ namespace ARSoft.Tools.Net.Dns
 		public new List<DnsQuestion> Questions
 		{
 			get { return base.Questions; }
-			set { base.Questions = (value ?? new List<DnsQuestion>()); }
+			set { base.Questions = value ?? new List<DnsQuestion>(); }
 		}
 
 		/// <summary>
@@ -193,7 +191,7 @@ namespace ARSoft.Tools.Net.Dns
 		public new List<DnsRecordBase> AnswerRecords
 		{
 			get { return base.AnswerRecords; }
-			set { base.AnswerRecords = (value ?? new List<DnsRecordBase>()); }
+			set { base.AnswerRecords = value ?? new List<DnsRecordBase>(); }
 		}
 
 		/// <summary>
@@ -202,7 +200,7 @@ namespace ARSoft.Tools.Net.Dns
 		public new List<DnsRecordBase> AuthorityRecords
 		{
 			get { return base.AuthorityRecords; }
-			set { base.AuthorityRecords = (value ?? new List<DnsRecordBase>()); }
+			set { base.AuthorityRecords = value ?? new List<DnsRecordBase>(); }
 		}
 
 		/// <summary>
@@ -219,7 +217,7 @@ namespace ARSoft.Tools.Net.Dns
 			get
 			{
 				var ednsOptions = EDnsOptions;
-				return (ednsOptions != null) && ednsOptions.IsDnsSecOk;
+				return ednsOptions != null && ednsOptions.IsDnsSecOk;
 			}
 			set
 			{
@@ -265,7 +263,7 @@ namespace ARSoft.Tools.Net.Dns
 			return result;
 		}
 
-		internal override bool IsTcpUsingRequested => (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr));
+		internal override bool IsTcpUsingRequested => Questions.Count > 0 && (Questions[0].RecordType == RecordType.Axfr || Questions[0].RecordType == RecordType.Ixfr);
 
 		internal override bool IsTcpResendingRequested => IsTruncated;
 
@@ -273,18 +271,18 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if (isSubsequentResponseMessage)
 			{
-				return (AnswerRecords.Count > 0) && (AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa);
+				return AnswerRecords.Count > 0 && AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa;
 			}
 
 			if (Questions.Count == 0)
 				return false;
 
-			if ((Questions[0].RecordType != RecordType.Axfr) && (Questions[0].RecordType != RecordType.Ixfr))
+			if (Questions[0].RecordType != RecordType.Axfr && Questions[0].RecordType != RecordType.Ixfr)
 				return false;
 
-			return (AnswerRecords.Count > 0)
-			       && (AnswerRecords[0].RecordType == RecordType.Soa)
-			       && ((AnswerRecords.Count == 1) || (AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa));
+			return AnswerRecords.Count > 0
+			       && AnswerRecords[0].RecordType == RecordType.Soa
+			       && (AnswerRecords.Count == 1 || AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa);
 		}
 	}
 }

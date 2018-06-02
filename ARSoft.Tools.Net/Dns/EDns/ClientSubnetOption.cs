@@ -17,22 +17,19 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>EDNS0 Client Subnet Option</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-02">draft-vandergaast-edns-client-subnet</see>
-	///   </para>
-	/// </summary>
-	public class ClientSubnetOption : EDnsOptionBase
+    /// <summary>
+    ///   <para>EDNS0 Client Subnet Option</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-02">draft-vandergaast-edns-client-subnet</see>
+    ///   </para>
+    /// </summary>
+    public class ClientSubnetOption : EDnsOptionBase
 	{
 		/// <summary>
 		///   The address family

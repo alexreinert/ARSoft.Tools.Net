@@ -16,27 +16,24 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Security Key</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
-	///     ,
-	///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
-	///     ,
-	///     <see cref="!:http://tools.ietf.org/html/rfc2535">RFC 2535</see>
-	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
-	///   </para>
-	/// </summary>
-	public abstract class KeyRecordBase : DnsRecordBase
+    /// <summary>
+    ///   <para>Security Key</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+    ///     ,
+    ///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+    ///     ,
+    ///     <see cref="!:http://tools.ietf.org/html/rfc2535">RFC 2535</see>
+    ///     and
+    ///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+    ///   </para>
+    /// </summary>
+    public abstract class KeyRecordBase : DnsRecordBase
 	{
 		/// <summary>
 		///   Type of key

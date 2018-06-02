@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>DNS Name Redirection record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc6672">RFC 6672</see>
-	///   </para>
-	/// </summary>
-	public class DNameRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>DNS Name Redirection record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc6672">RFC 6672</see>
+    ///   </para>
+    /// </summary>
+    public class DNameRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Target of the redirection

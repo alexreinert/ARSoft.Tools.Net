@@ -19,19 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Geographical position</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1712">RFC 1712</see>
-	///   </para>
-	/// </summary>
-	public class GPosRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Geographical position</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1712">RFC 1712</see>
+    ///   </para>
+    /// </summary>
+    public class GPosRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Longitude of the geographical position

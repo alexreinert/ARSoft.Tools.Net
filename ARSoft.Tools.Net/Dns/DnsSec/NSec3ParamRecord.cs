@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Hashed next owner parameter record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc5155">RFC 5155</see>
-	///   </para>
-	/// </summary>
-	public class NSec3ParamRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Hashed next owner parameter record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc5155">RFC 5155</see>
+    ///   </para>
+    /// </summary>
+    public class NSec3ParamRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Algorithm of the hash
@@ -90,7 +88,7 @@ namespace ARSoft.Tools.Net.Dns
 			HashAlgorithm = (NSec3HashAlgorithm) Byte.Parse(stringRepresentation[0]);
 			Flags = Byte.Parse(stringRepresentation[1]);
 			Iterations = UInt16.Parse(stringRepresentation[2]);
-			Salt = (stringRepresentation[3] == "-") ? new byte[] { } : stringRepresentation[3].FromBase16String();
+			Salt = stringRepresentation[3] == "-" ? new byte[] { } : stringRepresentation[3].FromBase16String();
 		}
 
 		internal override string RecordDataToString()
@@ -98,7 +96,7 @@ namespace ARSoft.Tools.Net.Dns
 			return (byte) HashAlgorithm
 			       + " " + Flags
 			       + " " + Iterations
-			       + " " + ((Salt.Length == 0) ? "-" : Salt.ToBase16String());
+			       + " " + (Salt.Length == 0 ? "-" : Salt.ToBase16String());
 		}
 
 		protected internal override int MaximumRecordDataLength => 5 + Salt.Length;

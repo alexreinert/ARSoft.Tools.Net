@@ -16,17 +16,14 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Message returned as result to a LLMNR query
-	/// </summary>
-	public class LlmnrMessage : DnsMessageBase
+    /// <summary>
+    ///   Message returned as result to a LLMNR query
+    /// </summary>
+    public class LlmnrMessage : DnsMessageBase
 	{
 		/// <summary>
 		///   Parses a the contents of a byte array as LlmnrMessage
@@ -115,7 +112,7 @@ namespace ARSoft.Tools.Net.Dns
 		public new List<DnsQuestion> Questions
 		{
 			get { return base.Questions; }
-			set { base.Questions = (value ?? new List<DnsQuestion>()); }
+			set { base.Questions = value ?? new List<DnsQuestion>(); }
 		}
 
 		/// <summary>
@@ -124,7 +121,7 @@ namespace ARSoft.Tools.Net.Dns
 		public new List<DnsRecordBase> AnswerRecords
 		{
 			get { return base.AnswerRecords; }
-			set { base.AnswerRecords = (value ?? new List<DnsRecordBase>()); }
+			set { base.AnswerRecords = value ?? new List<DnsRecordBase>(); }
 		}
 
 		/// <summary>
@@ -133,10 +130,10 @@ namespace ARSoft.Tools.Net.Dns
 		public new List<DnsRecordBase> AuthorityRecords
 		{
 			get { return base.AuthorityRecords; }
-			set { base.AuthorityRecords = (value ?? new List<DnsRecordBase>()); }
+			set { base.AuthorityRecords = value ?? new List<DnsRecordBase>(); }
 		}
 
-		internal override bool IsTcpUsingRequested => (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr));
+		internal override bool IsTcpUsingRequested => Questions.Count > 0 && (Questions[0].RecordType == RecordType.Axfr || Questions[0].RecordType == RecordType.Ixfr);
 
 		internal override bool IsTcpResendingRequested => IsTruncated;
 

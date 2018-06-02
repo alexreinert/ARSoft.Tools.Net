@@ -19,18 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>DNSSEC lookaside validation</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4431">RFC 4431</see>
-	///   </para>
-	/// </summary>
-	public class DlvRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>DNSSEC lookaside validation</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4431">RFC 4431</see>
+    ///   </para>
+    /// </summary>
+    public class DlvRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Key tag

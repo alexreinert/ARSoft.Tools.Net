@@ -17,17 +17,14 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   Represents a single term of a SPF record
-	/// </summary>
-	public class SpfTerm
+    /// <summary>
+    ///   Represents a single term of a SPF record
+    /// </summary>
+    public class SpfTerm
 	{
 		private static readonly Regex _parseMechanismRegex = new Regex(@"^(\s)*(?<qualifier>[~+?-]?)(?<type>[a-z0-9]+)(:(?<domain>[^/]+))?(/(?<prefix>[0-9]+)(/(?<prefix6>[0-9]+))?)?(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		private static readonly Regex _parseModifierRegex = new Regex(@"^(\s)*(?<type>[a-z]+)=(?<domain>[^\s]+)(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -91,12 +88,13 @@ namespace ARSoft.Tools.Net.Spf
 			match = _parseModifierRegex.Match(s);
 			if (match.Success)
 			{
-				var modifier = new SpfModifier();
+                var modifier = new SpfModifier
+                {
+                    Type = EnumHelper<SpfModifierType>.TryParse(match.Groups["type"].Value, true, out var type) ? type : SpfModifierType.Unknown,
+                    Domain = match.Groups["domain"].Value
+                };
 
-                modifier.Type = EnumHelper<SpfModifierType>.TryParse(match.Groups["type"].Value, true, out var type) ? type : SpfModifierType.Unknown;
-                modifier.Domain = match.Groups["domain"].Value;
-
-				value = modifier;
+                value = modifier;
 				return true;
 			}
 			#endregion

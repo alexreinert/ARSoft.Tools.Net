@@ -19,20 +19,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Next owner</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
-	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
-	///   </para>
-	/// </summary>
-	public class NSecRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Next owner</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+    ///     and
+    ///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+    ///   </para>
+    /// </summary>
+    public class NSecRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Name of next owner
@@ -59,7 +58,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			NextDomainName = nextDomainName ?? DomainName.Root;
 
-			if ((types == null) || (types.Count == 0))
+			if (types == null || types.Count == 0)
 			{
 				Types = new List<RecordType>();
 			}
@@ -193,8 +192,8 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal bool IsCovering(DomainName name, DomainName zone)
 		{
-			return ((name.CompareTo(Name) > 0) && (name.CompareTo(NextDomainName) < 0)) // within zone
-			       || ((name.CompareTo(Name) > 0) && NextDomainName.Equals(zone)); // behind zone
+			return name.CompareTo(Name) > 0 && name.CompareTo(NextDomainName) < 0 // within zone
+			       || name.CompareTo(Name) > 0 && NextDomainName.Equals(zone); // behind zone
 		}
 	}
 }

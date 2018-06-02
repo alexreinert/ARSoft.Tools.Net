@@ -16,21 +16,19 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
-	/// <summary>
-	///   <para>Dynamic DNS update message</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
-	///   </para>
-	/// </summary>
-	public class DnsUpdateMessage : DnsMessageBase
+    /// <summary>
+    ///   <para>Dynamic DNS update message</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+    ///   </para>
+    /// </summary>
+    public class DnsUpdateMessage : DnsMessageBase
 	{
 		/// <summary>
 		///   Parses a the contents of a byte array as DnsUpdateMessage
@@ -125,7 +123,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 				AnswerRecords.ConvertAll<PrequisiteBase>(
 					record =>
 					{
-						if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
+						if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
 						{
 							return new RecordExistsPrequisite(record.Name, record.RecordType);
 						}
@@ -133,15 +131,15 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 						{
 							return new RecordExistsPrequisite(record);
 						}
-						else if ((record.RecordClass == RecordClass.None) && (record.RecordDataLength == 0))
+						else if (record.RecordClass == RecordClass.None && record.RecordDataLength == 0)
 						{
 							return new RecordNotExistsPrequisite(record.Name, record.RecordType);
 						}
-						else if ((record.RecordClass == RecordClass.Any) && (record.RecordType == RecordType.Any))
+						else if (record.RecordClass == RecordClass.Any && record.RecordType == RecordType.Any)
 						{
 							return new NameIsInUsePrequisite(record.Name);
 						}
-						else if ((record.RecordClass == RecordClass.None) && (record.RecordType == RecordType.Any))
+						else if (record.RecordClass == RecordClass.None && record.RecordType == RecordType.Any)
 						{
 							return new NameIsNotInUsePrequisite(record.Name);
 						}
@@ -149,7 +147,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 						{
 							return null;
 						}
-					}).Where(prequisite => (prequisite != null)).ToList();
+					}).Where(prequisite => prequisite != null).ToList();
 
 			Updates =
 				AuthorityRecords.ConvertAll<UpdateBase>(
@@ -159,11 +157,11 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 						{
 							return new AddRecordUpdate(record);
 						}
-						else if ((record.RecordType == RecordType.Any) && (record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
+						else if (record.RecordType == RecordType.Any && record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
 						{
 							return new DeleteAllRecordsUpdate(record.Name);
 						}
-						else if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
+						else if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
 						{
 							return new DeleteRecordUpdate(record.Name, record.RecordType);
 						}
@@ -175,7 +173,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 						{
 							return null;
 						}
-					}).Where(update => (update != null)).ToList();
+					}).Where(update => update != null).ToList();
 		}
 	}
 }

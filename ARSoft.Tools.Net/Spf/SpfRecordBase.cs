@@ -16,17 +16,14 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   Base class of a SPF or SenderID record
-	/// </summary>
-	public class SpfRecordBase
+    /// <summary>
+    ///   Base class of a SPF or SenderID record
+    /// </summary>
+    public class SpfRecordBase
 	{
 		/// <summary>
 		///   Modifiers and mechanisms of a record

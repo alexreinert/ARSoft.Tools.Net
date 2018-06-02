@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Key exchanger record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2230">RFC 2230</see>
-	///   </para>
-	/// </summary>
-	public class KxRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Key exchanger record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc2230">RFC 2230</see>
+    ///   </para>
+    /// </summary>
+    public class KxRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Preference of the record

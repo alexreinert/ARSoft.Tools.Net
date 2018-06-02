@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using ARSoft.Tools.Net.Dns;
 using Org.BouncyCastle.Crypto;
@@ -29,10 +28,10 @@ using Org.BouncyCastle.Crypto.Digests;
 
 namespace ARSoft.Tools.Net
 {
-	/// <summary>
-	///   Represents a domain name
-	/// </summary>
-	public class DomainName : IEquatable<DomainName>, IComparable<DomainName>
+    /// <summary>
+    ///   Represents a domain name
+    /// </summary>
+    public class DomainName : IEquatable<DomainName>, IComparable<DomainName>
 	{
 		private readonly string[] _labels;
 
@@ -313,7 +312,7 @@ namespace ARSoft.Tools.Net
 			if (_toString != null)
 				return _toString;
 
-			return (_toString = String.Join(".", _labels.Select(x => x.ToMasterfileLabelRepresentation(true))) + ".");
+			return _toString = String.Join(".", _labels.Select(x => x.ToMasterfileLabelRepresentation(true))) + ".";
 		}
 
 		private int? _hashCode;
@@ -419,7 +418,7 @@ namespace ARSoft.Tools.Net
 			if (LabelCount != other.LabelCount)
 				return false;
 
-			if (_hashCode.HasValue && other._hashCode.HasValue && (_hashCode != other._hashCode))
+			if (_hashCode.HasValue && other._hashCode.HasValue && _hashCode != other._hashCode)
 				return false;
 
 			var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;

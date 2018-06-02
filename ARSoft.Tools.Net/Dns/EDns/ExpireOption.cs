@@ -16,21 +16,17 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Expire EDNS Option</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc7314">RFC 7314</see>
-	///   </para>
-	/// </summary>
-	public class ExpireOption : EDnsOptionBase
+    /// <summary>
+    ///   <para>Expire EDNS Option</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc7314">RFC 7314</see>
+    ///   </para>
+    /// </summary>
+    public class ExpireOption : EDnsOptionBase
 	{
 		/// <summary>
 		///   The expiration of the SOA record in seconds. Should be null on queries.

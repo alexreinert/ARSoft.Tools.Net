@@ -17,20 +17,17 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Long lived query option</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://files.dns-sd.org/draft-sekar-dns-llq.txt">draft-sekar-dns-llq</see>
-	///   </para>
-	/// </summary>
-	public class LongLivedQueryOption : EDnsOptionBase
+    /// <summary>
+    ///   <para>Long lived query option</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://files.dns-sd.org/draft-sekar-dns-llq.txt">draft-sekar-dns-llq</see>
+    ///   </para>
+    /// </summary>
+    public class LongLivedQueryOption : EDnsOptionBase
 	{
 		/// <summary>
 		///   Long lived query operation codes

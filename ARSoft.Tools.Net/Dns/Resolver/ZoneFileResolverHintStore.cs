@@ -16,18 +16,14 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Updateable Resolver HintStore using a local zone file for the hints
-	/// </summary>
-	public class ZoneFileResolverHintStore : UpdateableResolverHintStoreBase
+    /// <summary>
+    ///   Updateable Resolver HintStore using a local zone file for the hints
+    /// </summary>
+    public class ZoneFileResolverHintStore : UpdateableResolverHintStoreBase
 	{
 		private readonly string _fileName;
 

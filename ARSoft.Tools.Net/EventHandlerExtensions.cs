@@ -17,13 +17,10 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net
 {
-	internal static class EventHandlerExtensions
+    internal static class EventHandlerExtensions
 	{
 		public static void Raise<T>(this EventHandler<T> eventHandler, object sender, T eventArgs)
 			where T : EventArgs

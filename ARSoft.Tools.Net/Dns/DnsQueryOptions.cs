@@ -17,16 +17,13 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Provides options to be used in <see cref="DnsClient">DNS client</see> for resolving queries
-	/// </summary>
-	public class DnsQueryOptions
+    /// <summary>
+    ///   Provides options to be used in <see cref="DnsClient">DNS client</see> for resolving queries
+    /// </summary>
+    public class DnsQueryOptions
 	{
 		/// <summary>
 		///   <para>Gets or sets the recursion desired (RD) flag</para>
@@ -51,10 +48,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsEDnsEnabled
 		{
-			get { return (EDnsOptions != null); }
+			get { return EDnsOptions != null; }
 			set
 			{
-				if (value && (EDnsOptions == null))
+				if (value && EDnsOptions == null)
 				{
 					EDnsOptions = new OptRecord();
 				}
@@ -84,7 +81,7 @@ namespace ARSoft.Tools.Net.Dns
 			get
 			{
 				var ednsOptions = EDnsOptions;
-				return (ednsOptions != null) && ednsOptions.IsDnsSecOk;
+				return ednsOptions != null && ednsOptions.IsDnsSecOk;
 			}
 			set
 			{

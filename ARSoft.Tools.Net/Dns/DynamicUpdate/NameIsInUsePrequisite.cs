@@ -16,17 +16,14 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
-	/// <summary>
-	///   Prequisite, that a name exists
-	/// </summary>
-	public class NameIsInUsePrequisite : PrequisiteBase
+    /// <summary>
+    ///   Prequisite, that a name exists
+    /// </summary>
+    public class NameIsInUsePrequisite : PrequisiteBase
 	{
 		internal NameIsInUsePrequisite() {}
 

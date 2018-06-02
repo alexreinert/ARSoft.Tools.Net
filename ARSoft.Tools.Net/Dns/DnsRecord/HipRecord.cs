@@ -19,18 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Host identity protocol</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc5205">RFC 5205</see>
-	///   </para>
-	/// </summary>
-	public class HipRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Host identity protocol</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc5205">RFC 5205</see>
+    ///   </para>
+    /// </summary>
+    public class HipRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Algorithm of the key

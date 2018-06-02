@@ -17,16 +17,13 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Event arguments of <see cref="DnsServer.ExceptionThrown" /> event.
-	/// </summary>
-	public class ExceptionEventArgs : EventArgs
+    /// <summary>
+    ///   Event arguments of <see cref="DnsServer.ExceptionThrown" /> event.
+    /// </summary>
+    public class ExceptionEventArgs : EventArgs
 	{
 		/// <summary>
 		///   Exception which was thrown originally

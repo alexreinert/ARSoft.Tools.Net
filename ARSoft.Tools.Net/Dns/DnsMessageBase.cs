@@ -19,16 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using ARSoft.Tools.Net.Dns.DynamicUpdate;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Base class for a dns answer
-	/// </summary>
-	public abstract class DnsMessageBase
+    /// <summary>
+    ///   Base class for a dns answer
+    /// </summary>
+    public abstract class DnsMessageBase
 	{
 		protected ushort Flags;
 
@@ -44,7 +43,7 @@ namespace ARSoft.Tools.Net.Dns
 		public List<DnsRecordBase> AdditionalRecords
 		{
 			get { return _additionalRecords; }
-			set { _additionalRecords = (value ?? new List<DnsRecordBase>()); }
+			set { _additionalRecords = value ?? new List<DnsRecordBase>(); }
 		}
 
 		internal abstract bool IsTcpUsingRequested { get; }
@@ -106,7 +105,7 @@ namespace ARSoft.Tools.Net.Dns
 				else
 				{
 					// ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
-					return (rcode | ednsOptions.ExtendedReturnCode);
+					return rcode | ednsOptions.ExtendedReturnCode;
 				}
 			}
 			set
@@ -148,7 +147,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				if (_additionalRecords != null)
 				{
-					return _additionalRecords.Any(record => (record.RecordType == RecordType.Opt));
+					return _additionalRecords.Any(record => record.RecordType == RecordType.Opt);
 				}
 				else
 				{
@@ -167,7 +166,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else if (!value && IsEDnsEnabled)
 				{
-					_additionalRecords.RemoveAll(record => (record.RecordType == RecordType.Opt));
+					_additionalRecords.RemoveAll(record => record.RecordType == RecordType.Opt);
 				}
 			}
 		}
@@ -177,7 +176,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public OptRecord EDnsOptions
 		{
-			get { return (OptRecord) _additionalRecords?.Find(record => (record.RecordType == RecordType.Opt)); }
+			get { return (OptRecord) _additionalRecords?.Find(record => record.RecordType == RecordType.Opt); }
 			set
 			{
 				if (value == null)
@@ -186,7 +185,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else if (IsEDnsEnabled)
 				{
-					var pos = _additionalRecords.FindIndex(record => (record.RecordType == RecordType.Opt));
+					var pos = _additionalRecords.FindIndex(record => record.RecordType == RecordType.Opt);
 					_additionalRecords[pos] = value;
 				}
 				else
@@ -264,8 +263,8 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (_additionalRecords.Count > 0)
 			{
-				var tSigPos = _additionalRecords.FindIndex(record => (record.RecordType == RecordType.TSig));
-				if (tSigPos == (_additionalRecords.Count - 1))
+				var tSigPos = _additionalRecords.FindIndex(record => record.RecordType == RecordType.TSig);
+				if (tSigPos == _additionalRecords.Count - 1)
 				{
 					TSigOptions = (TSigRecord) _additionalRecords[tSigPos];
 
@@ -281,15 +280,15 @@ namespace ARSoft.Tools.Net.Dns
 		private ReturnCode ValidateTSig(byte[] resultData, DnsServer.SelectTsigKey tsigKeySelector, byte[] originalMac)
 		{
 			byte[] keyData;
-			if ((TSigOptions.Algorithm == TSigAlgorithm.Unknown) || (tsigKeySelector == null) || ((keyData = tsigKeySelector(TSigOptions.Algorithm, TSigOptions.Name)) == null))
+			if (TSigOptions.Algorithm == TSigAlgorithm.Unknown || tsigKeySelector == null || (keyData = tsigKeySelector(TSigOptions.Algorithm, TSigOptions.Name)) == null)
 			{
 				return ReturnCode.BadKey;
 			}
-			else if (((TSigOptions.TimeSigned - TSigOptions.Fudge) > DateTime.Now) || ((TSigOptions.TimeSigned + TSigOptions.Fudge) < DateTime.Now))
+			else if (TSigOptions.TimeSigned - TSigOptions.Fudge > DateTime.Now || TSigOptions.TimeSigned + TSigOptions.Fudge < DateTime.Now)
 			{
 				return ReturnCode.BadTime;
 			}
-			else if ((TSigOptions.Mac == null) || (TSigOptions.Mac.Length == 0))
+			else if (TSigOptions.Mac == null || TSigOptions.Mac.Length == 0)
 			{
 				return ReturnCode.BadSig;
 			}
@@ -311,7 +310,7 @@ namespace ARSoft.Tools.Net.Dns
 				var currentPosition = 0;
 
 				// original mac if neccessary
-				if ((originalMac != null) && (originalMac.Length > 0))
+				if (originalMac != null && originalMac.Length > 0)
 				{
 					EncodeUShort(validationBuffer, ref currentPosition, (ushort) originalMac.Length);
 					EncodeByteArray(validationBuffer, ref currentPosition, originalMac);
@@ -339,7 +338,7 @@ namespace ARSoft.Tools.Net.Dns
 				// Validate MAC
 				var hashAlgorithm = TSigAlgorithmHelper.GetHashAlgorithm(TSigOptions.Algorithm);
 				hashAlgorithm.Key = keyData;
-				return (hashAlgorithm.ComputeHash(validationBuffer, 0, currentPosition).SequenceEqual(TSigOptions.Mac)) ? ReturnCode.NoError : ReturnCode.BadSig;
+				return hashAlgorithm.ComputeHash(validationBuffer, 0, currentPosition).SequenceEqual(TSigOptions.Mac) ? ReturnCode.NoError : ReturnCode.BadSig;
 			}
 		}
 		#endregion
@@ -434,11 +433,11 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (BitConverter.IsLittleEndian)
 			{
-				res = ((resultData[currentPosition++] << 24) | (resultData[currentPosition++] << 16) | (resultData[currentPosition++] << 8) | resultData[currentPosition++]);
+				res = (resultData[currentPosition++] << 24) | (resultData[currentPosition++] << 16) | (resultData[currentPosition++] << 8) | resultData[currentPosition++];
 			}
 			else
 			{
-				res = (resultData[currentPosition++] | (resultData[currentPosition++] << 8) | (resultData[currentPosition++] << 16) | (resultData[currentPosition++] << 24));
+				res = resultData[currentPosition++] | (resultData[currentPosition++] << 8) | (resultData[currentPosition++] << 16) | (resultData[currentPosition++] << 24);
 			}
 
 			return res;
@@ -450,11 +449,11 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (BitConverter.IsLittleEndian)
 			{
-				res = (((uint) resultData[currentPosition++] << 24) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 8) | resultData[currentPosition++]);
+				res = ((uint) resultData[currentPosition++] << 24) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 8) | resultData[currentPosition++];
 			}
 			else
 			{
-				res = (resultData[currentPosition++] | ((uint) resultData[currentPosition++] << 8) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 24));
+				res = resultData[currentPosition++] | ((uint) resultData[currentPosition++] << 8) | ((uint) resultData[currentPosition++] << 16) | ((uint) resultData[currentPosition++] << 24);
 			}
 
 			return res;
@@ -695,7 +694,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 
 				var hashAlgorithm = TSigAlgorithmHelper.GetHashAlgorithm(TSigOptions.Algorithm);
-				if ((hashAlgorithm != null) && (TSigOptions.KeyData != null) && (TSigOptions.KeyData.Length > 0))
+				if (hashAlgorithm != null && TSigOptions.KeyData != null && TSigOptions.KeyData.Length > 0)
 				{
 					hashAlgorithm.Key = TSigOptions.KeyData;
 					newTSigMac = hashAlgorithm.ComputeHash(messageData, messageOffset, tsigVariablesPosition);
@@ -712,15 +711,15 @@ namespace ARSoft.Tools.Net.Dns
 
 				if (!IsQuery)
 				{
-					Buffer.BlockCopy(messageData, offset, messageData, messageOffset, (currentPosition - offset));
-					currentPosition -= (2 + originalTsigMac.Length);
+					Buffer.BlockCopy(messageData, offset, messageData, messageOffset, currentPosition - offset);
+					currentPosition -= 2 + originalTsigMac.Length;
 				}
 			}
 
 			if (addLengthPrefix)
 			{
 				Buffer.BlockCopy(messageData, 0, messageData, 2, currentPosition);
-				EncodeUShort(messageData, 0, (ushort) (currentPosition));
+				EncodeUShort(messageData, 0, (ushort) currentPosition);
 				currentPosition += 2;
 			}
 
@@ -833,7 +832,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			for (var i = 0; i < textData.Length; i += 255)
 			{
-				var blockLength = Math.Min(255, (textData.Length - i));
+				var blockLength = Math.Min(255, textData.Length - i);
 				messageData[currentPosition++] = (byte) blockLength;
 
 				Buffer.BlockCopy(textData, i, messageData, currentPosition, blockLength);
@@ -858,7 +857,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static void EncodeByteArray(byte[] messageData, ref int currentPosition, byte[] data, int length)
 		{
-			if ((data != null) && (length > 0))
+			if (data != null && length > 0)
 			{
 				Buffer.BlockCopy(data, 0, messageData, currentPosition, length);
 				currentPosition += length;

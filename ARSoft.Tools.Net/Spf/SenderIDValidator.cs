@@ -16,20 +16,18 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net.Dns;
 
 namespace ARSoft.Tools.Net.Spf
 {
-	/// <summary>
-	///   Validator for SenderID records
-	/// </summary>
-	public class SenderIDValidator : ValidatorBase<SenderIDRecord>
+    /// <summary>
+    ///   Validator for SenderID records
+    /// </summary>
+    public class SenderIDValidator : ValidatorBase<SenderIDRecord>
 	{
 		/// <summary>
 		///   Scope to examin
@@ -47,11 +45,11 @@ namespace ARSoft.Tools.Net.Spf
 		protected override async Task<LoadRecordResult> LoadRecordsAsync(DomainName domain, CancellationToken token)
 		{
 			var dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, token);
-			if ((dnsResult == null) || ((dnsResult.ReturnCode != ReturnCode.NoError) && (dnsResult.ReturnCode != ReturnCode.NxDomain)))
+			if (dnsResult == null || dnsResult.ReturnCode != ReturnCode.NoError && dnsResult.ReturnCode != ReturnCode.NxDomain)
 			{
 				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError };
 			}
-			else if ((Scope == SenderIDScope.Pra) && (dnsResult.ReturnCode == ReturnCode.NxDomain))
+			else if (Scope == SenderIDScope.Pra && dnsResult.ReturnCode == ReturnCode.NxDomain)
 			{
 				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.Fail };
 			}

@@ -18,19 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Uniform Resource Identifier</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc7553">RFC 7553</see>
-	///   </para>
-	/// </summary>
-	public class UriRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Uniform Resource Identifier</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc7553">RFC 7553</see>
+    ///   </para>
+    /// </summary>
+    public class UriRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Priority

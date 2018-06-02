@@ -18,20 +18,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>CAA</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc6844">RFC 6844</see>
-	///   </para>
-	/// </summary>
-	// ReSharper disable once InconsistentNaming
-	public class CAARecord : DnsRecordBase
+    /// <summary>
+    ///   <para>CAA</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc6844">RFC 6844</see>
+    ///   </para>
+    /// </summary>
+    // ReSharper disable once InconsistentNaming
+    public class CAARecord : DnsRecordBase
 	{
 		/// <summary>
 		///   The flags

@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
@@ -27,14 +26,14 @@ using X509Certificate = System.Security.Cryptography.X509Certificates.X509Certif
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>TLSA</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
-	///   </para>
-	/// </summary>
-	public class TlsaRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>TLSA</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+    ///   </para>
+    /// </summary>
+    public class TlsaRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Certificate Usage

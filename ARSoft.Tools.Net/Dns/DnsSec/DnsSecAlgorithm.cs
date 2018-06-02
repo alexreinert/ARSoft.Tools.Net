@@ -17,16 +17,13 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   DNSSEC algorithm type
-	/// </summary>
-	public enum DnsSecAlgorithm : byte
+    /// <summary>
+    ///   DNSSEC algorithm type
+    /// </summary>
+    public enum DnsSecAlgorithm : byte
 	{
 		/// <summary>
 		///   <para>RSA MD5</para>

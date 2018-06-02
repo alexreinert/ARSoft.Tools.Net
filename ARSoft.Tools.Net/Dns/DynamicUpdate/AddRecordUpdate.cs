@@ -16,17 +16,14 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
-	/// <summary>
-	///   Add record action
-	/// </summary>
-	public class AddRecordUpdate : UpdateBase
+    /// <summary>
+    ///   Add record action
+    /// </summary>
+    public class AddRecordUpdate : UpdateBase
 	{
 		/// <summary>
 		///   Record which should be added

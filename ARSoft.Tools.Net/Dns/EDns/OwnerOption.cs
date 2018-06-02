@@ -16,22 +16,18 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.NetworkInformation;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>EDNS0 Owner Option</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://files.dns-sd.org/draft-sekar-dns-llq.txt">draft-cheshire-edns0-owner-option</see>
-	///   </para>
-	/// </summary>
-	public class OwnerOption : EDnsOptionBase
+    /// <summary>
+    ///   <para>EDNS0 Owner Option</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://files.dns-sd.org/draft-sekar-dns-llq.txt">draft-cheshire-edns0-owner-option</see>
+    ///   </para>
+    /// </summary>
+    public class OwnerOption : EDnsOptionBase
 	{
 		/// <summary>
 		///   The version

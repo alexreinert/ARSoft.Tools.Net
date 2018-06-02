@@ -16,22 +16,18 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>IPv6 address</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc3596">RFC 3596</see>
-	///   </para>
-	/// </summary>
-	public class AaaaRecord : AddressRecordBase
+    /// <summary>
+    ///   <para>IPv6 address</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc3596">RFC 3596</see>
+    ///   </para>
+    /// </summary>
+    public class AaaaRecord : AddressRecordBase
 	{
 		internal AaaaRecord() {}
 

@@ -19,18 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>OPT record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2671">RFC 2671</see>
-	///   </para>
-	/// </summary>
-	public class OptRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>OPT record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc2671">RFC 2671</see>
+    ///   </para>
+    /// </summary>
+    public class OptRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Gets or set the sender's UDP payload size
@@ -49,8 +48,8 @@ namespace ARSoft.Tools.Net.Dns
 			get { return (ReturnCode) ((TimeToLive & 0xff000000) >> 20); }
 			set
 			{
-				var clearedTtl = (TimeToLive & 0x00ffffff);
-				TimeToLive = (clearedTtl | ((int) value << 20));
+				var clearedTtl = TimeToLive & 0x00ffffff;
+				TimeToLive = clearedTtl | ((int) value << 20);
 			}
 		}
 
@@ -189,14 +188,14 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			var flags = IsDnsSecOk ? "DO" : "";
-			return String.Format("; EDNS version: {0}; flags: {1}; udp: {2}", Version, flags, UdpPayloadSize);
+			return $"; EDNS version: {Version}; flags: {flags}; udp: {UdpPayloadSize}";
 		}
 
 		protected internal override int MaximumRecordDataLength
 		{
 			get
 			{
-				if ((Options == null) || (Options.Count == 0))
+				if (Options == null || Options.Count == 0)
 				{
 					return 0;
 				}
@@ -209,7 +208,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			if ((Options != null) && (Options.Count != 0))
+			if (Options != null && Options.Count != 0)
 			{
 				foreach (var option in Options)
 				{

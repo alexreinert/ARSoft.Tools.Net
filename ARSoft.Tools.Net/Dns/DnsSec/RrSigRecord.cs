@@ -20,20 +20,19 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Record signature record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
-	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
-	///   </para>
-	/// </summary>
-	public class RrSigRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Record signature record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+    ///     and
+    ///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+    ///   </para>
+    /// </summary>
+    public class RrSigRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   <see cref="RecordType">Record type</see> that is covered by this record
@@ -217,7 +216,7 @@ namespace ARSoft.Tools.Net.Dns
             EncodeSigningBuffer(coveredRecords, out var messageData, out var length);
 
             return dnsKeys
-				.Where(x => x.IsZoneKey && (x.Protocol == 3) && x.Algorithm.IsSupported() && (KeyTag == x.CalculateKeyTag()))
+				.Where(x => x.IsZoneKey && x.Protocol == 3 && x.Algorithm.IsSupported() && KeyTag == x.CalculateKeyTag())
 				.Any(x => x.Verify(messageData, length, Signature));
 		}
 

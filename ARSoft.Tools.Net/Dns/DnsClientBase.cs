@@ -83,7 +83,7 @@ namespace ARSoft.Tools.Net.Dns
 
             PrepareMessage(message, out var messageLength, out var messageData, out var tsigKeySelector, out var tsigOriginalMac);
 
-            var sendByTcp = ((messageLength > MaximumQueryMessageSize) || message.IsTcpUsingRequested || !IsUdpEnabled);
+            var sendByTcp = messageLength > MaximumQueryMessageSize || message.IsTcpUsingRequested || !IsUdpEnabled;
 
 			var endpointInfos = GetEndpointInfos();
 
@@ -115,7 +115,7 @@ namespace ARSoft.Tools.Net.Dns
 						if (!ValidateResponse(message, result))
 							continue;
 
-						if ((result.ReturnCode == ReturnCode.ServerFailure) && (i != endpointInfos.Count - 1))
+						if (result.ReturnCode == ReturnCode.ServerFailure && i != endpointInfos.Count - 1)
 						{
 							continue;
 						}
@@ -226,15 +226,15 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if (IsResponseValidationEnabled)
 			{
-				if ((result.ReturnCode == ReturnCode.NoError) || (result.ReturnCode == ReturnCode.NxDomain))
+				if (result.ReturnCode == ReturnCode.NoError || result.ReturnCode == ReturnCode.NxDomain)
 				{
 					if (message.TransactionID != result.TransactionID)
 						return false;
 
-					if ((message.Questions == null) || (result.Questions == null))
+					if (message.Questions == null || result.Questions == null)
 						return false;
 
-					if ((message.Questions.Count != result.Questions.Count))
+					if (message.Questions.Count != result.Questions.Count)
 						return false;
 
 					for (var j = 0; j < message.Questions.Count; j++)
@@ -242,9 +242,9 @@ namespace ARSoft.Tools.Net.Dns
 						var queryQuestion = message.Questions[j];
 						var responseQuestion = result.Questions[j];
 
-						if ((queryQuestion.RecordClass != responseQuestion.RecordClass)
-						    || (queryQuestion.RecordType != responseQuestion.RecordType)
-						    || (!queryQuestion.Name.Equals(responseQuestion.Name, false)))
+						if (queryQuestion.RecordClass != responseQuestion.RecordClass
+						    || queryQuestion.RecordType != responseQuestion.RecordType
+						    || !queryQuestion.Name.Equals(responseQuestion.Name, false))
 						{
 							return false;
 						}
@@ -403,7 +403,7 @@ namespace ARSoft.Tools.Net.Dns
 
             PrepareMessage(message, out var messageLength, out var messageData, out var tsigKeySelector, out var tsigOriginalMac);
 
-            var sendByTcp = ((messageLength > MaximumQueryMessageSize) || message.IsTcpUsingRequested || !IsUdpEnabled);
+            var sendByTcp = messageLength > MaximumQueryMessageSize || message.IsTcpUsingRequested || !IsUdpEnabled;
 
 			var endpointInfos = GetEndpointInfos();
 
@@ -436,7 +436,7 @@ namespace ARSoft.Tools.Net.Dns
 					if (!ValidateResponse(message, result))
 						continue;
 
-					if ((result.ReturnCode != ReturnCode.NoError) && (result.ReturnCode != ReturnCode.NxDomain) && (i != endpointInfos.Count - 1))
+					if (result.ReturnCode != ReturnCode.NoError && result.ReturnCode != ReturnCode.NxDomain && i != endpointInfos.Count - 1)
 						continue;
 
 					if (result.IsTcpResendingRequested)
@@ -731,9 +731,9 @@ namespace ARSoft.Tools.Net.Dns
 			if (_isAnyServerMulticast)
 			{
 				var localIPs = NetworkInterface.GetAllNetworkInterfaces()
-					.Where(n => n.SupportsMulticast && (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+					.Where(n => n.SupportsMulticast && n.OperationalStatus == OperationalStatus.Up && n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
 					.SelectMany(n => n.GetIPProperties().UnicastAddresses.Select(a => a.Address))
-					.Where(a => !IPAddress.IsLoopback(a) && ((a.AddressFamily == AddressFamily.InterNetwork) || a.IsIPv6LinkLocal))
+					.Where(a => !IPAddress.IsLoopback(a) && (a.AddressFamily == AddressFamily.InterNetwork || a.IsIPv6LinkLocal))
 					.ToList();
 
 				endpointInfos = _servers
@@ -769,7 +769,7 @@ namespace ARSoft.Tools.Net.Dns
 			else
 			{
 				endpointInfos = _servers
-					.Where(x => IsIPv6Enabled || (x.AddressFamily == AddressFamily.InterNetwork))
+					.Where(x => IsIPv6Enabled || x.AddressFamily == AddressFamily.InterNetwork)
 					.Select(
 						s => new DnsClientEndpointInfo
 						{
@@ -789,9 +789,9 @@ namespace ARSoft.Tools.Net.Dns
 		private static bool IsAnyIPv6Configured()
 		{
 			return NetworkInterface.GetAllNetworkInterfaces()
-				.Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+				.Where(n => n.OperationalStatus == OperationalStatus.Up && n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
 				.SelectMany(n => n.GetIPProperties().UnicastAddresses.Select(a => a.Address))
-				.Any(a => !IPAddress.IsLoopback(a) && (a.AddressFamily == AddressFamily.InterNetworkV6) && !a.IsIPv6LinkLocal && !a.IsIPv6Teredo && !a.GetNetworkAddress(96).Equals(_ipvMappedNetworkAddress));
+				.Any(a => !IPAddress.IsLoopback(a) && a.AddressFamily == AddressFamily.InterNetworkV6 && !a.IsIPv6LinkLocal && !a.IsIPv6Teredo && !a.GetNetworkAddress(96).Equals(_ipvMappedNetworkAddress));
 		}
 	}
 }

@@ -16,18 +16,16 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Base class for a ResolverHintStore, which has an updateable local storage for the hints
-	/// </summary>
-	public abstract class UpdateableResolverHintStoreBase : IResolverHintStore
+    /// <summary>
+    ///   Base class for a ResolverHintStore, which has an updateable local storage for the hints
+    /// </summary>
+    public abstract class UpdateableResolverHintStoreBase : IResolverHintStore
 	{
 		private bool _isInitiated;
 		private List<IPAddress> _rootServers;
@@ -99,7 +97,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			var nameServers = zone.OfType<NsRecord>().Where(x => x.Name == DomainName.Root).Select(x => x.NameServer);
 			RootServers = zone.Where(x => x.RecordType == RecordType.A || x.RecordType == RecordType.Aaaa).Join(nameServers, x => x.Name, x => x, (x, y) => ((IAddressRecord) x).Address).ToList();
-			RootKeys = zone.OfType<DnsKeyRecord>().Where(x => (x.Name == DomainName.Root) && x.IsSecureEntryPoint).Select(x => new DsRecord(x, x.TimeToLive, DnsSecDigestType.Sha256)).ToList();
+			RootKeys = zone.OfType<DnsKeyRecord>().Where(x => x.Name == DomainName.Root && x.IsSecureEntryPoint).Select(x => new DsRecord(x, x.TimeToLive, DnsSecDigestType.Sha256)).ToList();
 		}
 
 		/// <summary>

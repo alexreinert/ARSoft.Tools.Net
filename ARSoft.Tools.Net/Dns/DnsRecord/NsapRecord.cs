@@ -18,21 +18,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>NSAP address, NSAP style A record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1706">RFC 1706</see>
-	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc1348">RFC 1348</see>
-	///   </para>
-	/// </summary>
-	public class NsapRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>NSAP address, NSAP style A record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1706">RFC 1706</see>
+    ///     and
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1348">RFC 1348</see>
+    ///   </para>
+    /// </summary>
+    public class NsapRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Binary encoded NSAP data

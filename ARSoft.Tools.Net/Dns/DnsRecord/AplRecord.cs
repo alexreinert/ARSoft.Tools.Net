@@ -20,19 +20,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Address prefixes record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc3123">RFC 3123</see>
-	///   </para>
-	/// </summary>
-	public class AplRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Address prefixes record</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc3123">RFC 3123</see>
+    ///   </para>
+    /// </summary>
+    public class AplRecord : DnsRecordBase
 	{
 		internal enum Family : ushort
 		{
@@ -91,7 +90,7 @@ namespace ARSoft.Tools.Net.Dns
 			public AddressPrefix(bool isNegated, IPAddress address, byte prefix)
 			{
 				IsNegated = isNegated;
-				AddressFamily = (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) ? Family.IpV4 : Family.IpV6;
+				AddressFamily = address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? Family.IpV4 : Family.IpV6;
 				Address = address;
 				Prefix = prefix;
 			}
@@ -114,7 +113,7 @@ namespace ARSoft.Tools.Net.Dns
 
 				var address = IPAddress.Parse(groups["addr"].Value);
 
-				if ((address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) && (groups["fam"].Value != "1"))
+				if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && groups["fam"].Value != "1")
 					throw new FormatException();
 
 				return new AddressPrefix(groups["isneg"].Success, address, Byte.Parse(groups["pref"].Value));
@@ -158,7 +157,7 @@ namespace ARSoft.Tools.Net.Dns
 					addressLength -= 128;
 				}
 
-				var addressData = new byte[(family == Family.IpV4) ? 4 : 16];
+				var addressData = new byte[family == Family.IpV4 ? 4 : 16];
 				Buffer.BlockCopy(resultData, currentPosition, addressData, 0, addressLength);
 				currentPosition += addressLength;
 

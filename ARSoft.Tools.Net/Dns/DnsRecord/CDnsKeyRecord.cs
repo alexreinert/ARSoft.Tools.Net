@@ -150,7 +150,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			for (var i = 0; i < currentPosition; ++i)
 			{
-				ac += ((i & 1) == 1) ? buffer[i] : (ulong) buffer[i] << 8;
+				ac += (i & 1) == 1 ? buffer[i] : (ulong) buffer[i] << 8;
 			}
 
 			ac += (ac >> 16) & 0xFFFF;

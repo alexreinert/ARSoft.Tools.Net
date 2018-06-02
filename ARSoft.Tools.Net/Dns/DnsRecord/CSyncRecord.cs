@@ -19,18 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Child-to-Parent Synchronization</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc7477">RFC 7477</see>
-	///   </para>
-	/// </summary>
-	public class CSyncRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Child-to-Parent Synchronization</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc7477">RFC 7477</see>
+    ///   </para>
+    /// </summary>
+    public class CSyncRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   CSync record flags
@@ -88,7 +87,7 @@ namespace ARSoft.Tools.Net.Dns
 			SerialNumber = serialNumber;
 			Flags = flags;
 
-			if ((types == null) || (types.Count == 0))
+			if (types == null || types.Count == 0)
 			{
 				Types = new List<RecordType>();
 			}

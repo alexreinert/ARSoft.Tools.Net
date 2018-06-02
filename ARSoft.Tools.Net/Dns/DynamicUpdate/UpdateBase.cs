@@ -17,16 +17,13 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
-	/// <summary>
-	///   Base update action of dynamic dns update
-	/// </summary>
-	public abstract class UpdateBase : DnsRecordBase
+    /// <summary>
+    ///   Base update action of dynamic dns update
+    /// </summary>
+    public abstract class UpdateBase : DnsRecordBase
 	{
 		internal UpdateBase() {}
 

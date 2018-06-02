@@ -20,20 +20,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Stub resolver</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-	///   </para>
-	/// </summary>
-	public class DnsStubResolver : IDnsResolver
+    /// <summary>
+    ///   <para>Stub resolver</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+    ///   </para>
+    /// </summary>
+    public class DnsStubResolver : IDnsResolver
 	{
 		private readonly DnsClient _dnsClient;
 		private DnsCache _cache = new DnsCache();
@@ -89,12 +88,12 @@ namespace ARSoft.Tools.Net.Dns
 
             var msg = _dnsClient.Resolve(name, recordType, recordClass);
 
-			if ((msg == null) || ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain)))
+			if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain)
 			{
 				throw new Exception("DNS request failed");
 			}
 
-			var cName = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
+			var cName = msg.AnswerRecords.Where(x => x.RecordType == RecordType.CName && x.RecordClass == recordClass && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
 
 			if (cName != null)
 			{
@@ -143,16 +142,16 @@ namespace ARSoft.Tools.Net.Dns
 
             var msg = await _dnsClient.ResolveAsync(name, recordType, recordClass, null, token);
 
-			if ((msg == null) || ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain)))
+			if (msg == null || msg.ReturnCode != ReturnCode.NoError && msg.ReturnCode != ReturnCode.NxDomain)
 			{
 				throw new Exception("DNS request failed");
 			}
 
-			var cName = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
+			var cName = msg.AnswerRecords.Where(x => x.RecordType == RecordType.CName && x.RecordClass == recordClass && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
 
 			if (cName != null)
 			{
-				records = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(cName.CanonicalName)).OfType<T>().ToList();
+				records = msg.AnswerRecords.Where(x => x.RecordType == recordType && x.RecordClass == recordClass && x.Name.Equals(cName.CanonicalName)).OfType<T>().ToList();
 				if (records.Count > 0)
 				{
 					_cache.Add(name, recordType, recordClass, records, DnsSecValidationResult.Indeterminate, Math.Min(cName.TimeToLive, records.Min(x => x.TimeToLive)));

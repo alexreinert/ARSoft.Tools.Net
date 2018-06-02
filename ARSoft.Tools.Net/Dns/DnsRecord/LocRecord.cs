@@ -20,20 +20,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>Location information</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1876">RFC 1876</see>
-	///   </para>
-	/// </summary>
-	public class LocRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>Location information</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc1876">RFC 1876</see>
+    ///   </para>
+    /// </summary>
+    public class LocRecord : DnsRecordBase
 	{
 		private static readonly Regex _parserRegex = new Regex(@"^(?<latd>\d{1,2})( (?<latm>\d{1,2})( (?<lats>\d{1,2})(\.(?<latms>\d{1,3}))?)?)? (?<lat>(N|S)) (?<longd>\d{1,2})( (?<longm>\d{1,2})( (?<longs>\d{1,2})(\.(?<longms>\d{1,3}))?)?)? (?<long>(W|E)) (?<alt>-?\d{1,2}(\.\d+)?)m?( (?<size>\d+(\.\d+)?)m?( (?<hp>\d+(\.\d+)?)m?( (?<vp>\d+(\.\d+)?)m?)?)?)?$", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 
@@ -130,10 +128,10 @@ namespace ARSoft.Tools.Net.Dns
 				if (Milliseconds != 0)
 					res = "." + Milliseconds.ToString().PadLeft(3, '0').TrimEnd('0');
 
-				if ((res.Length > 0) || (Seconds != 0))
+				if (res.Length > 0 || Seconds != 0)
 					res = " " + Seconds + res;
 
-				if ((res.Length > 0) || (Minutes != 0))
+				if (res.Length > 0 || Minutes != 0)
 					res = " " + Minutes + res;
 
 				res = Degrees + res;
@@ -249,9 +247,9 @@ namespace ARSoft.Tools.Net.Dns
 			       + " "
 			       + Longitude.ToLongitudeString()
 			       + " " + Altitude.ToString(CultureInfo.InvariantCulture) + "m"
-			       + (((Size != 1) || (HorizontalPrecision != 10000) || (VerticalPrecision != 10)) ? " " + Size + "m" : "")
-			       + (((HorizontalPrecision != 10000) || (VerticalPrecision != 10)) ? " " + HorizontalPrecision + "m" : "")
-			       + ((VerticalPrecision != 10) ? " " + VerticalPrecision + "m" : "");
+			       + (Size != 1 || HorizontalPrecision != 10000 || VerticalPrecision != 10 ? " " + Size + "m" : "")
+			       + (HorizontalPrecision != 10000 || VerticalPrecision != 10 ? " " + HorizontalPrecision + "m" : "")
+			       + (VerticalPrecision != 10 ? " " + VerticalPrecision + "m" : "");
 		}
 
 		protected internal override int MaximumRecordDataLength => 16;
@@ -279,7 +277,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static byte ConvertPrecision(double precision)
 		{
-			var centimeters = (precision * 100);
+			var centimeters = precision * 100;
 
 			int exponent;
 			for (exponent = 0; exponent < 9; exponent++)
@@ -299,7 +297,7 @@ namespace ARSoft.Tools.Net.Dns
 		#region Convert Degree
 		private static Degree ConvertDegree(int degrees)
 		{
-			degrees -= (1 << 31);
+			degrees -= 1 << 31;
 
 			bool isNegative;
 			if (degrees < 0)
@@ -338,13 +336,13 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static double ConvertAltitude(int altitude)
 		{
-			return ((altitude < _ALTITUDE_REFERENCE) ? ((_ALTITUDE_REFERENCE - altitude) * -1) : (altitude - _ALTITUDE_REFERENCE)) / 100d;
+			return (altitude < _ALTITUDE_REFERENCE ? (_ALTITUDE_REFERENCE - altitude) * -1 : altitude - _ALTITUDE_REFERENCE) / 100d;
 		}
 
 		private static int ConvertAltitude(double altitude)
 		{
 			var centimeter = (int) (altitude * 100);
-			return ((centimeter > 0) ? (_ALTITUDE_REFERENCE + centimeter) : (centimeter + _ALTITUDE_REFERENCE));
+			return centimeter > 0 ? _ALTITUDE_REFERENCE + centimeter : centimeter + _ALTITUDE_REFERENCE;
 		}
 		#endregion
 	}

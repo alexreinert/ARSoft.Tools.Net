@@ -21,18 +21,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   <para>IPsec key storage</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
-	///   </para>
-	/// </summary>
-	public class IpSecKeyRecord : DnsRecordBase
+    /// <summary>
+    ///   <para>IPsec key storage</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4025">RFC 4025</see>
+    ///   </para>
+    /// </summary>
+    public class IpSecKeyRecord : DnsRecordBase
 	{
 		/// <summary>
 		///   Algorithm of key
@@ -160,7 +159,7 @@ namespace ARSoft.Tools.Net.Dns
 			: base(name, RecordType.IpSecKey, RecordClass.INet, timeToLive)
 		{
 			Precedence = precedence;
-			GatewayType = (gateway.AddressFamily == AddressFamily.InterNetwork) ? IpSecGatewayType.IpV4 : IpSecGatewayType.IpV6;
+			GatewayType = gateway.AddressFamily == AddressFamily.InterNetwork ? IpSecGatewayType.IpV4 : IpSecGatewayType.IpV6;
 			Algorithm = algorithm;
 			Gateway = gateway.ToString();
 			PublicKey = publicKey ?? new byte[] { };

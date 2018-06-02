@@ -16,17 +16,13 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <summary>
-	///   Type of DNSSEC digest
-	/// </summary>
-	public enum DnsSecDigestType : byte
+    /// <summary>
+    ///   Type of DNSSEC digest
+    /// </summary>
+    public enum DnsSecDigestType : byte
 	{
 		/// <summary>
 		///   <para>SHA-1</para>

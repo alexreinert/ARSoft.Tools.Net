@@ -142,7 +142,7 @@ namespace ARSoft.Tools.Net.Spf
 
 		private async Task<ValidationResult> CheckHostInternalAsync(IPAddress ip, DomainName domain, string sender, bool expandExplanation, State state, CancellationToken token)
 		{
-			if ((domain == null) || (domain.Equals(DomainName.Root)))
+			if (domain == null || domain.Equals(DomainName.Root))
 			{
 				return new ValidationResult() { Result = SpfQualifier.None, Explanation = String.Empty };
 			}
@@ -165,10 +165,10 @@ namespace ARSoft.Tools.Net.Spf
 
 			var record = loadResult.Record;
 
-			if ((record.Terms == null) || (record.Terms.Count == 0))
+			if (record.Terms == null || record.Terms.Count == 0)
 				return new ValidationResult() { Result = SpfQualifier.Neutral, Explanation = String.Empty };
 
-			if (record.Terms.OfType<SpfModifier>().GroupBy(m => m.Type).Where(g => (g.Key == SpfModifierType.Exp) || (g.Key == SpfModifierType.Redirect)).Any(g => g.Count() > 1))
+			if (record.Terms.OfType<SpfModifier>().GroupBy(m => m.Type).Where(g => g.Key == SpfModifierType.Exp || g.Key == SpfModifierType.Redirect).Any(g => g.Count() > 1))
 				return new ValidationResult() { Result = SpfQualifier.PermError, Explanation = String.Empty };
 
 			var result = new ValidationResult() { Result = loadResult.ErrorResult };
@@ -200,7 +200,7 @@ namespace ARSoft.Tools.Net.Spf
 
 					var redirectDomain = await ExpandDomainAsync(redirectModifier.Domain ?? String.Empty, ip, domain, sender, token);
 
-					if ((redirectDomain == null) || (redirectDomain == DomainName.Root) || (redirectDomain.Equals(domain)))
+					if (redirectDomain == null || redirectDomain == DomainName.Root || redirectDomain.Equals(domain))
 					{
 						result.Result = SpfQualifier.PermError;
 					}
@@ -213,21 +213,21 @@ namespace ARSoft.Tools.Net.Spf
 					}
 				}
 			}
-			else if ((result.Result == SpfQualifier.Fail) && expandExplanation)
+			else if (result.Result == SpfQualifier.Fail && expandExplanation)
 			{
 				var expModifier = record.Terms.OfType<SpfModifier>().FirstOrDefault(m => m.Type == SpfModifierType.Exp);
 				if (expModifier != null)
 				{
 					var target = await ExpandDomainAsync(expModifier.Domain, ip, domain, sender, token);
 
-					if ((target == null) || (target.Equals(DomainName.Root)))
+					if (target == null || target.Equals(DomainName.Root))
 					{
 						result.Explanation = String.Empty;
 					}
 					else
 					{
 						var dnsResult = await ResolveDnsAsync<TxtRecord>(target, RecordType.Txt, token);
-						if ((dnsResult != null) && (dnsResult.ReturnCode == ReturnCode.NoError))
+						if (dnsResult != null && dnsResult.ReturnCode == ReturnCode.NoError)
 						{
 							var txtRecord = dnsResult.Records.FirstOrDefault();
 							if (txtRecord != null)
@@ -276,7 +276,7 @@ namespace ARSoft.Tools.Net.Spf
 					var mxMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
 
 					var dnsMxResult = await ResolveDnsAsync<MxRecord>(mxMechanismDomain, RecordType.Mx, token);
-					if ((dnsMxResult == null) || ((dnsMxResult.ReturnCode != ReturnCode.NoError) && (dnsMxResult.ReturnCode != ReturnCode.NxDomain)))
+					if (dnsMxResult == null || dnsMxResult.ReturnCode != ReturnCode.NoError && dnsMxResult.ReturnCode != ReturnCode.NxDomain)
 						return SpfQualifier.TempError;
 
 					var mxCheckedCount = 0;
@@ -299,15 +299,14 @@ namespace ARSoft.Tools.Net.Spf
 
 				case SpfMechanismType.Ip4:
 				case SpfMechanismType.Ip6:
-					IPAddress compareAddress;
-					if (IPAddress.TryParse(mechanism.Domain, out compareAddress))
+				    if (IPAddress.TryParse(mechanism.Domain, out var compareAddress))
 					{
 						if (ip.AddressFamily != compareAddress.AddressFamily)
 							return SpfQualifier.None;
 
 						if (mechanism.Prefix.HasValue)
 						{
-							if ((mechanism.Prefix.Value < 0) || (mechanism.Prefix.Value > (compareAddress.AddressFamily == AddressFamily.InterNetworkV6 ? 128 : 32)))
+							if (mechanism.Prefix.Value < 0 || mechanism.Prefix.Value > (compareAddress.AddressFamily == AddressFamily.InterNetworkV6 ? 128 : 32))
 								return SpfQualifier.PermError;
 
 							if (ip.GetNetworkAddress(mechanism.Prefix.Value).Equals(compareAddress.GetNetworkAddress(mechanism.Prefix.Value)))
@@ -332,7 +331,7 @@ namespace ARSoft.Tools.Net.Spf
 						return SpfQualifier.PermError;
 
 					var dnsPtrResult = await ResolveDnsAsync<PtrRecord>(ip.GetReverseLookupDomain(), RecordType.Ptr, token);
-					if ((dnsPtrResult == null) || ((dnsPtrResult.ReturnCode != ReturnCode.NoError) && (dnsPtrResult.ReturnCode != ReturnCode.NxDomain)))
+					if (dnsPtrResult == null || dnsPtrResult.ReturnCode != ReturnCode.NoError && dnsPtrResult.ReturnCode != ReturnCode.NxDomain)
 						return SpfQualifier.TempError;
 
 					var ptrMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
@@ -346,7 +345,7 @@ namespace ARSoft.Tools.Net.Spf
 						var isPtrMatch = await IsIpMatchAsync(ptrRecord.PointerDomainName, ip, 0, 0, token);
 						if (isPtrMatch.HasValue && isPtrMatch.Value)
 						{
-							if (ptrRecord.PointerDomainName.Equals(ptrMechanismDomain) || (ptrRecord.PointerDomainName.IsSubDomainOf(ptrMechanismDomain)))
+							if (ptrRecord.PointerDomainName.Equals(ptrMechanismDomain) || ptrRecord.PointerDomainName.IsSubDomainOf(ptrMechanismDomain))
 								return mechanism.Qualifier;
 						}
 					}
@@ -362,10 +361,10 @@ namespace ARSoft.Tools.Net.Spf
 					var existsMechanismDomain = String.IsNullOrEmpty(mechanism.Domain) ? domain : await ExpandDomainAsync(mechanism.Domain, ip, domain, sender, token);
 
 					var dnsAResult = await ResolveDnsAsync<ARecord>(existsMechanismDomain, RecordType.A, token);
-					if ((dnsAResult == null) || ((dnsAResult.ReturnCode != ReturnCode.NoError) && (dnsAResult.ReturnCode != ReturnCode.NxDomain)))
+					if (dnsAResult == null || dnsAResult.ReturnCode != ReturnCode.NoError && dnsAResult.ReturnCode != ReturnCode.NxDomain)
 						return SpfQualifier.TempError;
 
-					if (dnsAResult.Records.Count(record => (record.RecordType == RecordType.A)) > 0)
+					if (dnsAResult.Records.Count(record => record.RecordType == RecordType.A) > 0)
 					{
 						return mechanism.Qualifier;
 					}
@@ -432,7 +431,7 @@ namespace ARSoft.Tools.Net.Spf
 			where TRecord : DnsRecordBase, IAddressRecord
 		{
 			var dnsResult = await ResolveDnsAsync<TRecord>(domain, recordType, token);
-			if ((dnsResult == null) || ((dnsResult.ReturnCode != ReturnCode.NoError) && (dnsResult.ReturnCode != ReturnCode.NxDomain)))
+			if (dnsResult == null || dnsResult.ReturnCode != ReturnCode.NoError && dnsResult.ReturnCode != ReturnCode.NxDomain)
 				return null;
 
 			foreach (var dnsRecord in dnsResult.Records)
@@ -557,7 +556,7 @@ namespace ARSoft.Tools.Net.Spf
 							letter = "unknown";
 
 							var dnsResult = await ResolveDnsAsync<PtrRecord>(ip.GetReverseLookupDomain(), RecordType.Ptr, token);
-							if ((dnsResult == null) || ((dnsResult.ReturnCode != ReturnCode.NoError) && (dnsResult.ReturnCode != ReturnCode.NxDomain)))
+							if (dnsResult == null || dnsResult.ReturnCode != ReturnCode.NoError && dnsResult.ReturnCode != ReturnCode.NxDomain)
 							{
 								break;
 							}
@@ -587,7 +586,7 @@ namespace ARSoft.Tools.Net.Spf
 							}
 							break;
 						case "v":
-							letter = (ip.AddressFamily == AddressFamily.InterNetworkV6) ? "ip6" : "in-addr";
+							letter = ip.AddressFamily == AddressFamily.InterNetworkV6 ? "ip6" : "in-addr";
 							break;
 						case "h":
 							letter = HeloDomain?.ToString() ?? "unknown";
@@ -596,11 +595,11 @@ namespace ARSoft.Tools.Net.Spf
 							var address =
 								LocalIP
 								?? NetworkInterface.GetAllNetworkInterfaces()
-									.Where(n => (n.OperationalStatus == OperationalStatus.Up) && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
+									.Where(n => n.OperationalStatus == OperationalStatus.Up && n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
 									.SelectMany(n => n.GetIPProperties().UnicastAddresses)
 									.Select(u => u.Address)
 									.FirstOrDefault(a => a.AddressFamily == ip.AddressFamily)
-								?? ((ip.AddressFamily == AddressFamily.InterNetwork) ? IPAddress.Loopback : IPAddress.IPv6Loopback);
+								?? (ip.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Loopback : IPAddress.IPv6Loopback);
 							letter = address.ToString();
 							break;
 						case "r":
@@ -637,7 +636,7 @@ namespace ARSoft.Tools.Net.Spf
 
 					count = Math.Min(count, parts.Length);
 
-					return String.Join(".", parts, (parts.Length - count), count);
+					return String.Join(".", parts, parts.Length - count, count);
 			}
 		}
 	}

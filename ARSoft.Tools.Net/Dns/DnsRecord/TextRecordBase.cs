@@ -50,7 +50,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength
 		{
-			get { return TextParts.Sum(p => p.Length + (p.Length / 255) + (p.Length % 255 == 0 ? 0 : 1)); }
+			get { return TextParts.Sum(p => p.Length + p.Length / 255 + (p.Length % 255 == 0 ? 0 : 1)); }
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)

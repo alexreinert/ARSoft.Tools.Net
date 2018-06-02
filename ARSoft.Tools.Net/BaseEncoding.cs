@@ -16,21 +16,18 @@
 // limitations under the License.
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net
 {
-	/// <summary>
-	///   <para>Extension class for encoding and decoding Base16, Base32 and Base64</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see>
-	///   </para>
-	/// </summary>
-	public static class BaseEncoding
+    /// <summary>
+    ///   <para>Extension class for encoding and decoding Base16, Base32 and Base64</para>
+    ///   <para>
+    ///     Defined in
+    ///     <see cref="!:http://tools.ietf.org/html/rfc4648">RFC 4648</see>
+    ///   </para>
+    /// </summary>
+    public static class BaseEncoding
 	{
 		#region Helper
 		private static Dictionary<char, byte> GetAlphabet(string alphabet, bool isCaseIgnored)
@@ -346,7 +343,7 @@ namespace ARSoft.Tools.Net
 			var inRemain = length % 5;
 			var inSafeEnd = offset + length - inRemain;
 
-			var outLength = length / 5 * 8 + ((inRemain == 0) ? 0 : 8);
+			var outLength = length / 5 * 8 + (inRemain == 0 ? 0 : 8);
 
 			var outData = new char[outLength];
 			var outPos = 0;
@@ -356,10 +353,10 @@ namespace ARSoft.Tools.Net
 			{
 				outData[outPos++] = alphabet[(inArray[inPos] & 0xf8) >> 3];
 				outData[outPos++] = alphabet[((inArray[inPos] & 0x07) << 2) | ((inArray[++inPos] & 0xc0) >> 6)];
-				outData[outPos++] = alphabet[((inArray[inPos] & 0x3e) >> 1)];
+				outData[outPos++] = alphabet[(inArray[inPos] & 0x3e) >> 1];
 				outData[outPos++] = alphabet[((inArray[inPos] & 0x01) << 4) | ((inArray[++inPos] & 0xf0) >> 4)];
 				outData[outPos++] = alphabet[((inArray[inPos] & 0x0f) << 1) | ((inArray[++inPos] & 0x80) >> 7)];
-				outData[outPos++] = alphabet[((inArray[inPos] & 0x7c) >> 2)];
+				outData[outPos++] = alphabet[(inArray[inPos] & 0x7c) >> 2];
 				outData[outPos++] = alphabet[((inArray[inPos] & 0x03) << 3) | ((inArray[++inPos] & 0xe0) >> 5)];
 				outData[outPos++] = alphabet[inArray[inPos++] & 0x1f];
 			}
@@ -368,7 +365,7 @@ namespace ARSoft.Tools.Net
 			{
 				case 1:
 					outData[outPos++] = alphabet[(inArray[inPos] & 0xf8) >> 3];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x07) << 2)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x07) << 2];
 					outData[outPos++] = alphabet[32];
 					outData[outPos++] = alphabet[32];
 					outData[outPos++] = alphabet[32];
@@ -379,8 +376,8 @@ namespace ARSoft.Tools.Net
 				case 2:
 					outData[outPos++] = alphabet[(inArray[inPos] & 0xf8) >> 3];
 					outData[outPos++] = alphabet[((inArray[inPos] & 0x07) << 2) | ((inArray[++inPos] & 0xc0) >> 6)];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x3e) >> 1)];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x01) << 4)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x3e) >> 1];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x01) << 4];
 					outData[outPos++] = alphabet[32];
 					outData[outPos++] = alphabet[32];
 					outData[outPos++] = alphabet[32];
@@ -389,9 +386,9 @@ namespace ARSoft.Tools.Net
 				case 3:
 					outData[outPos++] = alphabet[(inArray[inPos] & 0xf8) >> 3];
 					outData[outPos++] = alphabet[((inArray[inPos] & 0x07) << 2) | ((inArray[++inPos] & 0xc0) >> 6)];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x3e) >> 1)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x3e) >> 1];
 					outData[outPos++] = alphabet[((inArray[inPos] & 0x01) << 4) | ((inArray[++inPos] & 0xf0) >> 4)];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x0f) << 1)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x0f) << 1];
 					outData[outPos++] = alphabet[32];
 					outData[outPos++] = alphabet[32];
 					outData[outPos] = alphabet[32];
@@ -399,11 +396,11 @@ namespace ARSoft.Tools.Net
 				case 4:
 					outData[outPos++] = alphabet[(inArray[inPos] & 0xf8) >> 3];
 					outData[outPos++] = alphabet[((inArray[inPos] & 0x07) << 2) | ((inArray[++inPos] & 0xc0) >> 6)];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x3e) >> 1)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x3e) >> 1];
 					outData[outPos++] = alphabet[((inArray[inPos] & 0x01) << 4) | ((inArray[++inPos] & 0xf0) >> 4)];
 					outData[outPos++] = alphabet[((inArray[inPos] & 0x0f) << 1) | ((inArray[++inPos] & 0x80) >> 7)];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x7c) >> 2)];
-					outData[outPos++] = alphabet[((inArray[inPos] & 0x03) << 3)];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x7c) >> 2];
+					outData[outPos++] = alphabet[(inArray[inPos] & 0x03) << 3];
 					outData[outPos] = alphabet[32];
 					break;
 			}
@@ -598,7 +595,7 @@ namespace ARSoft.Tools.Net
 			var inRemain = length % 3;
 			var inSafeEnd = offset + length - inRemain;
 
-			var outLength = length / 3 * 4 + ((inRemain == 0) ? 0 : 4);
+			var outLength = length / 3 * 4 + (inRemain == 0 ? 0 : 4);
 
 			var outData = new char[outLength];
 			var outPos = 0;

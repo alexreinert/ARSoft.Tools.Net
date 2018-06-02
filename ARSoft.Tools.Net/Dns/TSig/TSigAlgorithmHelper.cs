@@ -16,16 +16,12 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	// ReSharper disable once InconsistentNaming
-	internal class TSigAlgorithmHelper
+    // ReSharper disable once InconsistentNaming
+    internal class TSigAlgorithmHelper
 	{
 		public static DomainName GetDomainName(TSigAlgorithm algorithm)
 		{
