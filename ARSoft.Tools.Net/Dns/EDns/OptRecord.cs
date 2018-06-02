@@ -49,7 +49,7 @@ namespace ARSoft.Tools.Net.Dns
 			get { return (ReturnCode) ((TimeToLive & 0xff000000) >> 20); }
 			set
 			{
-				int clearedTtl = (TimeToLive & 0x00ffffff);
+				var clearedTtl = (TimeToLive & 0x00ffffff);
 				TimeToLive = (clearedTtl | ((int) value << 20));
 			}
 		}
@@ -62,7 +62,7 @@ namespace ARSoft.Tools.Net.Dns
 			get { return (byte) ((TimeToLive & 0x00ff0000) >> 16); }
 			set
 			{
-				int clearedTtl = (int) ((uint) TimeToLive & 0xff00ffff);
+				var clearedTtl = (int) ((uint) TimeToLive & 0xff00ffff);
 				TimeToLive = clearedTtl | (value << 16);
 			}
 		}
@@ -109,13 +109,13 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
-			int endPosition = startPosition + length;
+			var endPosition = startPosition + length;
 
 			Options = new List<EDnsOptionBase>();
 			while (startPosition < endPosition)
 			{
-				EDnsOptionType type = (EDnsOptionType) DnsMessageBase.ParseUShort(resultData, ref startPosition);
-				ushort dataLength = DnsMessageBase.ParseUShort(resultData, ref startPosition);
+				var type = (EDnsOptionType) DnsMessageBase.ParseUShort(resultData, ref startPosition);
+				var dataLength = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 
 				EDnsOptionBase option;
 
@@ -188,7 +188,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			string flags = IsDnsSecOk ? "DO" : "";
+			var flags = IsDnsSecOk ? "DO" : "";
 			return String.Format("; EDNS version: {0}; flags: {1}; udp: {2}", Version, flags, UdpPayloadSize);
 		}
 
@@ -211,7 +211,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if ((Options != null) && (Options.Count != 0))
 			{
-				foreach (EDnsOptionBase option in Options)
+				foreach (var option in Options)
 				{
 					DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) option.Type);
 					DnsMessageBase.EncodeUShort(messageData, ref currentPosition, option.DataLength);

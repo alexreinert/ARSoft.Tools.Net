@@ -37,19 +37,18 @@ namespace ARSoft.Tools.Net.Spf
 		{
 			parsedTerms = new List<SpfTerm>(terms.Length - 1);
 
-			for (int i = 1; i < terms.Length; i++)
+			for (var i = 1; i < terms.Length; i++)
 			{
-				SpfTerm term;
-				if (SpfTerm.TryParse(terms[i], out term))
-				{
-					parsedTerms.Add(term);
-				}
-				else
-				{
-					parsedTerms = null;
-					return false;
-				}
-			}
+                if (SpfTerm.TryParse(terms[i], out var term))
+                {
+                    parsedTerms.Add(term);
+                }
+                else
+                {
+                    parsedTerms = null;
+                    return false;
+                }
+            }
 
 			return true;
 		}

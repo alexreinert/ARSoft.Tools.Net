@@ -38,14 +38,14 @@ namespace ARSoft.Tools.Net.Spf
 		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
-			StringBuilder res = new StringBuilder();
+			var res = new StringBuilder();
 			res.Append("v=spf1");
 
 			if ((Terms != null) && (Terms.Count > 0))
 			{
-				foreach (SpfTerm term in Terms)
+				foreach (var term in Terms)
 				{
-					SpfModifier modifier = term as SpfModifier;
+					var modifier = term as SpfModifier;
 					if ((modifier == null) || (modifier.Type != SpfModifierType.Unknown))
 					{
 						res.Append(" ");
@@ -81,19 +81,18 @@ namespace ARSoft.Tools.Net.Spf
 				return false;
 			}
 
-			string[] terms = s.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+			var terms = s.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-			List<SpfTerm> parsedTerms;
-			if (TryParseTerms(terms, out parsedTerms))
-			{
-				value = new SpfRecord { Terms = parsedTerms };
-				return true;
-			}
-			else
-			{
-				value = null;
-				return false;
-			}
-		}
+            if (TryParseTerms(terms, out var parsedTerms))
+            {
+                value = new SpfRecord { Terms = parsedTerms };
+                return true;
+            }
+            else
+            {
+                value = null;
+                return false;
+            }
+        }
 	}
 }

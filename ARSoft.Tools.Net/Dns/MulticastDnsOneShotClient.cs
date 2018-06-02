@@ -51,7 +51,7 @@ namespace ARSoft.Tools.Net.Dns
 		public MulticastDnsOneShotClient(int queryTimeout)
 			: base(_addresses, queryTimeout, 5353)
 		{
-			int maximumMessageSize = 0;
+			var maximumMessageSize = 0;
 
 			try
 			{
@@ -84,7 +84,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-			MulticastDnsMessage message = new MulticastDnsMessage { IsQuery = true, OperationCode = OperationCode.Query };
+			var message = new MulticastDnsMessage { IsQuery = true, OperationCode = OperationCode.Query };
 			message.Questions.Add(new DnsQuestion(name, recordType, RecordClass.INet));
 
 			return SendMessageParallel(message);
@@ -102,7 +102,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-			MulticastDnsMessage message = new MulticastDnsMessage { IsQuery = true, OperationCode = OperationCode.Query };
+			var message = new MulticastDnsMessage { IsQuery = true, OperationCode = OperationCode.Query };
 			message.Questions.Add(new DnsQuestion(name, recordType, RecordClass.INet));
 
 			return SendMessageParallelAsync(message, token);

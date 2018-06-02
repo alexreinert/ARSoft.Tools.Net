@@ -244,14 +244,14 @@ namespace ARSoft.Tools.Net.Dns
 					break;
 
 				case TlsaMatchingType.Sha256Hash:
-					Sha256Digest sha256Digest = new Sha256Digest();
+					var sha256Digest = new Sha256Digest();
 					sha256Digest.BlockUpdate(selectedBytes, 0, selectedBytes.Length);
 					matchingBytes = new byte[sha256Digest.GetDigestSize()];
 					sha256Digest.DoFinal(matchingBytes, 0);
 					break;
 
 				case TlsaMatchingType.Sha512Hash:
-					Sha512Digest sha512Digest = new Sha512Digest();
+					var sha512Digest = new Sha512Digest();
 					sha512Digest.BlockUpdate(selectedBytes, 0, selectedBytes.Length);
 					matchingBytes = new byte[sha512Digest.GetDigestSize()];
 					sha512Digest.DoFinal(matchingBytes, 0);

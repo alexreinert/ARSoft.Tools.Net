@@ -197,7 +197,7 @@ namespace ARSoft.Tools.Net.Dns
 			get { return (KeyTypeFlag) (Flags & 0xc000); }
 			set
 			{
-				ushort clearedOp = (ushort) (Flags & 0x3fff);
+				var clearedOp = (ushort) (Flags & 0x3fff);
 				Flags = (ushort) (clearedOp | (ushort) value);
 			}
 		}
@@ -229,7 +229,7 @@ namespace ARSoft.Tools.Net.Dns
 			get { return (NameTypeFlag) (Flags & 0x0300); }
 			set
 			{
-				ushort clearedOp = (ushort) (Flags & 0xfcff);
+				var clearedOp = (ushort) (Flags & 0xfcff);
 				Flags = (ushort) (clearedOp | (ushort) value);
 			}
 		}

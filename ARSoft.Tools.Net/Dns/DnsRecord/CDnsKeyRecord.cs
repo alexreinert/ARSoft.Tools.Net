@@ -142,20 +142,20 @@ namespace ARSoft.Tools.Net.Dns
 			if (Algorithm == DnsSecAlgorithm.RsaMd5)
 				return (ushort) (PublicKey[PublicKey.Length - 4] & PublicKey[PublicKey.Length - 3] << 8);
 
-			byte[] buffer = new byte[MaximumRecordDataLength];
-			int currentPosition = 0;
+			var buffer = new byte[MaximumRecordDataLength];
+			var currentPosition = 0;
 			EncodeRecordData(buffer, 0, ref currentPosition, null, false);
 
 			ulong ac = 0;
 
-			for (int i = 0; i < currentPosition; ++i)
+			for (var i = 0; i < currentPosition; ++i)
 			{
 				ac += ((i & 1) == 1) ? buffer[i] : (ulong) buffer[i] << 8;
 			}
 
 			ac += (ac >> 16) & 0xFFFF;
 
-			ushort res = (ushort) (ac & 0xffff);
+			var res = (ushort) (ac & 0xffff);
 
 			return res;
 		}

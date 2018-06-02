@@ -33,7 +33,7 @@ namespace ARSoft.Tools.Net
 
 			return _fromStringRepresentationRegex.Replace(s, k =>
 			{
-				string key = k.Groups["key"].Value;
+				var key = k.Groups["key"].Value;
 
 				if (key == "#")
 				{
@@ -55,11 +55,11 @@ namespace ARSoft.Tools.Net
 			if (s == null)
 				return null;
 
-			StringBuilder sb = new StringBuilder();
+			var sb = new StringBuilder();
 
-			for (int i = 0; i < s.Length; i++)
+			for (var i = 0; i < s.Length; i++)
 			{
-				char c = s[i];
+				var c = s[i];
 
 				if ((c < 32) || (c > 126))
 				{
@@ -90,13 +90,13 @@ namespace ARSoft.Tools.Net
 		// ReSharper disable once InconsistentNaming
 		internal static string Add0x20Bits(this string s)
 		{
-			char[] res = new char[s.Length];
+			var res = new char[s.Length];
 
-			for (int i = 0; i < s.Length; i++)
+			for (var i = 0; i < s.Length; i++)
 			{
-				bool isLower = _random.Next() > 0x3ffffff;
+				var isLower = _random.Next() > 0x3ffffff;
 
-				char current = s[i];
+				var current = s[i];
 
 				if (!isLower && current >= 'A' && current <= 'Z')
 				{

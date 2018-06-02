@@ -41,10 +41,10 @@ namespace ARSoft.Tools.Net
 			if (ipAddress == null)
 				throw new ArgumentNullException(nameof(ipAddress));
 
-			byte[] addressBytes = ipAddress.GetAddressBytes();
-			byte[] res = new byte[addressBytes.Length];
+			var addressBytes = ipAddress.GetAddressBytes();
+			var res = new byte[addressBytes.Length];
 
-			for (int i = 0; i < res.Length; i++)
+			for (var i = 0; i < res.Length; i++)
 			{
 				res[i] = addressBytes[addressBytes.Length - i - 1];
 			}
@@ -69,11 +69,11 @@ namespace ARSoft.Tools.Net
 			if (ipAddress.AddressFamily != netmask.AddressFamily)
 				throw new ArgumentOutOfRangeException(nameof(netmask), "Protocoll version of ipAddress and netmask do not match");
 
-			byte[] resultBytes = ipAddress.GetAddressBytes();
-			byte[] ipAddressBytes = ipAddress.GetAddressBytes();
-			byte[] netmaskBytes = netmask.GetAddressBytes();
+			var resultBytes = ipAddress.GetAddressBytes();
+			var ipAddressBytes = ipAddress.GetAddressBytes();
+			var netmaskBytes = netmask.GetAddressBytes();
 
-			for (int i = 0; i < netmaskBytes.Length; i++)
+			for (var i = 0; i < netmaskBytes.Length; i++)
 			{
 				resultBytes[i] = (byte) (ipAddressBytes[i] & netmaskBytes[i]);
 			}
@@ -98,9 +98,9 @@ namespace ARSoft.Tools.Net
 			if ((ipAddress.AddressFamily == AddressFamily.InterNetworkV6) && ((netmask < 0) || (netmask > 128)))
 				throw new ArgumentException("Netmask have to be in range of 0 to 128 on IPv6 addresses", nameof(netmask));
 
-			byte[] ipAddressBytes = ipAddress.GetAddressBytes();
+			var ipAddressBytes = ipAddress.GetAddressBytes();
 
-			for (int i = 0; i < ipAddressBytes.Length; i++)
+			for (var i = 0; i < ipAddressBytes.Length; i++)
 			{
 				if (netmask >= 8)
 				{
@@ -129,13 +129,13 @@ namespace ARSoft.Tools.Net
 			if (ipAddress == null)
 				throw new ArgumentNullException(nameof(ipAddress));
 
-			StringBuilder res = new StringBuilder();
+			var res = new StringBuilder();
 
-			byte[] addressBytes = ipAddress.GetAddressBytes();
+			var addressBytes = ipAddress.GetAddressBytes();
 
 			if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
 			{
-				for (int i = addressBytes.Length - 1; i >= 0; i--)
+				for (var i = addressBytes.Length - 1; i >= 0; i--)
 				{
 					res.Append(addressBytes[i]);
 					res.Append(".");
@@ -144,9 +144,9 @@ namespace ARSoft.Tools.Net
 			}
 			else
 			{
-				for (int i = addressBytes.Length - 1; i >= 0; i--)
+				for (var i = addressBytes.Length - 1; i >= 0; i--)
 				{
-					string hex = addressBytes[i].ToString("x2");
+					var hex = addressBytes[i].ToString("x2");
 					res.Append(hex[1]);
 					res.Append(".");
 					res.Append(hex[0]);
@@ -169,15 +169,15 @@ namespace ARSoft.Tools.Net
 			if (ipAddress == null)
 				throw new ArgumentNullException(nameof(ipAddress));
 
-			byte[] addressBytes = ipAddress.GetAddressBytes();
+			var addressBytes = ipAddress.GetAddressBytes();
 
 			if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
 			{
-				string[] labels = new string[addressBytes.Length + 2];
+				var labels = new string[addressBytes.Length + 2];
 
-				int labelPos = 0;
+				var labelPos = 0;
 
-				for (int i = addressBytes.Length - 1; i >= 0; i--)
+				for (var i = addressBytes.Length - 1; i >= 0; i--)
 				{
 					labels[labelPos++] = addressBytes[i].ToString();
 				}
@@ -189,13 +189,13 @@ namespace ARSoft.Tools.Net
 			}
 			else
 			{
-				string[] labels = new string[addressBytes.Length * 2 + 2];
+				var labels = new string[addressBytes.Length * 2 + 2];
 
-				int labelPos = 0;
+				var labelPos = 0;
 
-				for (int i = addressBytes.Length - 1; i >= 0; i--)
+				for (var i = addressBytes.Length - 1; i >= 0; i--)
 				{
-					string hex = addressBytes[i].ToString("x2");
+					var hex = addressBytes[i].ToString("x2");
 
 					labels[labelPos++] = hex[1].ToString();
 					labels[labelPos++] = hex[0].ToString();
@@ -266,7 +266,7 @@ namespace ARSoft.Tools.Net
 		{
 			byte result = 0;
 
-			for (int i = 0; i < 8; i++)
+			for (var i = 0; i < 8; i++)
 			{
 				result |= (byte) ((((1 << i) & value) >> i) << (7 - i));
 			}

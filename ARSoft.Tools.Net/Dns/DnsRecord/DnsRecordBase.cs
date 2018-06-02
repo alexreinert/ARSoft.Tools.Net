@@ -193,7 +193,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
-			string recordData = RecordDataToString();
+			var recordData = RecordDataToString();
 			return Name + " " + TimeToLive + " " + RecordClass.ToShortString() + " " + RecordType.ToShortString() + (String.IsNullOrEmpty(recordData) ? "" : " " + recordData);
 		}
 		#endregion
@@ -211,9 +211,9 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation[0] != @"\#")
 				throw new FormatException();
 
-			int length = Int32.Parse(stringRepresentation[1]);
+			var length = Int32.Parse(stringRepresentation[1]);
 
-			byte[] byteData = String.Join("", stringRepresentation.Skip(2)).FromBase16String();
+			var byteData = String.Join("", stringRepresentation.Skip(2)).FromBase16String();
 
 			if (length != byteData.Length)
 				throw new FormatException();
@@ -252,7 +252,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal void EncodeRecordBody(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			int recordDataOffset = currentPosition + 2;
+			var recordDataOffset = currentPosition + 2;
 			EncodeRecordData(messageData, offset, ref recordDataOffset, domainNames, useCanonical);
 			EncodeRecordLength(messageData, offset, ref currentPosition, domainNames, recordDataOffset);
 		}
@@ -277,7 +277,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		public int CompareTo(DnsRecordBase other)
 		{
-			int compare = Name.CompareTo(other.Name);
+			var compare = Name.CompareTo(other.Name);
 			if (compare != 0)
 				return compare;
 
@@ -293,15 +293,15 @@ namespace ARSoft.Tools.Net.Dns
 			if (compare != 0)
 				return compare;
 
-			byte[] thisBuffer = new byte[MaximumRecordDataLength];
-			int thisLength = 0;
+			var thisBuffer = new byte[MaximumRecordDataLength];
+			var thisLength = 0;
 			EncodeRecordData(thisBuffer, 0, ref thisLength, null, false);
 
-			byte[] otherBuffer = new byte[other.MaximumRecordDataLength];
-			int otherLength = 0;
+			var otherBuffer = new byte[other.MaximumRecordDataLength];
+			var otherLength = 0;
 			other.EncodeRecordData(otherBuffer, 0, ref otherLength, null, false);
 
-			for (int i = 0; i < Math.Min(thisLength, otherLength); i++)
+			for (var i = 0; i < Math.Min(thisLength, otherLength); i++)
 			{
 				compare = thisBuffer[i].CompareTo(otherBuffer[i]);
 				if (compare != 0)

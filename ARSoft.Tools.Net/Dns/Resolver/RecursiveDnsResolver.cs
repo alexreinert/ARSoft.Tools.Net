@@ -134,7 +134,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			for (; state.QueryCount <= MaximumReferalCount; state.QueryCount++)
 			{
-				DnsMessage msg = await new DnsClient(GetBestNameservers(recordType == RecordType.Ds ? name.GetParentName() : name), QueryTimeout)
+				var msg = await new DnsClient(GetBestNameservers(recordType == RecordType.Ds ? name.GetParentName() : name), QueryTimeout)
 				{
 					IsResponseValidationEnabled = IsResponseValidationEnabled,
 					Is0x20ValidationEnabled = Is0x20ValidationEnabled
@@ -149,7 +149,7 @@ namespace ARSoft.Tools.Net.Dns
 					if (msg.IsAuthoritiveAnswer)
 						return msg;
 
-					List<NsRecord> referalRecords = msg.AuthorityRecords
+					var referalRecords = msg.AuthorityRecords
 						.Where(x =>
 							(x.RecordType == RecordType.Ns)
 							&& (name.Equals(x.Name) || name.IsSubDomainOf(x.Name)))
@@ -164,7 +164,7 @@ namespace ARSoft.Tools.Net.Dns
 
 							if (newServers.Count > 0)
 							{
-								DomainName zone = referalRecords.First().Name;
+								var zone = referalRecords.First().Name;
 
 								foreach (var newServer in newServers)
 								{
@@ -175,7 +175,7 @@ namespace ARSoft.Tools.Net.Dns
 							}
 							else
 							{
-								NsRecord firstReferal = referalRecords.First();
+								var firstReferal = referalRecords.First();
 
 								var newLookedUpServers = await ResolveHostWithTtlAsync(firstReferal.NameServer, state, token);
 
@@ -202,29 +202,27 @@ namespace ARSoft.Tools.Net.Dns
 		private async Task<List<T>> ResolveAsyncInternal<T>(DomainName name, RecordType recordType, RecordClass recordClass, State state, CancellationToken token)
 			where T : DnsRecordBase
 		{
-			List<T> cachedResults;
-			if (_cache.TryGetRecords(name, recordType, recordClass, out cachedResults))
-			{
-				return cachedResults;
-			}
+            if (_cache.TryGetRecords(name, recordType, recordClass, out List<T> cachedResults))
+            {
+                return cachedResults;
+            }
 
-			List<CNameRecord> cachedCNames;
-			if (_cache.TryGetRecords(name, RecordType.CName, recordClass, out cachedCNames))
-			{
-				return await ResolveAsyncInternal<T>(cachedCNames.First().CanonicalName, recordType, recordClass, state, token);
-			}
+            if (_cache.TryGetRecords(name, RecordType.CName, recordClass, out List<CNameRecord> cachedCNames))
+            {
+                return await ResolveAsyncInternal<T>(cachedCNames.First().CanonicalName, recordType, recordClass, state, token);
+            }
 
-			DnsMessage msg = await ResolveMessageAsync(name, recordType, recordClass, state, token);
+            var msg = await ResolveMessageAsync(name, recordType, recordClass, state, token);
 
 			// check for cname
-			List<DnsRecordBase> cNameRecords = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
+			var cNameRecords = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
 			if (cNameRecords.Count > 0)
 			{
 				_cache.Add(name, RecordType.CName, recordClass, cNameRecords, DnsSecValidationResult.Indeterminate, cNameRecords.Min(x => x.TimeToLive));
 
-				DomainName canonicalName = ((CNameRecord) cNameRecords.First()).CanonicalName;
+				var canonicalName = ((CNameRecord) cNameRecords.First()).CanonicalName;
 
-				List<DnsRecordBase> matchingAdditionalRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(canonicalName)).ToList();
+				var matchingAdditionalRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(canonicalName)).ToList();
 				if (matchingAdditionalRecords.Count > 0)
 				{
 					_cache.Add(canonicalName, recordType, recordClass, matchingAdditionalRecords, DnsSecValidationResult.Indeterminate, matchingAdditionalRecords.Min(x => x.TimeToLive));
@@ -235,7 +233,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 
 			// check for "normal" answer
-			List<DnsRecordBase> answerRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
+			var answerRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
 			if (answerRecords.Count > 0)
 			{
 				_cache.Add(name, recordType, recordClass, answerRecords, DnsSecValidationResult.Indeterminate, answerRecords.Min(x => x.TimeToLive));
@@ -243,7 +241,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 
 			// check for negative answer
-			SoaRecord soaRecord = msg.AuthorityRecords
+			var soaRecord = msg.AuthorityRecords
 				.Where(x =>
 					(x.RecordType == RecordType.Soa)
 					&& (name.Equals(x.Name) || name.IsSubDomainOf(x.Name)))
@@ -262,7 +260,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private async Task<List<Tuple<IPAddress, int>>> ResolveHostWithTtlAsync(DomainName name, State state, CancellationToken token)
 		{
-			List<Tuple<IPAddress, int>> result = new List<Tuple<IPAddress, int>>();
+			var result = new List<Tuple<IPAddress, int>>();
 
 			var aaaaRecords = await ResolveAsyncInternal<AaaaRecord>(name, RecordType.Aaaa, RecordClass.INet, state, token);
 			result.AddRange(aaaaRecords.Select(x => new Tuple<IPAddress, int>(x.Address, x.TimeToLive)));
@@ -275,17 +273,16 @@ namespace ARSoft.Tools.Net.Dns
 
 		private IEnumerable<IPAddress> GetBestNameservers(DomainName name)
 		{
-			Random rnd = new Random();
+			var rnd = new Random();
 
 			while (name.LabelCount > 0)
 			{
-				List<IPAddress> cachedAddresses;
-				if (_nameserverCache.TryGetAddresses(name, out cachedAddresses))
-				{
-					return cachedAddresses.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ThenBy(x => rnd.Next());
-				}
+                if (_nameserverCache.TryGetAddresses(name, out var cachedAddresses))
+                {
+                    return cachedAddresses.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ThenBy(x => rnd.Next());
+                }
 
-				name = name.GetParentName();
+                name = name.GetParentName();
 			}
 
 			return _resolverHintStore.RootServers.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ThenBy(x => rnd.Next());

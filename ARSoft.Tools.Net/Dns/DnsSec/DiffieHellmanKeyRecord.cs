@@ -91,8 +91,8 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected override string PublicKeyToString()
 		{
-			byte[] publicKey = new byte[MaximumPublicKeyLength];
-			int currentPosition = 0;
+			var publicKey = new byte[MaximumPublicKeyLength];
+			var currentPosition = 0;
 
 			EncodePublicKey(publicKey, 0, ref currentPosition, null);
 

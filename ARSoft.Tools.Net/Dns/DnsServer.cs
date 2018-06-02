@@ -115,16 +115,15 @@ namespace ARSoft.Tools.Net.Dns
 				StartUdpListenerTask();
 			}
 
-			if (_tcpListenerCount > 0)
-			{
-				lock (_listenerLock)
-				{
-					_availableTcpListener = _tcpListenerCount;
-				}
-				_tcpListener = new TcpListener(_bindEndPoint);
-				_tcpListener.Start();
-				StartTcpListenerTask();
-			}
+		    if (_tcpListenerCount <= 0) return;
+
+		    lock (_listenerLock)
+		    {
+		        _availableTcpListener = _tcpListenerCount;
+		    }
+		    _tcpListener = new TcpListener(_bindEndPoint);
+		    _tcpListener.Start();
+		    StartTcpListenerTask();
 		}
 
 		/// <summary>
@@ -166,7 +165,7 @@ namespace ARSoft.Tools.Net.Dns
 						query.ReturnCode = ReturnCode.NotAuthoritive;
 						query.TSigOptions.Error = query.TSigOptions.ValidationResult;
 						query.TSigOptions.OtherData = new byte[6];
-						int tmp = 0;
+						var tmp = 0;
 						TSigRecord.EncodeDateTime(query.TSigOptions.OtherData, ref tmp, DateTime.Now);
 
 #pragma warning disable 4014
@@ -177,7 +176,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 			}
 
-			QueryReceivedEventArgs eventArgs = new QueryReceivedEventArgs(query, protocolType, remoteEndpoint);
+			var eventArgs = new QueryReceivedEventArgs(query, protocolType, remoteEndpoint);
 			await QueryReceived.RaiseAsync(this, eventArgs);
 			return eventArgs.Response;
 		}
@@ -189,12 +188,11 @@ namespace ARSoft.Tools.Net.Dns
 				if ((_udpListener.Client == null) || !_udpListener.Client.IsBound) // server is stopped
 					return;
 
-				if ((_availableUdpListener > 0) && !_hasActiveUdpListener)
-				{
-					_availableUdpListener--;
-					_hasActiveUdpListener = true;
-					HandleUdpListenerAsync();
-				}
+			    if ((_availableUdpListener <= 0) || _hasActiveUdpListener) return;
+
+			    _availableUdpListener--;
+			    _hasActiveUdpListener = true;
+			    HandleUdpListenerAsync();
 			}
 		}
 
@@ -219,7 +217,7 @@ namespace ARSoft.Tools.Net.Dns
 					}
 				}
 
-				ClientConnectedEventArgs clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Udp, receiveResult.RemoteEndPoint);
+				var clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Udp, receiveResult.RemoteEndPoint);
 				await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
 
 				if (clientConnectedEventArgs.RefuseConnect)
@@ -227,7 +225,7 @@ namespace ARSoft.Tools.Net.Dns
 
 				StartUdpListenerTask();
 
-				byte[] buffer = receiveResult.Buffer;
+				var buffer = receiveResult.Buffer;
 
 				DnsMessageBase query;
 				byte[] originalMac;
@@ -259,14 +257,14 @@ namespace ARSoft.Tools.Net.Dns
 					query.ReturnCode = ReturnCode.ServerFailure;
 				}
 
-				int length = response.Encode(false, originalMac, out buffer);
+				var length = response.Encode(false, originalMac, out buffer);
 
 				#region Truncating
-				DnsMessage message = response as DnsMessage;
+				var message = response as DnsMessage;
 
 				if (message != null)
 				{
-					int maxLength = 512;
+					var maxLength = 512;
 					if (query.IsEDnsEnabled && message.IsEDnsEnabled)
 					{
 						maxLength = Math.Max(512, (int) message.EDnsOptions.UdpPayloadSize);
@@ -277,7 +275,7 @@ namespace ARSoft.Tools.Net.Dns
 						// First step: remove data from additional records except the opt record
 						if ((message.IsEDnsEnabled && (message.AdditionalRecords.Count > 1)) || (!message.IsEDnsEnabled && (message.AdditionalRecords.Count > 0)))
 						{
-							for (int i = message.AdditionalRecords.Count - 1; i >= 0; i--)
+							for (var i = message.AdditionalRecords.Count - 1; i >= 0; i--)
 							{
 								if (message.AdditionalRecords[i].RecordType != RecordType.Opt)
 								{
@@ -289,10 +287,10 @@ namespace ARSoft.Tools.Net.Dns
 							continue;
 						}
 
-						int savedLength = 0;
+						var savedLength = 0;
 						if (message.AuthorityRecords.Count > 0)
 						{
-							for (int i = message.AuthorityRecords.Count - 1; i >= 0; i--)
+							for (var i = message.AuthorityRecords.Count - 1; i >= 0; i--)
 							{
 								savedLength += message.AuthorityRecords[i].MaximumLength;
 								message.AuthorityRecords.RemoveAt(i);
@@ -311,7 +309,7 @@ namespace ARSoft.Tools.Net.Dns
 
 						if (message.AnswerRecords.Count > 0)
 						{
-							for (int i = message.AnswerRecords.Count - 1; i >= 0; i--)
+							for (var i = message.AnswerRecords.Count - 1; i >= 0; i--)
 							{
 								savedLength += message.AnswerRecords[i].MaximumLength;
 								message.AnswerRecords.RemoveAt(i);
@@ -330,7 +328,7 @@ namespace ARSoft.Tools.Net.Dns
 
 						if (message.Questions.Count > 0)
 						{
-							for (int i = message.Questions.Count - 1; i >= 0; i--)
+							for (var i = message.Questions.Count - 1; i >= 0; i--)
 							{
 								savedLength += message.Questions[i].MaximumLength;
 								message.Questions.RemoveAt(i);
@@ -372,12 +370,10 @@ namespace ARSoft.Tools.Net.Dns
 				if ((_tcpListener.Server == null) || !_tcpListener.Server.IsBound) // server is stopped
 					return;
 
-				if ((_availableTcpListener > 0) && !_hasActiveTcpListener)
-				{
-					_availableTcpListener--;
-					_hasActiveTcpListener = true;
-					HandleTcpListenerAsync();
-				}
+			    if ((_availableTcpListener <= 0) || _hasActiveTcpListener) return;
+			    _availableTcpListener--;
+			    _hasActiveTcpListener = true;
+			    HandleTcpListenerAsync();
 			}
 		}
 
@@ -391,7 +387,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					client = await _tcpListener.AcceptTcpClientAsync();
 
-					ClientConnectedEventArgs clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint);
+					var clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint);
 					await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
 
 					if (clientConnectedEventArgs.RefuseConnect)
@@ -407,15 +403,15 @@ namespace ARSoft.Tools.Net.Dns
 
 				StartTcpListenerTask();
 
-				using (NetworkStream stream = client.GetStream())
+				using (var stream = client.GetStream())
 				{
 					while (true)
 					{
-						byte[] buffer = await ReadIntoBufferAsync(client, stream, 2);
+						var buffer = await ReadIntoBufferAsync(client, stream, 2);
 						if (buffer == null) // client disconneted while reading or timeout
 							break;
 
-						int offset = 0;
+						var offset = 0;
 						int length = DnsMessageBase.ParseUShort(buffer, ref offset);
 
 						buffer = await ReadIntoBufferAsync(client, stream, length);
@@ -452,11 +448,10 @@ namespace ARSoft.Tools.Net.Dns
 							response.ReturnCode = ReturnCode.ServerFailure;
 						}
 
-						byte[] newTsigMac;
 
-						length = response.Encode(true, tsigMac, false, out buffer, out newTsigMac);
+                        length = response.Encode(true, tsigMac, false, out buffer, out var newTsigMac);
 
-						if (length <= 65535)
+                        if (length <= 65535)
 						{
 							await stream.WriteAsync(buffer, 0, length);
 						}
@@ -477,16 +472,16 @@ namespace ARSoft.Tools.Net.Dns
 							}
 							else
 							{
-								bool isSubSequentResponse = false;
+								var isSubSequentResponse = false;
 
 								while (true)
 								{
-									List<DnsRecordBase> nextPacketRecords = new List<DnsRecordBase>();
+									var nextPacketRecords = new List<DnsRecordBase>();
 
 									while (length > 65535)
 									{
-										int lastIndex = Math.Min(500, response.AnswerRecords.Count / 2);
-										int removeCount = response.AnswerRecords.Count - lastIndex;
+										var lastIndex = Math.Min(500, response.AnswerRecords.Count / 2);
+										var removeCount = response.AnswerRecords.Count - lastIndex;
 
 										nextPacketRecords.InsertRange(0, response.AnswerRecords.GetRange(lastIndex, removeCount));
 										response.AnswerRecords.RemoveRange(lastIndex, removeCount);
@@ -539,9 +534,9 @@ namespace ARSoft.Tools.Net.Dns
 
 		private async Task<byte[]> ReadIntoBufferAsync(TcpClient client, NetworkStream stream, int count)
 		{
-			CancellationToken token = new CancellationTokenSource(Timeout).Token;
+			var token = new CancellationTokenSource(Timeout).Token;
 
-			byte[] buffer = new byte[count];
+			var buffer = new byte[count];
 
 			if (await TryReadAsync(client, stream, buffer, count, token))
 				return buffer;
@@ -551,7 +546,11 @@ namespace ARSoft.Tools.Net.Dns
 
 		private async Task<bool> TryReadAsync(TcpClient client, NetworkStream stream, byte[] buffer, int length, CancellationToken token)
 		{
-			int readBytes = 0;
+		    if (client is null) throw new ArgumentNullException(nameof(client));
+		    if (stream is null) throw new ArgumentNullException(nameof(stream));
+		    if (buffer is null) throw new ArgumentNullException(nameof(buffer));
+
+		    var readBytes = 0;
 
 			while (readBytes < length)
 			{

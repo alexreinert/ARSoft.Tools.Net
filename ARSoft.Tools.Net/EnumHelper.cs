@@ -31,13 +31,13 @@ namespace ARSoft.Tools.Net
 
 		static EnumHelper()
 		{
-			string[] names = Enum.GetNames(typeof (T));
-			T[] values = (T[]) Enum.GetValues(typeof (T));
+			var names = Enum.GetNames(typeof (T));
+			var values = (T[]) Enum.GetValues(typeof (T));
 
 			_names = new Dictionary<T, string>(names.Length);
 			_values = new Dictionary<string, T>(names.Length * 2);
 
-			for (int i = 0; i < names.Length; i++)
+			for (var i = 0; i < names.Length; i++)
 			{
 				_names[values[i]] = names[i];
 				_values[names[i]] = values[i];
@@ -58,26 +58,23 @@ namespace ARSoft.Tools.Net
 
 		public static string ToString(T value)
 		{
-			string res;
-			return _names.TryGetValue(value, out res) ? res : Convert.ToInt64(value).ToString();
-		}
+            return _names.TryGetValue(value, out var res) ? res : Convert.ToInt64(value).ToString();
+        }
 
 		public static Dictionary<T, string> Names => _names;
 
 		internal static T Parse(string s, bool ignoreCase, T defaultValue)
 		{
-			T res;
-			return TryParse(s, ignoreCase, out res) ? res : defaultValue;
-		}
+            return TryParse(s, ignoreCase, out var res) ? res : defaultValue;
+        }
 
 		internal static T Parse(string s, bool ignoreCase)
 		{
-			T res;
 
-			if (TryParse(s, ignoreCase, out res))
-				return res;
+            if (TryParse(s, ignoreCase, out var res))
+                return res;
 
-			throw new ArgumentOutOfRangeException(nameof(s));
+            throw new ArgumentOutOfRangeException(nameof(s));
 		}
 	}
 }

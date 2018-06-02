@@ -125,7 +125,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			private string ToDegreeString()
 			{
-				string res = String.Empty;
+				var res = String.Empty;
 
 				if (Milliseconds != 0)
 					res = "." + Milliseconds.ToString().PadLeft(3, '0').TrimEnd('0');
@@ -230,10 +230,10 @@ namespace ARSoft.Tools.Net.Dns
 				.Match(String.Join(" ", stringRepresentation))
 				.Groups;
 
-			bool latNegative = groups["lat"].Value.Equals("S", StringComparison.InvariantCultureIgnoreCase);
+			var latNegative = groups["lat"].Value.Equals("S", StringComparison.InvariantCultureIgnoreCase);
 			Latitude = new Degree(latNegative, groups["latd"].Value, groups["latm"].Value, groups["lats"].Value, groups["latms"].Value);
 
-			bool longNegative = groups["long"].Value.Equals("W", StringComparison.InvariantCultureIgnoreCase);
+			var longNegative = groups["long"].Value.Equals("W", StringComparison.InvariantCultureIgnoreCase);
 			Longitude = new Degree(longNegative, groups["longd"].Value, groups["longm"].Value, groups["longs"].Value, groups["longms"].Value);
 
 			Altitude = Double.Parse(groups["alt"].Value, CultureInfo.InvariantCulture);
@@ -272,14 +272,14 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static double ConvertPrecision(byte precision)
 		{
-			int mantissa = ((precision >> 4) & 0x0f) % 10;
-			int exponent = (precision & 0x0f) % 10;
+			var mantissa = ((precision >> 4) & 0x0f) % 10;
+			var exponent = (precision & 0x0f) % 10;
 			return mantissa * (double) _powerOften[exponent] / 100;
 		}
 
 		private static byte ConvertPrecision(double precision)
 		{
-			double centimeters = (precision * 100);
+			var centimeters = (precision * 100);
 
 			int exponent;
 			for (exponent = 0; exponent < 9; exponent++)
@@ -288,7 +288,7 @@ namespace ARSoft.Tools.Net.Dns
 					break;
 			}
 
-			int mantissa = (int) (centimeters / _powerOften[exponent]);
+			var mantissa = (int) (centimeters / _powerOften[exponent]);
 			if (mantissa > 9)
 				mantissa = 9;
 
@@ -312,11 +312,11 @@ namespace ARSoft.Tools.Net.Dns
 				isNegative = false;
 			}
 
-			int milliseconds = degrees % 1000;
+			var milliseconds = degrees % 1000;
 			degrees /= 1000;
-			int seconds = degrees % 60;
+			var seconds = degrees % 60;
 			degrees /= 60;
-			int minutes = degrees % 60;
+			var minutes = degrees % 60;
 			degrees /= 60;
 
 			return new Degree(isNegative, degrees, minutes, seconds, milliseconds);
@@ -324,7 +324,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static int ConvertDegree(Degree degrees)
 		{
-			int res = degrees.Degrees * 3600000 + degrees.Minutes * 60000 + degrees.Seconds * 1000 + degrees.Milliseconds;
+			var res = degrees.Degrees * 3600000 + degrees.Minutes * 60000 + degrees.Seconds * 1000 + degrees.Milliseconds;
 
 			if (degrees.IsNegative)
 				res = -res;
@@ -343,7 +343,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static int ConvertAltitude(double altitude)
 		{
-			int centimeter = (int) (altitude * 100);
+			var centimeter = (int) (altitude * 100);
 			return ((centimeter > 0) ? (_ALTITUDE_REFERENCE + centimeter) : (centimeter + _ALTITUDE_REFERENCE));
 		}
 		#endregion

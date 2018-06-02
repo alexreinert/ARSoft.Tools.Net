@@ -71,12 +71,12 @@ namespace ARSoft.Tools.Net.Dns
 
 			Preference = UInt16.Parse(stringRepresentation[0]);
 
-			string[] nodeIDParts = stringRepresentation[1].Split(':');
+			var nodeIDParts = stringRepresentation[1].Split(':');
 
 			if (nodeIDParts.Length != 4)
 				throw new FormatException();
 
-			for (int i = 0; i < 4; i++)
+			for (var i = 0; i < 4; i++)
 			{
 				if (nodeIDParts[i].Length != 4)
 					throw new FormatException();
@@ -88,7 +88,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			string nodeID = NodeID.ToString("x16");
+			var nodeID = NodeID.ToString("x16");
 			return Preference + " " + nodeID.Substring(0, 4) + ":" + nodeID.Substring(4, 4) + ":" + nodeID.Substring(8, 4) + ":" + nodeID.Substring(12);
 		}
 

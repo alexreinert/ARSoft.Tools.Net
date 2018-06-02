@@ -112,7 +112,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				var groups = _parserRegex.Match(s).Groups;
 
-				IPAddress address = IPAddress.Parse(groups["addr"].Value);
+				var address = IPAddress.Parse(groups["addr"].Value);
 
 				if ((address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) && (groups["fam"].Value != "1"))
 					throw new FormatException();
@@ -142,23 +142,23 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
 		{
-			int endPosition = currentPosition + length;
+			var endPosition = currentPosition + length;
 
 			Prefixes = new List<AddressPrefix>();
 			while (currentPosition < endPosition)
 			{
-				Family family = (Family) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
-				byte prefix = resultData[currentPosition++];
+				var family = (Family) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+				var prefix = resultData[currentPosition++];
 
-				byte addressLength = resultData[currentPosition++];
-				bool isNegated = false;
+				var addressLength = resultData[currentPosition++];
+				var isNegated = false;
 				if (addressLength > 127)
 				{
 					isNegated = true;
 					addressLength -= 128;
 				}
 
-				byte[] addressData = new byte[(family == Family.IpV4) ? 4 : 16];
+				var addressData = new byte[(family == Family.IpV4) ? 4 : 16];
 				Buffer.BlockCopy(resultData, currentPosition, addressData, 0, addressLength);
 				currentPosition += addressLength;
 
@@ -183,7 +183,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			foreach (AddressPrefix addressPrefix in Prefixes)
+			foreach (var addressPrefix in Prefixes)
 			{
 				DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) addressPrefix.AddressFamily);
 				messageData[currentPosition++] = addressPrefix.Prefix;
@@ -192,8 +192,8 @@ namespace ARSoft.Tools.Net.Dns
 				if (addressPrefix.IsNegated)
 					messageData[currentPosition] = 128;
 
-				byte[] addressData = addressPrefix.Address.GetNetworkAddress(addressPrefix.Prefix).GetAddressBytes();
-				int length = addressData.Length;
+				var addressData = addressPrefix.Address.GetNetworkAddress(addressPrefix.Prefix).GetAddressBytes();
+				var length = addressData.Length;
 				for (; length > 0; length--)
 				{
 					if (addressData[length - 1] != 0)

@@ -46,9 +46,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="zone">The zone to save</param>
 		protected override void Save(Zone zone)
 		{
-			using (StreamWriter writer = new StreamWriter(_fileName))
+			using (var writer = new StreamWriter(_fileName))
 			{
-				foreach (DnsRecordBase record in zone)
+				foreach (var record in zone)
 				{
 					writer.WriteLine(record.ToString());
 				}

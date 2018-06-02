@@ -39,13 +39,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns> A list of matching host addresses </returns>
 		public static List<IPAddress> ResolveHost(this IDnsResolver resolver, DomainName name)
 		{
-			List<IPAddress> result = new List<IPAddress>();
+			var result = new List<IPAddress>();
 
-			List<AaaaRecord> aaaaRecords = resolver.Resolve<AaaaRecord>(name, RecordType.Aaaa);
+			var aaaaRecords = resolver.Resolve<AaaaRecord>(name, RecordType.Aaaa);
 			if (aaaaRecords != null)
 				result.AddRange(aaaaRecords.Select(x => x.Address));
 
-			List<ARecord> aRecords = resolver.Resolve<ARecord>(name);
+			var aRecords = resolver.Resolve<ARecord>(name);
 			if (aRecords != null)
 				result.AddRange(aRecords.Select(x => x.Address));
 
@@ -72,13 +72,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns> A list of matching host addresses </returns>
 		public static async Task<List<IPAddress>> ResolveHostAsync(this IDnsResolver resolver, DomainName name, CancellationToken token = default(CancellationToken))
 		{
-			List<IPAddress> result = new List<IPAddress>();
+			var result = new List<IPAddress>();
 
-			List<AaaaRecord> aaaaRecords = await resolver.ResolveAsync<AaaaRecord>(name, RecordType.Aaaa, token: token);
+			var aaaaRecords = await resolver.ResolveAsync<AaaaRecord>(name, RecordType.Aaaa, token: token);
 			if (aaaaRecords != null)
 				result.AddRange(aaaaRecords.Select(x => x.Address));
 
-			List<ARecord> aRecords = await resolver.ResolveAsync<ARecord>(name, token: token);
+			var aRecords = await resolver.ResolveAsync<ARecord>(name, token: token);
 			if (aRecords != null)
 				result.AddRange(aRecords.Select(x => x.Address));
 
@@ -105,7 +105,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns> The reverse name of the IP address </returns>
 		public static DomainName ResolvePtr(this IDnsResolver resolver, IPAddress address)
 		{
-			List<PtrRecord> ptrRecords = resolver.Resolve<PtrRecord>(address.GetReverseLookupDomain(), RecordType.Ptr);
+			var ptrRecords = resolver.Resolve<PtrRecord>(address.GetReverseLookupDomain(), RecordType.Ptr);
 			return ptrRecords.Select(x => x.PointerDomainName).FirstOrDefault();
 		}
 
@@ -118,7 +118,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns> The reverse name of the IP address </returns>
 		public static async Task<DomainName> ResolvePtrAsync(this IDnsResolver resolver, IPAddress address, CancellationToken token = default(CancellationToken))
 		{
-			List<PtrRecord> ptrRecords = await resolver.ResolveAsync<PtrRecord>(address.GetReverseLookupDomain(), RecordType.Ptr, token: token);
+			var ptrRecords = await resolver.ResolveAsync<PtrRecord>(address.GetReverseLookupDomain(), RecordType.Ptr, token: token);
 			return ptrRecords.Select(x => x.PointerDomainName).FirstOrDefault();
 		}
 

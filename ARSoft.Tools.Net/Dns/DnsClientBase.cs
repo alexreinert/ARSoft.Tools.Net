@@ -80,18 +80,14 @@ namespace ARSoft.Tools.Net.Dns
 		protected TMessage SendMessage<TMessage>(TMessage message)
 			where TMessage : DnsMessageBase, new()
 		{
-			int messageLength;
-			byte[] messageData;
-			DnsServer.SelectTsigKey tsigKeySelector;
-			byte[] tsigOriginalMac;
 
-			PrepareMessage(message, out messageLength, out messageData, out tsigKeySelector, out tsigOriginalMac);
+            PrepareMessage(message, out var messageLength, out var messageData, out var tsigKeySelector, out var tsigOriginalMac);
 
-			bool sendByTcp = ((messageLength > MaximumQueryMessageSize) || message.IsTcpUsingRequested || !IsUdpEnabled);
+            var sendByTcp = ((messageLength > MaximumQueryMessageSize) || message.IsTcpUsingRequested || !IsUdpEnabled);
 
 			var endpointInfos = GetEndpointInfos();
 
-			for (int i = 0; i < endpointInfos.Count; i++)
+			for (var i = 0; i < endpointInfos.Count; i++)
 			{
 				TcpClient tcpClient = null;
 				NetworkStream tcpStream = null;
@@ -100,10 +96,9 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					var endpointInfo = endpointInfos[i];
 
-					IPAddress responderAddress;
-					byte[] resultData = sendByTcp ? QueryByTcp(endpointInfo.ServerAddress, messageData, messageLength, ref tcpClient, ref tcpStream, out responderAddress) : QueryByUdp(endpointInfo, messageData, messageLength, out responderAddress);
+                    var resultData = sendByTcp ? QueryByTcp(endpointInfo.ServerAddress, messageData, messageLength, ref tcpClient, ref tcpStream, out var responderAddress) : QueryByUdp(endpointInfo, messageData, messageLength, out responderAddress);
 
-					if (resultData != null)
+                    if (resultData != null)
 					{
 						TMessage result;
 
@@ -156,8 +151,8 @@ namespace ARSoft.Tools.Net.Dns
 							}
 						}
 
-						bool isTcpNextMessageWaiting = result.IsTcpNextMessageWaiting(false);
-						bool isSucessfullFinished = true;
+						var isTcpNextMessageWaiting = result.IsTcpNextMessageWaiting(false);
+						var isSucessfullFinished = true;
 
 						while (isTcpNextMessageWaiting)
 						{
@@ -219,7 +214,7 @@ namespace ARSoft.Tools.Net.Dns
 		protected List<TMessage> SendMessageParallel<TMessage>(TMessage message)
 			where TMessage : DnsMessageBase, new()
 		{
-			Task<List<TMessage>> result = SendMessageParallelAsync(message, default(CancellationToken));
+			var result = SendMessageParallelAsync(message, default(CancellationToken));
 
 			result.Wait();
 
@@ -242,10 +237,10 @@ namespace ARSoft.Tools.Net.Dns
 					if ((message.Questions.Count != result.Questions.Count))
 						return false;
 
-					for (int j = 0; j < message.Questions.Count; j++)
+					for (var j = 0; j < message.Questions.Count; j++)
 					{
-						DnsQuestion queryQuestion = message.Questions[j];
-						DnsQuestion responseQuestion = result.Questions[j];
+						var queryQuestion = message.Questions[j];
+						var responseQuestion = result.Questions[j];
 
 						if ((queryQuestion.RecordClass != responseQuestion.RecordClass)
 						    || (queryQuestion.RecordType != responseQuestion.RecordType)
@@ -304,12 +299,12 @@ namespace ARSoft.Tools.Net.Dns
 					if (endpointInfo.IsMulticast)
 						serverEndpoint = new IPEndPoint(udpClient.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any, _port);
 
-					byte[] buffer = new byte[65535];
-					int length = udpClient.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref serverEndpoint);
+					var buffer = new byte[65535];
+					var length = udpClient.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref serverEndpoint);
 
 					responderAddress = ((IPEndPoint) serverEndpoint).Address;
 
-					byte[] res = new byte[length];
+					var res = new byte[length];
 					Buffer.BlockCopy(buffer, 0, res, 0, length);
 					return res;
 				}
@@ -341,7 +336,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (!IsTcpEnabled)
 				return null;
 
-			IPEndPoint endPoint = new IPEndPoint(nameServer, _port);
+			var endPoint = new IPEndPoint(nameServer, _port);
 
 			try
 			{
@@ -359,8 +354,8 @@ namespace ARSoft.Tools.Net.Dns
 					tcpStream = tcpClient.GetStream();
 				}
 
-				int tmp = 0;
-				byte[] lengthBuffer = new byte[2];
+				var tmp = 0;
+				var lengthBuffer = new byte[2];
 
 				if (messageLength > 0)
 				{
@@ -376,7 +371,7 @@ namespace ARSoft.Tools.Net.Dns
 				tmp = 0;
 				int length = DnsMessageBase.ParseUShort(lengthBuffer, ref tmp);
 
-				byte[] resultData = new byte[length];
+				var resultData = new byte[length];
 
 				return TryRead(tcpClient, tcpStream, resultData, length) ? resultData : null;
 			}
@@ -389,7 +384,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private bool TryRead(TcpClient client, NetworkStream stream, byte[] buffer, int length)
 		{
-			int readBytes = 0;
+			var readBytes = 0;
 
 			while (readBytes < length)
 			{
@@ -405,18 +400,14 @@ namespace ARSoft.Tools.Net.Dns
 		protected async Task<TMessage> SendMessageAsync<TMessage>(TMessage message, CancellationToken token)
 			where TMessage : DnsMessageBase, new()
 		{
-			int messageLength;
-			byte[] messageData;
-			DnsServer.SelectTsigKey tsigKeySelector;
-			byte[] tsigOriginalMac;
 
-			PrepareMessage(message, out messageLength, out messageData, out tsigKeySelector, out tsigOriginalMac);
+            PrepareMessage(message, out var messageLength, out var messageData, out var tsigKeySelector, out var tsigOriginalMac);
 
-			bool sendByTcp = ((messageLength > MaximumQueryMessageSize) || message.IsTcpUsingRequested || !IsUdpEnabled);
+            var sendByTcp = ((messageLength > MaximumQueryMessageSize) || message.IsTcpUsingRequested || !IsUdpEnabled);
 
 			var endpointInfos = GetEndpointInfos();
 
-			for (int i = 0; i < endpointInfos.Count; i++)
+			for (var i = 0; i < endpointInfos.Count; i++)
 			{
 				token.ThrowIfCancellationRequested();
 
@@ -476,8 +467,8 @@ namespace ARSoft.Tools.Net.Dns
 						}
 					}
 
-					bool isTcpNextMessageWaiting = result.IsTcpNextMessageWaiting(false);
-					bool isSucessfullFinished = true;
+					var isTcpNextMessageWaiting = result.IsTcpNextMessageWaiting(false);
+					var isSucessfullFinished = true;
 
 					while (isTcpNextMessageWaiting)
 					{
@@ -545,21 +536,21 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				if (endpointInfo.IsMulticast)
 				{
-					using (UdpClient udpClient = new UdpClient(new IPEndPoint(endpointInfo.LocalAddress, 0)))
+					using (var udpClient = new UdpClient(new IPEndPoint(endpointInfo.LocalAddress, 0)))
 					{
-						IPEndPoint serverEndpoint = new IPEndPoint(endpointInfo.ServerAddress, _port);
+						var serverEndpoint = new IPEndPoint(endpointInfo.ServerAddress, _port);
 						await udpClient.SendAsync(messageData, messageLength, serverEndpoint);
 
 						udpClient.Client.SendTimeout = QueryTimeout;
 						udpClient.Client.ReceiveTimeout = QueryTimeout;
 
-						UdpReceiveResult response = await udpClient.ReceiveAsync(QueryTimeout, token);
+						var response = await udpClient.ReceiveAsync(QueryTimeout, token);
 						return new QueryResponse(response.Buffer, response.RemoteEndPoint.Address);
 					}
 				}
 				else
 				{
-					using (UdpClient udpClient = new UdpClient(endpointInfo.LocalAddress.AddressFamily))
+					using (var udpClient = new UdpClient(endpointInfo.LocalAddress.AddressFamily))
 					{
 						udpClient.Connect(endpointInfo.ServerAddress, _port);
 
@@ -568,7 +559,7 @@ namespace ARSoft.Tools.Net.Dns
 
 						await udpClient.SendAsync(messageData, messageLength);
 
-						UdpReceiveResult response = await udpClient.ReceiveAsync(QueryTimeout, token);
+						var response = await udpClient.ReceiveAsync(QueryTimeout, token);
 						return new QueryResponse(response.Buffer, response.RemoteEndPoint.Address);
 					}
 				}
@@ -626,8 +617,8 @@ namespace ARSoft.Tools.Net.Dns
 					tcpStream = tcpClient.GetStream();
 				}
 
-				int tmp = 0;
-				byte[] lengthBuffer = new byte[2];
+				var tmp = 0;
+				var lengthBuffer = new byte[2];
 
 				if (messageLength > 0)
 				{
@@ -643,7 +634,7 @@ namespace ARSoft.Tools.Net.Dns
 				tmp = 0;
 				int length = DnsMessageBase.ParseUShort(lengthBuffer, ref tmp);
 
-				byte[] resultData = new byte[length];
+				var resultData = new byte[length];
 
 				return await TryReadAsync(tcpClient, tcpStream, resultData, length, token) ? new QueryResponse(resultData, nameServer, tcpClient, tcpStream) : null;
 			}
@@ -656,7 +647,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private async Task<bool> TryReadAsync(TcpClient client, NetworkStream stream, byte[] buffer, int length, CancellationToken token)
 		{
-			int readBytes = 0;
+			var readBytes = 0;
 
 			while (readBytes < length)
 			{
@@ -672,21 +663,17 @@ namespace ARSoft.Tools.Net.Dns
 		protected async Task<List<TMessage>> SendMessageParallelAsync<TMessage>(TMessage message, CancellationToken token)
 			where TMessage : DnsMessageBase, new()
 		{
-			int messageLength;
-			byte[] messageData;
-			DnsServer.SelectTsigKey tsigKeySelector;
-			byte[] tsigOriginalMac;
 
-			PrepareMessage(message, out messageLength, out messageData, out tsigKeySelector, out tsigOriginalMac);
+            PrepareMessage(message, out var messageLength, out var messageData, out var tsigKeySelector, out var tsigOriginalMac);
 
-			if (messageLength > MaximumQueryMessageSize)
+            if (messageLength > MaximumQueryMessageSize)
 				throw new ArgumentException("Message exceeds maximum size");
 
 			if (message.IsTcpUsingRequested)
 				throw new NotSupportedException("Using tcp is not supported in parallel mode");
 
-			BlockingCollection<TMessage> results = new BlockingCollection<TMessage>();
-			CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+			var results = new BlockingCollection<TMessage>();
+			var cancellationTokenSource = new CancellationTokenSource();
 
 			// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 			GetEndpointInfos().Select(x => SendMessageParallelAsync(x, message, messageData, messageLength, tsigKeySelector, tsigOriginalMac, results, CancellationTokenSource.CreateLinkedTokenSource(token, cancellationTokenSource.Token).Token)).ToArray();
@@ -701,9 +688,9 @@ namespace ARSoft.Tools.Net.Dns
 		private async Task SendMessageParallelAsync<TMessage>(DnsClientEndpointInfo endpointInfo, TMessage message, byte[] messageData, int messageLength, DnsServer.SelectTsigKey tsigKeySelector, byte[] tsigOriginalMac, BlockingCollection<TMessage> results, CancellationToken token)
 			where TMessage : DnsMessageBase, new()
 		{
-			using (UdpClient udpClient = new UdpClient(new IPEndPoint(endpointInfo.LocalAddress, 0)))
+			using (var udpClient = new UdpClient(new IPEndPoint(endpointInfo.LocalAddress, 0)))
 			{
-				IPEndPoint serverEndpoint = new IPEndPoint(endpointInfo.ServerAddress, _port);
+				var serverEndpoint = new IPEndPoint(endpointInfo.ServerAddress, _port);
 				await udpClient.SendAsync(messageData, messageLength, serverEndpoint);
 
 				udpClient.Client.SendTimeout = QueryTimeout;
@@ -712,7 +699,7 @@ namespace ARSoft.Tools.Net.Dns
 				while (true)
 				{
 					TMessage result;
-					UdpReceiveResult response = await udpClient.ReceiveAsync(Int32.MaxValue, token);
+					var response = await udpClient.ReceiveAsync(Int32.MaxValue, token);
 
 					try
 					{

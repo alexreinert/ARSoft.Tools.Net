@@ -55,9 +55,9 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
-			int endPosition = startPosition + length;
+			var endPosition = startPosition + length;
 
-			List<string> textParts = new List<string>();
+			var textParts = new List<string>();
 			while (startPosition < endPosition)
 			{
 				textParts.Add(DnsMessageBase.ParseText(resultData, ref startPosition));

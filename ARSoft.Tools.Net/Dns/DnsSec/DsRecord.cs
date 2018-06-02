@@ -138,16 +138,16 @@ namespace ARSoft.Tools.Net.Dns
 			if (dnsKeyRecord.CalculateKeyTag() != KeyTag)
 				return false;
 
-			byte[] hash = CalculateKeyHash(dnsKeyRecord);
+			var hash = CalculateKeyHash(dnsKeyRecord);
 
 			return StructuralComparisons.StructuralEqualityComparer.Equals(hash, Digest);
 		}
 
 		private byte[] CalculateKeyHash(DnsKeyRecord dnsKeyRecord)
 		{
-			byte[] buffer = new byte[dnsKeyRecord.Name.MaximumRecordDataLength + 2 + dnsKeyRecord.MaximumRecordDataLength];
+			var buffer = new byte[dnsKeyRecord.Name.MaximumRecordDataLength + 2 + dnsKeyRecord.MaximumRecordDataLength];
 
-			int currentPosition = 0;
+			var currentPosition = 0;
 
 			DnsMessageBase.EncodeDomainName(buffer, 0, ref currentPosition, dnsKeyRecord.Name, null, true);
 			dnsKeyRecord.EncodeRecordData(buffer, 0, ref currentPosition, null, true);
@@ -156,7 +156,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			hashAlgorithm.BlockUpdate(buffer, 0, currentPosition);
 
-			byte[] hash = new byte[hashAlgorithm.GetDigestSize()];
+			var hash = new byte[hashAlgorithm.GetDigestSize()];
 
 			hashAlgorithm.DoFinal(hash, 0);
 			return hash;

@@ -218,12 +218,12 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			get
 			{
-				OptRecord ednsOptions = EDnsOptions;
+				var ednsOptions = EDnsOptions;
 				return (ednsOptions != null) && ednsOptions.IsDnsSecOk;
 			}
 			set
 			{
-				OptRecord ednsOptions = EDnsOptions;
+				var ednsOptions = EDnsOptions;
 				if (ednsOptions == null)
 				{
 					if (value)
@@ -244,7 +244,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns>A new instance of the DnsMessage as response to the current instance</returns>
 		public DnsMessage CreateResponseInstance()
 		{
-			DnsMessage result = new DnsMessage()
+			var result = new DnsMessage()
 			{
 				TransactionID = TransactionID,
 				IsEDnsEnabled = IsEDnsEnabled,

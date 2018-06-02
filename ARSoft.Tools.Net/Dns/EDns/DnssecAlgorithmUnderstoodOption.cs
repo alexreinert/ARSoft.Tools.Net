@@ -53,7 +53,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
 			Algorithms = new List<DnsSecAlgorithm>(length);
-			for (int i = 0; i < length; i++)
+			for (var i = 0; i < length; i++)
 			{
 				Algorithms.Add((DnsSecAlgorithm) resultData[startPosition++]);
 			}

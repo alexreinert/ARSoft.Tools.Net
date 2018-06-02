@@ -74,7 +74,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
 		{
-			int endPosition = currentPosition + length;
+			var endPosition = currentPosition + length;
 
 			int hitLength = resultData[currentPosition++];
 			Algorithm = (IpSecKeyRecord.IpSecAlgorithm) resultData[currentPosition++];
@@ -111,7 +111,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			get
 			{
-				int res = 4;
+				var res = 4;
 				res += Hit.Length;
 				res += PublicKey.Length;
 				res += RendezvousServers.Sum(s => s.MaximumRecordDataLength + 2);
@@ -126,7 +126,7 @@ namespace ARSoft.Tools.Net.Dns
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) PublicKey.Length);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Hit);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
-			foreach (DomainName server in RendezvousServers)
+			foreach (var server in RendezvousServers)
 			{
 				DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, server, null, false);
 			}

@@ -75,7 +75,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			string locator = Locator64.ToString("x16");
+			var locator = Locator64.ToString("x16");
 			return Preference + " " + locator.Substring(0, 4) + ":" + locator.Substring(4, 4) + ":" + locator.Substring(8, 4) + ":" + locator.Substring(12);
 		}
 

@@ -86,7 +86,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// <returns>A new instance of the DnsUpdateMessage as response to the current instance</returns>
 		public DnsUpdateMessage CreateResponseInstance()
 		{
-			DnsUpdateMessage result = new DnsUpdateMessage()
+			var result = new DnsUpdateMessage()
 			{
 				TransactionID = TransactionID,
 				IsEDnsEnabled = IsEDnsEnabled,

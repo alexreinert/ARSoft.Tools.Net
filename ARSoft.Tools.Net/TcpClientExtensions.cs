@@ -31,7 +31,7 @@ namespace ARSoft.Tools.Net
 	{
 		public static bool TryConnect(this TcpClient tcpClient, IPEndPoint endPoint, int timeout)
 		{
-			IAsyncResult ar = tcpClient.BeginConnect(endPoint.Address, endPoint.Port, null, null);
+			var ar = tcpClient.BeginConnect(endPoint.Address, endPoint.Port, null, null);
 			var wh = ar.AsyncWaitHandle;
 			try
 			{
@@ -73,7 +73,7 @@ namespace ARSoft.Tools.Net
 			{
 				if (client.Connected)
 				{
-					byte[] b = new byte[1];
+					var b = new byte[1];
 					try
 					{
 						if (client.Client.Receive(b, SocketFlags.Peek) == 0)

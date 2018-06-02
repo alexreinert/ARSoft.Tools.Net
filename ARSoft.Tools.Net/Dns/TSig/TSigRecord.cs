@@ -140,7 +140,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, byte[] mac)
 		{
 			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, false);
-			int recordDataOffset = currentPosition + 2;
+			var recordDataOffset = currentPosition + 2;
 			EncodeRecordData(messageData, offset, ref recordDataOffset, mac);
 			EncodeRecordLength(messageData, offset, ref currentPosition, domainNames, recordDataOffset);
 		}
@@ -165,7 +165,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static void EncodeDateTime(byte[] buffer, ref int currentPosition, DateTime value)
 		{
-			long timeStamp = (long) (value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+			var timeStamp = (long) (value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
 
 			if (BitConverter.IsLittleEndian)
 			{

@@ -83,12 +83,12 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			get
 			{
-				OptRecord ednsOptions = EDnsOptions;
+				var ednsOptions = EDnsOptions;
 				return (ednsOptions != null) && ednsOptions.IsDnsSecOk;
 			}
 			set
 			{
-				OptRecord ednsOptions = EDnsOptions;
+				var ednsOptions = EDnsOptions;
 				if (ednsOptions == null)
 				{
 					if (value)

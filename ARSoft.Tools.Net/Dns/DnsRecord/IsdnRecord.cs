@@ -69,7 +69,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
 		{
-			int endPosition = currentPosition + length;
+			var endPosition = currentPosition + length;
 
 			IsdnAddress = DnsMessageBase.ParseText(resultData, ref currentPosition);
 			SubAddress = (currentPosition < endPosition) ? DnsMessageBase.ParseText(resultData, ref currentPosition) : String.Empty;

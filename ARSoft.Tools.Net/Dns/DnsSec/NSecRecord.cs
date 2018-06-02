@@ -71,7 +71,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
 		{
-			int endPosition = currentPosition + length;
+			var endPosition = currentPosition + length;
 
 			NextDomainName = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
 
@@ -80,17 +80,17 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static List<RecordType> ParseTypeBitMap(byte[] resultData, ref int currentPosition, int endPosition)
 		{
-			List<RecordType> types = new List<RecordType>();
+			var types = new List<RecordType>();
 			while (currentPosition < endPosition)
 			{
-				byte windowNumber = resultData[currentPosition++];
-				byte windowLength = resultData[currentPosition++];
+				var windowNumber = resultData[currentPosition++];
+				var windowLength = resultData[currentPosition++];
 
-				for (int i = 0; i < windowLength; i++)
+				for (var i = 0; i < windowLength; i++)
 				{
-					byte bitmap = resultData[currentPosition++];
+					var bitmap = resultData[currentPosition++];
 
-					for (int bit = 0; bit < 8; bit++)
+					for (var bit = 0; bit < 8; bit++)
 					{
 						if ((bitmap & (1 << Math.Abs(bit - 7))) != 0)
 						{
@@ -121,12 +121,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static int GetMaximumTypeBitmapLength(List<RecordType> types)
 		{
-			int res = 0;
+			var res = 0;
 
-			int windowEnd = 255;
+			var windowEnd = 255;
 			ushort lastType = 0;
 
-			foreach (ushort type in types.Select(t => (ushort) t))
+			foreach (var type in types.Select(t => (ushort) t))
 			{
 				if (type > windowEnd)
 				{
@@ -148,11 +148,11 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static void EncodeTypeBitmap(byte[] messageData, ref int currentPosition, List<RecordType> types)
 		{
-			int windowEnd = 255;
-			byte[] windowData = new byte[32];
-			int windowLength = 0;
+			var windowEnd = 255;
+			var windowData = new byte[32];
+			var windowLength = 0;
 
-			foreach (ushort type in types.Select(t => (ushort) t))
+			foreach (var type in types.Select(t => (ushort) t))
 			{
 				if (type > windowEnd)
 				{
@@ -167,10 +167,10 @@ namespace ARSoft.Tools.Net.Dns
 					windowLength = 0;
 				}
 
-				int typeLower = type % 256;
+				var typeLower = type % 256;
 
-				int octetPos = typeLower / 8;
-				int bitPos = typeLower % 8;
+				var octetPos = typeLower / 8;
+				var bitPos = typeLower % 8;
 
 				while (windowLength <= octetPos)
 				{
@@ -178,7 +178,7 @@ namespace ARSoft.Tools.Net.Dns
 					windowLength++;
 				}
 
-				byte octet = windowData[octetPos];
+				var octet = windowData[octetPos];
 				octet |= (byte) (1 << Math.Abs(bitPos - 7));
 				windowData[octetPos] = octet;
 			}

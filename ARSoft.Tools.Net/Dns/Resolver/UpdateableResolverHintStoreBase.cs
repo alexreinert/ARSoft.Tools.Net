@@ -65,7 +65,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="resolver">The resolver to use for resolving the new hints</param>
 		public void Update(IDnsResolver resolver)
 		{
-			Zone zone = new Zone(DomainName.Root);
+			var zone = new Zone(DomainName.Root);
 
 			var nameServer = resolver.Resolve<NsRecord>(DomainName.Root, RecordType.Ns);
 			zone.AddRange(nameServer);
@@ -87,7 +87,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if (!_isInitiated)
 			{
-				Zone zone = Load();
+				var zone = Load();
 
 				LoadZoneInternal(zone);
 

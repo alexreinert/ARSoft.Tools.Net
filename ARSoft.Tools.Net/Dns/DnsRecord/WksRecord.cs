@@ -69,18 +69,18 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
 		{
-			int endPosition = currentPosition + length;
+			var endPosition = currentPosition + length;
 
 			Address = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref currentPosition, 4));
 			Protocol = (ProtocolType) resultData[currentPosition++];
 			Ports = new List<ushort>();
 
-			int octetNumber = 0;
+			var octetNumber = 0;
 			while (currentPosition < endPosition)
 			{
-				byte octet = resultData[currentPosition++];
+				var octet = resultData[currentPosition++];
 
-				for (int bit = 0; bit < 8; bit++)
+				for (var bit = 0; bit < 8; bit++)
 				{
 					if ((octet & (1 << Math.Abs(bit - 7))) != 0)
 					{
@@ -115,11 +115,11 @@ namespace ARSoft.Tools.Net.Dns
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
 			messageData[currentPosition++] = (byte) Protocol;
 
-			foreach (ushort port in Ports)
+			foreach (var port in Ports)
 			{
-				int octetPosition = port / 8 + currentPosition;
-				int bitPos = port % 8;
-				byte octet = messageData[octetPosition];
+				var octetPosition = port / 8 + currentPosition;
+				var bitPos = port % 8;
+				var octet = messageData[octetPosition];
 				octet |= (byte) (1 << Math.Abs(bitPos - 7));
 				messageData[octetPosition] = octet;
 			}

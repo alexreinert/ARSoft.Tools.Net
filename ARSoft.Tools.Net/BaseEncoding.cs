@@ -35,7 +35,7 @@ namespace ARSoft.Tools.Net
 		#region Helper
 		private static Dictionary<char, byte> GetAlphabet(string alphabet, bool isCaseIgnored)
 		{
-			Dictionary<char, byte> res = new Dictionary<char, byte>(isCaseIgnored ? 2 * alphabet.Length : alphabet.Length);
+			var res = new Dictionary<char, byte>(isCaseIgnored ? 2 * alphabet.Length : alphabet.Length);
 
 			for (byte i = 0; i < alphabet.Length; i++)
 			{
@@ -79,10 +79,10 @@ namespace ARSoft.Tools.Net
 		/// <returns> Decoded data </returns>
 		public static byte[] FromBase16CharArray(this char[] inData, int offset, int length)
 		{
-			byte[] res = new byte[length / 2];
+			var res = new byte[length / 2];
 
-			int inPos = offset;
-			int outPos = 0;
+			var inPos = offset;
+			var outPos = 0;
 
 			while (inPos < offset + length)
 			{
@@ -121,11 +121,11 @@ namespace ARSoft.Tools.Net
 		/// <returns> Encoded string </returns>
 		public static string ToBase16String(this byte[] inArray, int offset, int length)
 		{
-			char[] outData = new char[length * 2];
+			var outData = new char[length * 2];
 
-			int inPos = offset;
-			int inEnd = offset + length;
-			int outPos = 0;
+			var inPos = offset;
+			var inEnd = offset + length;
+			var outPos = 0;
 
 			while (inPos < inEnd)
 			{
@@ -256,7 +256,7 @@ namespace ARSoft.Tools.Net
 
 		private static byte[] FromBase32CharArray(this char[] inData, int offset, int length, Dictionary<char, byte> alphabet)
 		{
-			int paddingCount = 0;
+			var paddingCount = 0;
 			while (paddingCount < 6)
 			{
 				if (alphabet[inData[offset + length - paddingCount - 1]] != 32)
@@ -285,18 +285,18 @@ namespace ARSoft.Tools.Net
 					break;
 			}
 
-			int outSafeLength = (length - paddingCount) / 8 * 5;
+			var outSafeLength = (length - paddingCount) / 8 * 5;
 
-			byte[] res = new byte[outSafeLength + remain];
+			var res = new byte[outSafeLength + remain];
 
-			int inPos = offset;
-			int outPos = 0;
+			var inPos = offset;
+			var outPos = 0;
 
-			byte[] buffer = new byte[8];
+			var buffer = new byte[8];
 
 			while (outPos < outSafeLength)
 			{
-				for (int i = 0; i < 8; i++)
+				for (var i = 0; i < 8; i++)
 				{
 					buffer[i] = alphabet[inData[inPos++]];
 				}
@@ -310,7 +310,7 @@ namespace ARSoft.Tools.Net
 
 			if (remain > 0)
 			{
-				for (int i = 0; i < 8 - paddingCount; i++)
+				for (var i = 0; i < 8 - paddingCount; i++)
 				{
 					buffer[i] = alphabet[inData[inPos++]];
 				}
@@ -343,15 +343,15 @@ namespace ARSoft.Tools.Net
 
 		private static string ToBase32String(this byte[] inArray, int offset, int length, char[] alphabet)
 		{
-			int inRemain = length % 5;
-			int inSafeEnd = offset + length - inRemain;
+			var inRemain = length % 5;
+			var inSafeEnd = offset + length - inRemain;
 
-			int outLength = length / 5 * 8 + ((inRemain == 0) ? 0 : 8);
+			var outLength = length / 5 * 8 + ((inRemain == 0) ? 0 : 8);
 
-			char[] outData = new char[outLength];
-			int outPos = 0;
+			var outData = new char[outLength];
+			var outPos = 0;
 
-			int inPos = offset;
+			var inPos = offset;
 			while (inPos < inSafeEnd)
 			{
 				outData[outPos++] = alphabet[(inArray[inPos] & 0xf8) >> 3];
@@ -550,18 +550,18 @@ namespace ARSoft.Tools.Net
 				remain = 0;
 			}
 
-			int outSafeLength = (length - paddingCount) / 4 * 3;
+			var outSafeLength = (length - paddingCount) / 4 * 3;
 
-			byte[] res = new byte[outSafeLength + remain];
+			var res = new byte[outSafeLength + remain];
 
-			int inPos = offset;
-			int outPos = 0;
+			var inPos = offset;
+			var outPos = 0;
 
-			byte[] buffer = new byte[4];
+			var buffer = new byte[4];
 
 			while (outPos < outSafeLength)
 			{
-				for (int i = 0; i < 4; i++)
+				for (var i = 0; i < 4; i++)
 				{
 					buffer[i] = alphabet[inData[inPos++]];
 				}
@@ -573,7 +573,7 @@ namespace ARSoft.Tools.Net
 
 			if (remain > 0)
 			{
-				for (int i = 0; i < 4 - paddingCount; i++)
+				for (var i = 0; i < 4 - paddingCount; i++)
 				{
 					buffer[i] = alphabet[inData[inPos++]];
 				}
@@ -595,15 +595,15 @@ namespace ARSoft.Tools.Net
 
 		private static string ToBase64String(this byte[] inArray, int offset, int length, char[] alphabet)
 		{
-			int inRemain = length % 3;
-			int inSafeEnd = offset + length - inRemain;
+			var inRemain = length % 3;
+			var inSafeEnd = offset + length - inRemain;
 
-			int outLength = length / 3 * 4 + ((inRemain == 0) ? 0 : 4);
+			var outLength = length / 3 * 4 + ((inRemain == 0) ? 0 : 4);
 
-			char[] outData = new char[outLength];
-			int outPos = 0;
+			var outData = new char[outLength];
+			var outPos = 0;
 
-			int inPos = offset;
+			var inPos = offset;
 			while (inPos < inSafeEnd)
 			{
 				outData[outPos++] = alphabet[(inArray[inPos] & 0xfc) >> 2];

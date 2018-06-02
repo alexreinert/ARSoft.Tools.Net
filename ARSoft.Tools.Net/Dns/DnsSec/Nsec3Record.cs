@@ -97,7 +97,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
 		{
-			int endPosition = currentPosition + length;
+			var endPosition = currentPosition + length;
 
 			HashAlgorithm = (NSec3HashAlgorithm) resultData[currentPosition++];
 			Flags = resultData[currentPosition++];
@@ -150,7 +150,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal bool IsCovering(DomainName name)
 		{
-			DomainName nextDomainName = new DomainName(NextHashedOwnerName.ToBase32HexString(), name.GetParentName());
+			var nextDomainName = new DomainName(NextHashedOwnerName.ToBase32HexString(), name.GetParentName());
 
 			return ((name.CompareTo(Name) > 0) && (name.CompareTo(nextDomainName) < 0));
 		}

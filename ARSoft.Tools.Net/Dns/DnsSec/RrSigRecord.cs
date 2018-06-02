@@ -127,17 +127,14 @@ namespace ARSoft.Tools.Net.Dns
 			KeyTag = key.CalculateKeyTag();
 			SignersName = key.Name;
 			Signature = new byte[] { };
+            EncodeSigningBuffer(records, out var signBuffer, out var signBufferLength);
 
-			byte[] signBuffer;
-			int signBufferLength;
-			EncodeSigningBuffer(records, out signBuffer, out signBufferLength);
-
-			Signature = key.Sign(signBuffer, signBufferLength);
+            Signature = key.Sign(signBuffer, signBufferLength);
 		}
 
 		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
 		{
-			int currentPosition = startPosition;
+			var currentPosition = startPosition;
 
 			TypeCovered = (RecordType) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
 			Algorithm = (DnsSecAlgorithm) resultData[currentPosition++];
@@ -203,25 +200,23 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static void EncodeDateTime(byte[] buffer, ref int currentPosition, DateTime value)
 		{
-			int timeStamp = (int) (value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+			var timeStamp = (int) (value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
 			DnsMessageBase.EncodeInt(buffer, ref currentPosition, timeStamp);
 		}
 
 		private static DateTime ParseDateTime(byte[] buffer, ref int currentPosition)
 		{
-			int timeStamp = DnsMessageBase.ParseInt(buffer, ref currentPosition);
+			var timeStamp = DnsMessageBase.ParseInt(buffer, ref currentPosition);
 			return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timeStamp).ToLocalTime();
 		}
 
 		internal bool Verify<T>(List<T> coveredRecords, IEnumerable<DnsKeyRecord> dnsKeys)
 			where T : DnsRecordBase
 		{
-			byte[] messageData;
-			int length;
 
-			EncodeSigningBuffer(coveredRecords, out messageData, out length);
+            EncodeSigningBuffer(coveredRecords, out var messageData, out var length);
 
-			return dnsKeys
+            return dnsKeys
 				.Where(x => x.IsZoneKey && (x.Protocol == 3) && x.Algorithm.IsSupported() && (KeyTag == x.CalculateKeyTag()))
 				.Any(x => x.Verify(messageData, length, Signature));
 		}

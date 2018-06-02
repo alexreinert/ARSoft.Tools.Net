@@ -55,7 +55,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			public override bool Equals(object obj)
 			{
-				CacheKey other = obj as CacheKey;
+				var other = obj as CacheKey;
 
 				if (other == null)
 					return false;
@@ -86,7 +86,7 @@ namespace ARSoft.Tools.Net.Dns
 		public void Add<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, IEnumerable<TRecord> records, DnsSecValidationResult validationResult, int timeToLive)
 			where TRecord : DnsRecordBase
 		{
-			DnsCacheRecordList<DnsRecordBase> cacheValues = new DnsCacheRecordList<DnsRecordBase>();
+			var cacheValues = new DnsCacheRecordList<DnsRecordBase>();
 			cacheValues.AddRange(records);
 			cacheValues.ValidationResult = validationResult;
 
@@ -95,96 +95,93 @@ namespace ARSoft.Tools.Net.Dns
 
 		public void Add(DomainName name, RecordType recordType, RecordClass recordClass, DnsCacheRecordList<DnsRecordBase> records, int timeToLive)
 		{
-			CacheKey key = new CacheKey(name, recordType, recordClass);
+			var key = new CacheKey(name, recordType, recordClass);
 			_cache.TryAdd(key, new CacheValue(records, timeToLive));
 		}
 
 		public bool TryGetRecords<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, out List<TRecord> records)
 			where TRecord : DnsRecordBase
 		{
-			CacheKey key = new CacheKey(name, recordType, recordClass);
-			DateTime utcNow = DateTime.UtcNow;
+			var key = new CacheKey(name, recordType, recordClass);
+			var utcNow = DateTime.UtcNow;
 
-			CacheValue cacheValue;
-			if (_cache.TryGetValue(key, out cacheValue))
-			{
-				if (cacheValue.ExpireDateUtc < utcNow)
-				{
-					_cache.TryRemove(key, out cacheValue);
-					records = null;
-					return false;
-				}
+            if (_cache.TryGetValue(key, out var cacheValue))
+            {
+                if (cacheValue.ExpireDateUtc < utcNow)
+                {
+                    _cache.TryRemove(key, out cacheValue);
+                    records = null;
+                    return false;
+                }
 
-				int ttl = (int) (cacheValue.ExpireDateUtc - utcNow).TotalSeconds;
+                var ttl = (int)(cacheValue.ExpireDateUtc - utcNow).TotalSeconds;
 
-				records = new List<TRecord>();
+                records = new List<TRecord>();
 
-				records.AddRange(cacheValue
-					.Records
-					.OfType<TRecord>()
-					.Select(x =>
-					{
-						TRecord record = x.Clone<TRecord>();
-						record.TimeToLive = ttl;
-						return record;
-					}));
+                records.AddRange(cacheValue
+                    .Records
+                    .OfType<TRecord>()
+                    .Select(x =>
+                    {
+                        var record = x.Clone<TRecord>();
+                        record.TimeToLive = ttl;
+                        return record;
+                    }));
 
-				return true;
-			}
+                return true;
+            }
 
-			records = null;
+            records = null;
 			return false;
 		}
 
 		public bool TryGetRecords<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, out DnsCacheRecordList<TRecord> records)
 			where TRecord : DnsRecordBase
 		{
-			CacheKey key = new CacheKey(name, recordType, recordClass);
-			DateTime utcNow = DateTime.UtcNow;
+			var key = new CacheKey(name, recordType, recordClass);
+			var utcNow = DateTime.UtcNow;
 
-			CacheValue cacheValue;
-			if (_cache.TryGetValue(key, out cacheValue))
-			{
-				if (cacheValue.ExpireDateUtc < utcNow)
-				{
-					_cache.TryRemove(key, out cacheValue);
-					records = null;
-					return false;
-				}
+            if (_cache.TryGetValue(key, out var cacheValue))
+            {
+                if (cacheValue.ExpireDateUtc < utcNow)
+                {
+                    _cache.TryRemove(key, out cacheValue);
+                    records = null;
+                    return false;
+                }
 
-				int ttl = (int) (cacheValue.ExpireDateUtc - utcNow).TotalSeconds;
+                var ttl = (int)(cacheValue.ExpireDateUtc - utcNow).TotalSeconds;
 
-				records = new DnsCacheRecordList<TRecord>();
+                records = new DnsCacheRecordList<TRecord>();
 
-				records.AddRange(cacheValue
-					.Records
-					.OfType<TRecord>()
-					.Select(x =>
-					{
-						TRecord record = x.Clone<TRecord>();
-						record.TimeToLive = ttl;
-						return record;
-					}));
+                records.AddRange(cacheValue
+                    .Records
+                    .OfType<TRecord>()
+                    .Select(x =>
+                    {
+                        var record = x.Clone<TRecord>();
+                        record.TimeToLive = ttl;
+                        return record;
+                    }));
 
-				records.ValidationResult = cacheValue.Records.ValidationResult;
+                records.ValidationResult = cacheValue.Records.ValidationResult;
 
-				return true;
-			}
+                return true;
+            }
 
-			records = null;
+            records = null;
 			return false;
 		}
 
 		public void RemoveExpiredItems()
 		{
-			DateTime utcNow = DateTime.UtcNow;
+			var utcNow = DateTime.UtcNow;
 
 			foreach (var kvp in _cache)
 			{
-				CacheValue tmp;
-				if (kvp.Value.ExpireDateUtc < utcNow)
-					_cache.TryRemove(kvp.Key, out tmp);
-			}
+                if (kvp.Value.ExpireDateUtc < utcNow)
+                    _cache.TryRemove(kvp.Key, out var tmp);
+            }
 		}
 	}
 }

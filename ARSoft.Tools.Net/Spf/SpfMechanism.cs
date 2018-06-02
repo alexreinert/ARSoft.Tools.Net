@@ -59,7 +59,7 @@ namespace ARSoft.Tools.Net.Spf
 		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
-			StringBuilder res = new StringBuilder();
+			var res = new StringBuilder();
 
 			switch (Qualifier)
 			{

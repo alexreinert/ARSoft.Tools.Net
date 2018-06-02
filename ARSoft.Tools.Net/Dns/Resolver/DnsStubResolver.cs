@@ -82,20 +82,19 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-			List<T> records;
-			if (_cache.TryGetRecords(name, recordType, recordClass, out records))
-			{
-				return records;
-			}
+            if (_cache.TryGetRecords(name, recordType, recordClass, out List<T> records))
+            {
+                return records;
+            }
 
-			DnsMessage msg = _dnsClient.Resolve(name, recordType, recordClass);
+            var msg = _dnsClient.Resolve(name, recordType, recordClass);
 
 			if ((msg == null) || ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain)))
 			{
 				throw new Exception("DNS request failed");
 			}
 
-			CNameRecord cName = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
+			var cName = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
 
 			if (cName != null)
 			{
@@ -137,20 +136,19 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-			List<T> records;
-			if (_cache.TryGetRecords(name, recordType, recordClass, out records))
-			{
-				return records;
-			}
+            if (_cache.TryGetRecords(name, recordType, recordClass, out List<T> records))
+            {
+                return records;
+            }
 
-			DnsMessage msg = await _dnsClient.ResolveAsync(name, recordType, recordClass, null, token);
+            var msg = await _dnsClient.ResolveAsync(name, recordType, recordClass, null, token);
 
 			if ((msg == null) || ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain)))
 			{
 				throw new Exception("DNS request failed");
 			}
 
-			CNameRecord cName = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
+			var cName = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
 
 			if (cName != null)
 			{

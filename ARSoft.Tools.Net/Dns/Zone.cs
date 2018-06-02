@@ -85,7 +85,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns>A new instance of the Zone class</returns>
 		public static Zone ParseMasterFile(DomainName name, string zoneFile)
 		{
-			using (StreamReader reader = new StreamReader(zoneFile))
+			using (var reader = new StreamReader(zoneFile))
 			{
 				return ParseMasterFile(name, reader);
 			}
@@ -99,7 +99,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns>A new instance of the Zone class</returns>
 		public static Zone ParseMasterFile(DomainName name, Stream zoneFile)
 		{
-			using (StreamReader reader = new StreamReader(zoneFile))
+			using (var reader = new StreamReader(zoneFile))
 			{
 				return ParseMasterFile(name, reader);
 			}
@@ -107,9 +107,9 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static Zone ParseMasterFile(DomainName name, StreamReader reader)
 		{
-			List<DnsRecordBase> records = ParseRecords(reader, name, 0, new UnknownRecord(name, RecordType.Invalid, RecordClass.INet, 0, new byte[] { }));
+			var records = ParseRecords(reader, name, 0, new UnknownRecord(name, RecordType.Invalid, RecordClass.INet, 0, new byte[] { }));
 
-			SoaRecord soa = (SoaRecord) records.SingleOrDefault(x => x.RecordType == RecordType.Soa);
+			var soa = (SoaRecord) records.SingleOrDefault(x => x.RecordType == RecordType.Soa);
 
 			if (soa != null)
 			{
@@ -125,15 +125,15 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static List<DnsRecordBase> ParseRecords(StreamReader reader, DomainName origin, int ttl, DnsRecordBase lastRecord)
 		{
-			List<DnsRecordBase> records = new List<DnsRecordBase>();
+			var records = new List<DnsRecordBase>();
 
 			while (!reader.EndOfStream)
 			{
-				string line = ReadRecordLine(reader);
+				var line = ReadRecordLine(reader);
 
 				if (!String.IsNullOrEmpty(line))
 				{
-					string[] parts = _lineSplitterRegex.Matches(line).Cast<Match>().Select(x => x.Groups.Cast<Group>().Last(g => g.Success).Value.FromMasterfileLabelRepresentation()).ToArray();
+					var parts = _lineSplitterRegex.Matches(line).Cast<Match>().Select(x => x.Groups.Cast<Group>().Last(g => g.Success).Value.FromMasterfileLabelRepresentation()).ToArray();
 
 					if (parts[0].Equals("$origin", StringComparison.InvariantCultureIgnoreCase))
 					{
@@ -145,17 +145,17 @@ namespace ARSoft.Tools.Net.Dns
 					}
 					if (parts[0].Equals("$include", StringComparison.InvariantCultureIgnoreCase))
 					{
-						FileStream fileStream = reader.BaseStream as FileStream;
+						var fileStream = reader.BaseStream as FileStream;
 
 						if (fileStream == null)
 							throw new NotSupportedException("Includes only supported when loading files");
 
 						// ReSharper disable once AssignNullToNotNullAttribute
-						string path = Path.Combine(new FileInfo(fileStream.Name).DirectoryName, parts[1]);
+						var path = Path.Combine(new FileInfo(fileStream.Name).DirectoryName, parts[1]);
 
-						DomainName includeOrigin = (parts.Length > 2) ? DomainName.ParseFromMasterfile(parts[2]) : origin;
+						var includeOrigin = (parts.Length > 2) ? DomainName.ParseFromMasterfile(parts[2]) : origin;
 
-						using (StreamReader includeReader = new StreamReader(path))
+						using (var includeReader = new StreamReader(path))
 						{
 							records.AddRange(ParseRecords(includeReader, includeOrigin, ttl, lastRecord));
 						}
@@ -165,10 +165,9 @@ namespace ARSoft.Tools.Net.Dns
 						string domainString;
 						RecordType recordType;
 						RecordClass recordClass;
-						int recordTtl;
-						string[] rrData;
+                        string[] rrData;
 
-						if (Int32.TryParse(parts[0], out recordTtl))
+                        if (Int32.TryParse(parts[0], out var recordTtl))
 						{
 							// no domain, starts with ttl
 							if (RecordClassHelper.TryParseShortString(parts[1], out recordClass, false))
@@ -324,12 +323,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static string ReadRecordLine(StreamReader reader)
 		{
-			string line = ReadLineWithoutComment(reader);
+			var line = ReadLineWithoutComment(reader);
 
 			int bracketPos;
 			if ((bracketPos = line.IndexOf('(')) != -1)
 			{
-				StringBuilder sb = new StringBuilder();
+				var sb = new StringBuilder();
 
 				sb.Append(line.Substring(0, bracketPos));
 				sb.Append(" ");
@@ -361,7 +360,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static string ReadLineWithoutComment(StreamReader reader)
 		{
-			string line = reader.ReadLine();
+			var line = reader.ReadLine();
 			// ReSharper disable once AssignNullToNotNullAttribute
 			return _commentRemoverRegex.Match(line).Groups["data"].Value;
 		}
@@ -391,8 +390,8 @@ namespace ARSoft.Tools.Net.Dns
 			if (keys.Any(x => (x.Protocol != 3) || ((nsec3Algorithm != 0) ? !x.Algorithm.IsCompatibleWithNSec3() : !x.Algorithm.IsCompatibleWithNSec())))
 				throw new Exception("At least one invalid DNS key was provided");
 
-			List<DnsKeyRecord> keySigningKeys = keys.Where(x => x.IsSecureEntryPoint).ToList();
-			List<DnsKeyRecord> zoneSigningKeys = keys.Where(x => !x.IsSecureEntryPoint).ToList();
+			var keySigningKeys = keys.Where(x => x.IsSecureEntryPoint).ToList();
+			var zoneSigningKeys = keys.Where(x => !x.IsSecureEntryPoint).ToList();
 
 			if (nsec3Algorithm == 0)
 			{
@@ -411,17 +410,17 @@ namespace ARSoft.Tools.Net.Dns
 			var glueRecords = _records.Where(x => subZones.Any(y => x.Name.IsSubDomainOf(y))).ToList();
 			var recordsByName = _records.Except(glueRecords).Union(zoneSigningKeys).Union(keySigningKeys).GroupBy(x => x.Name).Select(x => new Tuple<DomainName, List<DnsRecordBase>>(x.Key, x.OrderBy(y => y.RecordType == RecordType.Soa ? -1 : (int) y.RecordType).ToList())).OrderBy(x => x.Item1).ToList();
 
-			Zone res = new Zone(Name, Count * 3);
+			var res = new Zone(Name, Count * 3);
 
-			for (int i = 0; i < recordsByName.Count; i++)
+			for (var i = 0; i < recordsByName.Count; i++)
 			{
-				List<RecordType> recordTypes = new List<RecordType>();
+				var recordTypes = new List<RecordType>();
 
-				DomainName currentName = recordsByName[i].Item1;
+				var currentName = recordsByName[i].Item1;
 
 				foreach (var recordsByType in recordsByName[i].Item2.GroupBy(x => x.RecordType))
 				{
-					List<DnsRecordBase> records = recordsByType.ToList();
+					var records = recordsByType.ToList();
 
 					recordTypes.Add(recordsByType.Key);
 					res.AddRange(records);
@@ -447,7 +446,7 @@ namespace ARSoft.Tools.Net.Dns
 
 				recordTypes.Add(RecordType.NSec);
 
-				NSecRecord nsecRecord = new NSecRecord(recordsByName[i].Item1, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, recordsByName[(i + 1) % recordsByName.Count].Item1, recordTypes);
+				var nsecRecord = new NSecRecord(recordsByName[i].Item1, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, recordsByName[(i + 1) % recordsByName.Count].Item1, recordTypes);
 				res.Add(nsecRecord);
 
 				foreach (var key in zoneSigningKeys)
@@ -471,27 +470,27 @@ namespace ARSoft.Tools.Net.Dns
 				unsignedRecords = unsignedRecords.Union(subZoneNameserver.Where(x => !_records.Any(y => (y.RecordType == RecordType.Ds) && (y.Name == x.Name)))).ToList(); // delegations without DS record
 			var recordsByName = _records.Except(unsignedRecords).Union(zoneSigningKeys).Union(keySigningKeys).GroupBy(x => x.Name).Select(x => new Tuple<DomainName, List<DnsRecordBase>>(x.Key, x.OrderBy(y => y.RecordType == RecordType.Soa ? -1 : (int) y.RecordType).ToList())).OrderBy(x => x.Item1).ToList();
 
-			byte nsec3RecordFlags = (byte) (nsec3OptOut ? 1 : 0);
+			var nsec3RecordFlags = (byte) (nsec3OptOut ? 1 : 0);
 
-			Zone res = new Zone(Name, Count * 3);
-			List<NSec3Record> nSec3Records = new List<NSec3Record>(Count);
+			var res = new Zone(Name, Count * 3);
+			var nSec3Records = new List<NSec3Record>(Count);
 
 			if (nsec3Salt == null)
 				nsec3Salt = _secureRandom.GenerateSeed(8);
 
 			recordsByName[0].Item2.Add(new NSec3ParamRecord(soaRecord.Name, soaRecord.RecordClass, 0, nsec3Algorithm, 0, (ushort) nsec3Iterations, nsec3Salt));
 
-			HashSet<DomainName> allNames = new HashSet<DomainName>();
+			var allNames = new HashSet<DomainName>();
 
-			for (int i = 0; i < recordsByName.Count; i++)
+			for (var i = 0; i < recordsByName.Count; i++)
 			{
-				List<RecordType> recordTypes = new List<RecordType>();
+				var recordTypes = new List<RecordType>();
 
-				DomainName currentName = recordsByName[i].Item1;
+				var currentName = recordsByName[i].Item1;
 
 				foreach (var recordsByType in recordsByName[i].Item2.GroupBy(x => x.RecordType))
 				{
-					List<DnsRecordBase> records = recordsByType.ToList();
+					var records = recordsByType.ToList();
 
 					recordTypes.Add(recordsByType.Key);
 					res.AddRange(records);
@@ -515,13 +514,13 @@ namespace ARSoft.Tools.Net.Dns
 					}
 				}
 
-				byte[] hash = recordsByName[i].Item1.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
+				var hash = recordsByName[i].Item1.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
 				nSec3Records.Add(new NSec3Record(DomainName.ParseFromMasterfile(hash.ToBase32HexString()) + Name, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, hash, recordTypes));
 
 				allNames.Add(currentName);
-				for (int j = currentName.LabelCount - Name.LabelCount; j > 0; j--)
+				for (var j = currentName.LabelCount - Name.LabelCount; j > 0; j--)
 				{
-					DomainName possibleNonTerminal = currentName.GetParentName(j);
+					var possibleNonTerminal = currentName.GetParentName(j);
 
 					if (!allNames.Contains(possibleNonTerminal))
 					{
@@ -535,9 +534,9 @@ namespace ARSoft.Tools.Net.Dns
 
 			nSec3Records = nSec3Records.OrderBy(x => x.Name).ToList();
 
-			byte[] firstNextHashedOwnerName = nSec3Records[0].NextHashedOwnerName;
+			var firstNextHashedOwnerName = nSec3Records[0].NextHashedOwnerName;
 
-			for (int i = 1; i < nSec3Records.Count; i++)
+			for (var i = 1; i < nSec3Records.Count; i++)
 			{
 				nSec3Records[i - 1].NextHashedOwnerName = nSec3Records[i].NextHashedOwnerName;
 			}

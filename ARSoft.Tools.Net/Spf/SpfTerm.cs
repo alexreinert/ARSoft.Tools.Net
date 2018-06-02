@@ -41,10 +41,10 @@ namespace ARSoft.Tools.Net.Spf
 			}
 
 			#region Parse Mechanism
-			Match match = _parseMechanismRegex.Match(s);
+			var match = _parseMechanismRegex.Match(s);
 			if (match.Success)
 			{
-				SpfMechanism mechanism = new SpfMechanism();
+				var mechanism = new SpfMechanism();
 
 				switch (match.Groups["qualifier"].Value)
 				{
@@ -66,19 +66,17 @@ namespace ARSoft.Tools.Net.Spf
 						break;
 				}
 
-				SpfMechanismType type;
-				mechanism.Type = EnumHelper<SpfMechanismType>.TryParse(match.Groups["type"].Value, true, out type) ? type : SpfMechanismType.Unknown;
+                mechanism.Type = EnumHelper<SpfMechanismType>.TryParse(match.Groups["type"].Value, true, out var type) ? type : SpfMechanismType.Unknown;
 
-				mechanism.Domain = match.Groups["domain"].Value;
+                mechanism.Domain = match.Groups["domain"].Value;
 
-				string tmpPrefix = match.Groups["prefix"].Value;
-				int prefix;
-				if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out prefix))
-				{
-					mechanism.Prefix = prefix;
-				}
+				var tmpPrefix = match.Groups["prefix"].Value;
+                if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out var prefix))
+                {
+                    mechanism.Prefix = prefix;
+                }
 
-				tmpPrefix = match.Groups["prefix6"].Value;
+                tmpPrefix = match.Groups["prefix6"].Value;
 				if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out prefix))
 				{
 					mechanism.Prefix6 = prefix;
@@ -93,11 +91,10 @@ namespace ARSoft.Tools.Net.Spf
 			match = _parseModifierRegex.Match(s);
 			if (match.Success)
 			{
-				SpfModifier modifier = new SpfModifier();
+				var modifier = new SpfModifier();
 
-				SpfModifierType type;
-				modifier.Type = EnumHelper<SpfModifierType>.TryParse(match.Groups["type"].Value, true, out type) ? type : SpfModifierType.Unknown;
-				modifier.Domain = match.Groups["domain"].Value;
+                modifier.Type = EnumHelper<SpfModifierType>.TryParse(match.Groups["type"].Value, true, out var type) ? type : SpfModifierType.Unknown;
+                modifier.Domain = match.Groups["domain"].Value;
 
 				value = modifier;
 				return true;

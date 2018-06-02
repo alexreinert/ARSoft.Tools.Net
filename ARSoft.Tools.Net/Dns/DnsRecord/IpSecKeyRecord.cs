@@ -168,7 +168,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
 		{
-			int startPosition = currentPosition;
+			var startPosition = currentPosition;
 
 			Precedence = resultData[currentPosition++];
 			GatewayType = (IpSecGatewayType) resultData[currentPosition++];
@@ -232,7 +232,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			get
 			{
-				int res = 3;
+				var res = 3;
 				switch (GatewayType)
 				{
 					case IpSecGatewayType.IpV4:
@@ -259,7 +259,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				case IpSecGatewayType.IpV4:
 				case IpSecGatewayType.IpV6:
-					byte[] addressBuffer = IPAddress.Parse(Gateway).GetAddressBytes();
+					var addressBuffer = IPAddress.Parse(Gateway).GetAddressBytes();
 					DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, addressBuffer);
 					break;
 				case IpSecGatewayType.Domain:

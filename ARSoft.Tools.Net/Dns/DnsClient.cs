@@ -100,7 +100,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
+			var message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
 
 			if (options == null)
 			{
@@ -133,7 +133,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (name == null)
 				throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
+			var message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
 
 			if (options == null)
 			{
@@ -224,21 +224,21 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns></returns>
 		public static List<IPAddress> GetLocalConfiguredDnsServers()
 		{
-			List<IPAddress> res = new List<IPAddress>();
+			var res = new List<IPAddress>();
 
 			try
 			{
-				foreach (NetworkInterface nic in NetworkInterface.GetAllNetworkInterfaces())
+				foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
 				{
 					if ((nic.OperationalStatus == OperationalStatus.Up) && (nic.NetworkInterfaceType != NetworkInterfaceType.Loopback))
 					{
-						foreach (IPAddress dns in nic.GetIPProperties().DnsAddresses)
+						foreach (var dns in nic.GetIPProperties().DnsAddresses)
 						{
 							// only use servers defined in draft-ietf-ipngwg-dns-discovery if they are in the same subnet
 							// fec0::/10 is marked deprecated in RFC 3879, so nobody should use these addresses
 							if (dns.AddressFamily == AddressFamily.InterNetworkV6)
 							{
-								IPAddress unscoped = new IPAddress(dns.GetAddressBytes());
+								var unscoped = new IPAddress(dns.GetAddressBytes());
 								if (unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::1"))
 								    || unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::2"))
 								    || unscoped.Equals(IPAddress.Parse("fec0:0:0:ffff::3")))
@@ -264,24 +264,23 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				try
 				{
-					using (StreamReader reader = File.OpenText("/etc/resolv.conf"))
+					using (var reader = File.OpenText("/etc/resolv.conf"))
 					{
 						string line;
 						while ((line = reader.ReadLine()) != null)
 						{
-							int commentStart = line.IndexOf('#');
+							var commentStart = line.IndexOf('#');
 							if (commentStart != -1)
 							{
 								line = line.Substring(0, commentStart);
 							}
 
-							string[] lineData = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-							IPAddress dns;
-							if ((lineData.Length == 2) && (lineData[0] == "nameserver") && (IPAddress.TryParse(lineData[1], out dns)))
-							{
-								res.Add(dns);
-							}
-						}
+							var lineData = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                            if ((lineData.Length == 2) && (lineData[0] == "nameserver") && (IPAddress.TryParse(lineData[1], out var dns)))
+                            {
+                                res.Add(dns);
+                            }
+                        }
 					}
 				}
 				catch (Exception e)

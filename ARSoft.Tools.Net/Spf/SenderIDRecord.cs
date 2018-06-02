@@ -56,7 +56,7 @@ namespace ARSoft.Tools.Net.Spf
 		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
-			StringBuilder res = new StringBuilder();
+			var res = new StringBuilder();
 
 			if (Version == 1)
 			{
@@ -74,9 +74,9 @@ namespace ARSoft.Tools.Net.Spf
 
 			if ((Terms != null) && (Terms.Count > 0))
 			{
-				foreach (SpfTerm term in Terms)
+				foreach (var term in Terms)
 				{
-					SpfModifier modifier = term as SpfModifier;
+					var modifier = term as SpfModifier;
 					if ((modifier == null) || (modifier.Type != SpfModifierType.Unknown))
 					{
 						res.Append(" ");
@@ -99,20 +99,16 @@ namespace ARSoft.Tools.Net.Spf
 			if (String.IsNullOrEmpty(s))
 				return false;
 
-			string[] terms = s.Split(new[] { ' ' }, 2);
+			var terms = s.Split(new[] { ' ' }, 2);
 
 			if (terms.Length < 2)
 				return false;
+            if (!TryParsePrefix(terms[0], out var version, out var minor, out var scopes))
+            {
+                return false;
+            }
 
-			int version;
-			int minor;
-			List<SenderIDScope> scopes;
-			if (!TryParsePrefix(terms[0], out version, out minor, out scopes))
-			{
-				return false;
-			}
-
-			if ((version == 1) && ((scope == SenderIDScope.MFrom) || (scope == SenderIDScope.Pra)))
+            if ((version == 1) && ((scope == SenderIDScope.MFrom) || (scope == SenderIDScope.Pra)))
 			{
 				return true;
 			}
@@ -124,7 +120,7 @@ namespace ARSoft.Tools.Net.Spf
 
 		private static bool TryParsePrefix(string prefix, out int version, out int minor, out List<SenderIDScope> scopes)
 		{
-			Match match = _prefixRegex.Match(prefix);
+			var match = _prefixRegex.Match(prefix);
 			if (!match.Success)
 			{
 				version = 0;
@@ -155,41 +151,36 @@ namespace ARSoft.Tools.Net.Spf
 				return false;
 			}
 
-			string[] terms = s.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+			var terms = s.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
 			if (terms.Length < 1)
 			{
 				value = null;
 				return false;
 			}
+            if (!TryParsePrefix(terms[0], out var version, out var minor, out var scopes))
+            {
+                value = null;
+                return false;
+            }
 
-			int version;
-			int minor;
-			List<SenderIDScope> scopes;
-			if (!TryParsePrefix(terms[0], out version, out minor, out scopes))
-			{
-				value = null;
-				return false;
-			}
-
-			List<SpfTerm> parsedTerms;
-			if (TryParseTerms(terms, out parsedTerms))
-			{
-				value =
-					new SenderIDRecord
-					{
-						Version = version,
-						MinorVersion = minor,
-						Scopes = scopes,
-						Terms = parsedTerms
-					};
-				return true;
-			}
-			else
-			{
-				value = null;
-				return false;
-			}
-		}
+            if (TryParseTerms(terms, out var parsedTerms))
+            {
+                value =
+                    new SenderIDRecord
+                    {
+                        Version = version,
+                        MinorVersion = minor,
+                        Scopes = scopes,
+                        Terms = parsedTerms
+                    };
+                return true;
+            }
+            else
+            {
+                value = null;
+                return false;
+            }
+        }
 	}
 }

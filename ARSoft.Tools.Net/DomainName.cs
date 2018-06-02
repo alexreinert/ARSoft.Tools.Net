@@ -78,9 +78,9 @@ namespace ARSoft.Tools.Net
 		// ReSharper disable once InconsistentNaming
 		internal DomainName Add0x20Bits()
 		{
-			string[] newLabels = new string[LabelCount];
+			var newLabels = new string[LabelCount];
 
-			for (int i = 0; i < LabelCount; i++)
+			for (var i = 0; i < LabelCount; i++)
 			{
 				newLabels[i] = Labels[i].Add0x20Bits();
 			}
@@ -104,7 +104,7 @@ namespace ARSoft.Tools.Net
 			if (removeLabels == 0)
 				return this;
 
-			string[] newLabels = new string[LabelCount - removeLabels];
+			var newLabels = new string[LabelCount - removeLabels];
 			Array.Copy(_labels, removeLabels, newLabels, 0, newLabels.Length);
 
 			return new DomainName(newLabels);
@@ -153,13 +153,13 @@ namespace ARSoft.Tools.Net
 					throw new NotSupportedException();
 			}
 
-			byte[] buffer = new byte[Math.Max(MaximumRecordDataLength + 1, digest.GetDigestSize()) + salt.Length];
+			var buffer = new byte[Math.Max(MaximumRecordDataLength + 1, digest.GetDigestSize()) + salt.Length];
 
-			int length = 0;
+			var length = 0;
 
 			DnsMessageBase.EncodeDomainName(buffer, 0, ref length, this, null, true);
 
-			for (int i = 0; i <= iterations; i++)
+			for (var i = 0; i <= iterations; i++)
 			{
 				DnsMessageBase.EncodeByteArray(buffer, ref length, salt);
 
@@ -169,7 +169,7 @@ namespace ARSoft.Tools.Net
 				length = digest.GetDigestSize();
 			}
 
-			byte[] res = new byte[length];
+			var res = new byte[length];
 			Buffer.BlockCopy(buffer, 0, res, 0, length);
 
 			return res;
@@ -185,11 +185,11 @@ namespace ARSoft.Tools.Net
 			if (s == ".")
 				return Root;
 
-			List<string> labels = new List<string>();
+			var labels = new List<string>();
 
-			int lastOffset = 0;
+			var lastOffset = 0;
 
-			for (int i = 0; i < s.Length; ++i)
+			for (var i = 0; i < s.Length; ++i)
 			{
 				if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
 				{
@@ -212,12 +212,11 @@ namespace ARSoft.Tools.Net
 		/// <returns>A new instance of the DomainName class</returns>
 		public static DomainName Parse(string s)
 		{
-			DomainName res;
 
-			if (TryParse(s, out res))
-				return res;
+            if (TryParse(s, out var res))
+                return res;
 
-			throw new ArgumentException("Domain name could not be parsed", nameof(s));
+            throw new ArgumentException("Domain name could not be parsed", nameof(s));
 		}
 
 		/// <summary>
@@ -237,13 +236,13 @@ namespace ARSoft.Tools.Net
 				return true;
 			}
 
-			List<string> labels = new List<string>();
+			var labels = new List<string>();
 
-			int lastOffset = 0;
+			var lastOffset = 0;
 
 			string label;
 
-			for (int i = 0; i < s.Length; ++i)
+			for (var i = 0; i < s.Length; ++i)
 			{
 				if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
 				{
@@ -329,9 +328,9 @@ namespace ARSoft.Tools.Net
 			if (_hashCode.HasValue)
 				return _hashCode.Value;
 
-			int hash = LabelCount;
+			var hash = LabelCount;
 
-			for (int i = 0; i < LabelCount; i++)
+			for (var i = 0; i < LabelCount; i++)
 			{
 				unchecked
 				{
@@ -350,7 +349,7 @@ namespace ARSoft.Tools.Net
 		/// <returns>A new domain name</returns>
 		public static DomainName operator +(DomainName name1, DomainName name2)
 		{
-			string[] newLabels = new string[name1.LabelCount + name2.LabelCount];
+			var newLabels = new string[name1.LabelCount + name2.LabelCount];
 
 			Array.Copy(name1._labels, newLabels, name1.LabelCount);
 			Array.Copy(name2._labels, 0, newLabels, name1.LabelCount, name2.LabelCount);
@@ -423,9 +422,9 @@ namespace ARSoft.Tools.Net
 			if (_hashCode.HasValue && other._hashCode.HasValue && (_hashCode != other._hashCode))
 				return false;
 
-			StringComparison comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+			var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
-			for (int i = 0; i < LabelCount; i++)
+			for (var i = 0; i < LabelCount; i++)
 			{
 				if (!String.Equals(_labels[i], other._labels[i], comparison))
 					return false;
@@ -442,9 +441,9 @@ namespace ARSoft.Tools.Net
 		/// <returns>A value that indicates the relative order of the objects being compared.</returns>
 		public int CompareTo(DomainName other)
 		{
-			for (int i = 1; i <= Math.Min(LabelCount, other.LabelCount); i++)
+			for (var i = 1; i <= Math.Min(LabelCount, other.LabelCount); i++)
 			{
-				int labelCompare = String.Compare(Labels[LabelCount - i].ToLowerInvariant(), other.Labels[other.LabelCount - i].ToLowerInvariant(), StringComparison.Ordinal);
+				var labelCompare = String.Compare(Labels[LabelCount - i].ToLowerInvariant(), other.Labels[other.LabelCount - i].ToLowerInvariant(), StringComparison.Ordinal);
 
 				if (labelCompare != 0)
 					return labelCompare;

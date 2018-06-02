@@ -45,7 +45,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			public override bool Equals(object obj)
 			{
-				CacheValue second = obj as CacheValue;
+				var second = obj as CacheValue;
 
 				if (second == null)
 					return false;
@@ -58,76 +58,73 @@ namespace ARSoft.Tools.Net.Dns
 
 		public void Add(DomainName zoneName, IPAddress address, int timeToLive)
 		{
-			HashSet<CacheValue> addresses;
 
-			if (_cache.TryGetValue(zoneName, out addresses))
-			{
-				lock (addresses)
-				{
-					addresses.Add(new CacheValue(timeToLive, address));
-				}
-			}
-			else
-			{
-				_cache.TryAdd(zoneName, new HashSet<CacheValue>() { new CacheValue(timeToLive, address) });
-			}
-		}
+            if (_cache.TryGetValue(zoneName, out var addresses))
+            {
+                lock (addresses)
+                {
+                    addresses.Add(new CacheValue(timeToLive, address));
+                }
+            }
+            else
+            {
+                _cache.TryAdd(zoneName, new HashSet<CacheValue>() { new CacheValue(timeToLive, address) });
+            }
+        }
 
 		public bool TryGetAddresses(DomainName zoneName, out List<IPAddress> addresses)
 		{
-			DateTime utcNow = DateTime.UtcNow;
+			var utcNow = DateTime.UtcNow;
 
-			HashSet<CacheValue> cacheValues;
-			if (_cache.TryGetValue(zoneName, out cacheValues))
-			{
-				addresses = new List<IPAddress>();
-				bool needsCleanup = false;
+            if (_cache.TryGetValue(zoneName, out var cacheValues))
+            {
+                addresses = new List<IPAddress>();
+                var needsCleanup = false;
 
-				lock (cacheValues)
-				{
-					foreach (CacheValue cacheValue in cacheValues)
-					{
-						if (cacheValue.ExpireDateUtc < utcNow)
-						{
-							needsCleanup = true;
-						}
-						else
-						{
-							addresses.Add(cacheValue.Address);
-						}
-					}
+                lock (cacheValues)
+                {
+                    foreach (var cacheValue in cacheValues)
+                    {
+                        if (cacheValue.ExpireDateUtc < utcNow)
+                        {
+                            needsCleanup = true;
+                        }
+                        else
+                        {
+                            addresses.Add(cacheValue.Address);
+                        }
+                    }
 
-					if (needsCleanup)
-					{
-						cacheValues.RemoveWhere(x => x.ExpireDateUtc < utcNow);
-						if (cacheValues.Count == 0)
+                    if (needsCleanup)
+                    {
+                        cacheValues.RemoveWhere(x => x.ExpireDateUtc < utcNow);
+                        if (cacheValues.Count == 0)
 #pragma warning disable 0728
-							_cache.TryRemove(zoneName, out cacheValues);
+                            _cache.TryRemove(zoneName, out cacheValues);
 #pragma warning restore 0728
-					}
-				}
+                    }
+                }
 
-				if (addresses.Count > 0)
-					return true;
-			}
+                if (addresses.Count > 0)
+                    return true;
+            }
 
-			addresses = null;
+            addresses = null;
 			return false;
 		}
 
 		public void RemoveExpiredItems()
 		{
-			DateTime utcNow = DateTime.UtcNow;
+			var utcNow = DateTime.UtcNow;
 
 			foreach (var kvp in _cache)
 			{
 				lock (kvp.Value)
 				{
-					HashSet<CacheValue> tmp;
 
-					kvp.Value.RemoveWhere(x => x.ExpireDateUtc < utcNow);
-					if (kvp.Value.Count == 0)
-						_cache.TryRemove(kvp.Key, out tmp);
+                    kvp.Value.RemoveWhere(x => x.ExpireDateUtc < utcNow);
+                    if (kvp.Value.Count == 0)
+						_cache.TryRemove(kvp.Key, out var tmp);
 				}
 			}
 		}

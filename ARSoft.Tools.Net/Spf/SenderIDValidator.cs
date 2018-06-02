@@ -46,7 +46,7 @@ namespace ARSoft.Tools.Net.Spf
 
 		protected override async Task<LoadRecordResult> LoadRecordsAsync(DomainName domain, CancellationToken token)
 		{
-			DnsResolveResult<TxtRecord> dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, token);
+			var dnsResult = await ResolveDnsAsync<TxtRecord>(domain, RecordType.Txt, token);
 			if ((dnsResult == null) || ((dnsResult.ReturnCode != ReturnCode.NoError) && (dnsResult.ReturnCode != ReturnCode.NxDomain)))
 			{
 				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError };
@@ -66,16 +66,15 @@ namespace ARSoft.Tools.Net.Spf
 				var potentialRecords = new List<SenderIDRecord>();
 				foreach (var senderIDTextRecord in senderIDTextRecords)
 				{
-					SenderIDRecord tmpRecord;
-					if (SenderIDRecord.TryParse(senderIDTextRecord, out tmpRecord))
-					{
-						potentialRecords.Add(tmpRecord);
-					}
-					else
-					{
-						return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
-					}
-				}
+                    if (SenderIDRecord.TryParse(senderIDTextRecord, out var tmpRecord))
+                    {
+                        potentialRecords.Add(tmpRecord);
+                    }
+                    else
+                    {
+                        return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
+                    }
+                }
 
 				if (potentialRecords.GroupBy(r => r.Version).Any(g => g.Count() > 1))
 				{

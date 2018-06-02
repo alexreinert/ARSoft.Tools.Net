@@ -139,13 +139,12 @@ namespace ARSoft.Tools.Net.Dns
 				default:
 					if (s.StartsWith("CLASS", StringComparison.InvariantCultureIgnoreCase))
 					{
-						ushort classValue;
-						if (UInt16.TryParse(s.Substring(5), out classValue))
-						{
-							recordClass = (RecordClass) classValue;
-							return true;
-						}
-					}
+                        if (UInt16.TryParse(s.Substring(5), out var classValue))
+                        {
+                            recordClass = (RecordClass)classValue;
+                            return true;
+                        }
+                    }
 					recordClass = RecordClass.Invalid;
 					return false;
 			}

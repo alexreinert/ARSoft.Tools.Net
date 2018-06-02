@@ -191,13 +191,13 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static void EncodeDateTime(byte[] buffer, ref int currentPosition, DateTime value)
 		{
-			int timeStamp = (int) (value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+			var timeStamp = (int) (value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
 			DnsMessageBase.EncodeInt(buffer, ref currentPosition, timeStamp);
 		}
 
 		private static DateTime ParseDateTime(byte[] buffer, ref int currentPosition)
 		{
-			int timeStamp = DnsMessageBase.ParseInt(buffer, ref currentPosition);
+			var timeStamp = DnsMessageBase.ParseInt(buffer, ref currentPosition);
 			return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timeStamp).ToLocalTime();
 		}
 	}

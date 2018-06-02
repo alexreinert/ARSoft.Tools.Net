@@ -81,11 +81,11 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override void ParseData(byte[] resultData, int startPosition, int length)
 		{
-			ushort family = DnsMessageBase.ParseUShort(resultData, ref startPosition);
+			var family = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			SourceNetmask = resultData[startPosition++];
 			ScopeNetmask = resultData[startPosition++];
 
-			byte[] addressData = new byte[family == 1 ? 4 : 16];
+			var addressData = new byte[family == 1 ? 4 : 16];
 			Buffer.BlockCopy(resultData, startPosition, addressData, 0, GetAddressLength());
 
 			Address = new IPAddress(addressData);
@@ -99,7 +99,7 @@ namespace ARSoft.Tools.Net.Dns
 			messageData[currentPosition++] = SourceNetmask;
 			messageData[currentPosition++] = ScopeNetmask;
 
-			byte[] data = Address.GetAddressBytes();
+			var data = Address.GetAddressBytes();
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, data, GetAddressLength());
 		}
 
