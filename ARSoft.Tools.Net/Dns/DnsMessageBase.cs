@@ -1,4 +1,5 @@
 #region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -28,20 +30,19 @@ using ARSoft.Tools.Net.Dns.TSig;
 namespace ARSoft.Tools.Net.Dns
 {
     /// <summary>
-    ///   Base class for a dns answer
+    ///     Base class for a dns answer
     /// </summary>
     public abstract class DnsMessageBase
     {
+        private List<DnsRecordBase> _additionalRecords = new List<DnsRecordBase>();
+        protected internal List<DnsRecordBase> AnswerRecords = new List<DnsRecordBase>();
+        protected internal List<DnsRecordBase> AuthorityRecords = new List<DnsRecordBase>();
         protected ushort Flags;
 
         protected internal List<DnsQuestion> Questions = new List<DnsQuestion>();
-        protected internal List<DnsRecordBase> AnswerRecords = new List<DnsRecordBase>();
-        protected internal List<DnsRecordBase> AuthorityRecords = new List<DnsRecordBase>();
-
-        private List<DnsRecordBase> _additionalRecords = new List<DnsRecordBase>();
 
         /// <summary>
-        ///   Gets or sets the entries in the additional records section
+        ///     Gets or sets the entries in the additional records section
         /// </summary>
         public List<DnsRecordBase> AdditionalRecords
         {
@@ -56,12 +57,12 @@ namespace ARSoft.Tools.Net.Dns
         #region Header
 
         /// <summary>
-        ///   Gets or sets the transaction identifier (ID) of the message
+        ///     Gets or sets the transaction identifier (ID) of the message
         /// </summary>
         public ushort TransactionId { get; set; }
 
         /// <summary>
-        ///   Gets or sets the query (QR) flag
+        ///     Gets or sets the query (QR) flag
         /// </summary>
         public bool IsQuery
         {
@@ -76,7 +77,7 @@ namespace ARSoft.Tools.Net.Dns
         }
 
         /// <summary>
-        ///   Gets or sets the Operation Code (OPCODE)
+        ///     Gets or sets the Operation Code (OPCODE)
         /// </summary>
         public OperationCode OperationCode
         {
@@ -89,7 +90,7 @@ namespace ARSoft.Tools.Net.Dns
         }
 
         /// <summary>
-        ///   Gets or sets the return code (RCODE)
+        ///     Gets or sets the return code (RCODE)
         /// </summary>
         public ReturnCode ReturnCode
         {
@@ -128,7 +129,7 @@ namespace ARSoft.Tools.Net.Dns
         #region EDNS
 
         /// <summary>
-        ///   Enables or disables EDNS
+        ///     Enables or disables EDNS
         /// </summary>
         public bool IsEDnsEnabled
         {
@@ -151,7 +152,7 @@ namespace ARSoft.Tools.Net.Dns
         }
 
         /// <summary>
-        ///   Gets or set the OptRecord for the EDNS options
+        ///     Gets or set the OptRecord for the EDNS options
         /// </summary>
         public OptRecord EDnsOptions
         {
@@ -178,7 +179,7 @@ namespace ARSoft.Tools.Net.Dns
         #region TSig
 
         /// <summary>
-        ///   Gets or set the TSigRecord for the tsig signed messages
+        ///     Gets or set the TSigRecord for the tsig signed messages
         /// </summary>
         // ReSharper disable once InconsistentNaming
         public TSigRecord TSigOptions { get; set; }
@@ -739,7 +740,8 @@ namespace ARSoft.Tools.Net.Dns
             }
         }
 
-        internal static void EncodeDomainName(byte[] messageData, int offset, ref int currentPosition, DomainName name, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+        internal static void EncodeDomainName(byte[] messageData, int offset, ref int currentPosition, DomainName name,
+            Dictionary<DomainName, ushort> domainNames, bool useCanonical)
         {
             while (true)
             {

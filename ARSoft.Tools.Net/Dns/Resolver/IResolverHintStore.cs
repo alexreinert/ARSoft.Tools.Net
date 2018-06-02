@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System.Collections.Generic;
@@ -23,18 +25,18 @@ using ARSoft.Tools.Net.Dns.DnsSec;
 namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
-    ///   Interface to provide hints used by resolvers
+    ///     Interface to provide hints used by resolvers
     /// </summary>
     public interface IResolverHintStore
-	{
-		/// <summary>
-		///   List of hints to the root servers
-		/// </summary>
-		List<IPAddress> RootServers { get; }
+    {
+        /// <summary>
+        ///     List of hints to the root servers
+        /// </summary>
+        List<IPAddress> RootServers { get; }
 
-		/// <summary>
-		///   List of DsRecords of the root zone
-		/// </summary>
-		List<DsRecord> RootKeys { get; }
-	}
+        /// <summary>
+        ///     List of DsRecords of the root zone
+        /// </summary>
+        List<DsRecord> RootKeys { get; }
+    }
 }

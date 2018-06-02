@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -22,31 +24,31 @@ using System.Net.Sockets;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	/// <inheritdoc />
-	/// <summary>
-	///   Event arguments of <see cref="E:ARSoft.Tools.Net.Dns.DnsServer.ClientConnected" /> event.
-	/// </summary>
-	public class ClientConnectedEventArgs : EventArgs
-	{
-		/// <summary>
-		///   Protocol used by the client
-		/// </summary>
-		public ProtocolType ProtocolType { get; }
+    /// <inheritdoc />
+    /// <summary>
+    ///     Event arguments of <see cref="E:ARSoft.Tools.Net.Dns.DnsServer.ClientConnected" /> event.
+    /// </summary>
+    public class ClientConnectedEventArgs : EventArgs
+    {
+        internal ClientConnectedEventArgs(ProtocolType protocolType, IPEndPoint remoteEndpoint)
+        {
+            ProtocolType = protocolType;
+            RemoteEndpoint = remoteEndpoint;
+        }
 
-		/// <summary>
-		///   Remote endpoint of the client
-		/// </summary>
-		public IPEndPoint RemoteEndpoint { get; }
+        /// <summary>
+        ///     Protocol used by the client
+        /// </summary>
+        public ProtocolType ProtocolType { get; }
 
-		/// <summary>
-		///   If true, the client connection will be refused
-		/// </summary>
-		public bool RefuseConnect { get; set; }
+        /// <summary>
+        ///     Remote endpoint of the client
+        /// </summary>
+        public IPEndPoint RemoteEndpoint { get; }
 
-		internal ClientConnectedEventArgs(ProtocolType protocolType, IPEndPoint remoteEndpoint)
-		{
-			ProtocolType = protocolType;
-			RemoteEndpoint = remoteEndpoint;
-		}
-	}
+        /// <summary>
+        ///     If true, the client connection will be refused
+        /// </summary>
+        public bool RefuseConnect { get; set; }
+    }
 }

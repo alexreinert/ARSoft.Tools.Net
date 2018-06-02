@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -22,52 +24,56 @@ using System.Collections.Generic;
 namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
-    ///   <para>Domain name pointer</para>
-    ///   <para>
-    ///     Defined in
-    ///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
-    ///   </para>
+    ///     <para>Domain name pointer</para>
+    ///     <para>
+    ///         Defined in
+    ///         <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+    ///     </para>
     /// </summary>
     public class PtrRecord : DnsRecordBase
-	{
-		/// <summary>
-		///   Domain name the address points to
-		/// </summary>
-		public DomainName PointerDomainName { get; private set; }
+    {
+        internal PtrRecord()
+        {
+        }
 
-		internal PtrRecord() {}
+        /// <summary>
+        ///     Creates a new instance of the PtrRecord class
+        /// </summary>
+        /// <param name="name"> Reverse name of the address </param>
+        /// <param name="timeToLive"> Seconds the record should be cached at most </param>
+        /// <param name="pointerDomainName"> Domain name the address points to </param>
+        public PtrRecord(DomainName name, int timeToLive, DomainName pointerDomainName)
+            : base(name, RecordType.Ptr, RecordClass.INet, timeToLive) =>
+            PointerDomainName = pointerDomainName ?? DomainName.Root;
 
-		/// <summary>
-		///   Creates a new instance of the PtrRecord class
-		/// </summary>
-		/// <param name="name"> Reverse name of the address </param>
-		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="pointerDomainName"> Domain name the address points to </param>
-		public PtrRecord(DomainName name, int timeToLive, DomainName pointerDomainName)
-			: base(name, RecordType.Ptr, RecordClass.INet, timeToLive) => PointerDomainName = pointerDomainName ?? DomainName.Root;
+        /// <summary>
+        ///     Domain name the address points to
+        /// </summary>
+        public DomainName PointerDomainName { get; private set; }
 
-	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			PointerDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
-		}
+        protected internal override int MaximumRecordDataLength => PointerDomainName.MaximumRecordDataLength + 2;
 
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 1)
-				throw new FormatException();
+        internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+        {
+            PointerDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
+        }
 
-			PointerDomainName = ParseDomainName(origin, stringRepresentation[0]);
-		}
+        internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
+        {
+            if (stringRepresentation.Length != 1)
+                throw new FormatException();
 
-		internal override string RecordDataToString() => PointerDomainName.ToString();
+            PointerDomainName = ParseDomainName(origin, stringRepresentation[0]);
+        }
 
-	    protected internal override int MaximumRecordDataLength => PointerDomainName.MaximumRecordDataLength + 2;
+        internal override string RecordDataToString() => PointerDomainName.ToString();
 
 
-
-        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
-		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, PointerDomainName, domainNames, useCanonical);
-		}
-	}
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition,
+            Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+        {
+            DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, PointerDomainName, domainNames,
+                useCanonical);
+        }
+    }
 }

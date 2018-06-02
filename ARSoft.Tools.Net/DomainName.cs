@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -30,397 +32,399 @@ using Org.BouncyCastle.Crypto.Digests;
 namespace ARSoft.Tools.Net
 {
     /// <summary>
-    ///   Represents a domain name
+    ///     Represents a domain name
     /// </summary>
     public class DomainName : IEquatable<DomainName>, IComparable<DomainName>
-	{
-		private readonly string[] _labels;
+    {
+        private static readonly IdnMapping _idnParser = new IdnMapping {UseStd3AsciiRules = true};
 
-		/// <summary>
-		///   The DNS root name (.)
-		/// </summary>
-		public static DomainName Root { get; } = new DomainName(new string[] { });
+        private static readonly Regex _asciiNameRegex =
+            new Regex("^[a-zA-Z0-9_-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-		internal static DomainName Asterisk { get; } = new DomainName(new[] { "*" });
+        private int? _hashCode;
 
-		/// <summary>
-		///   Creates a new instance of the DomainName class
-		/// </summary>
-		/// <param name="labels">The labels of the DomainName</param>
-		public DomainName(string[] labels) => _labels = labels;
+        private string _toString;
 
-	    internal DomainName(string label, DomainName parent)
-		{
-			_labels = new string[1 + parent.LabelCount];
+        /// <summary>
+        ///     Creates a new instance of the DomainName class
+        /// </summary>
+        /// <param name="labels">The labels of the DomainName</param>
+        public DomainName(string[] labels) => Labels = labels;
 
-			_labels[0] = label;
-			Array.Copy(parent._labels, 0, _labels, 1, parent.LabelCount);
-		}
+        internal DomainName(string label, DomainName parent)
+        {
+            Labels = new string[1 + parent.LabelCount];
 
-		/// <summary>
-		///   Gets the labels of the domain name
-		/// </summary>
-		public string[] Labels => _labels;
+            Labels[0] = label;
+            Array.Copy(parent.Labels, 0, Labels, 1, parent.LabelCount);
+        }
 
-		/// <summary>
-		///   Gets the count of labels this domain name contains
-		/// </summary>
-		public int LabelCount => _labels.Length;
+        /// <summary>
+        ///     The DNS root name (.)
+        /// </summary>
+        public static DomainName Root { get; } = new DomainName(new string[] { });
 
-		internal int MaximumRecordDataLength
-		{
-			get { return LabelCount + _labels.Sum(x => x.Length); }
-		}
+        internal static DomainName Asterisk { get; } = new DomainName(new[] {"*"});
 
-		// ReSharper disable once InconsistentNaming
-		internal DomainName Add0x20Bits()
-		{
-			var newLabels = new string[LabelCount];
+        /// <summary>
+        ///     Gets the labels of the domain name
+        /// </summary>
+        public string[] Labels { get; }
 
-			for (var i = 0; i < LabelCount; i++) newLabels[i] = Labels[i].Add0x20Bits();
+        /// <summary>
+        ///     Gets the count of labels this domain name contains
+        /// </summary>
+        public int LabelCount => Labels.Length;
 
-		    return new DomainName(newLabels) { _hashCode = _hashCode };
-		}
+        internal int MaximumRecordDataLength
+        {
+            get { return LabelCount + Labels.Sum(x => x.Length); }
+        }
 
-		/// <summary>
-		///   Gets a parent zone of the domain name
-		/// </summary>
-		/// <param name="removeLabels">The number of labels to be removed</param>
-		/// <returns>The DomainName of the parent zone</returns>
-		public DomainName GetParentName(int removeLabels = 1)
-		{
-			if (removeLabels < 0)
-				throw new ArgumentOutOfRangeException(nameof(removeLabels));
+        /// <summary>
+        ///     Compares the current instance with another name and returns an integer that indicates whether the current instance
+        ///     precedes, follows, or occurs in the same position in the sort order as the other name.
+        /// </summary>
+        /// <param name="other">A name to compare with this instance.</param>
+        /// <returns>A value that indicates the relative order of the objects being compared.</returns>
+        public int CompareTo(DomainName other)
+        {
+            for (var i = 1; i <= Math.Min(LabelCount, other.LabelCount); i++)
+            {
+                var labelCompare = string.Compare(Labels[LabelCount - i].ToLowerInvariant(),
+                    other.Labels[other.LabelCount - i].ToLowerInvariant(), StringComparison.Ordinal);
 
-			if (removeLabels > LabelCount)
-				throw new ArgumentOutOfRangeException(nameof(removeLabels));
+                if (labelCompare != 0)
+                    return labelCompare;
+            }
 
-			if (removeLabels == 0)
-				return this;
+            return LabelCount.CompareTo(other.LabelCount);
+        }
 
-			var newLabels = new string[LabelCount - removeLabels];
-			Array.Copy(_labels, removeLabels, newLabels, 0, newLabels.Length);
+        /// <summary>
+        ///     Checks, whether this name is equal to an other name (case insensitive)
+        /// </summary>
+        /// <param name="other">The other name</param>
+        /// <returns>true, if the names are equal</returns>
+        public bool Equals(DomainName other) => Equals(other, true);
 
-			return new DomainName(newLabels);
-		}
+        // ReSharper disable once InconsistentNaming
+        internal DomainName Add0x20Bits()
+        {
+            var newLabels = new string[LabelCount];
 
-		/// <summary>
-		///   Returns if with domain name equals an other domain name or is a child of it
-		/// </summary>
-		/// <param name="domainName">The possible equal or parent domain name</param>
-		/// <returns>true, if the domain name equals the other domain name or is a child of it; otherwise, false</returns>
-		public bool IsEqualOrSubDomainOf(DomainName domainName)
-		{
-			if (Equals(domainName))
-				return true;
+            for (var i = 0; i < LabelCount; i++) newLabels[i] = Labels[i].Add0x20Bits();
 
-			if (domainName.LabelCount >= LabelCount)
-				return false;
+            return new DomainName(newLabels) {_hashCode = _hashCode};
+        }
 
-			return GetParentName(LabelCount - domainName.LabelCount).Equals(domainName);
-		}
+        /// <summary>
+        ///     Gets a parent zone of the domain name
+        /// </summary>
+        /// <param name="removeLabels">The number of labels to be removed</param>
+        /// <returns>The DomainName of the parent zone</returns>
+        public DomainName GetParentName(int removeLabels = 1)
+        {
+            if (removeLabels < 0)
+                throw new ArgumentOutOfRangeException(nameof(removeLabels));
 
-		/// <summary>
-		///   Returns if with domain name is a child of an other domain name
-		/// </summary>
-		/// <param name="domainName">The possible parent domain name</param>
-		/// <returns>true, if the domain name is a child of the other domain; otherwise, false</returns>
-		public bool IsSubDomainOf(DomainName domainName)
-		{
-			if (domainName.LabelCount >= LabelCount)
-				return false;
+            if (removeLabels > LabelCount)
+                throw new ArgumentOutOfRangeException(nameof(removeLabels));
 
-			return GetParentName(LabelCount - domainName.LabelCount).Equals(domainName);
-		}
+            if (removeLabels == 0)
+                return this;
 
-		internal byte[] GetNSec3Hash(NSec3HashAlgorithm algorithm, int iterations, byte[] salt)
-		{
-			IDigest digest;
+            var newLabels = new string[LabelCount - removeLabels];
+            Array.Copy(Labels, removeLabels, newLabels, 0, newLabels.Length);
 
-			switch (algorithm)
-			{
-				case NSec3HashAlgorithm.Sha1:
-					digest = new Sha1Digest();
-					break;
+            return new DomainName(newLabels);
+        }
 
-				default:
-					throw new NotSupportedException();
-			}
+        /// <summary>
+        ///     Returns if with domain name equals an other domain name or is a child of it
+        /// </summary>
+        /// <param name="domainName">The possible equal or parent domain name</param>
+        /// <returns>true, if the domain name equals the other domain name or is a child of it; otherwise, false</returns>
+        public bool IsEqualOrSubDomainOf(DomainName domainName)
+        {
+            if (Equals(domainName))
+                return true;
 
-			var buffer = new byte[Math.Max(MaximumRecordDataLength + 1, digest.GetDigestSize()) + salt.Length];
+            if (domainName.LabelCount >= LabelCount)
+                return false;
 
-			var length = 0;
+            return GetParentName(LabelCount - domainName.LabelCount).Equals(domainName);
+        }
 
-			DnsMessageBase.EncodeDomainName(buffer, 0, ref length, this, null, true);
+        /// <summary>
+        ///     Returns if with domain name is a child of an other domain name
+        /// </summary>
+        /// <param name="domainName">The possible parent domain name</param>
+        /// <returns>true, if the domain name is a child of the other domain; otherwise, false</returns>
+        public bool IsSubDomainOf(DomainName domainName)
+        {
+            if (domainName.LabelCount >= LabelCount)
+                return false;
 
-			for (var i = 0; i <= iterations; i++)
-			{
-				DnsMessageBase.EncodeByteArray(buffer, ref length, salt);
+            return GetParentName(LabelCount - domainName.LabelCount).Equals(domainName);
+        }
 
-				digest.BlockUpdate(buffer, 0, length);
+        internal byte[] GetNSec3Hash(NSec3HashAlgorithm algorithm, int iterations, byte[] salt)
+        {
+            IDigest digest;
 
-				digest.DoFinal(buffer, 0);
-				length = digest.GetDigestSize();
-			}
+            switch (algorithm)
+            {
+                case NSec3HashAlgorithm.Sha1:
+                    digest = new Sha1Digest();
+                    break;
 
-			var res = new byte[length];
-			Buffer.BlockCopy(buffer, 0, res, 0, length);
+                default:
+                    throw new NotSupportedException();
+            }
 
-			return res;
-		}
+            var buffer = new byte[Math.Max(MaximumRecordDataLength + 1, digest.GetDigestSize()) + salt.Length];
 
-		internal DomainName GetNsec3HashName(NSec3HashAlgorithm algorithm, int iterations, byte[] salt, DomainName zoneApex) => new DomainName(GetNSec3Hash(algorithm, iterations, salt).ToBase32HexString(), zoneApex);
+            var length = 0;
 
-	    internal static DomainName ParseFromMasterfile(string s)
-		{
-			if (s == ".")
-				return Root;
+            DnsMessageBase.EncodeDomainName(buffer, 0, ref length, this, null, true);
 
-			var labels = new List<string>();
+            for (var i = 0; i <= iterations; i++)
+            {
+                DnsMessageBase.EncodeByteArray(buffer, ref length, salt);
 
-			var lastOffset = 0;
+                digest.BlockUpdate(buffer, 0, length);
 
-			for (var i = 0; i < s.Length; ++i)
-			    if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
-			    {
-			        labels.Add(s.Substring(lastOffset, i - lastOffset).FromMasterfileLabelRepresentation());
-			        lastOffset = i + 1;
-			    }
+                digest.DoFinal(buffer, 0);
+                length = digest.GetDigestSize();
+            }
 
-		    labels.Add(s.Substring(lastOffset, s.Length - lastOffset).FromMasterfileLabelRepresentation());
+            var res = new byte[length];
+            Buffer.BlockCopy(buffer, 0, res, 0, length);
 
-			if (labels[labels.Count - 1] == string.Empty)
-				labels.RemoveAt(labels.Count - 1);
+            return res;
+        }
 
-			return new DomainName(labels.ToArray());
-		}
+        internal DomainName GetNsec3HashName(NSec3HashAlgorithm algorithm, int iterations, byte[] salt,
+            DomainName zoneApex) =>
+            new DomainName(GetNSec3Hash(algorithm, iterations, salt).ToBase32HexString(), zoneApex);
 
-		/// <summary>
-		///   Parses the string representation of a domain name
-		/// </summary>
-		/// <param name="s">The string representation of the domain name to parse</param>
-		/// <returns>A new instance of the DomainName class</returns>
-		public static DomainName Parse(string s)
-		{
+        internal static DomainName ParseFromMasterfile(string s)
+        {
+            if (s == ".")
+                return Root;
 
+            var labels = new List<string>();
+
+            var lastOffset = 0;
+
+            for (var i = 0; i < s.Length; ++i)
+                if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
+                {
+                    labels.Add(s.Substring(lastOffset, i - lastOffset).FromMasterfileLabelRepresentation());
+                    lastOffset = i + 1;
+                }
+
+            labels.Add(s.Substring(lastOffset, s.Length - lastOffset).FromMasterfileLabelRepresentation());
+
+            if (labels[labels.Count - 1] == string.Empty)
+                labels.RemoveAt(labels.Count - 1);
+
+            return new DomainName(labels.ToArray());
+        }
+
+        /// <summary>
+        ///     Parses the string representation of a domain name
+        /// </summary>
+        /// <param name="s">The string representation of the domain name to parse</param>
+        /// <returns>A new instance of the DomainName class</returns>
+        public static DomainName Parse(string s)
+        {
             if (TryParse(s, out var res))
                 return res;
 
             throw new ArgumentException("Domain name could not be parsed", nameof(s));
-		}
+        }
 
-		/// <summary>
-		///   Parses the string representation of a domain name
-		/// </summary>
-		/// <param name="s">The string representation of the domain name to parse</param>
-		/// <param name="name">
-		///   When this method returns, contains a DomainName instance representing s or null, if s could not be
-		///   parsed
-		/// </param>
-		/// <returns>true, if s was parsed successfully; otherwise, false</returns>
-		public static bool TryParse(string s, out DomainName name)
-		{
-			if (s == ".")
-			{
-				name = Root;
-				return true;
-			}
+        /// <summary>
+        ///     Parses the string representation of a domain name
+        /// </summary>
+        /// <param name="s">The string representation of the domain name to parse</param>
+        /// <param name="name">
+        ///     When this method returns, contains a DomainName instance representing s or null, if s could not be
+        ///     parsed
+        /// </param>
+        /// <returns>true, if s was parsed successfully; otherwise, false</returns>
+        public static bool TryParse(string s, out DomainName name)
+        {
+            if (s == ".")
+            {
+                name = Root;
+                return true;
+            }
 
-			var labels = new List<string>();
+            var labels = new List<string>();
 
-			var lastOffset = 0;
+            var lastOffset = 0;
 
-			string label;
+            string label;
 
-			for (var i = 0; i < s.Length; ++i)
-			    if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
-			    {
-			        if (TryParseLabel(s.Substring(lastOffset, i - lastOffset), out label))
-			        {
-			            labels.Add(label);
-			            lastOffset = i + 1;
-			        }
-			        else
-			        {
-			            name = null;
-			            return false;
-			        }
-			    }
+            for (var i = 0; i < s.Length; ++i)
+                if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
+                {
+                    if (TryParseLabel(s.Substring(lastOffset, i - lastOffset), out label))
+                    {
+                        labels.Add(label);
+                        lastOffset = i + 1;
+                    }
+                    else
+                    {
+                        name = null;
+                        return false;
+                    }
+                }
 
-		    if (s.Length == lastOffset)
-			{
-				// empty label --> name ends with dot
-			}
-			else if (TryParseLabel(s.Substring(lastOffset, s.Length - lastOffset), out label))
-		        labels.Add(label);
-		    else
-			{
-				name = null;
-				return false;
-			}
+            if (s.Length == lastOffset)
+            {
+                // empty label --> name ends with dot
+            }
+            else if (TryParseLabel(s.Substring(lastOffset, s.Length - lastOffset), out label))
+                labels.Add(label);
+            else
+            {
+                name = null;
+                return false;
+            }
 
-			name = new DomainName(labels.ToArray());
-			return true;
-		}
+            name = new DomainName(labels.ToArray());
+            return true;
+        }
 
-		private static readonly IdnMapping _idnParser = new IdnMapping { UseStd3AsciiRules = true };
-		private static readonly Regex _asciiNameRegex = new Regex("^[a-zA-Z0-9_-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static bool TryParseLabel(string s, out string label)
+        {
+            try
+            {
+                if (_asciiNameRegex.IsMatch(s))
+                {
+                    label = s;
+                    return true;
+                }
 
-		private static bool TryParseLabel(string s, out string label)
-		{
-			try
-			{
-				if (_asciiNameRegex.IsMatch(s))
-				{
-					label = s;
-					return true;
-				}
+                label = _idnParser.GetAscii(s);
+                return true;
+            }
+            catch
+            {
+                label = null;
+                return false;
+            }
+        }
 
-			    label = _idnParser.GetAscii(s);
-			    return true;
-			}
-			catch
-			{
-				label = null;
-				return false;
-			}
-		}
+        /// <summary>
+        ///     Returns the string representation of the domain name
+        /// </summary>
+        /// <returns>The string representation of the domain name</returns>
+        public override string ToString()
+        {
+            if (_toString != null)
+                return _toString;
 
-		private string _toString;
+            return _toString = string.Join(".", Labels.Select(x => x.ToMasterfileLabelRepresentation(true))) + ".";
+        }
 
-		/// <summary>
-		///   Returns the string representation of the domain name
-		/// </summary>
-		/// <returns>The string representation of the domain name</returns>
-		public override string ToString()
-		{
-			if (_toString != null)
-				return _toString;
+        /// <summary>
+        ///     Returns the hash code for this domain name
+        /// </summary>
+        /// <returns>The hash code for this domain name</returns>
+        [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+        public override int GetHashCode()
+        {
+            if (_hashCode.HasValue)
+                return _hashCode.Value;
 
-			return _toString = string.Join(".", _labels.Select(x => x.ToMasterfileLabelRepresentation(true))) + ".";
-		}
+            var hash = LabelCount;
 
-		private int? _hashCode;
+            for (var i = 0; i < LabelCount; i++)
+                unchecked
+                {
+                    hash = hash * 17 + Labels[i].ToLowerInvariant().GetHashCode();
+                }
 
-		/// <summary>
-		///   Returns the hash code for this domain name
-		/// </summary>
-		/// <returns>The hash code for this domain name</returns>
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
-		{
-			if (_hashCode.HasValue)
-				return _hashCode.Value;
+            return (_hashCode = hash).Value;
+        }
 
-			var hash = LabelCount;
+        /// <summary>
+        ///     Concatinates two names
+        /// </summary>
+        /// <param name="name1">The left name</param>
+        /// <param name="name2">The right name</param>
+        /// <returns>A new domain name</returns>
+        public static DomainName operator +(DomainName name1, DomainName name2)
+        {
+            var newLabels = new string[name1.LabelCount + name2.LabelCount];
 
-			for (var i = 0; i < LabelCount; i++)
-			    unchecked
-			    {
-			        hash = hash * 17 + _labels[i].ToLowerInvariant().GetHashCode();
-			    }
+            Array.Copy(name1.Labels, newLabels, name1.LabelCount);
+            Array.Copy(name2.Labels, 0, newLabels, name1.LabelCount, name2.LabelCount);
 
-		    return (_hashCode = hash).Value;
-		}
+            return new DomainName(newLabels);
+        }
 
-		/// <summary>
-		///   Concatinates two names
-		/// </summary>
-		/// <param name="name1">The left name</param>
-		/// <param name="name2">The right name</param>
-		/// <returns>A new domain name</returns>
-		public static DomainName operator +(DomainName name1, DomainName name2)
-		{
-			var newLabels = new string[name1.LabelCount + name2.LabelCount];
+        /// <summary>
+        ///     Checks, whether two names are identical (case sensitive)
+        /// </summary>
+        /// <param name="name1">The first name</param>
+        /// <param name="name2">The second name</param>
+        /// <returns>true, if the names are identical</returns>
+        public static bool operator ==(DomainName name1, DomainName name2)
+        {
+            if (ReferenceEquals(name1, name2))
+                return true;
 
-			Array.Copy(name1._labels, newLabels, name1.LabelCount);
-			Array.Copy(name2._labels, 0, newLabels, name1.LabelCount, name2.LabelCount);
+            if (ReferenceEquals(name1, null))
+                return false;
 
-			return new DomainName(newLabels);
-		}
+            return name1.Equals(name2, false);
+        }
 
-		/// <summary>
-		///   Checks, whether two names are identical (case sensitive)
-		/// </summary>
-		/// <param name="name1">The first name</param>
-		/// <param name="name2">The second name</param>
-		/// <returns>true, if the names are identical</returns>
-		public static bool operator ==(DomainName name1, DomainName name2)
-		{
-			if (ReferenceEquals(name1, name2))
-				return true;
+        /// <summary>
+        ///     Checks, whether two names are not identical (case sensitive)
+        /// </summary>
+        /// <param name="name1">The first name</param>
+        /// <param name="name2">The second name</param>
+        /// <returns>true, if the names are not identical</returns>
+        public static bool operator !=(DomainName name1, DomainName name2) => !(name1 == name2);
 
-			if (ReferenceEquals(name1, null))
-				return false;
+        /// <summary>
+        ///     Checks, whether this name is equal to an other object (case insensitive)
+        /// </summary>
+        /// <param name="obj">The other object</param>
+        /// <returns>true, if the names are equal</returns>
+        public override bool Equals(object obj) => Equals(obj as DomainName);
 
-			return name1.Equals(name2, false);
-		}
+        /// <summary>
+        ///     Checks, whether this name is equal to an other name
+        /// </summary>
+        /// <param name="other">The other name</param>
+        /// <param name="ignoreCase">true, if the case should ignored on checking</param>
+        /// <returns>true, if the names are equal</returns>
+        public bool Equals(DomainName other, bool ignoreCase)
+        {
+            if (ReferenceEquals(other, null))
+                return false;
 
-		/// <summary>
-		///   Checks, whether two names are not identical (case sensitive)
-		/// </summary>
-		/// <param name="name1">The first name</param>
-		/// <param name="name2">The second name</param>
-		/// <returns>true, if the names are not identical</returns>
-		public static bool operator !=(DomainName name1, DomainName name2) => !(name1 == name2);
+            if (LabelCount != other.LabelCount)
+                return false;
 
-	    /// <summary>
-		///   Checks, whether this name is equal to an other object (case insensitive)
-		/// </summary>
-		/// <param name="obj">The other object</param>
-		/// <returns>true, if the names are equal</returns>
-		public override bool Equals(object obj) => Equals(obj as DomainName);
+            if (_hashCode.HasValue && other._hashCode.HasValue && _hashCode != other._hashCode)
+                return false;
 
-	    /// <summary>
-		///   Checks, whether this name is equal to an other name (case insensitive)
-		/// </summary>
-		/// <param name="other">The other name</param>
-		/// <returns>true, if the names are equal</returns>
-		public bool Equals(DomainName other) => Equals(other, true);
+            var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
-	    /// <summary>
-		///   Checks, whether this name is equal to an other name
-		/// </summary>
-		/// <param name="other">The other name</param>
-		/// <param name="ignoreCase">true, if the case should ignored on checking</param>
-		/// <returns>true, if the names are equal</returns>
-		public bool Equals(DomainName other, bool ignoreCase)
-		{
-			if (ReferenceEquals(other, null))
-				return false;
+            for (var i = 0; i < LabelCount; i++)
+                if (!string.Equals(Labels[i], other.Labels[i], comparison))
+                    return false;
 
-			if (LabelCount != other.LabelCount)
-				return false;
-
-			if (_hashCode.HasValue && other._hashCode.HasValue && _hashCode != other._hashCode)
-				return false;
-
-			var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-
-			for (var i = 0; i < LabelCount; i++)
-			    if (!string.Equals(_labels[i], other._labels[i], comparison))
-			        return false;
-
-		    return true;
-		}
-
-		/// <summary>
-		///   Compares the current instance with another name and returns an integer that indicates whether the current instance
-		///   precedes, follows, or occurs in the same position in the sort order as the other name.
-		/// </summary>
-		/// <param name="other">A name to compare with this instance.</param>
-		/// <returns>A value that indicates the relative order of the objects being compared.</returns>
-		public int CompareTo(DomainName other)
-		{
-			for (var i = 1; i <= Math.Min(LabelCount, other.LabelCount); i++)
-			{
-				var labelCompare = string.Compare(Labels[LabelCount - i].ToLowerInvariant(), other.Labels[other.LabelCount - i].ToLowerInvariant(), StringComparison.Ordinal);
-
-				if (labelCompare != 0)
-					return labelCompare;
-			}
-
-			return LabelCount.CompareTo(other.LabelCount);
-		}
-	}
+            return true;
+        }
+    }
 }

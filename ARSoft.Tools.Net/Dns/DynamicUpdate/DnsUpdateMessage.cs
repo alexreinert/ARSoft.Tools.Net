@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System.Collections.Generic;
@@ -23,125 +25,126 @@ using ARSoft.Tools.Net.Dns.DnsRecord;
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
     /// <summary>
-    ///   <para>Dynamic DNS update message</para>
-    ///   <para>
-    ///     Defined in
-    ///     <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
-    ///   </para>
+    ///     <para>Dynamic DNS update message</para>
+    ///     <para>
+    ///         Defined in
+    ///         <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+    ///     </para>
     /// </summary>
     public class DnsUpdateMessage : DnsMessageBase
-	{
-		/// <summary>
-		///   Parses a the contents of a byte array as DnsUpdateMessage
-		/// </summary>
-		/// <param name="data">Buffer, that contains the message data</param>
-		/// <returns>A new instance of the DnsUpdateMessage class</returns>
-		public static DnsUpdateMessage Parse(byte[] data) => Parse<DnsUpdateMessage>(data);
+    {
+        private List<PrequisiteBase> _prequisites;
+        private List<UpdateBase> _updates;
 
-	    /// <summary>
-		///   Creates a new instance of the DnsUpdateMessage class
-		/// </summary>
-		public DnsUpdateMessage() => OperationCode = OperationCode.Update;
+        /// <summary>
+        ///     Creates a new instance of the DnsUpdateMessage class
+        /// </summary>
+        public DnsUpdateMessage() => OperationCode = OperationCode.Update;
 
-	    private List<PrequisiteBase> _prequisites;
-		private List<UpdateBase> _updates;
+        /// <summary>
+        ///     Gets or sets the zone name
+        /// </summary>
+        public DomainName ZoneName
+        {
+            get => Questions.Count > 0 ? Questions[0].Name : null;
+            set => Questions = new List<DnsQuestion> {new DnsQuestion(value, RecordType.Soa, RecordClass.INet)};
+        }
 
-		/// <summary>
-		///   Gets or sets the zone name
-		/// </summary>
-		public DomainName ZoneName
-		{
-			get => Questions.Count > 0 ? Questions[0].Name : null;
-		    set => Questions = new List<DnsQuestion> { new DnsQuestion(value, RecordType.Soa, RecordClass.INet) };
-		}
+        /// <summary>
+        ///     Gets or sets the entries in the prerequisites section
+        /// </summary>
+        public List<PrequisiteBase> Prequisites
+        {
+            get => _prequisites ?? (_prequisites = new List<PrequisiteBase>());
+            set => _prequisites = value;
+        }
 
-		/// <summary>
-		///   Gets or sets the entries in the prerequisites section
-		/// </summary>
-		public List<PrequisiteBase> Prequisites
-		{
-			get => _prequisites ?? (_prequisites = new List<PrequisiteBase>());
-		    set => _prequisites = value;
-		}
+        /// <summary>
+        ///     Gets or sets the entries in the update section
+        /// </summary>
+        public List<UpdateBase> Updates
+        {
+            get => _updates ?? (_updates = new List<UpdateBase>());
+            set => _updates = value;
+        }
 
-		/// <summary>
-		///   Gets or sets the entries in the update section
-		/// </summary>
-		public List<UpdateBase> Updates
-		{
-			get => _updates ?? (_updates = new List<UpdateBase>());
-		    set => _updates = value;
-		}
+        internal override bool IsTcpUsingRequested => false;
 
-		/// <summary>
-		///   Creates a new instance of the DnsUpdateMessage as response to the current instance
-		/// </summary>
-		/// <returns>A new instance of the DnsUpdateMessage as response to the current instance</returns>
-		public DnsUpdateMessage CreateResponseInstance()
-		{
-			var result = new DnsUpdateMessage
-			{
-				TransactionId = TransactionId,
-				IsEDnsEnabled = IsEDnsEnabled,
-				IsQuery = false,
-				OperationCode = OperationCode,
-				Questions = new List<DnsQuestion>(Questions),
-			};
+        internal override bool IsTcpResendingRequested => false;
 
-			if (IsEDnsEnabled)
-			{
-				result.EDnsOptions.Version = EDnsOptions.Version;
-				result.EDnsOptions.UdpPayloadSize = EDnsOptions.UdpPayloadSize;
-			}
+        /// <summary>
+        ///     Parses a the contents of a byte array as DnsUpdateMessage
+        /// </summary>
+        /// <param name="data">Buffer, that contains the message data</param>
+        /// <returns>A new instance of the DnsUpdateMessage class</returns>
+        public static DnsUpdateMessage Parse(byte[] data) => Parse<DnsUpdateMessage>(data);
 
-			return result;
-		}
+        /// <summary>
+        ///     Creates a new instance of the DnsUpdateMessage as response to the current instance
+        /// </summary>
+        /// <returns>A new instance of the DnsUpdateMessage as response to the current instance</returns>
+        public DnsUpdateMessage CreateResponseInstance()
+        {
+            var result = new DnsUpdateMessage
+            {
+                TransactionId = TransactionId,
+                IsEDnsEnabled = IsEDnsEnabled,
+                IsQuery = false,
+                OperationCode = OperationCode,
+                Questions = new List<DnsQuestion>(Questions)
+            };
 
-		internal override bool IsTcpUsingRequested => false;
+            if (IsEDnsEnabled)
+            {
+                result.EDnsOptions.Version = EDnsOptions.Version;
+                result.EDnsOptions.UdpPayloadSize = EDnsOptions.UdpPayloadSize;
+            }
 
-		internal override bool IsTcpResendingRequested => false;
+            return result;
+        }
 
-		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage) => false;
+        internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage) => false;
 
-	    protected override void PrepareEncoding()
-		{
-			AnswerRecords = Prequisites?.Cast<DnsRecordBase>().ToList() ?? new List<DnsRecordBase>();
-			AuthorityRecords = Updates?.Cast<DnsRecordBase>().ToList() ?? new List<DnsRecordBase>();
-		}
+        protected override void PrepareEncoding()
+        {
+            AnswerRecords = Prequisites?.Cast<DnsRecordBase>().ToList() ?? new List<DnsRecordBase>();
+            AuthorityRecords = Updates?.Cast<DnsRecordBase>().ToList() ?? new List<DnsRecordBase>();
+        }
 
-		protected override void FinishParsing()
-		{
-			Prequisites =
-				AnswerRecords.ConvertAll<PrequisiteBase>(
-					record =>
-					{
-					    if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
-						    return new RecordExistsPrequisite(record.Name, record.RecordType);
-					    if (record.RecordClass == RecordClass.Any)
-					        return new RecordExistsPrequisite(record);
-					    if (record.RecordClass == RecordClass.None && record.RecordDataLength == 0)
-					        return new RecordNotExistsPrequisite(record.Name, record.RecordType);
-					    if (record.RecordClass == RecordClass.Any && record.RecordType == RecordType.Any)
-					        return new NameIsInUsePrequisite(record.Name);
-					    if (record.RecordClass == RecordClass.None && record.RecordType == RecordType.Any)
-					        return new NameIsNotInUsePrequisite(record.Name);
-					    return null;
-					}).Where(prequisite => prequisite != null).ToList();
+        protected override void FinishParsing()
+        {
+            Prequisites =
+                AnswerRecords.ConvertAll<PrequisiteBase>(
+                    record =>
+                    {
+                        if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
+                            return new RecordExistsPrequisite(record.Name, record.RecordType);
+                        if (record.RecordClass == RecordClass.Any)
+                            return new RecordExistsPrequisite(record);
+                        if (record.RecordClass == RecordClass.None && record.RecordDataLength == 0)
+                            return new RecordNotExistsPrequisite(record.Name, record.RecordType);
+                        if (record.RecordClass == RecordClass.Any && record.RecordType == RecordType.Any)
+                            return new NameIsInUsePrequisite(record.Name);
+                        if (record.RecordClass == RecordClass.None && record.RecordType == RecordType.Any)
+                            return new NameIsNotInUsePrequisite(record.Name);
+                        return null;
+                    }).Where(prequisite => prequisite != null).ToList();
 
-			Updates =
-				AuthorityRecords.ConvertAll<UpdateBase>(
-					record =>
-					{
-					    if (record.TimeToLive != 0)
-						    return new AddRecordUpdate(record);
-					    if (record.RecordType == RecordType.Any && record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
-					        return new DeleteAllRecordsUpdate(record.Name);
-					    if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
-					        return new DeleteRecordUpdate(record.Name, record.RecordType);
-					    if (record.RecordClass == RecordClass.None)
-					        return new DeleteRecordUpdate(record);
-					    return null;
-					}).Where(update => update != null).ToList();
-		}
-	}
+            Updates =
+                AuthorityRecords.ConvertAll<UpdateBase>(
+                    record =>
+                    {
+                        if (record.TimeToLive != 0)
+                            return new AddRecordUpdate(record);
+                        if (record.RecordType == RecordType.Any && record.RecordClass == RecordClass.Any &&
+                            record.RecordDataLength == 0)
+                            return new DeleteAllRecordsUpdate(record.Name);
+                        if (record.RecordClass == RecordClass.Any && record.RecordDataLength == 0)
+                            return new DeleteRecordUpdate(record.Name, record.RecordType);
+                        if (record.RecordClass == RecordClass.None)
+                            return new DeleteRecordUpdate(record);
+                        return null;
+                    }).Where(update => update != null).ToList();
+        }
+    }
 }

@@ -1,4 +1,5 @@
 #region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -21,54 +23,57 @@ using System.Collections.Generic;
 
 namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
-	/// <summary>
-	///   <para>OpenPGP Key</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/draft-ietf-dane-openpgpkey">draft-ietf-dane-openpgpkey</see>
-	///   </para>
-	/// </summary>
-	// ReSharper disable once InconsistentNaming
-	public class OpenPGPKeyRecord : DnsRecordBase
-	{
-		/// <summary>
-		///   The Public Key
-		/// </summary>
-		public byte[] PublicKey { get; private set; }
+    /// <summary>
+    ///     <para>OpenPGP Key</para>
+    ///     <para>
+    ///         Defined in
+    ///         <see cref="!:http://tools.ietf.org/html/draft-ietf-dane-openpgpkey">draft-ietf-dane-openpgpkey</see>
+    ///     </para>
+    /// </summary>
+    // ReSharper disable once InconsistentNaming
+    public class OpenPGPKeyRecord : DnsRecordBase
+    {
+        internal OpenPGPKeyRecord()
+        {
+        }
 
-		internal OpenPGPKeyRecord() {}
+        /// <summary>
+        ///     Creates a new instance of the OpenPGPKeyRecord class
+        /// </summary>
+        /// <param name="name"> Domain name of the host </param>
+        /// <param name="timeToLive"> Seconds the record should be cached at most </param>
+        /// <param name="publicKey"> The Public Key</param>
+        public OpenPGPKeyRecord(DomainName name, int timeToLive, byte[] publicKey)
+            : base(name, RecordType.OpenPGPKey, RecordClass.INet, timeToLive) =>
+            PublicKey = publicKey ?? new byte[] { };
 
-		/// <summary>
-		///   Creates a new instance of the OpenPGPKeyRecord class
-		/// </summary>
-		/// <param name="name"> Domain name of the host </param>
-		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="publicKey"> The Public Key</param>
-		public OpenPGPKeyRecord(DomainName name, int timeToLive, byte[] publicKey)
-			: base(name, RecordType.OpenPGPKey, RecordClass.INet, timeToLive) => PublicKey = publicKey ?? new byte[] { };
+        /// <summary>
+        ///     The Public Key
+        /// </summary>
+        public byte[] PublicKey { get; private set; }
 
-	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
-		}
+        protected internal override int MaximumRecordDataLength => PublicKey.Length;
 
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length == 0)
-				throw new NotSupportedException();
+        internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+        {
+            PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
+        }
 
-			PublicKey = string.Join(string.Empty, stringRepresentation).FromBase64String();
-		}
+        internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
+        {
+            if (stringRepresentation.Length == 0)
+                throw new NotSupportedException();
 
-		internal override string RecordDataToString() => PublicKey.ToBase64String();
+            PublicKey = string.Join(string.Empty, stringRepresentation).FromBase64String();
+        }
 
-	    protected internal override int MaximumRecordDataLength => PublicKey.Length;
+        internal override string RecordDataToString() => PublicKey.ToBase64String();
 
 
-
-        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
-		{
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
-		}
-	}
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition,
+            Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+        {
+            DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
+        }
+    }
 }

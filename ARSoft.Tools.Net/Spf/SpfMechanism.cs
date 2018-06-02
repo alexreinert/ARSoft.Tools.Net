@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System.Text;
@@ -21,37 +23,37 @@ using System.Text;
 namespace ARSoft.Tools.Net.Spf
 {
     /// <summary>
-    ///   Represents a single mechanism term in a SPF record
+    ///     Represents a single mechanism term in a SPF record
     /// </summary>
     public class SpfMechanism : SpfTerm
     {
         /// <summary>
-        ///   Qualifier of the mechanism
+        ///     Qualifier of the mechanism
         /// </summary>
         public SpfQualifier Qualifier { get; set; }
 
         /// <summary>
-        ///   Type of the mechanism
+        ///     Type of the mechanism
         /// </summary>
         public SpfMechanismType Type { get; set; }
 
         /// <summary>
-        ///   Domain part of the mechanism
+        ///     Domain part of the mechanism
         /// </summary>
         public string Domain { get; set; }
 
         /// <summary>
-        ///   IPv4 prefix of the mechanism
+        ///     IPv4 prefix of the mechanism
         /// </summary>
         public int? Prefix { get; set; }
 
         /// <summary>
-        ///   IPv6 prefix of the mechanism
+        ///     IPv6 prefix of the mechanism
         /// </summary>
         public int? Prefix6 { get; set; }
 
         /// <summary>
-        ///   Returns the textual representation of a mechanism term
+        ///     Returns the textual representation of a mechanism term
         /// </summary>
         /// <returns> Textual representation </returns>
         public override string ToString()

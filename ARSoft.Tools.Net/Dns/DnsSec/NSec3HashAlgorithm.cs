@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,51 +15,52 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
 
 namespace ARSoft.Tools.Net.Dns.DnsSec
 {
-	/// <summary>
-	///   DNSSEC algorithm type
-	/// </summary>
-	public enum NSec3HashAlgorithm : byte
-	{
-		/// <summary>
-		///   <para>RSA MD5</para>
-		///   <para>
-		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc5155">RFC 5155</see>
-		///   </para>
-		/// </summary>
-		Sha1 = 1,
-	}
+    /// <summary>
+    ///     DNSSEC algorithm type
+    /// </summary>
+    public enum NSec3HashAlgorithm : byte
+    {
+        /// <summary>
+        ///     <para>RSA MD5</para>
+        ///     <para>
+        ///         Defined in
+        ///         <see cref="!:http://tools.ietf.org/html/rfc5155">RFC 5155</see>
+        ///     </para>
+        /// </summary>
+        Sha1 = 1
+    }
 
-	internal static class NSec3HashAlgorithmHelper
-	{
-		public static bool IsSupported(this NSec3HashAlgorithm algorithm)
-		{
-			switch (algorithm)
-			{
-				case NSec3HashAlgorithm.Sha1:
-					return true;
+    internal static class NSec3HashAlgorithmHelper
+    {
+        public static bool IsSupported(this NSec3HashAlgorithm algorithm)
+        {
+            switch (algorithm)
+            {
+                case NSec3HashAlgorithm.Sha1:
+                    return true;
 
-				default:
-					return false;
-			}
-		}
+                default:
+                    return false;
+            }
+        }
 
-		public static int GetPriority(this NSec3HashAlgorithm algorithm)
-		{
-			switch (algorithm)
-			{
-				case NSec3HashAlgorithm.Sha1:
-					return 1;
+        public static int GetPriority(this NSec3HashAlgorithm algorithm)
+        {
+            switch (algorithm)
+            {
+                case NSec3HashAlgorithm.Sha1:
+                    return 1;
 
-				default:
-					throw new NotSupportedException();
-			}
-		}
-	}
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+    }
 }

@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,49 +15,50 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 
 namespace ARSoft.Tools.Net.Spf
 {
     /// <summary>
-    ///   Qualifier of spf mechanism
+    ///     Qualifier of spf mechanism
     /// </summary>
     public enum SpfQualifier
-	{
-		/// <summary>
-		///   No records were published or no checkable sender could be determined
-		/// </summary>
-		None,
+    {
+        /// <summary>
+        ///     No records were published or no checkable sender could be determined
+        /// </summary>
+        None,
 
-		/// <summary>
-		///   Client is allowed to send mail with the given identity
-		/// </summary>
-		Pass,
+        /// <summary>
+        ///     Client is allowed to send mail with the given identity
+        /// </summary>
+        Pass,
 
-		/// <summary>
-		///   Client is explicit not allowed to send mail with the given identity
-		/// </summary>
-		Fail,
+        /// <summary>
+        ///     Client is explicit not allowed to send mail with the given identity
+        /// </summary>
+        Fail,
 
-		/// <summary>
-		///   Client is not allowed to send mail with the given identity
-		/// </summary>
-		SoftFail,
+        /// <summary>
+        ///     Client is not allowed to send mail with the given identity
+        /// </summary>
+        SoftFail,
 
-		/// <summary>
-		///   No statement if a client is allowed or not allowed to send mail with the given identity
-		/// </summary>
-		Neutral,
+        /// <summary>
+        ///     No statement if a client is allowed or not allowed to send mail with the given identity
+        /// </summary>
+        Neutral,
 
-		/// <summary>
-		///   A transient error encountered while performing the check
-		/// </summary>
-		TempError,
+        /// <summary>
+        ///     A transient error encountered while performing the check
+        /// </summary>
+        TempError,
 
-		/// <summary>
-		///   The published record could not be correctly interpreted
-		/// </summary>
-		PermError,
-	}
+        /// <summary>
+        ///     The published record could not be correctly interpreted
+        /// </summary>
+        PermError
+    }
 }

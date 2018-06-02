@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,50 +15,54 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 
 namespace ARSoft.Tools.Net.Dns.EDns
 {
     /// <summary>
-    ///   <para>Expire EDNS Option</para>
-    ///   <para>
-    ///     Defined in
-    ///     <see cref="!:http://tools.ietf.org/html/rfc7314">RFC 7314</see>
-    ///   </para>
+    ///     <para>Expire EDNS Option</para>
+    ///     <para>
+    ///         Defined in
+    ///         <see cref="!:http://tools.ietf.org/html/rfc7314">RFC 7314</see>
+    ///     </para>
     /// </summary>
     public class ExpireOption : EDnsOptionBase
-	{
-		/// <summary>
-		///   The expiration of the SOA record in seconds. Should be null on queries.
-		/// </summary>
-		public int? SoaExpire { get; private set; }
+    {
+        /// <summary>
+        ///     Creates a new instance of the ExpireOption class
+        /// </summary>
+        public ExpireOption()
+            : base(EDnsOptionType.Expire)
+        {
+        }
 
-		/// <summary>
-		///   Creates a new instance of the ExpireOption class
-		/// </summary>
-		public ExpireOption()
-			: base(EDnsOptionType.Expire) {}
+        /// <summary>
+        ///     Creates a new instance of the ExpireOption class
+        /// </summary>
+        /// <param name="soaExpire">The expiration of the SOA record in seconds</param>
+        public ExpireOption(int soaExpire)
+            : this() =>
+            SoaExpire = soaExpire;
 
-		/// <summary>
-		///   Creates a new instance of the ExpireOption class
-		/// </summary>
-		/// <param name="soaExpire">The expiration of the SOA record in seconds</param>
-		public ExpireOption(int soaExpire)
-			: this() => SoaExpire = soaExpire;
+        /// <summary>
+        ///     The expiration of the SOA record in seconds. Should be null on queries.
+        /// </summary>
+        public int? SoaExpire { get; private set; }
 
-	    internal override void ParseData(byte[] resultData, int startPosition, int length)
-		{
-			if (length == 4)
-				SoaExpire = DnsMessageBase.ParseInt(resultData, ref startPosition);
-		}
+        internal override ushort DataLength => (ushort) (SoaExpire.HasValue ? 4 : 0);
 
-		internal override ushort DataLength => (ushort) (SoaExpire.HasValue ? 4 : 0);
+        internal override void ParseData(byte[] resultData, int startPosition, int length)
+        {
+            if (length == 4)
+                SoaExpire = DnsMessageBase.ParseInt(resultData, ref startPosition);
+        }
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
-		{
-			if (SoaExpire.HasValue)
-				DnsMessageBase.EncodeInt(messageData, ref currentPosition, SoaExpire.Value);
-		}
-	}
+        internal override void EncodeData(byte[] messageData, ref int currentPosition)
+        {
+            if (SoaExpire.HasValue)
+                DnsMessageBase.EncodeInt(messageData, ref currentPosition, SoaExpire.Value);
+        }
+    }
 }

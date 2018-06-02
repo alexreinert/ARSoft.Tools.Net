@@ -1,4 +1,5 @@
 #region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -22,76 +24,79 @@ using System.Text.RegularExpressions;
 
 namespace ARSoft.Tools.Net
 {
-	internal static class StringExtensions
-	{
-		private static readonly Regex _fromStringRepresentationRegex = new Regex(@"\\(?<key>([^0-9]|\d\d\d))", RegexOptions.Compiled);
+    internal static class StringExtensions
+    {
+        private static readonly Regex _fromStringRepresentationRegex =
+            new Regex(@"\\(?<key>([^0-9]|\d\d\d))", RegexOptions.Compiled);
 
-		internal static string FromMasterfileLabelRepresentation(this string s)
-		{
-			if (s == null)
-				return null;
+        private static readonly Random _random = new Random();
 
-			return _fromStringRepresentationRegex.Replace(s, k =>
-			{
-				var key = k.Groups["key"].Value;
+        internal static string FromMasterfileLabelRepresentation(this string s)
+        {
+            if (s == null)
+                return null;
 
-				if (key == "#")
-				    return @"\#";
-			    if (key.Length == 3)
-			        return new string((char) byte.Parse(key), 1);
-			    return key;
-			});
-		}
+            return _fromStringRepresentationRegex.Replace(s, k =>
+            {
+                var key = k.Groups["key"].Value;
 
-		internal static string ToMasterfileLabelRepresentation(this string s, bool encodeDots = false)
-		{
-			if (s == null)
-				return null;
+                if (key == "#")
+                    return @"\#";
+                if (key.Length == 3)
+                    return new string((char) byte.Parse(key), 1);
+                return key;
+            });
+        }
 
-			var sb = new StringBuilder();
+        internal static string ToMasterfileLabelRepresentation(this string s, bool encodeDots = false)
+        {
+            if (s == null)
+                return null;
 
-			foreach (var c in s)
-			    if (c < 32 || c > 126)
-			        sb.Append(@"\" + ((int) c).ToString("000"));
-			    else switch (c)
-			    {
-			        case '"':
-			            sb.Append(@"\""");
-			            break;
-			        case '\\':
-			            sb.Append(@"\\");
-			            break;
-			        case '.' when encodeDots:
-			            sb.Append(@"\.");
-			            break;
-			        default:
-			            sb.Append(c);
-			            break;
-			    }
+            var sb = new StringBuilder();
 
-		    return sb.ToString();
-		}
+            foreach (var c in s)
+                if (c < 32 || c > 126)
+                    sb.Append(@"\" + ((int) c).ToString("000"));
+                else
+                    switch (c)
+                    {
+                        case '"':
+                            sb.Append(@"\""");
+                            break;
+                        case '\\':
+                            sb.Append(@"\\");
+                            break;
+                        case '.' when encodeDots:
+                            sb.Append(@"\.");
+                            break;
+                        default:
+                            sb.Append(c);
+                            break;
+                    }
 
-		private static readonly Random _random = new Random();
-		// ReSharper disable once InconsistentNaming
-		internal static string Add0x20Bits(this string s)
-		{
-			var res = new char[s.Length];
+            return sb.ToString();
+        }
 
-			for (var i = 0; i < s.Length; i++)
-			{
-				var isLower = _random.Next() > 0x3ffffff;
+        // ReSharper disable once InconsistentNaming
+        internal static string Add0x20Bits(this string s)
+        {
+            var res = new char[s.Length];
 
-				var current = s[i];
+            for (var i = 0; i < s.Length; i++)
+            {
+                var isLower = _random.Next() > 0x3ffffff;
 
-				if (!isLower && current >= 'A' && current <= 'Z')
-				    current = (char) (current + 0x20);
-				else if (isLower && current >= 'a' && current <= 'z') current = (char) (current - 0x20);
+                var current = s[i];
 
-			    res[i] = current;
-			}
+                if (!isLower && current >= 'A' && current <= 'Z')
+                    current = (char) (current + 0x20);
+                else if (isLower && current >= 'a' && current <= 'z') current = (char) (current - 0x20);
 
-			return new string(res);
-		}
-	}
+                res[i] = current;
+            }
+
+            return new string(res);
+        }
+    }
 }

@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -22,20 +24,24 @@ using ARSoft.Tools.Net.Dns.DnsRecord;
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
     /// <summary>
-    ///   Base class for prequisites of dynamic dns updates
+    ///     Base class for prequisites of dynamic dns updates
     /// </summary>
     public abstract class PrequisiteBase : DnsRecordBase
-	{
-		internal PrequisiteBase() {}
+    {
+        internal PrequisiteBase()
+        {
+        }
 
-		protected PrequisiteBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive)
-			: base(name, recordType, recordClass, timeToLive) {}
+        protected PrequisiteBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive)
+            : base(name, recordType, recordClass, timeToLive)
+        {
+        }
 
-		internal override string RecordDataToString() => null;
+        internal override string RecordDataToString() => null;
 
-	    internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			throw new NotSupportedException();
-		}
-	}
+        internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
+        {
+            throw new NotSupportedException();
+        }
+    }
 }

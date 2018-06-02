@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -22,52 +24,55 @@ using System.Collections.Generic;
 namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
-    ///   <para>Dynamic Host Configuration Protocol (DHCP) Information record</para>
-    ///   <para>
-    ///     Defined in
-    ///     <see cref="!:http://tools.ietf.org/html/rfc4701">RFC 4701</see>
-    ///   </para>
+    ///     <para>Dynamic Host Configuration Protocol (DHCP) Information record</para>
+    ///     <para>
+    ///         Defined in
+    ///         <see cref="!:http://tools.ietf.org/html/rfc4701">RFC 4701</see>
+    ///     </para>
     /// </summary>
     public class DhcidRecord : DnsRecordBase
-	{
-		/// <summary>
-		///   Record data
-		/// </summary>
-		public byte[] RecordData { get; private set; }
+    {
+        internal DhcidRecord()
+        {
+        }
 
-		internal DhcidRecord() {}
+        /// <summary>
+        ///     Creates a new instance of the DhcidRecord class
+        /// </summary>
+        /// <param name="name"> Name of the record </param>
+        /// <param name="timeToLive"> Seconds the record should be cached at most </param>
+        /// <param name="recordData"> Record data </param>
+        public DhcidRecord(DomainName name, int timeToLive, byte[] recordData)
+            : base(name, RecordType.Dhcid, RecordClass.INet, timeToLive) =>
+            RecordData = recordData ?? new byte[] { };
 
-		/// <summary>
-		///   Creates a new instance of the DhcidRecord class
-		/// </summary>
-		/// <param name="name"> Name of the record </param>
-		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="recordData"> Record data </param>
-		public DhcidRecord(DomainName name, int timeToLive, byte[] recordData)
-			: base(name, RecordType.Dhcid, RecordClass.INet, timeToLive) => RecordData = recordData ?? new byte[] { };
+        /// <summary>
+        ///     Record data
+        /// </summary>
+        public byte[] RecordData { get; private set; }
 
-	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
-		}
+        protected internal override int MaximumRecordDataLength => RecordData.Length;
 
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 1)
-				throw new FormatException();
+        internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+        {
+            RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
+        }
 
-			RecordData = string.Join(string.Empty, stringRepresentation).FromBase64String();
-		}
+        internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
+        {
+            if (stringRepresentation.Length < 1)
+                throw new FormatException();
 
-		internal override string RecordDataToString() => RecordData.ToBase64String();
+            RecordData = string.Join(string.Empty, stringRepresentation).FromBase64String();
+        }
 
-	    protected internal override int MaximumRecordDataLength => RecordData.Length;
+        internal override string RecordDataToString() => RecordData.ToBase64String();
 
 
-
-        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
-		{
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, RecordData);
-		}
-	}
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition,
+            Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+        {
+            DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, RecordData);
+        }
+    }
 }

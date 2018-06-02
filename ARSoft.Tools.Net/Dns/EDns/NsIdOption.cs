@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,44 +15,48 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 
 namespace ARSoft.Tools.Net.Dns.EDns
 {
     /// <summary>
-    ///   <para>Name server ID option</para>
-    ///   <para>
-    ///     Defined in
-    ///     <see cref="!:http://tools.ietf.org/html/rfc5001">RFC 5001</see>
-    ///   </para>
+    ///     <para>Name server ID option</para>
+    ///     <para>
+    ///         Defined in
+    ///         <see cref="!:http://tools.ietf.org/html/rfc5001">RFC 5001</see>
+    ///     </para>
     /// </summary>
     public class NsIdOption : EDnsOptionBase
-	{
-		/// <summary>
-		///   Binary data of the payload
-		/// </summary>
-		public byte[] Payload { get; private set; }
+    {
+        internal NsIdOption()
+            : base(EDnsOptionType.NsId)
+        {
+        }
 
-		internal NsIdOption()
-			: base(EDnsOptionType.NsId) {}
+        /// <summary>
+        ///     Creates a new instance of the NsIdOption class
+        /// </summary>
+        public NsIdOption(byte[] payload)
+            : this() =>
+            Payload = payload;
 
-		/// <summary>
-		///   Creates a new instance of the NsIdOption class
-		/// </summary>
-		public NsIdOption(byte[] payload)
-			: this() => Payload = payload;
+        /// <summary>
+        ///     Binary data of the payload
+        /// </summary>
+        public byte[] Payload { get; private set; }
 
-	    internal override void ParseData(byte[] resultData, int startPosition, int length)
-		{
-			Payload = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
-		}
+        internal override ushort DataLength => (ushort) (Payload?.Length ?? 0);
 
-		internal override ushort DataLength => (ushort) (Payload?.Length ?? 0);
+        internal override void ParseData(byte[] resultData, int startPosition, int length)
+        {
+            Payload = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
+        }
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
-		{
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Payload);
-		}
-	}
+        internal override void EncodeData(byte[] messageData, ref int currentPosition)
+        {
+            DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Payload);
+        }
+    }
 }

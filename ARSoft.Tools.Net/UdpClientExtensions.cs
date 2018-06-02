@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System.Net.Sockets;
@@ -23,18 +25,19 @@ using System.Threading.Tasks;
 namespace ARSoft.Tools.Net
 {
     internal static class UdpClientExtensions
-	{
-		public static async Task<UdpReceiveResult> ReceiveAsync(this UdpClient udpClient, int timeout, CancellationToken token)
-		{
-			var connectTask = udpClient.ReceiveAsync();
-			var timeoutTask = Task.Delay(timeout, token);
+    {
+        public static async Task<UdpReceiveResult> ReceiveAsync(this UdpClient udpClient, int timeout,
+            CancellationToken token)
+        {
+            var connectTask = udpClient.ReceiveAsync();
+            var timeoutTask = Task.Delay(timeout, token);
 
-			await Task.WhenAny(connectTask, timeoutTask);
+            await Task.WhenAny(connectTask, timeoutTask);
 
-			if (connectTask.IsCompleted)
-				return connectTask.Result;
+            if (connectTask.IsCompleted)
+                return connectTask.Result;
 
-			return new UdpReceiveResult();
-		}
-	}
+            return new UdpReceiveResult();
+        }
+    }
 }

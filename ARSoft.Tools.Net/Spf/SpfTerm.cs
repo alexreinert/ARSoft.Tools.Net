@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System.Text.RegularExpressions;
@@ -21,7 +23,7 @@ using System.Text.RegularExpressions;
 namespace ARSoft.Tools.Net.Spf
 {
     /// <summary>
-    ///   Represents a single term of a SPF record
+    ///     Represents a single term of a SPF record
     /// </summary>
     public class SpfTerm
     {

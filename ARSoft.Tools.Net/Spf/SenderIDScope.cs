@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,29 +15,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 
 namespace ARSoft.Tools.Net.Spf
 {
     /// <summary>
-    ///   Scope of a SenderID record
+    ///     Scope of a SenderID record
     /// </summary>
     public enum SenderIdScope
-	{
-		/// <summary>
-		///   Unknown scope
-		/// </summary>
-		Unknown,
+    {
+        /// <summary>
+        ///     Unknown scope
+        /// </summary>
+        Unknown,
 
-		/// <summary>
-		///   MFrom scope, used for lookups of SMTP MAIL FROM address
-		/// </summary>
-		MFrom,
+        /// <summary>
+        ///     MFrom scope, used for lookups of SMTP MAIL FROM address
+        /// </summary>
+        MFrom,
 
-		/// <summary>
-		///   PRA scope, used for lookups of the Purported Responsible Address
-		/// </summary>
-		Pra,
-	}
+        /// <summary>
+        ///     PRA scope, used for lookups of the Purported Responsible Address
+        /// </summary>
+        Pra
+    }
 }

@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -24,46 +26,24 @@ using System.Net;
 namespace ARSoft.Tools.Net.Dns.Cache
 {
     internal class NameserverCache
-	{
-		private class CacheValue
-		{
-			public DateTime ExpireDateUtc { get; }
-			public IPAddress Address { get; }
+    {
+        private readonly ConcurrentDictionary<DomainName, HashSet<CacheValue>> _cache =
+            new ConcurrentDictionary<DomainName, HashSet<CacheValue>>();
 
-			public CacheValue(int timeToLive, IPAddress address)
-			{
-				ExpireDateUtc = DateTime.UtcNow.AddSeconds(timeToLive);
-				Address = address;
-			}
-
-			public override int GetHashCode() => Address.GetHashCode();
-
-		    public override bool Equals(object obj)
-			{
-			    if (!(obj is CacheValue second))
-					return false;
-
-				return Address.Equals(second.Address);
-			}
-		}
-
-		private readonly ConcurrentDictionary<DomainName, HashSet<CacheValue>> _cache = new ConcurrentDictionary<DomainName, HashSet<CacheValue>>();
-
-		public void Add(DomainName zoneName, IPAddress address, int timeToLive)
-		{
-
+        public void Add(DomainName zoneName, IPAddress address, int timeToLive)
+        {
             if (_cache.TryGetValue(zoneName, out var addresses))
                 lock (addresses)
                 {
                     addresses.Add(new CacheValue(timeToLive, address));
                 }
             else
-                _cache.TryAdd(zoneName, new HashSet<CacheValue> { new CacheValue(timeToLive, address) });
-		}
+                _cache.TryAdd(zoneName, new HashSet<CacheValue> {new CacheValue(timeToLive, address)});
+        }
 
-		public bool TryGetAddresses(DomainName zoneName, out List<IPAddress> addresses)
-		{
-			var utcNow = DateTime.UtcNow;
+        public bool TryGetAddresses(DomainName zoneName, out List<IPAddress> addresses)
+        {
+            var utcNow = DateTime.UtcNow;
 
             if (_cache.TryGetValue(zoneName, out var cacheValues))
             {
@@ -93,21 +73,42 @@ namespace ARSoft.Tools.Net.Dns.Cache
             }
 
             addresses = null;
-			return false;
-		}
+            return false;
+        }
 
-		public void RemoveExpiredItems()
-		{
-			var utcNow = DateTime.UtcNow;
+        public void RemoveExpiredItems()
+        {
+            var utcNow = DateTime.UtcNow;
 
-			foreach (var kvp in _cache)
-			    lock (kvp.Value)
-			    {
+            foreach (var kvp in _cache)
+                lock (kvp.Value)
+                {
+                    kvp.Value.RemoveWhere(x => x.ExpireDateUtc < utcNow);
+                    if (kvp.Value.Count == 0)
+                        _cache.TryRemove(kvp.Key, out _);
+                }
+        }
 
-			        kvp.Value.RemoveWhere(x => x.ExpireDateUtc < utcNow);
-			        if (kvp.Value.Count == 0)
-			            _cache.TryRemove(kvp.Key, out _);
-			    }
-		}
-	}
+        private class CacheValue
+        {
+            public CacheValue(int timeToLive, IPAddress address)
+            {
+                ExpireDateUtc = DateTime.UtcNow.AddSeconds(timeToLive);
+                Address = address;
+            }
+
+            public DateTime ExpireDateUtc { get; }
+            public IPAddress Address { get; }
+
+            public override int GetHashCode() => Address.GetHashCode();
+
+            public override bool Equals(object obj)
+            {
+                if (!(obj is CacheValue second))
+                    return false;
+
+                return Address.Equals(second.Address);
+            }
+        }
+    }
 }

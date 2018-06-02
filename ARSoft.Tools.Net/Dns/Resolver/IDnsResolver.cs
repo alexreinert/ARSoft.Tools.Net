@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System.Collections.Generic;
@@ -24,36 +26,38 @@ using ARSoft.Tools.Net.Dns.DnsRecord;
 namespace ARSoft.Tools.Net.Dns.Resolver
 {
     /// <summary>
-    ///   Interface of a DNS resolver
+    ///     Interface of a DNS resolver
     /// </summary>
     public interface IDnsResolver
-	{
-		/// <summary>
-		///   Queries a dns resolver for specified records.
-		/// </summary>
-		/// <typeparam name="T"> Type of records, that should be returned </typeparam>
-		/// <param name="name"> Domain, that should be queried </param>
-		/// <param name="recordType"> Type the should be queried </param>
-		/// <param name="recordClass"> Class the should be queried </param>
-		/// <returns> A list of matching <see cref="DnsRecordBase">records</see> </returns>
-		List<T> Resolve<T>(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet)
-			where T : DnsRecordBase;
+    {
+        /// <summary>
+        ///     Queries a dns resolver for specified records.
+        /// </summary>
+        /// <typeparam name="T"> Type of records, that should be returned </typeparam>
+        /// <param name="name"> Domain, that should be queried </param>
+        /// <param name="recordType"> Type the should be queried </param>
+        /// <param name="recordClass"> Class the should be queried </param>
+        /// <returns> A list of matching <see cref="DnsRecordBase">records</see> </returns>
+        List<T> Resolve<T>(DomainName name, RecordType recordType = RecordType.A,
+            RecordClass recordClass = RecordClass.INet)
+            where T : DnsRecordBase;
 
-		/// <summary>
-		///   Queries a dns resolver for specified records as an asynchronous operation.
-		/// </summary>
-		/// <typeparam name="T"> Type of records, that should be returned </typeparam>
-		/// <param name="name"> Domain, that should be queried </param>
-		/// <param name="recordType"> Type the should be queried </param>
-		/// <param name="recordClass"> Class the should be queried </param>
-		/// <param name="token"> The token to monitor cancellation requests </param>
-		/// <returns> A list of matching <see cref="DnsRecordBase">records</see> </returns>
-		Task<List<T>> ResolveAsync<T>(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, CancellationToken token = default(CancellationToken))
-			where T : DnsRecordBase;
+        /// <summary>
+        ///     Queries a dns resolver for specified records as an asynchronous operation.
+        /// </summary>
+        /// <typeparam name="T"> Type of records, that should be returned </typeparam>
+        /// <param name="name"> Domain, that should be queried </param>
+        /// <param name="recordType"> Type the should be queried </param>
+        /// <param name="recordClass"> Class the should be queried </param>
+        /// <param name="token"> The token to monitor cancellation requests </param>
+        /// <returns> A list of matching <see cref="DnsRecordBase">records</see> </returns>
+        Task<List<T>> ResolveAsync<T>(DomainName name, RecordType recordType = RecordType.A,
+            RecordClass recordClass = RecordClass.INet, CancellationToken token = default(CancellationToken))
+            where T : DnsRecordBase;
 
-		/// <summary>
-		///   Clears the record cache
-		/// </summary>
-		void ClearCache();
-	}
+        /// <summary>
+        ///     Clears the record cache
+        /// </summary>
+        void ClearCache();
+    }
 }

@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System.Collections.Generic;
@@ -22,33 +24,39 @@ using ARSoft.Tools.Net.Dns.DnsRecord;
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
     /// <summary>
-    ///   Add record action
+    ///     Add record action
     /// </summary>
     public class AddRecordUpdate : UpdateBase
-	{
-		/// <summary>
-		///   Record which should be added
-		/// </summary>
-		public DnsRecordBase Record { get; }
+    {
+        internal AddRecordUpdate()
+        {
+        }
 
-		internal AddRecordUpdate() {}
+        /// <summary>
+        ///     Creates a new instance of the AddRecordUpdate
+        /// </summary>
+        /// <param name="record"> Record which should be added </param>
+        public AddRecordUpdate(DnsRecordBase record)
+            : base(record.Name, record.RecordType, record.RecordClass, record.TimeToLive) =>
+            Record = record;
 
-		/// <summary>
-		///   Creates a new instance of the AddRecordUpdate
-		/// </summary>
-		/// <param name="record"> Record which should be added </param>
-		public AddRecordUpdate(DnsRecordBase record)
-			: base(record.Name, record.RecordType, record.RecordClass, record.TimeToLive) => Record = record;
+        /// <summary>
+        ///     Record which should be added
+        /// </summary>
+        public DnsRecordBase Record { get; }
 
-	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
+        protected internal override int MaximumRecordDataLength => Record.MaximumRecordDataLength;
 
-		internal override string RecordDataToString() => Record?.RecordDataToString();
+        internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+        {
+        }
 
-	    protected internal override int MaximumRecordDataLength => Record.MaximumRecordDataLength;
+        internal override string RecordDataToString() => Record?.RecordDataToString();
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
-		{
-			Record.EncodeRecordData(messageData, offset, ref currentPosition, domainNames, useCanonical);
-		}
-	}
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition,
+            Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+        {
+            Record.EncodeRecordData(messageData, offset, ref currentPosition, domainNames, useCanonical);
+        }
+    }
 }

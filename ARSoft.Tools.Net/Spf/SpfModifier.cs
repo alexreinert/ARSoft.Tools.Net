@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System.Text;
@@ -21,33 +23,33 @@ using System.Text;
 namespace ARSoft.Tools.Net.Spf
 {
     /// <summary>
-    ///   Represents a single modifier term in a SPF record
+    ///     Represents a single modifier term in a SPF record
     /// </summary>
     public class SpfModifier : SpfTerm
-	{
-		/// <summary>
-		///   Type of the modifier
-		/// </summary>
-		public SpfModifierType Type { get; set; }
+    {
+        /// <summary>
+        ///     Type of the modifier
+        /// </summary>
+        public SpfModifierType Type { get; set; }
 
-		/// <summary>
-		///   Domain part of the modifier
-		/// </summary>
-		public string Domain { get; set; }
+        /// <summary>
+        ///     Domain part of the modifier
+        /// </summary>
+        public string Domain { get; set; }
 
-		/// <summary>
-		///   Returns the textual representation of a modifier term
-		/// </summary>
-		/// <returns> Textual representation </returns>
-		public override string ToString()
-		{
-			var res = new StringBuilder();
+        /// <summary>
+        ///     Returns the textual representation of a modifier term
+        /// </summary>
+        /// <returns> Textual representation </returns>
+        public override string ToString()
+        {
+            var res = new StringBuilder();
 
-			res.Append(EnumHelper<SpfModifierType>.ToString(Type).ToLower());
-			res.Append("=");
-			res.Append(Domain);
+            res.Append(EnumHelper<SpfModifierType>.ToString(Type).ToLower());
+            res.Append("=");
+            res.Append(Domain);
 
-			return res.ToString();
-		}
-	}
+            return res.ToString();
+        }
+    }
 }

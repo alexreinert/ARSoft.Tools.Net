@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -22,68 +24,73 @@ using System.Collections.Generic;
 namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
-    ///   <para>Responsible person record</para>
-    ///   <para>
-    ///     Defined in
-    ///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
-    ///   </para>
+    ///     <para>Responsible person record</para>
+    ///     <para>
+    ///         Defined in
+    ///         <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+    ///     </para>
     /// </summary>
     public class RpRecord : DnsRecordBase
-	{
-		/// <summary>
-		///   Mail address of responsable person, the @ should be replaced by a dot
-		/// </summary>
-		public DomainName MailBox { get; protected set; }
+    {
+        internal RpRecord()
+        {
+        }
 
-		/// <summary>
-		///   Domain name of a <see cref="TxtRecord" /> with additional information
-		/// </summary>
-		public DomainName TxtDomainName { get; protected set; }
+        /// <summary>
+        ///     Creates a new instance of the RpRecord class
+        /// </summary>
+        /// <param name="name"> Name of the record </param>
+        /// <param name="timeToLive"> Seconds the record should be cached at most </param>
+        /// <param name="mailBox"> Mail address of responsable person, the @ should be replaced by a dot </param>
+        /// <param name="txtDomainName">
+        ///     Domain name of a <see cref="TxtRecord" /> with additional information
+        /// </param>
+        public RpRecord(DomainName name, int timeToLive, DomainName mailBox, DomainName txtDomainName)
+            : base(name, RecordType.Rp, RecordClass.INet, timeToLive)
+        {
+            MailBox = mailBox ?? DomainName.Root;
+            TxtDomainName = txtDomainName ?? DomainName.Root;
+        }
 
-		internal RpRecord() {}
+        /// <summary>
+        ///     Mail address of responsable person, the @ should be replaced by a dot
+        /// </summary>
+        public DomainName MailBox { get; protected set; }
 
-		/// <summary>
-		///   Creates a new instance of the RpRecord class
-		/// </summary>
-		/// <param name="name"> Name of the record </param>
-		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="mailBox"> Mail address of responsable person, the @ should be replaced by a dot </param>
-		/// <param name="txtDomainName">
-		///   Domain name of a <see cref="TxtRecord" /> with additional information
-		/// </param>
-		public RpRecord(DomainName name, int timeToLive, DomainName mailBox, DomainName txtDomainName)
-			: base(name, RecordType.Rp, RecordClass.INet, timeToLive)
-		{
-			MailBox = mailBox ?? DomainName.Root;
-			TxtDomainName = txtDomainName ?? DomainName.Root;
-		}
+        /// <summary>
+        ///     Domain name of a <see cref="TxtRecord" /> with additional information
+        /// </summary>
+        public DomainName TxtDomainName { get; protected set; }
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			MailBox = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
-			TxtDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
-		}
+        protected internal override int MaximumRecordDataLength =>
+            4 + MailBox.MaximumRecordDataLength + TxtDomainName.MaximumRecordDataLength;
 
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 2)
-				throw new FormatException();
+        internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+        {
+            MailBox = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
+            TxtDomainName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
+        }
 
-			MailBox = ParseDomainName(origin, stringRepresentation[0]);
-			TxtDomainName = ParseDomainName(origin, stringRepresentation[1]);
-		}
+        internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
+        {
+            if (stringRepresentation.Length != 2)
+                throw new FormatException();
 
-		internal override string RecordDataToString() => MailBox
-		                                                 + " " + TxtDomainName;
+            MailBox = ParseDomainName(origin, stringRepresentation[0]);
+            TxtDomainName = ParseDomainName(origin, stringRepresentation[1]);
+        }
 
-	    protected internal override int MaximumRecordDataLength => 4 + MailBox.MaximumRecordDataLength + TxtDomainName.MaximumRecordDataLength;
+        internal override string RecordDataToString() =>
+            MailBox
+            + " " + TxtDomainName;
 
 
-
-        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
-		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MailBox, null, useCanonical);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TxtDomainName, null, useCanonical);
-		}
-	}
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition,
+            Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+        {
+            DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MailBox, null, useCanonical);
+            DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TxtDomainName, null,
+                useCanonical);
+        }
+    }
 }

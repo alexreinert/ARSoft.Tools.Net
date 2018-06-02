@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -23,200 +25,207 @@ using ARSoft.Tools.Net.Dns.DnsSec;
 
 namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
-	/// <inheritdoc />
-	/// <summary>
-	///   <para>Child DNS Key record</para>
-	///   <para>
-	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc7344">RFC 7344</see>
-	///   </para>
-	/// </summary>
-	public class CDnsKeyRecord : DnsRecordBase
-	{
-		/// <summary>
-		///   Flags of the key
-		/// </summary>
-		public DnsKeyFlags Flags { get; private set; }
+    /// <inheritdoc />
+    /// <summary>
+    ///     <para>Child DNS Key record</para>
+    ///     <para>
+    ///         Defined in
+    ///         <see cref="!:http://tools.ietf.org/html/rfc7344">RFC 7344</see>
+    ///     </para>
+    /// </summary>
+    public class CDnsKeyRecord : DnsRecordBase
+    {
+        internal CDnsKeyRecord()
+        {
+        }
 
-		/// <summary>
-		///   Protocol field
-		/// </summary>
-		public byte Protocol { get; private set; }
+        /// <summary>
+        ///     Creates a new instance of the DnsKeyRecord class
+        /// </summary>
+        /// <param name="name"> Name of the record </param>
+        /// <param name="recordClass"> Class of the record </param>
+        /// <param name="timeToLive"> Seconds the record should be cached at most </param>
+        /// <param name="flags"> Flags of the key </param>
+        /// <param name="protocol"> Protocol field </param>
+        /// <param name="algorithm"> Algorithm of the key </param>
+        /// <param name="publicKey"> Binary data of the public key </param>
+        public CDnsKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol,
+            DnsSecAlgorithm algorithm, byte[] publicKey)
+            : this(name, recordClass, timeToLive, flags, protocol, algorithm, publicKey, null)
+        {
+        }
 
-		/// <summary>
-		///   Algorithm of the key
-		/// </summary>
-		public DnsSecAlgorithm Algorithm { get; private set; }
+        /// <summary>
+        ///     Creates a new instance of the DnsKeyRecord class
+        /// </summary>
+        /// <param name="name"> Name of the record </param>
+        /// <param name="recordClass"> Class of the record </param>
+        /// <param name="timeToLive"> Seconds the record should be cached at most </param>
+        /// <param name="flags"> Flags of the key </param>
+        /// <param name="protocol"> Protocol field </param>
+        /// <param name="algorithm"> Algorithm of the key </param>
+        /// <param name="publicKey"> Binary data of the public key </param>
+        /// <param name="privateKey"> Binary data of the private key </param>
+        public CDnsKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol,
+            DnsSecAlgorithm algorithm, byte[] publicKey, byte[] privateKey)
+            : base(name, RecordType.CDnsKey, recordClass, timeToLive)
+        {
+            Flags = flags;
+            Protocol = protocol;
+            Algorithm = algorithm;
+            PublicKey = publicKey;
+            PrivateKey = privateKey;
+        }
 
-		/// <summary>
-		///   Binary data of the public key
-		/// </summary>
-		public byte[] PublicKey { get; private set; }
+        /// <summary>
+        ///     Flags of the key
+        /// </summary>
+        public DnsKeyFlags Flags { get; private set; }
 
-		/// <summary>
-		///   Binary data of the private key
-		/// </summary>
-		public byte[] PrivateKey { get; }
+        /// <summary>
+        ///     Protocol field
+        /// </summary>
+        public byte Protocol { get; private set; }
 
-		/// <summary>
-		///   <para>Record holds a DNS zone key</para>
-		///   <para>
-		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
-		///     and
-		///     <see cref="!:http://tools.ietf.org/html/rfc3757">RFC 3757</see>
-		///   </para>
-		/// </summary>
-		public bool IsZoneKey
-		{
-			get => (Flags & DnsKeyFlags.Zone) == DnsKeyFlags.Zone;
-		    set
-			{
-				if (value)
-				    Flags |= DnsKeyFlags.Zone;
-				else
-				    Flags &= ~DnsKeyFlags.Zone;
-			}
-		}
+        /// <summary>
+        ///     Algorithm of the key
+        /// </summary>
+        public DnsSecAlgorithm Algorithm { get; private set; }
 
-		/// <summary>
-		///   <para>Key is intended for use as a secure entry point</para>
-		///   <para>
-		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
-		///     and
-		///     <see cref="!:http://tools.ietf.org/html/rfc3757">RFC 3757</see>
-		///   </para>
-		/// </summary>
-		public bool IsSecureEntryPoint
-		{
-			get => (Flags & DnsKeyFlags.SecureEntryPoint) == DnsKeyFlags.SecureEntryPoint;
-		    set
-			{
-				if (value)
-				    Flags |= DnsKeyFlags.SecureEntryPoint;
-				else
-				    Flags &= ~DnsKeyFlags.SecureEntryPoint;
-			}
-		}
+        /// <summary>
+        ///     Binary data of the public key
+        /// </summary>
+        public byte[] PublicKey { get; private set; }
 
-		/// <summary>
-		///   <para>Key is intended for use as a secure entry point</para>
-		///   <para>
-		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc5011">RFC 5011</see>
-		///   </para>
-		/// </summary>
-		public bool IsRevoked
-		{
-			get => (Flags & DnsKeyFlags.Revoke) == DnsKeyFlags.Revoke;
-		    set
-			{
-				if (value)
-				    Flags |= DnsKeyFlags.Revoke;
-				else
-				    Flags &= ~DnsKeyFlags.Revoke;
-			}
-		}
+        /// <summary>
+        ///     Binary data of the private key
+        /// </summary>
+        public byte[] PrivateKey { get; }
 
-		/// <summary>
-		///   <para>Calculates the key tag</para>
-		///   <para>
-		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
-		///   </para>
-		/// </summary>
-		/// <returns></returns>
-		public ushort CalculateKeyTag()
-		{
-			if (Algorithm == DnsSecAlgorithm.RsaMd5)
-				return (ushort) (PublicKey[PublicKey.Length - 4] & PublicKey[PublicKey.Length - 3] << 8);
+        /// <summary>
+        ///     <para>Record holds a DNS zone key</para>
+        ///     <para>
+        ///         Defined in
+        ///         <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+        ///         and
+        ///         <see cref="!:http://tools.ietf.org/html/rfc3757">RFC 3757</see>
+        ///     </para>
+        /// </summary>
+        public bool IsZoneKey
+        {
+            get => (Flags & DnsKeyFlags.Zone) == DnsKeyFlags.Zone;
+            set
+            {
+                if (value)
+                    Flags |= DnsKeyFlags.Zone;
+                else
+                    Flags &= ~DnsKeyFlags.Zone;
+            }
+        }
 
-			var buffer = new byte[MaximumRecordDataLength];
-			var currentPosition = 0;
-			EncodeRecordData(buffer, 0, ref currentPosition, null, false);
+        /// <summary>
+        ///     <para>Key is intended for use as a secure entry point</para>
+        ///     <para>
+        ///         Defined in
+        ///         <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+        ///         and
+        ///         <see cref="!:http://tools.ietf.org/html/rfc3757">RFC 3757</see>
+        ///     </para>
+        /// </summary>
+        public bool IsSecureEntryPoint
+        {
+            get => (Flags & DnsKeyFlags.SecureEntryPoint) == DnsKeyFlags.SecureEntryPoint;
+            set
+            {
+                if (value)
+                    Flags |= DnsKeyFlags.SecureEntryPoint;
+                else
+                    Flags &= ~DnsKeyFlags.SecureEntryPoint;
+            }
+        }
 
-			ulong ac = 0;
+        /// <summary>
+        ///     <para>Key is intended for use as a secure entry point</para>
+        ///     <para>
+        ///         Defined in
+        ///         <see cref="!:http://tools.ietf.org/html/rfc5011">RFC 5011</see>
+        ///     </para>
+        /// </summary>
+        public bool IsRevoked
+        {
+            get => (Flags & DnsKeyFlags.Revoke) == DnsKeyFlags.Revoke;
+            set
+            {
+                if (value)
+                    Flags |= DnsKeyFlags.Revoke;
+                else
+                    Flags &= ~DnsKeyFlags.Revoke;
+            }
+        }
 
-			for (var i = 0; i < currentPosition; ++i) ac += (i & 1) == 1 ? buffer[i] : (ulong) buffer[i] << 8;
+        protected internal override int MaximumRecordDataLength => 4 + PublicKey.Length;
 
-		    ac += ac >> 16 & 0xFFFF;
+        /// <summary>
+        ///     <para>Calculates the key tag</para>
+        ///     <para>
+        ///         Defined in
+        ///         <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+        ///     </para>
+        /// </summary>
+        /// <returns></returns>
+        public ushort CalculateKeyTag()
+        {
+            if (Algorithm == DnsSecAlgorithm.RsaMd5)
+                return (ushort) (PublicKey[PublicKey.Length - 4] & PublicKey[PublicKey.Length - 3] << 8);
 
-			var res = (ushort) (ac & 0xffff);
+            var buffer = new byte[MaximumRecordDataLength];
+            var currentPosition = 0;
+            EncodeRecordData(buffer, 0, ref currentPosition, null, false);
 
-			return res;
-		}
+            ulong ac = 0;
 
-		internal CDnsKeyRecord() {}
+            for (var i = 0; i < currentPosition; ++i) ac += (i & 1) == 1 ? buffer[i] : (ulong) buffer[i] << 8;
 
-		/// <summary>
-		///   Creates a new instance of the DnsKeyRecord class
-		/// </summary>
-		/// <param name="name"> Name of the record </param>
-		/// <param name="recordClass"> Class of the record </param>
-		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="flags"> Flags of the key </param>
-		/// <param name="protocol"> Protocol field </param>
-		/// <param name="algorithm"> Algorithm of the key </param>
-		/// <param name="publicKey"> Binary data of the public key </param>
-		public CDnsKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol, DnsSecAlgorithm algorithm, byte[] publicKey)
-			: this(name, recordClass, timeToLive, flags, protocol, algorithm, publicKey, null) {}
+            ac += ac >> 16 & 0xFFFF;
 
-		/// <summary>
-		///   Creates a new instance of the DnsKeyRecord class
-		/// </summary>
-		/// <param name="name"> Name of the record </param>
-		/// <param name="recordClass"> Class of the record </param>
-		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="flags"> Flags of the key </param>
-		/// <param name="protocol"> Protocol field </param>
-		/// <param name="algorithm"> Algorithm of the key </param>
-		/// <param name="publicKey"> Binary data of the public key </param>
-		/// <param name="privateKey"> Binary data of the private key </param>
-		public CDnsKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol, DnsSecAlgorithm algorithm, byte[] publicKey, byte[] privateKey)
-			: base(name, RecordType.CDnsKey, recordClass, timeToLive)
-		{
-			Flags = flags;
-			Protocol = protocol;
-			Algorithm = algorithm;
-			PublicKey = publicKey;
-			PrivateKey = privateKey;
-		}
+            var res = (ushort) (ac & 0xffff);
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Flags = (DnsKeyFlags) DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Protocol = resultData[startPosition++];
-			Algorithm = (DnsSecAlgorithm) resultData[startPosition++];
-			PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 4);
-		}
+            return res;
+        }
 
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 4)
-				throw new FormatException();
+        internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+        {
+            Flags = (DnsKeyFlags) DnsMessageBase.ParseUShort(resultData, ref startPosition);
+            Protocol = resultData[startPosition++];
+            Algorithm = (DnsSecAlgorithm) resultData[startPosition++];
+            PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 4);
+        }
 
-			Flags = (DnsKeyFlags) ushort.Parse(stringRepresentation[0]);
-			Protocol = byte.Parse(stringRepresentation[1]);
-			Algorithm = (DnsSecAlgorithm) byte.Parse(stringRepresentation[2]);
-			PublicKey = string.Join(string.Empty, stringRepresentation.Skip(3)).FromBase64String();
-		}
+        internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
+        {
+            if (stringRepresentation.Length < 4)
+                throw new FormatException();
 
-		internal override string RecordDataToString() => (ushort) Flags
-		                                                 + " " + Protocol
-		                                                 + " " + (byte) Algorithm
-		                                                 + " " + PublicKey.ToBase64String();
+            Flags = (DnsKeyFlags) ushort.Parse(stringRepresentation[0]);
+            Protocol = byte.Parse(stringRepresentation[1]);
+            Algorithm = (DnsSecAlgorithm) byte.Parse(stringRepresentation[2]);
+            PublicKey = string.Join(string.Empty, stringRepresentation.Skip(3)).FromBase64String();
+        }
 
-	    protected internal override int MaximumRecordDataLength => 4 + PublicKey.Length;
+        internal override string RecordDataToString() =>
+            (ushort) Flags
+            + " " + Protocol
+            + " " + (byte) Algorithm
+            + " " + PublicKey.ToBase64String();
 
 
-
-        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
-		{
-			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Flags);
-			messageData[currentPosition++] = Protocol;
-			messageData[currentPosition++] = (byte) Algorithm;
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
-		}
-	}
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition,
+            Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+        {
+            DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Flags);
+            messageData[currentPosition++] = Protocol;
+            messageData[currentPosition++] = (byte) Algorithm;
+            DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
+        }
+    }
 }

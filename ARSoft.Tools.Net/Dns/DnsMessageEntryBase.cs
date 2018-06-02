@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -22,53 +24,53 @@ using System.Diagnostics.CodeAnalysis;
 namespace ARSoft.Tools.Net.Dns
 {
     /// <summary>
-    ///   Base class for a dns name identity
+    ///     Base class for a dns name identity
     /// </summary>
     public abstract class DnsMessageEntryBase : IEquatable<DnsMessageEntryBase>
-	{
-		/// <summary>
-		///   Domain name
-		/// </summary>
-		public DomainName Name { get; internal set; }
+    {
+        private int? _hashCode;
 
-		/// <summary>
-		///   Type of the record
-		/// </summary>
-		public RecordType RecordType { get; internal set; }
+        /// <summary>
+        ///     Domain name
+        /// </summary>
+        public DomainName Name { get; internal set; }
 
-		/// <summary>
-		///   Class of the record
-		/// </summary>
-		public RecordClass RecordClass { get; internal set; }
+        /// <summary>
+        ///     Type of the record
+        /// </summary>
+        public RecordType RecordType { get; internal set; }
 
-		internal abstract int MaximumLength { get; }
+        /// <summary>
+        ///     Class of the record
+        /// </summary>
+        public RecordClass RecordClass { get; internal set; }
 
-		/// <summary>
-		///   Returns the textual representation
-		/// </summary>
-		/// <returns> Textual representation </returns>
-		public override string ToString() => Name + " " + RecordType + " " + RecordClass;
+        internal abstract int MaximumLength { get; }
 
-	    private int? _hashCode;
+        public bool Equals(DnsMessageEntryBase other)
+        {
+            if (other == null)
+                return false;
 
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
-		{
-			if (!_hashCode.HasValue) _hashCode = ToString().GetHashCode();
+            return Name.Equals(other.Name)
+                   && RecordType.Equals(other.RecordType)
+                   && RecordClass.Equals(other.RecordClass);
+        }
 
-		    return _hashCode.Value;
-		}
+        /// <summary>
+        ///     Returns the textual representation
+        /// </summary>
+        /// <returns> Textual representation </returns>
+        public override string ToString() => Name + " " + RecordType + " " + RecordClass;
 
-		public override bool Equals(object obj) => Equals(obj as DnsMessageEntryBase);
+        [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+        public override int GetHashCode()
+        {
+            if (!_hashCode.HasValue) _hashCode = ToString().GetHashCode();
 
-	    public bool Equals(DnsMessageEntryBase other)
-		{
-			if (other == null)
-				return false;
+            return _hashCode.Value;
+        }
 
-			return Name.Equals(other.Name)
-			       && RecordType.Equals(other.RecordType)
-			       && RecordClass.Equals(other.RecordClass);
-		}
-	}
+        public override bool Equals(object obj) => Equals(obj as DnsMessageEntryBase);
+    }
 }

@@ -1,4 +1,5 @@
 ﻿#region Copyright and License
+
 // Copyright 2010..2017 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
@@ -14,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #endregion
 
 using System;
@@ -23,38 +25,43 @@ using System.Net;
 namespace ARSoft.Tools.Net.Dns.DnsRecord
 {
     /// <summary>
-    ///   Base record class for storing host to ip allocation (ARecord and AaaaRecord)
+    ///     Base record class for storing host to ip allocation (ARecord and AaaaRecord)
     /// </summary>
     public abstract class AddressRecordBase : DnsRecordBase, IAddressRecord
-	{
-		/// <summary>
-		///   IP address of the host
-		/// </summary>
-		public IPAddress Address { get; private set; }
+    {
+        protected AddressRecordBase()
+        {
+        }
 
-		protected AddressRecordBase() {}
+        protected AddressRecordBase(DomainName name, RecordType recordType, int timeToLive, IPAddress address)
+            : base(name, recordType, RecordClass.INet, timeToLive) =>
+            Address = address;
 
-		protected AddressRecordBase(DomainName name, RecordType recordType, int timeToLive, IPAddress address)
-			: base(name, recordType, RecordClass.INet, timeToLive) => Address = address;
+        /// <summary>
+        ///     IP address of the host
+        /// </summary>
+        public IPAddress Address { get; private set; }
 
-	    internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Address = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref startPosition, MaximumRecordDataLength));
-		}
+        internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+        {
+            Address = new IPAddress(
+                DnsMessageBase.ParseByteData(resultData, ref startPosition, MaximumRecordDataLength));
+        }
 
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 1)
-				throw new FormatException();
+        internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
+        {
+            if (stringRepresentation.Length != 1)
+                throw new FormatException();
 
-			Address = IPAddress.Parse(stringRepresentation[0]);
-		}
+            Address = IPAddress.Parse(stringRepresentation[0]);
+        }
 
-		internal override string RecordDataToString() => Address.ToString();
+        internal override string RecordDataToString() => Address.ToString();
 
-	    protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
-		{
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
-		}
-	}
+        protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition,
+            Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+        {
+            DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
+        }
+    }
 }
