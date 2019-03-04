@@ -41,7 +41,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<T> Records { get; private set; }
 
-		internal DnsSecResult(ReturnCode returnCode, List<T> records, DnsSecValidationResult validationResult)
+		public DnsSecResult(ReturnCode returnCode, List<T> records, DnsSecValidationResult validationResult)
 		{
 			ReturnCode = returnCode;
 			Records = records;
