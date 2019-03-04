@@ -138,7 +138,7 @@ namespace ARSoft.Tools.Net.Dns
 			DnsCacheRecordList<T> cacheResult;
 			if (_cache.TryGetRecords(name, recordType, recordClass, out cacheResult))
 			{
-				return new DnsSecResult<T>(cacheResult, cacheResult.ValidationResult);
+				return new DnsSecResult<T>(cacheResult.ReturnCode, cacheResult, cacheResult.ValidationResult);
 			}
 
 			DnsMessage msg = await _dnsClient.ResolveAsync(name, recordType, recordClass, new DnsQueryOptions()
@@ -172,18 +172,18 @@ namespace ARSoft.Tools.Net.Dns
 						throw new DnsSecValidationException("CNAME matching records could not be validated");
 
 					validationResult = cNameValidationResult == recordsValidationResult ? cNameValidationResult : DnsSecValidationResult.Unsigned;
-					_cache.Add(name, recordType, recordClass, records, validationResult, Math.Min(cName.TimeToLive, records.Min(x => x.TimeToLive)));
+					_cache.Add(name, recordType, recordClass, records, msg.ReturnCode, validationResult, Math.Min(cName.TimeToLive, records.Min(x => x.TimeToLive)));
 
-					return new DnsSecResult<T>(records, validationResult);
+					return new DnsSecResult<T>(msg.ReturnCode, records, validationResult);
 				}
 
 				var cNameResults = await ResolveSecureAsync<T>(cName.CanonicalName, recordType, recordClass, token);
 				validationResult = cNameValidationResult == cNameResults.ValidationResult ? cNameValidationResult : DnsSecValidationResult.Unsigned;
 
 				if (cNameResults.Records.Count > 0)
-					_cache.Add(name, recordType, recordClass, cNameResults.Records, validationResult, Math.Min(cName.TimeToLive, cNameResults.Records.Min(x => x.TimeToLive)));
+					_cache.Add(name, recordType, recordClass, cNameResults.Records, msg.ReturnCode, validationResult, Math.Min(cName.TimeToLive, cNameResults.Records.Min(x => x.TimeToLive)));
 
-				return new DnsSecResult<T>(cNameResults.Records, validationResult);
+				return new DnsSecResult<T>(msg.ReturnCode, cNameResults.Records, validationResult);
 			}
 
 			List<T> res = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<T>().ToList();
@@ -194,9 +194,9 @@ namespace ARSoft.Tools.Net.Dns
 				throw new DnsSecValidationException("Response records could not be validated");
 
 			if (res.Count > 0)
-				_cache.Add(name, recordType, recordClass, res, validationResult, res.Min(x => x.TimeToLive));
+				_cache.Add(name, recordType, recordClass, res, msg.ReturnCode, validationResult, res.Min(x => x.TimeToLive));
 
-			return new DnsSecResult<T>(res, validationResult);
+			return new DnsSecResult<T>(msg.ReturnCode, res, validationResult);
 		}
 
 		/// <summary>

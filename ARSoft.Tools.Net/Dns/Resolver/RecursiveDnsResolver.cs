@@ -220,14 +220,14 @@ namespace ARSoft.Tools.Net.Dns
 			List<DnsRecordBase> cNameRecords = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
 			if (cNameRecords.Count > 0)
 			{
-				_cache.Add(name, RecordType.CName, recordClass, cNameRecords, DnsSecValidationResult.Indeterminate, cNameRecords.Min(x => x.TimeToLive));
+				_cache.Add(name, RecordType.CName, recordClass, cNameRecords, msg.ReturnCode, DnsSecValidationResult.Indeterminate, cNameRecords.Min(x => x.TimeToLive));
 
 				DomainName canonicalName = ((CNameRecord) cNameRecords.First()).CanonicalName;
 
 				List<DnsRecordBase> matchingAdditionalRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(canonicalName)).ToList();
 				if (matchingAdditionalRecords.Count > 0)
 				{
-					_cache.Add(canonicalName, recordType, recordClass, matchingAdditionalRecords, DnsSecValidationResult.Indeterminate, matchingAdditionalRecords.Min(x => x.TimeToLive));
+					_cache.Add(canonicalName, recordType, recordClass, matchingAdditionalRecords, msg.ReturnCode, DnsSecValidationResult.Indeterminate, matchingAdditionalRecords.Min(x => x.TimeToLive));
 					return matchingAdditionalRecords.OfType<T>().ToList();
 				}
 
@@ -238,7 +238,7 @@ namespace ARSoft.Tools.Net.Dns
 			List<DnsRecordBase> answerRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
 			if (answerRecords.Count > 0)
 			{
-				_cache.Add(name, recordType, recordClass, answerRecords, DnsSecValidationResult.Indeterminate, answerRecords.Min(x => x.TimeToLive));
+				_cache.Add(name, recordType, recordClass, answerRecords, msg.ReturnCode, DnsSecValidationResult.Indeterminate, answerRecords.Min(x => x.TimeToLive));
 				return answerRecords.OfType<T>().ToList();
 			}
 
@@ -252,7 +252,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (soaRecord != null)
 			{
-				_cache.Add(name, recordType, recordClass, new List<DnsRecordBase>(), DnsSecValidationResult.Indeterminate, soaRecord.NegativeCachingTTL);
+				_cache.Add(name, recordType, recordClass, new List<DnsRecordBase>(), msg.ReturnCode, DnsSecValidationResult.Indeterminate, soaRecord.NegativeCachingTTL);
 				return new List<T>();
 			}
 

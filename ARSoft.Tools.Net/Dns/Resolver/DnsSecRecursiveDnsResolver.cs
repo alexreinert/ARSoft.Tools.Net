@@ -241,14 +241,14 @@ namespace ARSoft.Tools.Net.Dns
 			DnsCacheRecordList<T> cachedResults;
 			if (_cache.TryGetRecords(name, recordType, recordClass, out cachedResults))
 			{
-				return new DnsSecResult<T>(cachedResults, cachedResults.ValidationResult);
+				return new DnsSecResult<T>(cachedResults.ReturnCode, cachedResults, cachedResults.ValidationResult);
 			}
 
 			DnsCacheRecordList<CNameRecord> cachedCNames;
 			if (_cache.TryGetRecords(name, RecordType.CName, recordClass, out cachedCNames))
 			{
 				var cNameResult = await ResolveAsyncInternal<T>(cachedCNames.First().CanonicalName, recordType, recordClass, state, token);
-				return new DnsSecResult<T>(cNameResult.Records, cachedCNames.ValidationResult == cNameResult.ValidationResult ? cachedCNames.ValidationResult : DnsSecValidationResult.Unsigned);
+				return new DnsSecResult<T>(cNameResult.ReturnCode, cNameResult.Records, cachedCNames.ValidationResult == cNameResult.ValidationResult ? cachedCNames.ValidationResult : DnsSecValidationResult.Unsigned);
 			}
 
 			DnsMessage msg = await ResolveMessageAsync(name, recordType, recordClass, state, token);
@@ -261,7 +261,7 @@ namespace ARSoft.Tools.Net.Dns
 				if ((cNameValidationResult == DnsSecValidationResult.Bogus) || (cNameValidationResult == DnsSecValidationResult.Indeterminate))
 					throw new DnsSecValidationException("CNAME record could not be validated");
 
-				_cache.Add(name, RecordType.CName, recordClass, cNameRecords, cNameValidationResult, cNameRecords.Min(x => x.TimeToLive));
+				_cache.Add(name, RecordType.CName, recordClass, cNameRecords, msg.ReturnCode, cNameValidationResult, cNameRecords.Min(x => x.TimeToLive));
 
 				DomainName canonicalName = ((CNameRecord) cNameRecords.First()).CanonicalName;
 
@@ -273,13 +273,13 @@ namespace ARSoft.Tools.Net.Dns
 						throw new DnsSecValidationException("CNAME matching records could not be validated");
 
 					DnsSecValidationResult validationResult = cNameValidationResult == matchingValidationResult ? cNameValidationResult : DnsSecValidationResult.Unsigned;
-					_cache.Add(canonicalName, recordType, recordClass, matchingAdditionalRecords, validationResult, matchingAdditionalRecords.Min(x => x.TimeToLive));
+					_cache.Add(canonicalName, recordType, recordClass, matchingAdditionalRecords, msg.ReturnCode, validationResult, matchingAdditionalRecords.Min(x => x.TimeToLive));
 
-					return new DnsSecResult<T>(matchingAdditionalRecords.OfType<T>().ToList(), validationResult);
+					return new DnsSecResult<T>(msg.ReturnCode, matchingAdditionalRecords.OfType<T>().ToList(), validationResult);
 				}
 
 				var cNameResults = await ResolveAsyncInternal<T>(canonicalName, recordType, recordClass, state, token);
-				return new DnsSecResult<T>(cNameResults.Records, cNameValidationResult == cNameResults.ValidationResult ? cNameValidationResult : DnsSecValidationResult.Unsigned);
+				return new DnsSecResult<T>(cNameResults.ReturnCode, cNameResults.Records, cNameValidationResult == cNameResults.ValidationResult ? cNameValidationResult : DnsSecValidationResult.Unsigned);
 			}
 
 			// check for "normal" answer
@@ -290,8 +290,8 @@ namespace ARSoft.Tools.Net.Dns
 				if ((validationResult == DnsSecValidationResult.Bogus) || (validationResult == DnsSecValidationResult.Indeterminate))
 					throw new DnsSecValidationException("Response records could not be validated");
 
-				_cache.Add(name, recordType, recordClass, answerRecords, validationResult, answerRecords.Min(x => x.TimeToLive));
-				return new DnsSecResult<T>(answerRecords.OfType<T>().ToList(), validationResult);
+				_cache.Add(name, recordType, recordClass, answerRecords, msg.ReturnCode, validationResult, answerRecords.Min(x => x.TimeToLive));
+				return new DnsSecResult<T>(msg.ReturnCode, answerRecords.OfType<T>().ToList(), validationResult);
 			}
 
 			// check for negative answer
@@ -308,8 +308,8 @@ namespace ARSoft.Tools.Net.Dns
 				if ((validationResult == DnsSecValidationResult.Bogus) || (validationResult == DnsSecValidationResult.Indeterminate))
 					throw new DnsSecValidationException("Negative answer could not be validated");
 
-				_cache.Add(name, recordType, recordClass, new List<DnsRecordBase>(), validationResult, soaRecord.NegativeCachingTTL);
-				return new DnsSecResult<T>(new List<T>(), validationResult);
+				_cache.Add(name, recordType, recordClass, new List<DnsRecordBase>(), msg.ReturnCode, validationResult, soaRecord.NegativeCachingTTL);
+				return new DnsSecResult<T>(msg.ReturnCode, new List<T>(), validationResult);
 			}
 
 			// authoritive response does not contain answer

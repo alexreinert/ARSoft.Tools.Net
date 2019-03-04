@@ -26,6 +26,7 @@ namespace ARSoft.Tools.Net.Dns
 {
 	internal class DnsCacheRecordList<T> : List<T>
 	{
+		public ReturnCode ReturnCode { get; set; }
 		public DnsSecValidationResult ValidationResult { get; set; }
 	}
 
@@ -83,11 +84,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		private readonly ConcurrentDictionary<CacheKey, CacheValue> _cache = new ConcurrentDictionary<CacheKey, CacheValue>();
 
-		public void Add<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, IEnumerable<TRecord> records, DnsSecValidationResult validationResult, int timeToLive)
+		public void Add<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, IEnumerable<TRecord> records, ReturnCode returnCode, DnsSecValidationResult validationResult, int timeToLive)
 			where TRecord : DnsRecordBase
 		{
 			DnsCacheRecordList<DnsRecordBase> cacheValues = new DnsCacheRecordList<DnsRecordBase>();
 			cacheValues.AddRange(records);
+			cacheValues.ReturnCode = returnCode;
 			cacheValues.ValidationResult = validationResult;
 
 			Add(name, recordType, recordClass, cacheValues, timeToLive);
@@ -166,6 +168,7 @@ namespace ARSoft.Tools.Net.Dns
 						return record;
 					}));
 
+				records.ReturnCode = cacheValue.Records.ReturnCode;
 				records.ValidationResult = cacheValue.Records.ValidationResult;
 
 				return true;

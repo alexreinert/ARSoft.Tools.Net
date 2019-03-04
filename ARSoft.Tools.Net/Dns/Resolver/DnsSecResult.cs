@@ -27,6 +27,11 @@ namespace ARSoft.Tools.Net.Dns
 		where T : DnsRecordBase
 	{
 		/// <summary>
+		///   Gets the return code (RCODE)
+		/// </summary>
+		public ReturnCode ReturnCode { get; }
+
+		/// <summary>
 		///   The result of the validation process
 		/// </summary>
 		public DnsSecValidationResult ValidationResult { get; private set; }
@@ -36,8 +41,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<T> Records { get; private set; }
 
-		internal DnsSecResult(List<T> records, DnsSecValidationResult validationResult)
+		internal DnsSecResult(ReturnCode returnCode, List<T> records, DnsSecValidationResult validationResult)
 		{
+			ReturnCode = returnCode;
 			Records = records;
 			ValidationResult = validationResult;
 		}
