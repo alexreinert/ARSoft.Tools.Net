@@ -1,6 +1,9 @@
 # Project Description
 This project contains a complete managed .Net SPF validation, SenderID validation and a dns client and dns server implementation written in C#.
 
+# Documentation
+[https://docs.ar-soft.de/arsoft.tools.net/](https://docs.ar-soft.de/arsoft.tools.net/)
+
 # Donations
 If you use this library, please send me your feedback and add a link to this page.
 In addition you can [Donate via Paypal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=A5RMPWBTPZ29G) or send me an [Amazon.de gift card](https://www.amazon.de/gp/gc/order-email?ie=UTF8&ref_=gc_lp_eb2&design=a_amazon_09)
