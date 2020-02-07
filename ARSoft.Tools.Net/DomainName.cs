@@ -314,7 +314,7 @@ namespace ARSoft.Tools.Net
 			if (_toString != null)
 				return _toString;
 
-			return (_toString = String.Join(".", _labels.Select(x => x.ToMasterfileLabelRepresentation(true))) + ".");
+			return (_toString = String.Join(".", _labels.Select(x => x.ToMasterfileLabelRepresentation(true))));
 		}
 
 		private int? _hashCode;
