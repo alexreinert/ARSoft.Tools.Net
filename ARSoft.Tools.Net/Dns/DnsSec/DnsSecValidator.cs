@@ -21,10 +21,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	internal class DnsSecValidator<TState>
+	internal class DnsSecValidator<TState> where TState : IDnsSecValidatorContext
 	{
 		private readonly IInternalDnsSecResolver<TState> _resolver;
 		private readonly IResolverHintStore _resolverHintStore;
@@ -38,6 +39,8 @@ namespace ARSoft.Tools.Net.Dns
 		public async Task<DnsSecValidationResult> ValidateAsync<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, DnsMessage msg, List<TRecord> resultRecords, TState state, CancellationToken token)
 			where TRecord : DnsRecordBase
 		{
+			CheckAndUpdatedResolvedDomains(state, name, recordType);
+
 			List<RrSigRecord> rrSigRecords = msg
 				.AnswerRecords.OfType<RrSigRecord>()
 				.Union(msg.AuthorityRecords.OfType<RrSigRecord>())
@@ -54,6 +57,14 @@ namespace ARSoft.Tools.Net.Dns
 				return await ValidateRrSigAsync(name, recordType, recordClass, resultRecords, rrSigRecords, zoneApex, msg, state, token);
 
 			return await ValidateNonExistenceAsync(name, recordType, recordClass, rrSigRecords, DomainName.Asterisk + zoneApex, zoneApex, msg, state, token);
+		}
+
+		private static void CheckAndUpdatedResolvedDomains(TState state, DomainName name, RecordType recordType)
+		{
+			if (state.HasDomainAlreadyBeenResolvedInValidation(name, recordType))
+				throw new DnsSecValidationException($"The domain '{name}' (record type '{recordType}') has already been resolved during the DNSSEC validation. Aborting validation to avoid endless loop.");
+
+			state.AddResolvedDomainInValidation(name, recordType);
 		}
 
 		private async Task<bool> ValidateOptOut(DomainName name, RecordClass recordClass, TState state, CancellationToken token)
@@ -141,7 +152,15 @@ namespace ARSoft.Tools.Net.Dns
 						return DnsSecValidationResult.Bogus;
 				}
 
-				current = DomainName.Asterisk + current.GetParentName(current.Labels[0] == "*" ? 2 : 1);
+				// Updated the following lines to fix an issue where an NSEC entry is present for a parent domain but is not a wildcard entry.
+				if (current.Labels[0] == "*")
+				{
+					current = current.GetParentName();
+				}
+				else
+				{
+					current = DomainName.Asterisk + current.GetParentName();
+				}
 			}
 		}
 
@@ -179,7 +198,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			while (true)
 			{
-				if (nsecRecords.Any(x => x.Name == hashedName))
+				if (nsecRecords.Any(x => x.Name.Equals(hashedName, true)))
 					break;
 
 				if (current == zoneApex)

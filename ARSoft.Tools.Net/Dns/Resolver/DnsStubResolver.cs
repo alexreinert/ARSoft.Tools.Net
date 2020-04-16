@@ -102,14 +102,14 @@ namespace ARSoft.Tools.Net.Dns
 				records = msg.AnswerRecords.Where(x => x.Name.Equals(cName.CanonicalName)).OfType<T>().ToList();
 				if (records.Count > 0)
 				{
-					_cache.Add(name, recordType, recordClass, records, DnsSecValidationResult.Indeterminate, records.Min(x => x.TimeToLive));
+					_cache.Add(name, recordType, recordClass, records, msg.ReturnCode, DnsSecValidationResult.Indeterminate, records.Min(x => x.TimeToLive));
 					return records;
 				}
 
 				records = Resolve<T>(cName.CanonicalName, recordType, recordClass);
 
 				if (records.Count > 0)
-					_cache.Add(name, recordType, recordClass, records, DnsSecValidationResult.Indeterminate, records.Min(x => x.TimeToLive));
+					_cache.Add(name, recordType, recordClass, records, msg.ReturnCode, DnsSecValidationResult.Indeterminate, records.Min(x => x.TimeToLive));
 
 				return records;
 			}
@@ -117,7 +117,7 @@ namespace ARSoft.Tools.Net.Dns
 			records = msg.AnswerRecords.Where(x => x.Name.Equals(name)).OfType<T>().ToList();
 
 			if (records.Count > 0)
-				_cache.Add(name, recordType, recordClass, records, DnsSecValidationResult.Indeterminate, records.Min(x => x.TimeToLive));
+				_cache.Add(name, recordType, recordClass, records, msg.ReturnCode, DnsSecValidationResult.Indeterminate, records.Min(x => x.TimeToLive));
 
 			return records;
 		}
@@ -157,14 +157,14 @@ namespace ARSoft.Tools.Net.Dns
 				records = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(cName.CanonicalName)).OfType<T>().ToList();
 				if (records.Count > 0)
 				{
-					_cache.Add(name, recordType, recordClass, records, DnsSecValidationResult.Indeterminate, Math.Min(cName.TimeToLive, records.Min(x => x.TimeToLive)));
+					_cache.Add(name, recordType, recordClass, records, msg.ReturnCode, DnsSecValidationResult.Indeterminate, Math.Min(cName.TimeToLive, records.Min(x => x.TimeToLive)));
 					return records;
 				}
 
 				records = await ResolveAsync<T>(cName.CanonicalName, recordType, recordClass, token);
 
 				if (records.Count > 0)
-					_cache.Add(name, recordType, recordClass, records, DnsSecValidationResult.Indeterminate, Math.Min(cName.TimeToLive, records.Min(x => x.TimeToLive)));
+					_cache.Add(name, recordType, recordClass, records, msg.ReturnCode, DnsSecValidationResult.Indeterminate, Math.Min(cName.TimeToLive, records.Min(x => x.TimeToLive)));
 
 				return records;
 			}
@@ -172,7 +172,7 @@ namespace ARSoft.Tools.Net.Dns
 			records = msg.AnswerRecords.Where(x => x.Name.Equals(name)).OfType<T>().ToList();
 
 			if (records.Count > 0)
-				_cache.Add(name, recordType, recordClass, records, DnsSecValidationResult.Indeterminate, records.Min(x => x.TimeToLive));
+				_cache.Add(name, recordType, recordClass, records, msg.ReturnCode, DnsSecValidationResult.Indeterminate, records.Min(x => x.TimeToLive));
 
 			return records;
 		}
