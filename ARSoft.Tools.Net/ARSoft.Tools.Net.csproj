@@ -59,6 +59,9 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -135,6 +138,8 @@
     <Compile Include="Dns\DnsSec\DnsSecDigestType.cs" />
     <Compile Include="Dns\DnsSec\DnsSecValidationException.cs" />
     <Compile Include="Dns\DnsSec\DnsSecValidator.cs" />
+    <Compile Include="Dns\DnsSec\DnsSecValidatorContext.cs" />
+    <Compile Include="Dns\DnsSec\IDnsSecValidatorContext.cs" />
     <Compile Include="Dns\DnsSec\IInternalDnsSecResolver.cs" />
     <Compile Include="Dns\EDns\CookieOption.cs" />
     <Compile Include="Dns\Resolver\IResolverHintStore.cs" />

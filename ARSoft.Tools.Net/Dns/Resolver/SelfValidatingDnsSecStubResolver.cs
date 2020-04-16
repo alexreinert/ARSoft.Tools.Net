@@ -20,9 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -35,11 +35,11 @@ namespace ARSoft.Tools.Net.Dns
 	///     and <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
 	///   </para>
 	/// </summary>
-	public class SelfValidatingInternalDnsSecStubResolver : IDnsSecResolver, IInternalDnsSecResolver<object>
+	public class SelfValidatingInternalDnsSecStubResolver : IDnsSecResolver, IInternalDnsSecResolver<DnsSecValidatorContext>
 	{
 		private readonly DnsClient _dnsClient;
 		private DnsCache _cache;
-		private readonly DnsSecValidator<object> _validator;
+		private readonly DnsSecValidator<DnsSecValidatorContext> _validator;
 
 		/// <summary>
 		///   Provides a new instance using a custom <see cref="DnsClient">DNS client</see>
@@ -50,7 +50,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			_dnsClient = dnsClient ?? DnsClient.Default;
 			_cache = new DnsCache();
-			_validator = new DnsSecValidator<object>(this, resolverHintStore ?? new StaticResolverHintStore());
+			_validator = new DnsSecValidator<DnsSecValidatorContext>(this, resolverHintStore ?? new StaticResolverHintStore());
 		}
 
 		/// <summary>
@@ -129,7 +129,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="recordClass"> Class the should be queried </param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> A list of matching <see cref="DnsRecordBase">records</see> </returns>
-		public async Task<DnsSecResult<T>> ResolveSecureAsync<T>(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, CancellationToken token = default(CancellationToken))
+		public Task<DnsSecResult<T>> ResolveSecureAsync<T>(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, CancellationToken token = default(CancellationToken))
+			where T : DnsRecordBase
+		{
+			return ResolveSecureInternalAsync<T>(name, recordType, recordClass, new DnsSecValidatorContext(), token);
+		}
+
+		private async Task<DnsSecResult<T>> ResolveSecureInternalAsync<T>(DomainName name, RecordType recordType, RecordClass recordClass, DnsSecValidatorContext state, CancellationToken token)
 			where T : DnsRecordBase
 		{
 			if (name == null)
@@ -160,14 +166,14 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (cName != null)
 			{
-				DnsSecValidationResult cNameValidationResult = await _validator.ValidateAsync(name, RecordType.CName, recordClass, msg, new List<CNameRecord>() { cName }, null, token);
+				DnsSecValidationResult cNameValidationResult = await _validator.ValidateAsync(name, RecordType.CName, recordClass, msg, new List<CNameRecord>() { cName }, state, token);
 				if ((cNameValidationResult == DnsSecValidationResult.Bogus) || (cNameValidationResult == DnsSecValidationResult.Indeterminate))
 					throw new DnsSecValidationException("CNAME record could not be validated");
 
 				var records = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(cName.CanonicalName)).OfType<T>().ToList();
 				if (records.Count > 0)
 				{
-					DnsSecValidationResult recordsValidationResult = await _validator.ValidateAsync(cName.CanonicalName, recordType, recordClass, msg, records, null, token);
+					DnsSecValidationResult recordsValidationResult = await _validator.ValidateAsync(cName.CanonicalName, recordType, recordClass, msg, records, state, token);
 					if ((recordsValidationResult == DnsSecValidationResult.Bogus) || (recordsValidationResult == DnsSecValidationResult.Indeterminate))
 						throw new DnsSecValidationException("CNAME matching records could not be validated");
 
@@ -188,7 +194,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			List<T> res = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<T>().ToList();
 
-			validationResult = await _validator.ValidateAsync(name, recordType, recordClass, msg, res, null, token);
+			validationResult = await _validator.ValidateAsync(name, recordType, recordClass, msg, res, state, token);
 
 			if ((validationResult == DnsSecValidationResult.Bogus) || (validationResult == DnsSecValidationResult.Indeterminate))
 				throw new DnsSecValidationException("Response records could not be validated");
@@ -207,14 +213,14 @@ namespace ARSoft.Tools.Net.Dns
 			_cache = new DnsCache();
 		}
 
-		Task<DnsMessage> IInternalDnsSecResolver<object>.ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, object state, CancellationToken token)
+		Task<DnsMessage> IInternalDnsSecResolver<DnsSecValidatorContext>.ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, DnsSecValidatorContext state, CancellationToken token)
 		{
 			return _dnsClient.ResolveAsync(name, RecordType.Ds, recordClass, new DnsQueryOptions() { IsEDnsEnabled = true, IsDnsSecOk = true, IsCheckingDisabled = true, IsRecursionDesired = true }, token);
 		}
 
-		Task<DnsSecResult<TRecord>> IInternalDnsSecResolver<object>.ResolveSecureAsync<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, object state, CancellationToken token)
+		Task<DnsSecResult<TRecord>> IInternalDnsSecResolver<DnsSecValidatorContext>.ResolveSecureAsync<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, DnsSecValidatorContext state, CancellationToken token)
 		{
-			return ResolveSecureAsync<TRecord>(name, recordType, recordClass, token);
+			return ResolveSecureInternalAsync<TRecord>(name, recordType, recordClass, state, token);
 		}
 	}
 }

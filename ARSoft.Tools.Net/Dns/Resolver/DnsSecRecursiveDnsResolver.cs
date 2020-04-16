@@ -21,9 +21,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -36,7 +36,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public class DnsSecRecursiveDnsResolver : IDnsSecResolver, IInternalDnsSecResolver<DnsSecRecursiveDnsResolver.State>
 	{
-		private class State
+		private class State : DnsSecValidatorContext
 		{
 			public int QueryCount;
 		}

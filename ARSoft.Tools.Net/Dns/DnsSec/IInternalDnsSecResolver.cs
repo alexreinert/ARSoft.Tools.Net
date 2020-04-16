@@ -16,16 +16,13 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ARSoft.Tools.Net.Dns.DnsSec;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	internal interface IInternalDnsSecResolver<in TState>
+	internal interface IInternalDnsSecResolver<in TState> where TState : IDnsSecValidatorContext
 	{
 		Task<DnsMessage> ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, TState state, CancellationToken token);
 
