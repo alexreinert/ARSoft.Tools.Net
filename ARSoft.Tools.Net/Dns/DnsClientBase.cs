@@ -31,7 +31,7 @@ using Org.BouncyCastle.Security;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	public abstract class DnsClientBase
+	public abstract class DnsClientBase : IDnsClientBase
 	{
 		private static readonly SecureRandom _secureRandom = new SecureRandom(new CryptoApiRandomGenerator());
 
