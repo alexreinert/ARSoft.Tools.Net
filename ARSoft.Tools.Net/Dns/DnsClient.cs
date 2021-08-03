@@ -34,7 +34,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   Provides a client for querying dns records
 	/// </summary>
-	public class DnsClient : DnsClientBase
+	public class DnsClient : DnsClientBase, IDnsClient
 	{
 		/// <summary>
 		///   Returns a default instance of the DnsClient, which uses the configured dns servers of the executing computer and a

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ARSoft.Tools.Net</RootNamespace>
     <AssemblyName>ARSoft.Tools.Net</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -139,6 +139,8 @@
     <Compile Include="Dns\DnsSec\DnsSecValidator.cs" />
     <Compile Include="Dns\DnsSec\IInternalDnsSecResolver.cs" />
     <Compile Include="Dns\EDns\CookieOption.cs" />
+    <Compile Include="Dns\IDnsClient.cs" />
+    <Compile Include="Dns\IDnsClientBase.cs" />
     <Compile Include="Dns\Resolver\IResolverHintStore.cs" />
     <Compile Include="Dns\Resolver\DnsSecRecursiveDnsResolver.cs" />
     <Compile Include="Dns\DnsSec\DsRecord.cs" />

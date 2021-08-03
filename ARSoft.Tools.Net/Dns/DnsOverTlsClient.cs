@@ -34,7 +34,7 @@ namespace ARSoft.Tools.Net.Dns
     /// <summary>
     ///   Provides a client for querying dns records through TLS
     /// </summary>
-    public class DnsOverTlsClient : DnsOverTlsClientBase
+    public class DnsOverTlsClient : DnsOverTlsClientBase, IDnsClient
     {
         /// <summary>
         ///   Returns a default instance of the DnsClient, which uses the configured dns servers of the executing computer and a
