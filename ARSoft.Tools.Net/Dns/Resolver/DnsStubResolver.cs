@@ -106,6 +106,11 @@ namespace ARSoft.Tools.Net.Dns
 					return records;
 				}
 
+				if (name.Equals(cName.CanonicalName))
+				{
+					throw new Exception($"CNAME loop detected for '{name}'.");
+				}
+
 				records = Resolve<T>(cName.CanonicalName, recordType, recordClass);
 
 				if (records.Count > 0)
@@ -159,6 +164,11 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					_cache.Add(name, recordType, recordClass, records, msg.ReturnCode, DnsSecValidationResult.Indeterminate, Math.Min(cName.TimeToLive, records.Min(x => x.TimeToLive)));
 					return records;
+				}
+
+				if (name.Equals(cName.CanonicalName))
+				{
+					throw new Exception($"CNAME loop detected for '{name}'.");
 				}
 
 				records = await ResolveAsync<T>(cName.CanonicalName, recordType, recordClass, token);

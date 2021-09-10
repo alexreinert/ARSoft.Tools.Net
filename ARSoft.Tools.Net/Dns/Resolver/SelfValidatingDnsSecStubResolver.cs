@@ -183,6 +183,11 @@ namespace ARSoft.Tools.Net.Dns
 					return new DnsSecResult<T>(msg.ReturnCode, records, validationResult);
 				}
 
+				if (name.Equals(cName.CanonicalName))
+				{
+					throw new Exception($"CNAME loop detected for '{name}'.");
+				}
+
 				var cNameResults = await ResolveSecureAsync<T>(cName.CanonicalName, recordType, recordClass, token);
 				validationResult = cNameValidationResult == cNameResults.ValidationResult ? cNameValidationResult : DnsSecValidationResult.Unsigned;
 

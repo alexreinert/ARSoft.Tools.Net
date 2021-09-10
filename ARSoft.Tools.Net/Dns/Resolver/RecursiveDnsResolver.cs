@@ -211,7 +211,13 @@ namespace ARSoft.Tools.Net.Dns
 			List<CNameRecord> cachedCNames;
 			if (_cache.TryGetRecords(name, RecordType.CName, recordClass, out cachedCNames))
 			{
-				return await ResolveAsyncInternal<T>(cachedCNames.First().CanonicalName, recordType, recordClass, state, token);
+				var cNameCanonicalName = cachedCNames.First().CanonicalName;
+				if (name.Equals(cNameCanonicalName))
+				{
+					throw new Exception($"CNAME loop detected for '{name}'.");
+				}
+
+				return await ResolveAsyncInternal<T>(cNameCanonicalName, recordType, recordClass, state, token);
 			}
 
 			DnsMessage msg = await ResolveMessageAsync(name, recordType, recordClass, state, token);
@@ -229,6 +235,12 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					_cache.Add(canonicalName, recordType, recordClass, matchingAdditionalRecords, msg.ReturnCode, DnsSecValidationResult.Indeterminate, matchingAdditionalRecords.Min(x => x.TimeToLive));
 					return matchingAdditionalRecords.OfType<T>().ToList();
+				}
+
+
+				if (name.Equals(canonicalName))
+				{
+					throw new Exception($"CNAME loop detected for '{name}'.");
 				}
 
 				return await ResolveAsyncInternal<T>(canonicalName, recordType, recordClass, state, token);

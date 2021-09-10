@@ -247,7 +247,13 @@ namespace ARSoft.Tools.Net.Dns
 			DnsCacheRecordList<CNameRecord> cachedCNames;
 			if (_cache.TryGetRecords(name, RecordType.CName, recordClass, out cachedCNames))
 			{
-				var cNameResult = await ResolveAsyncInternal<T>(cachedCNames.First().CanonicalName, recordType, recordClass, state, token);
+				var cNameCanonicalName = cachedCNames.First().CanonicalName;
+				if (name.Equals(cNameCanonicalName))
+				{
+					throw new Exception($"CNAME loop detected for '{name}'.");
+				}
+
+				var cNameResult = await ResolveAsyncInternal<T>(cNameCanonicalName, recordType, recordClass, state, token);
 				return new DnsSecResult<T>(cNameResult.ReturnCode, cNameResult.Records, cachedCNames.ValidationResult == cNameResult.ValidationResult ? cachedCNames.ValidationResult : DnsSecValidationResult.Unsigned);
 			}
 
@@ -276,6 +282,11 @@ namespace ARSoft.Tools.Net.Dns
 					_cache.Add(canonicalName, recordType, recordClass, matchingAdditionalRecords, msg.ReturnCode, validationResult, matchingAdditionalRecords.Min(x => x.TimeToLive));
 
 					return new DnsSecResult<T>(msg.ReturnCode, matchingAdditionalRecords.OfType<T>().ToList(), validationResult);
+				}
+
+				if (name.Equals(canonicalName))
+				{
+					throw new Exception($"CNAME loop detected for '{name}'.");
 				}
 
 				var cNameResults = await ResolveAsyncInternal<T>(canonicalName, recordType, recordClass, state, token);
