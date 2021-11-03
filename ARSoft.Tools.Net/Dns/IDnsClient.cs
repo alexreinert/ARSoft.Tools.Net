@@ -35,7 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="options"> Options for the query </param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> The complete response of the dns server </returns>
-		Task<DnsMessage> ResolveAsync(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, DnsQueryOptions options = null, CancellationToken token = default);
+		Task<DnsMessage> ResolveAsync(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, DnsQueryOptions options = null, CancellationToken token = default(CancellationToken));
 
 	}
 }
