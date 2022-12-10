@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Host identity protocol</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc5205">RFC 5205</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc5205.html">RFC 5205</a>.
 	///   </para>
 	/// </summary>
 	public class HipRecord : DnsRecordBase
@@ -52,7 +52,34 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<DomainName> RendezvousServers { get; private set; }
 
-		internal HipRecord() {}
+		internal HipRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			int endPosition = currentPosition + length;
+
+			int hitLength = resultData[currentPosition++];
+			Algorithm = (IpSecKeyRecord.IpSecAlgorithm) resultData[currentPosition++];
+			int publicKeyLength = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Hit = DnsMessageBase.ParseByteData(resultData, ref currentPosition, hitLength);
+			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, publicKeyLength);
+			RendezvousServers = new List<DomainName>();
+			while (currentPosition < endPosition)
+			{
+				RendezvousServers.Add(DnsMessageBase.ParseDomainName(resultData, ref currentPosition));
+			}
+		}
+
+		internal HipRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 3)
+				throw new FormatException();
+
+			Algorithm = (IpSecKeyRecord.IpSecAlgorithm) Byte.Parse(stringRepresentation[0]);
+			Hit = stringRepresentation[1].FromBase16String();
+			PublicKey = stringRepresentation[2].FromBase64String();
+			RendezvousServers = stringRepresentation.Skip(3).Select(x => ParseDomainName(origin, x)).ToList();
+		}
 
 		/// <summary>
 		///   Creates a new instace of the HipRecord class
@@ -70,33 +97,6 @@ namespace ARSoft.Tools.Net.Dns
 			Hit = hit ?? new byte[] { };
 			PublicKey = publicKey ?? new byte[] { };
 			RendezvousServers = rendezvousServers ?? new List<DomainName>();
-		}
-
-		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
-		{
-			int endPosition = currentPosition + length;
-
-			int hitLength = resultData[currentPosition++];
-			Algorithm = (IpSecKeyRecord.IpSecAlgorithm) resultData[currentPosition++];
-			int publicKeyLength = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
-			Hit = DnsMessageBase.ParseByteData(resultData, ref currentPosition, hitLength);
-			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, publicKeyLength);
-			RendezvousServers = new List<DomainName>();
-			while (currentPosition < endPosition)
-			{
-				RendezvousServers.Add(DnsMessageBase.ParseDomainName(resultData, ref currentPosition));
-			}
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 3)
-				throw new FormatException();
-
-			Algorithm = (IpSecKeyRecord.IpSecAlgorithm) Byte.Parse(stringRepresentation[0]);
-			Hit = stringRepresentation[1].FromBase16String();
-			PublicKey = stringRepresentation[2].FromBase64String();
-			RendezvousServers = stringRepresentation.Skip(3).Select(x => ParseDomainName(origin, x)).ToList();
 		}
 
 		internal override string RecordDataToString()
@@ -119,7 +119,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) Hit.Length;
 			messageData[currentPosition++] = (byte) Algorithm;

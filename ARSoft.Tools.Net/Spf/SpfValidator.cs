@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -39,24 +39,24 @@ namespace ARSoft.Tools.Net.Spf
 				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.TempError };
 			}
 
-			var spfTextRecords = dnsResult.Records
+			var spfTextRecords = dnsResult.Records?
 				.Select(r => r.TextData)
 				.Where(SpfRecord.IsSpfRecord)
 				.ToList();
 
-			SpfRecord record;
+			SpfRecord? record;
 
-			if (spfTextRecords.Count == 0)
+			if (spfTextRecords?.Count == 0)
 			{
 				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.None };
 			}
-			else if ((spfTextRecords.Count > 1) || !SpfRecord.TryParse(spfTextRecords[0], out record))
+			else if ((spfTextRecords?.Count == 1) && SpfRecord.TryParse(spfTextRecords[0], out record))
 			{
-				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
+				return new LoadRecordResult() { CouldBeLoaded = true, Record = record! };
 			}
 			else
 			{
-				return new LoadRecordResult() { CouldBeLoaded = true, Record = record };
+				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.PermError };
 			}
 		}
 	}

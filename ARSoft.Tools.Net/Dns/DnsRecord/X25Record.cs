@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>X.25 PSDN address record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc1183.html">RFC 1183</a>.
 	///   </para>
 	/// </summary>
 	public class X25Record : DnsRecordBase
@@ -37,7 +37,20 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public string X25Address { get; protected set; }
 
-		internal X25Record() {}
+		internal X25Record(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			X25Address += DnsMessageBase.ParseText(resultData, ref currentPosition);
+		}
+
+		internal X25Record(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new FormatException();
+
+			X25Address = stringRepresentation[0];
+		}
 
 		/// <summary>
 		///   Creates a new instance of the X25Record class
@@ -51,19 +64,6 @@ namespace ARSoft.Tools.Net.Dns
 			X25Address = x25Address ?? String.Empty;
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			X25Address += DnsMessageBase.ParseText(resultData, ref startPosition);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 1)
-				throw new FormatException();
-
-			X25Address = stringRepresentation[0];
-		}
-
 		internal override string RecordDataToString()
 		{
 			return X25Address.ToMasterfileLabelRepresentation();
@@ -71,7 +71,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 1 + X25Address.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, X25Address);
 		}

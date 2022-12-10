@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -30,7 +30,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Location information</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1876">RFC 1876</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc1876.html">RFC 1876</a>.
 	///   </para>
 	/// </summary>
 	public class LocRecord : DnsRecordBase
@@ -187,7 +187,36 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public double Altitude { get; private set; }
 
-		internal LocRecord() {}
+		internal LocRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Version = resultData[currentPosition++];
+			Size = ConvertPrecision(resultData[currentPosition++]);
+			HorizontalPrecision = ConvertPrecision(resultData[currentPosition++]);
+			VerticalPrecision = ConvertPrecision(resultData[currentPosition++]);
+			Latitude = ConvertDegree(DnsMessageBase.ParseInt(resultData, ref currentPosition));
+			Longitude = ConvertDegree(DnsMessageBase.ParseInt(resultData, ref currentPosition));
+			Altitude = ConvertAltitude(DnsMessageBase.ParseInt(resultData, ref currentPosition));
+		}
+
+		internal LocRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			var groups = _parserRegex
+				.Match(String.Join(" ", stringRepresentation))
+				.Groups;
+
+			bool latNegative = groups["lat"].Value.Equals("S", StringComparison.InvariantCultureIgnoreCase);
+			Latitude = new Degree(latNegative, groups["latd"].Value, groups["latm"].Value, groups["lats"].Value, groups["latms"].Value);
+
+			bool longNegative = groups["long"].Value.Equals("W", StringComparison.InvariantCultureIgnoreCase);
+			Longitude = new Degree(longNegative, groups["longd"].Value, groups["longm"].Value, groups["longs"].Value, groups["longms"].Value);
+
+			Altitude = Double.Parse(groups["alt"].Value, CultureInfo.InvariantCulture);
+			Size = String.IsNullOrEmpty(groups["size"].Value) ? 1 : Double.Parse(groups["size"].Value, CultureInfo.InvariantCulture);
+			HorizontalPrecision = String.IsNullOrEmpty(groups["hp"].Value) ? 10000 : Double.Parse(groups["hp"].Value, CultureInfo.InvariantCulture);
+			VerticalPrecision = String.IsNullOrEmpty(groups["vp"].Value) ? 10 : Double.Parse(groups["vp"].Value, CultureInfo.InvariantCulture);
+		}
 
 		/// <summary>
 		///   Creates a new instance of the LocRecord class
@@ -213,35 +242,6 @@ namespace ARSoft.Tools.Net.Dns
 			Altitude = altitude;
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
-		{
-			Version = resultData[currentPosition++];
-			Size = ConvertPrecision(resultData[currentPosition++]);
-			HorizontalPrecision = ConvertPrecision(resultData[currentPosition++]);
-			VerticalPrecision = ConvertPrecision(resultData[currentPosition++]);
-			Latitude = ConvertDegree(DnsMessageBase.ParseInt(resultData, ref currentPosition));
-			Longitude = ConvertDegree(DnsMessageBase.ParseInt(resultData, ref currentPosition));
-			Altitude = ConvertAltitude(DnsMessageBase.ParseInt(resultData, ref currentPosition));
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			var groups = _parserRegex
-				.Match(String.Join(" ", stringRepresentation))
-				.Groups;
-
-			bool latNegative = groups["lat"].Value.Equals("S", StringComparison.InvariantCultureIgnoreCase);
-			Latitude = new Degree(latNegative, groups["latd"].Value, groups["latm"].Value, groups["lats"].Value, groups["latms"].Value);
-
-			bool longNegative = groups["long"].Value.Equals("W", StringComparison.InvariantCultureIgnoreCase);
-			Longitude = new Degree(longNegative, groups["longd"].Value, groups["longm"].Value, groups["longs"].Value, groups["longms"].Value);
-
-			Altitude = Double.Parse(groups["alt"].Value, CultureInfo.InvariantCulture);
-			Size = String.IsNullOrEmpty(groups["size"].Value) ? 1 : Double.Parse(groups["size"].Value, CultureInfo.InvariantCulture);
-			HorizontalPrecision = String.IsNullOrEmpty(groups["hp"].Value) ? 10000 : Double.Parse(groups["hp"].Value, CultureInfo.InvariantCulture);
-			VerticalPrecision = String.IsNullOrEmpty(groups["vp"].Value) ? 10 : Double.Parse(groups["vp"].Value, CultureInfo.InvariantCulture);
-		}
-
 		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 		internal override string RecordDataToString()
 		{
@@ -256,7 +256,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 16;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = Version;
 			messageData[currentPosition++] = ConvertPrecision(Size);

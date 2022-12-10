@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Child-to-Parent Synchronization</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc7477">RFC 7477</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc7477.html">RFC 7477</a>.
 	///   </para>
 	/// </summary>
 	public class CSyncRecord : DnsRecordBase
@@ -41,7 +41,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>Immediate</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc7477">RFC 7477</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc7477.html">RFC 7477</a>.
 			///   </para>
 			/// </summary>
 			Immediate = 1,
@@ -50,7 +50,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>SOA minimum</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc7477">RFC 7477</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc7477.html">RFC 7477</a>.
 			///   </para>
 			/// </summary>
 			SoaMinimum = 2,
@@ -71,7 +71,26 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<RecordType> Types { get; private set; }
 
-		internal CSyncRecord() {}
+		internal CSyncRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			int endPosition = currentPosition + length;
+
+			SerialNumber = DnsMessageBase.ParseUInt(resultData, ref currentPosition);
+			Flags = (CSyncFlags) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Types = ParseTypeBitMap(resultData, ref currentPosition, endPosition);
+		}
+
+		internal CSyncRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 3)
+				throw new FormatException();
+
+			SerialNumber = UInt32.Parse(stringRepresentation[0]);
+			Flags = (CSyncFlags) UInt16.Parse(stringRepresentation[1]);
+			Types = stringRepresentation.Skip(2).Select(RecordTypeHelper.ParseShortString).ToList();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the CSyncRecord class
@@ -98,15 +117,6 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
-		{
-			int endPosition = currentPosition + length;
-
-			SerialNumber = DnsMessageBase.ParseUInt(resultData, ref currentPosition);
-			Flags = (CSyncFlags) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
-			Types = ParseTypeBitMap(resultData, ref currentPosition, endPosition);
-		}
-
 		internal static List<RecordType> ParseTypeBitMap(byte[] resultData, ref int currentPosition, int endPosition)
 		{
 			List<RecordType> types = new List<RecordType>();
@@ -128,17 +138,8 @@ namespace ARSoft.Tools.Net.Dns
 					}
 				}
 			}
+
 			return types;
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 3)
-				throw new FormatException();
-
-			SerialNumber = UInt32.Parse(stringRepresentation[0]);
-			Flags = (CSyncFlags) UInt16.Parse(stringRepresentation[1]);
-			Types = stringRepresentation.Skip(2).Select(RecordTypeHelper.ParseShortString).ToList();
 		}
 
 		internal override string RecordDataToString()
@@ -170,7 +171,7 @@ namespace ARSoft.Tools.Net.Dns
 			return res + 3 + lastType % 256 / 8;
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUInt(messageData, ref currentPosition, SerialNumber);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Flags);

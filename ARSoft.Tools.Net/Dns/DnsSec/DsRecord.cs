@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -30,9 +30,9 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Delegation signer</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>
 	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc3658">RFC 3658</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc3658.html">RFC 3658</a>.
 	///   </para>
 	/// </summary>
 	public class DsRecord : DnsRecordBase
@@ -57,7 +57,26 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] Digest { get; private set; }
 
-		internal DsRecord() {}
+		internal DsRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			KeyTag = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Algorithm = (DnsSecAlgorithm) resultData[currentPosition++];
+			DigestType = (DnsSecDigestType) resultData[currentPosition++];
+			Digest = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 4);
+		}
+
+		internal DsRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 4)
+				throw new FormatException();
+
+			KeyTag = UInt16.Parse(stringRepresentation[0]);
+			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
+			DigestType = (DnsSecDigestType) Byte.Parse(stringRepresentation[2]);
+			Digest = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase16String();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the DsRecord class
@@ -93,25 +112,6 @@ namespace ARSoft.Tools.Net.Dns
 			Digest = CalculateKeyHash(key);
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			KeyTag = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Algorithm = (DnsSecAlgorithm) resultData[startPosition++];
-			DigestType = (DnsSecDigestType) resultData[startPosition++];
-			Digest = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 4);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 4)
-				throw new FormatException();
-
-			KeyTag = UInt16.Parse(stringRepresentation[0]);
-			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
-			DigestType = (DnsSecDigestType) Byte.Parse(stringRepresentation[2]);
-			Digest = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase16String();
-		}
-
 		internal override string RecordDataToString()
 		{
 			return KeyTag
@@ -122,7 +122,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 4 + Digest.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, KeyTag);
 			messageData[currentPosition++] = (byte) Algorithm;
@@ -138,9 +138,16 @@ namespace ARSoft.Tools.Net.Dns
 			if (dnsKeyRecord.CalculateKeyTag() != KeyTag)
 				return false;
 
-			byte[] hash = CalculateKeyHash(dnsKeyRecord);
+			if (DigestType.IsSupported())
+			{
+				byte[] hash = CalculateKeyHash(dnsKeyRecord);
 
-			return StructuralComparisons.StructuralEqualityComparer.Equals(hash, Digest);
+				return StructuralComparisons.StructuralEqualityComparer.Equals(hash, Digest);
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		private byte[] CalculateKeyHash(DnsKeyRecord dnsKeyRecord)

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -31,8 +31,8 @@ namespace ARSoft.Tools.Net
 
 		static EnumHelper()
 		{
-			string[] names = Enum.GetNames(typeof (T));
-			T[] values = (T[]) Enum.GetValues(typeof (T));
+			string[] names = Enum.GetNames(typeof(T));
+			T[] values = (T[]) Enum.GetValues(typeof(T));
 
 			_names = new Dictionary<T, string>(names.Length);
 			_values = new Dictionary<string, T>(names.Length * 2);
@@ -58,7 +58,7 @@ namespace ARSoft.Tools.Net
 
 		public static string ToString(T value)
 		{
-			string res;
+			string? res;
 			return _names.TryGetValue(value, out res) ? res : Convert.ToInt64(value).ToString();
 		}
 

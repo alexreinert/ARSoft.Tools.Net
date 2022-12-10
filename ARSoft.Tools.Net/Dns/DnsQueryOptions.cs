@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -32,7 +32,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Gets or sets the recursion desired (RD) flag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 		///   </para>
 		/// </summary>
 		public bool IsRecursionDesired { get; set; }
@@ -41,7 +41,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Gets or sets the checking disabled (CD) flag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4035.html">RFC 4035</a>.
 		///   </para>
 		/// </summary>
 		public bool IsCheckingDisabled { get; set; }
@@ -68,27 +68,27 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Gets or set the OptRecord for the EDNS options
 		/// </summary>
-		public OptRecord EDnsOptions { get; set; }
+		public OptRecord? EDnsOptions { get; set; }
 
 		/// <summary>
 		///   <para>Gets or sets the DNSSEC answer OK (DO) flag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4035.html">RFC 4035</a>
 		///     and
-		///     <see cref="!:http://tools.ietf.org/html/rfc3225">RFC 3225</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc3225.html">RFC 3225</a>.
 		///   </para>
 		/// </summary>
 		public bool IsDnsSecOk
 		{
 			get
 			{
-				OptRecord ednsOptions = EDnsOptions;
+				OptRecord? ednsOptions = EDnsOptions;
 				return (ednsOptions != null) && ednsOptions.IsDnsSecOk;
 			}
 			set
 			{
-				OptRecord ednsOptions = EDnsOptions;
+				OptRecord? ednsOptions = EDnsOptions;
 				if (ednsOptions == null)
 				{
 					if (value)

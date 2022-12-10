@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -197,6 +197,7 @@ namespace ARSoft.Tools.Net
 					lastOffset = i + 1;
 				}
 			}
+
 			labels.Add(s.Substring(lastOffset, s.Length - lastOffset).FromMasterfileLabelRepresentation());
 
 			if (labels[labels.Count - 1] == String.Empty)
@@ -212,10 +213,10 @@ namespace ARSoft.Tools.Net
 		/// <returns>A new instance of the DomainName class</returns>
 		public static DomainName Parse(string s)
 		{
-			DomainName res;
+			DomainName? res;
 
 			if (TryParse(s, out res))
-				return res;
+				return res!;
 
 			throw new ArgumentException("Domain name could not be parsed", nameof(s));
 		}
@@ -229,7 +230,7 @@ namespace ARSoft.Tools.Net
 		///   parsed
 		/// </param>
 		/// <returns>true, if s was parsed successfully; otherwise, false</returns>
-		public static bool TryParse(string s, out DomainName name)
+		public static bool TryParse(string s, out DomainName? name)
 		{
 			if (s == ".")
 			{
@@ -241,7 +242,7 @@ namespace ARSoft.Tools.Net
 
 			int lastOffset = 0;
 
-			string label;
+			string? label;
 
 			for (int i = 0; i < s.Length; ++i)
 			{
@@ -249,7 +250,7 @@ namespace ARSoft.Tools.Net
 				{
 					if (TryParseLabel(s.Substring(lastOffset, i - lastOffset), out label))
 					{
-						labels.Add(label);
+						labels.Add(label!);
 						lastOffset = i + 1;
 					}
 					else
@@ -266,11 +267,11 @@ namespace ARSoft.Tools.Net
 			}
 			else if (TryParseLabel(s.Substring(lastOffset, s.Length - lastOffset), out label))
 			{
-				labels.Add(label);
+				labels.Add(label!);
 			}
 			else
 			{
-				name = null;
+				name = default;
 				return false;
 			}
 
@@ -281,7 +282,7 @@ namespace ARSoft.Tools.Net
 		private static readonly IdnMapping _idnParser = new IdnMapping() { UseStd3AsciiRules = true };
 		private static readonly Regex _asciiNameRegex = new Regex("^[a-zA-Z0-9_-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-		private static bool TryParseLabel(string s, out string label)
+		private static bool TryParseLabel(string s, out string? label)
 		{
 			try
 			{
@@ -303,7 +304,7 @@ namespace ARSoft.Tools.Net
 			}
 		}
 
-		private string _toString;
+		private string? _toString;
 
 		/// <summary>
 		///   Returns the string representation of the domain name
@@ -364,7 +365,7 @@ namespace ARSoft.Tools.Net
 		/// <param name="name1">The first name</param>
 		/// <param name="name2">The second name</param>
 		/// <returns>true, if the names are identical</returns>
-		public static bool operator ==(DomainName name1, DomainName name2)
+		public static bool operator ==(DomainName? name1, DomainName? name2)
 		{
 			if (ReferenceEquals(name1, name2))
 				return true;
@@ -391,7 +392,7 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="obj">The other object</param>
 		/// <returns>true, if the names are equal</returns>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return Equals(obj as DomainName);
 		}
@@ -401,7 +402,7 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="other">The other name</param>
 		/// <returns>true, if the names are equal</returns>
-		public bool Equals(DomainName other)
+		public bool Equals(DomainName? other)
 		{
 			return Equals(other, true);
 		}
@@ -412,7 +413,7 @@ namespace ARSoft.Tools.Net
 		/// <param name="other">The other name</param>
 		/// <param name="ignoreCase">true, if the case should ignored on checking</param>
 		/// <returns>true, if the names are equal</returns>
-		public bool Equals(DomainName other, bool ignoreCase)
+		public bool Equals(DomainName? other, bool ignoreCase)
 		{
 			if (ReferenceEquals(other, null))
 				return false;
@@ -440,8 +441,11 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		/// <param name="other">A name to compare with this instance.</param>
 		/// <returns>A value that indicates the relative order of the objects being compared.</returns>
-		public int CompareTo(DomainName other)
+		public int CompareTo(DomainName? other)
 		{
+			if (ReferenceEquals(other, null))
+				return 1;
+
 			for (int i = 1; i <= Math.Min(LabelCount, other.LabelCount); i++)
 			{
 				int labelCompare = String.Compare(Labels[LabelCount - i].ToLowerInvariant(), other.Labels[other.LabelCount - i].ToLowerInvariant(), StringComparison.Ordinal);

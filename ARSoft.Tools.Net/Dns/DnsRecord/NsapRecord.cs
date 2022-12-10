@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,9 +27,9 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>NSAP address, NSAP style A record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1706">RFC 1706</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc1706.html">RFC 1706</a>
 	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc1348">RFC 1348</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc1348.html">RFC 1348</a>.
 	///   </para>
 	/// </summary>
 	public class NsapRecord : DnsRecordBase
@@ -39,7 +39,23 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] RecordData { get; private set; }
 
-		internal NsapRecord() {}
+		internal NsapRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			RecordData = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length);
+		}
+
+		internal NsapRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new FormatException();
+
+			if (!stringRepresentation[0].StartsWith("0x", StringComparison.InvariantCultureIgnoreCase))
+				throw new FormatException();
+
+			RecordData = stringRepresentation[0].Substring(2).Replace(".", String.Empty).FromBase16String();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the NsapRecord class
@@ -53,22 +69,6 @@ namespace ARSoft.Tools.Net.Dns
 			RecordData = recordData ?? new byte[] { };
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 1)
-				throw new FormatException();
-
-			if (!stringRepresentation[0].StartsWith("0x", StringComparison.InvariantCultureIgnoreCase))
-				throw new FormatException();
-
-			RecordData = stringRepresentation[0].Substring(2).Replace(".", String.Empty).FromBase16String();
-		}
-
 		internal override string RecordDataToString()
 		{
 			return "0x" + RecordData.ToBase16String();
@@ -76,7 +76,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => RecordData.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, RecordData);
 		}

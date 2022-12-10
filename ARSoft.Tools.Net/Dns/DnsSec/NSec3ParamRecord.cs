@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Hashed next owner parameter record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc5155">RFC 5155</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc5155.html">RFC 5155</a>.
 	///   </para>
 	/// </summary>
 	public class NSec3ParamRecord : DnsRecordBase
@@ -40,7 +40,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Flags of the record
 		/// </summary>
-		public byte Flags { get; private set; }
+		public NSec3Flags Flags { get; private set; }
 
 		/// <summary>
 		///   Number of iterations
@@ -52,7 +52,27 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] Salt { get; private set; }
 
-		internal NSec3ParamRecord() {}
+		internal NSec3ParamRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			HashAlgorithm = (NSec3HashAlgorithm) resultData[currentPosition++];
+			Flags = (NSec3Flags) resultData[currentPosition++];
+			Iterations = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			int saltLength = resultData[currentPosition++];
+			Salt = DnsMessageBase.ParseByteData(resultData, ref currentPosition, saltLength);
+		}
+
+		internal NSec3ParamRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length != 4)
+				throw new FormatException();
+
+			HashAlgorithm = (NSec3HashAlgorithm) Byte.Parse(stringRepresentation[0]);
+			Flags = (NSec3Flags) Byte.Parse(stringRepresentation[1]);
+			Iterations = UInt16.Parse(stringRepresentation[2]);
+			Salt = (stringRepresentation[3] == "-") ? new byte[] { } : stringRepresentation[3].FromBase16String();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the NSec3ParamRecord class
@@ -64,33 +84,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="flags"> Flags of the record </param>
 		/// <param name="iterations"> Number of iterations </param>
 		/// <param name="salt"> Binary data of salt </param>
-		public NSec3ParamRecord(DomainName name, RecordClass recordClass, int timeToLive, NSec3HashAlgorithm hashAlgorithm, byte flags, ushort iterations, byte[] salt)
+		public NSec3ParamRecord(DomainName name, RecordClass recordClass, int timeToLive, NSec3HashAlgorithm hashAlgorithm, NSec3Flags flags, ushort iterations, byte[] salt)
 			: base(name, RecordType.NSec3Param, recordClass, timeToLive)
 		{
 			HashAlgorithm = hashAlgorithm;
 			Flags = flags;
 			Iterations = iterations;
 			Salt = salt ?? new byte[] { };
-		}
-
-		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
-		{
-			HashAlgorithm = (NSec3HashAlgorithm) resultData[currentPosition++];
-			Flags = resultData[currentPosition++];
-			Iterations = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
-			int saltLength = resultData[currentPosition++];
-			Salt = DnsMessageBase.ParseByteData(resultData, ref currentPosition, saltLength);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 4)
-				throw new FormatException();
-
-			HashAlgorithm = (NSec3HashAlgorithm) Byte.Parse(stringRepresentation[0]);
-			Flags = Byte.Parse(stringRepresentation[1]);
-			Iterations = UInt16.Parse(stringRepresentation[2]);
-			Salt = (stringRepresentation[3] == "-") ? new byte[] { } : stringRepresentation[3].FromBase16String();
 		}
 
 		internal override string RecordDataToString()
@@ -103,10 +103,10 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 5 + Salt.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) HashAlgorithm;
-			messageData[currentPosition++] = Flags;
+			messageData[currentPosition++] = (byte) Flags;
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Iterations);
 			messageData[currentPosition++] = (byte) Salt.Length;
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Salt);

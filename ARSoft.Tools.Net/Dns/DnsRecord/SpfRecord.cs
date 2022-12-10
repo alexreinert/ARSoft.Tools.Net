@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,15 +27,19 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Sender Policy Framework</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4408">RFC 4408</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4408.html">RFC 4408</a>
 	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc7208">RFC 7208</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc7208.html">RFC 7208</a>.
 	///   </para>
 	/// </summary>
 	[Obsolete]
 	public class SpfRecord : TextRecordBase
 	{
-		internal SpfRecord() {}
+		internal SpfRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int startPosition, int length)
+			: base(name, recordType, recordClass, timeToLive, resultData, startPosition, length) { }
+
+		internal SpfRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive, origin, stringRepresentation) { }
 
 		/// <summary>
 		///   Creates a new instance of the SpfRecord class
@@ -44,7 +48,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="textData"> Text data of the record </param>
 		public SpfRecord(DomainName name, int timeToLive, string textData)
-			: base(name, RecordType.Spf, timeToLive, textData) {}
+			: base(name, RecordType.Spf, timeToLive, textData) { }
 
 		/// <summary>
 		///   Creates a new instance of the SpfRecord class
@@ -53,6 +57,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="textParts"> All parts of the text data </param>
 		public SpfRecord(DomainName name, int timeToLive, IEnumerable<string> textParts)
-			: base(name, RecordType.Spf, timeToLive, textParts) {}
+			: base(name, RecordType.Spf, timeToLive, textParts) { }
 	}
 }

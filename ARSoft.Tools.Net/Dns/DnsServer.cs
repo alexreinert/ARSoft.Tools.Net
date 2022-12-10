@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -39,13 +39,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="algorithm"> The algorithm which is used in the message </param>
 		/// <param name="keyName"> The keyname which is used in the message </param>
 		/// <returns> Binary representation of the key </returns>
-		public delegate byte[] SelectTsigKey(TSigAlgorithm algorithm, DomainName keyName);
+		public delegate byte[]? SelectTsigKey(TSigAlgorithm algorithm, DomainName keyName);
 
 		private const int _DNS_PORT = 53;
 
 		private readonly object _listenerLock = new object();
-		private TcpListener _tcpListener;
-		private UdpClient _udpListener;
+		private TcpListener? _tcpListener;
+		private UdpClient? _udpListener;
 		private readonly IPEndPoint _bindEndPoint;
 
 		private readonly int _udpListenerCount;
@@ -60,7 +60,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Method that will be called to get the keydata for processing a tsig signed message
 		/// </summary>
-		public SelectTsigKey TsigKeySelector;
+		public SelectTsigKey? TsigKeySelector;
 
 		/// <summary>
 		///   Gets or sets the timeout for sending and receiving data
@@ -73,7 +73,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
 		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
 		public DnsServer(int udpListenerCount, int tcpListenerCount)
-			: this(IPAddress.Any, udpListenerCount, tcpListenerCount) {}
+			: this(IPAddress.Any, udpListenerCount, tcpListenerCount) { }
 
 		/// <summary>
 		///   Creates a new dns server instance
@@ -82,7 +82,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
 		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
 		public DnsServer(IPAddress bindAddress, int udpListenerCount, int tcpListenerCount)
-			: this(new IPEndPoint(bindAddress, _DNS_PORT), udpListenerCount, tcpListenerCount) {}
+			: this(new IPEndPoint(bindAddress, _DNS_PORT), udpListenerCount, tcpListenerCount) { }
 
 		/// <summary>
 		///   Creates a new dns server instance
@@ -111,6 +111,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					_availableUdpListener = _udpListenerCount;
 				}
+
 				_udpListener = new UdpClient(_bindEndPoint);
 				StartUdpListenerTask();
 			}
@@ -121,6 +122,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					_availableTcpListener = _tcpListenerCount;
 				}
+
 				_tcpListener = new TcpListener(_bindEndPoint);
 				_tcpListener.Start();
 				StartTcpListenerTask();
@@ -134,11 +136,12 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if (_udpListenerCount > 0)
 			{
-				_udpListener.Close();
+				_udpListener!.Close();
 			}
+
 			if (_tcpListenerCount > 0)
 			{
-				_tcpListener.Stop();
+				_tcpListener!.Stop();
 			}
 		}
 
@@ -148,45 +151,63 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				switch (query.TSigOptions.ValidationResult)
 				{
+					case ReturnCode.FormatError:
+					{
+						var response = query.CreateFailureResponse();
+						response.ReturnCode = ReturnCode.FormatError;
+						response.TSigOptions = null;
+
+#pragma warning disable 4014
+						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
+#pragma warning restore 4014
+
+						return response;
+					}
+
 					case ReturnCode.BadKey:
 					case ReturnCode.BadSig:
-						query.IsQuery = false;
-						query.ReturnCode = ReturnCode.NotAuthoritive;
-						query.TSigOptions.Error = query.TSigOptions.ValidationResult;
-						query.TSigOptions.KeyData = null;
+					case ReturnCode.BadTrunc:
+					{
+						var response = query.CreateFailureResponse();
+						response.ReturnCode = ReturnCode.NotAuthoritive;
+						response.TSigOptions = new TSigRecord(query.TSigOptions.Name, query.TSigOptions.Algorithm, query.TSigOptions.TimeSigned, query.TSigOptions.Fudge, query.TSigOptions.OriginalID, query.TSigOptions.ValidationResult, null, null);
 
 #pragma warning disable 4014
 						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
 #pragma warning restore 4014
 
-						return query;
+						return response;
+					}
 
 					case ReturnCode.BadTime:
-						query.IsQuery = false;
-						query.ReturnCode = ReturnCode.NotAuthoritive;
-						query.TSigOptions.Error = query.TSigOptions.ValidationResult;
-						query.TSigOptions.OtherData = new byte[6];
-						int tmp = 0;
-						TSigRecord.EncodeDateTime(query.TSigOptions.OtherData, ref tmp, DateTime.Now);
+					{
+						var otherData = new byte[6];
+						var tmp = 0;
+						TSigRecord.EncodeDateTime(otherData, ref tmp, DateTime.Now);
+
+						var response = query.CreateFailureResponse();
+						response.ReturnCode = ReturnCode.NotAuthoritive;
+						response.TSigOptions = new TSigRecord(query.TSigOptions.Name, query.TSigOptions.Algorithm, query.TSigOptions.TimeSigned, query.TSigOptions.Fudge, query.TSigOptions.OriginalID, query.TSigOptions.ValidationResult, otherData, null);
 
 #pragma warning disable 4014
 						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
 #pragma warning restore 4014
 
-						return query;
+						return response;
+					}
 				}
 			}
 
 			QueryReceivedEventArgs eventArgs = new QueryReceivedEventArgs(query, protocolType, remoteEndpoint);
 			await QueryReceived.RaiseAsync(this, eventArgs);
-			return eventArgs.Response;
+			return eventArgs.Response ?? query.CreateFailureResponse();
 		}
 
 		private void StartUdpListenerTask()
 		{
 			lock (_listenerLock)
 			{
-				if ((_udpListener.Client == null) || !_udpListener.Client.IsBound) // server is stopped
+				if ((_udpListener!.Client == null) || !_udpListener!.Client.IsBound) // server is stopped
 					return;
 
 				if ((_availableUdpListener > 0) && !_hasActiveUdpListener)
@@ -205,7 +226,7 @@ namespace ARSoft.Tools.Net.Dns
 				UdpReceiveResult receiveResult;
 				try
 				{
-					receiveResult = await _udpListener.ReceiveAsync();
+					receiveResult = await _udpListener!.ReceiveAsync();
 				}
 				catch (ObjectDisposedException)
 				{
@@ -230,7 +251,7 @@ namespace ARSoft.Tools.Net.Dns
 				byte[] buffer = receiveResult.Buffer;
 
 				DnsMessageBase query;
-				byte[] originalMac;
+				byte[]? originalMac;
 				try
 				{
 					query = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
@@ -241,7 +262,7 @@ namespace ARSoft.Tools.Net.Dns
 					throw new Exception("Error parsing dns query", e);
 				}
 
-				DnsMessageBase response;
+				DnsMessageBase? response;
 				try
 				{
 					response = await ProcessMessageAsync(query, ProtocolType.Udp, receiveResult.RemoteEndPoint);
@@ -262,14 +283,14 @@ namespace ARSoft.Tools.Net.Dns
 				int length = response.Encode(false, originalMac, out buffer);
 
 				#region Truncating
-				DnsMessage message = response as DnsMessage;
+				DnsMessage? message = response as DnsMessage;
 
 				if (message != null)
 				{
 					int maxLength = 512;
 					if (query.IsEDnsEnabled && message.IsEDnsEnabled)
 					{
-						maxLength = Math.Max(512, (int) message.EDnsOptions.UdpPayloadSize);
+						maxLength = Math.Max(512, (int) message.EDnsOptions!.UdpPayloadSize);
 					}
 
 					while (length > maxLength)
@@ -361,6 +382,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					_availableUdpListener++;
 				}
+
 				StartUdpListenerTask();
 			}
 		}
@@ -369,7 +391,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			lock (_listenerLock)
 			{
-				if ((_tcpListener.Server == null) || !_tcpListener.Server.IsBound) // server is stopped
+				if ((_tcpListener!.Server == null) || !_tcpListener!.Server.IsBound) // server is stopped
 					return;
 
 				if ((_availableTcpListener > 0) && !_hasActiveTcpListener)
@@ -383,15 +405,18 @@ namespace ARSoft.Tools.Net.Dns
 
 		private async void HandleTcpListenerAsync()
 		{
-			TcpClient client = null;
+			TcpClient? client = null;
 
 			try
 			{
 				try
 				{
-					client = await _tcpListener.AcceptTcpClientAsync();
+					client = await _tcpListener!.AcceptTcpClientAsync();
 
-					ClientConnectedEventArgs clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint);
+					if (client == null)
+						return;
+
+					ClientConnectedEventArgs clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint!);
 					await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
 
 					if (clientConnectedEventArgs.RefuseConnect)
@@ -411,7 +436,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					while (true)
 					{
-						byte[] buffer = await ReadIntoBufferAsync(client, stream, 2);
+						byte[]? buffer = await ReadIntoBufferAsync(client, stream, 2);
 						if (buffer == null) // client disconneted while reading or timeout
 							break;
 
@@ -425,7 +450,7 @@ namespace ARSoft.Tools.Net.Dns
 						}
 
 						DnsMessageBase query;
-						byte[] tsigMac;
+						byte[]? tsigMac;
 						try
 						{
 							query = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
@@ -439,20 +464,16 @@ namespace ARSoft.Tools.Net.Dns
 						DnsMessageBase response;
 						try
 						{
-							response = await ProcessMessageAsync(query, ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint);
+							response = await ProcessMessageAsync(query, ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint!);
 						}
 						catch (Exception ex)
 						{
 							OnExceptionThrownAsync(ex);
 
-							response = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
-							response.IsQuery = false;
-							response.AdditionalRecords.Clear();
-							response.AuthorityRecords.Clear();
-							response.ReturnCode = ReturnCode.ServerFailure;
+							response = query.CreateFailureResponse();
 						}
 
-						byte[] newTsigMac;
+						byte[]? newTsigMac;
 
 						length = response.Encode(true, tsigMac, false, out buffer, out newTsigMac);
 
@@ -462,48 +483,26 @@ namespace ARSoft.Tools.Net.Dns
 						}
 						else
 						{
-							if ((response.Questions.Count == 0) || (response.Questions[0].RecordType != RecordType.Axfr))
-							{
-								OnExceptionThrownAsync(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
-
-								response = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
-								response.IsQuery = false;
-								response.AdditionalRecords.Clear();
-								response.AuthorityRecords.Clear();
-								response.ReturnCode = ReturnCode.ServerFailure;
-
-								length = response.Encode(true, tsigMac, false, out buffer, out newTsigMac);
-								await stream.WriteAsync(buffer, 0, length);
-							}
-							else
+							if (response.AllowMultipleResponses)
 							{
 								bool isSubSequentResponse = false;
 
-								while (true)
+								foreach (DnsMessageBase partialResponse in response.SplitResponse())
 								{
-									List<DnsRecordBase> nextPacketRecords = new List<DnsRecordBase>();
-
-									while (length > 65535)
-									{
-										int lastIndex = Math.Min(500, response.AnswerRecords.Count / 2);
-										int removeCount = response.AnswerRecords.Count - lastIndex;
-
-										nextPacketRecords.InsertRange(0, response.AnswerRecords.GetRange(lastIndex, removeCount));
-										response.AnswerRecords.RemoveRange(lastIndex, removeCount);
-
-										length = response.Encode(true, tsigMac, isSubSequentResponse, out buffer, out newTsigMac);
-									}
-
+									length = response.Encode(true, tsigMac, isSubSequentResponse, out buffer, out newTsigMac);
 									await stream.WriteAsync(buffer, 0, length);
-
-									if (nextPacketRecords.Count == 0)
-										break;
-
 									isSubSequentResponse = true;
 									tsigMac = newTsigMac;
-									response.AnswerRecords = nextPacketRecords;
-									length = response.Encode(true, tsigMac, true, out buffer, out newTsigMac);
 								}
+							}
+							else
+							{
+								OnExceptionThrownAsync(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
+
+								response = query.CreateFailureResponse();
+
+								length = response.Encode(true, tsigMac, false, out buffer, out newTsigMac);
+								await stream.WriteAsync(buffer, 0, length);
 							}
 						}
 
@@ -533,11 +532,12 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					_availableTcpListener++;
 				}
+
 				StartTcpListenerTask();
 			}
 		}
 
-		private async Task<byte[]> ReadIntoBufferAsync(TcpClient client, NetworkStream stream, int count)
+		private async Task<byte[]?> ReadIntoBufferAsync(TcpClient client, NetworkStream stream, int count)
 		{
 			CancellationToken token = new CancellationTokenSource(Timeout).Token;
 
@@ -576,22 +576,22 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   This event is fired on exceptions of the listeners. You can use it for custom logging.
 		/// </summary>
-		public event AsyncEventHandler<ExceptionEventArgs> ExceptionThrown;
+		public event AsyncEventHandler<ExceptionEventArgs>? ExceptionThrown;
 
 		/// <summary>
 		///   This event is fired whenever a message is received, that is not correct signed
 		/// </summary>
-		public event AsyncEventHandler<InvalidSignedMessageEventArgs> InvalidSignedMessageReceived;
+		public event AsyncEventHandler<InvalidSignedMessageEventArgs>? InvalidSignedMessageReceived;
 
 		/// <summary>
 		///   This event is fired whenever a client connects to the server
 		/// </summary>
-		public event AsyncEventHandler<ClientConnectedEventArgs> ClientConnected;
+		public event AsyncEventHandler<ClientConnectedEventArgs>? ClientConnected;
 
 		/// <summary>
 		///   This event is fired whenever a query is received by the server
 		/// </summary>
-		public event AsyncEventHandler<QueryReceivedEventArgs> QueryReceived;
+		public event AsyncEventHandler<QueryReceivedEventArgs>? QueryReceived;
 
 		void IDisposable.Dispose()
 		{

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -21,5 +21,12 @@ using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net
 {
+	/// <summary>
+	///   An asynchronous event handler.
+	/// </summary>
+	/// <typeparam name="T">The type of event arguments.</typeparam>
+	/// <param name="sender">The sender of the event.</param>
+	/// <param name="eventArgs">Event arguments.</param>
+	/// <returns></returns>
 	public delegate Task AsyncEventHandler<T>(object sender, T eventArgs) where T : EventArgs;
 }

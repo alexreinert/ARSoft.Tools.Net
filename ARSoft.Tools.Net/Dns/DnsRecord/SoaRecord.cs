@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Start of zone of authority record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 	///   </para>
 	/// </summary>
 	public class SoaRecord : DnsRecordBase
@@ -66,13 +66,40 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Seconds a negative answer could be cached</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc2308">RFC 2308</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc2308.html">RFC 2308</a>.
 		///   </para>
 		/// </summary>
 		// ReSharper disable once InconsistentNaming
 		public int NegativeCachingTTL { get; private set; }
 
-		internal SoaRecord() {}
+		internal SoaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			MasterName = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
+			ResponsibleName = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
+
+			SerialNumber = DnsMessageBase.ParseUInt(resultData, ref currentPosition);
+			RefreshInterval = DnsMessageBase.ParseInt(resultData, ref currentPosition);
+			RetryInterval = DnsMessageBase.ParseInt(resultData, ref currentPosition);
+			ExpireInterval = DnsMessageBase.ParseInt(resultData, ref currentPosition);
+			NegativeCachingTTL = DnsMessageBase.ParseInt(resultData, ref currentPosition);
+		}
+
+		internal SoaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length != 7)
+				throw new FormatException();
+
+			MasterName = ParseDomainName(origin, stringRepresentation[0]);
+			ResponsibleName = ParseDomainName(origin, stringRepresentation[1]);
+
+			SerialNumber = UInt32.Parse(stringRepresentation[2]);
+			RefreshInterval = Int32.Parse(stringRepresentation[3]);
+			RetryInterval = Int32.Parse(stringRepresentation[4]);
+			ExpireInterval = Int32.Parse(stringRepresentation[5]);
+			NegativeCachingTTL = Int32.Parse(stringRepresentation[6]);
+		}
 
 		/// <summary>
 		///   Creates a new instance of the SoaRecord class
@@ -89,7 +116,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Seconds a negative answer could be cached</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc2308">RFC 2308</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc2308.html">RFC 2308</a>.
 		///   </para>
 		/// </param>
 		// ReSharper disable once InconsistentNaming
@@ -105,30 +132,6 @@ namespace ARSoft.Tools.Net.Dns
 			NegativeCachingTTL = negativeCachingTTL;
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			MasterName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
-			ResponsibleName = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
-
-			SerialNumber = DnsMessageBase.ParseUInt(resultData, ref startPosition);
-			RefreshInterval = DnsMessageBase.ParseInt(resultData, ref startPosition);
-			RetryInterval = DnsMessageBase.ParseInt(resultData, ref startPosition);
-			ExpireInterval = DnsMessageBase.ParseInt(resultData, ref startPosition);
-			NegativeCachingTTL = DnsMessageBase.ParseInt(resultData, ref startPosition);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			MasterName = ParseDomainName(origin, stringRepresentation[0]);
-			ResponsibleName = ParseDomainName(origin, stringRepresentation[1]);
-
-			SerialNumber = UInt32.Parse(stringRepresentation[2]);
-			RefreshInterval = Int32.Parse(stringRepresentation[3]);
-			RetryInterval = Int32.Parse(stringRepresentation[4]);
-			ExpireInterval = Int32.Parse(stringRepresentation[5]);
-			NegativeCachingTTL = Int32.Parse(stringRepresentation[6]);
-		}
-
 		internal override string RecordDataToString()
 		{
 			return MasterName
@@ -142,7 +145,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => MasterName.MaximumRecordDataLength + ResponsibleName.MaximumRecordDataLength + 24;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MasterName, domainNames, useCanonical);
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, ResponsibleName, domainNames, useCanonical);

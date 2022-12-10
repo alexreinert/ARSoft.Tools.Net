@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -26,7 +26,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   Message returned as result to a dns query
 	/// </summary>
-	public class MulticastDnsMessage : DnsMessageBase
+	public class MulticastDnsMessage : DnsRecordMessageBase
 	{
 		/// <summary>
 		///   Parses a the contents of a byte array as MulticastDnsMessage
@@ -43,7 +43,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Gets or sets the autoritive answer (AA) flag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 		///   </para>
 		/// </summary>
 		public bool IsAuthoritiveAnswer
@@ -66,7 +66,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Gets or sets the truncated response (TC) flag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 		///   </para>
 		/// </summary>
 		public bool IsTruncated
@@ -89,7 +89,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Gets or sets the recursion desired (RD) flag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 		///   </para>
 		/// </summary>
 		public bool IsRecursionDesired
@@ -112,7 +112,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Gets or sets the recursion allowed (RA) flag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 		///   </para>
 		/// </summary>
 		public bool IsRecursionAllowed
@@ -135,7 +135,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Gets or sets the authentic data (AD) flag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4035.html">RFC 4035</a>.
 		///   </para>
 		/// </summary>
 		public bool IsAuthenticData
@@ -158,7 +158,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Gets or sets the checking disabled (CD) flag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4035.html">RFC 4035</a>.
 		///   </para>
 		/// </summary>
 		public bool IsCheckingDisabled
@@ -178,33 +178,6 @@ namespace ARSoft.Tools.Net.Dns
 		}
 		#endregion
 
-		/// <summary>
-		///   Gets or sets the entries in the question section
-		/// </summary>
-		public new List<DnsQuestion> Questions
-		{
-			get { return base.Questions; }
-			set { base.Questions = (value ?? new List<DnsQuestion>()); }
-		}
-
-		/// <summary>
-		///   Gets or sets the entries in the answer records section
-		/// </summary>
-		public new List<DnsRecordBase> AnswerRecords
-		{
-			get { return base.AnswerRecords; }
-			set { base.AnswerRecords = (value ?? new List<DnsRecordBase>()); }
-		}
-
-		/// <summary>
-		///   Gets or sets the entries in the authority records section
-		/// </summary>
-		public new List<DnsRecordBase> AuthorityRecords
-		{
-			get { return base.AuthorityRecords; }
-			set { base.AuthorityRecords = (value ?? new List<DnsRecordBase>()); }
-		}
-
 		internal override bool IsTcpUsingRequested => (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr));
 
 		internal override bool IsTcpResendingRequested => IsTruncated;
@@ -212,6 +185,11 @@ namespace ARSoft.Tools.Net.Dns
 		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
 		{
 			return false;
+		}
+
+		protected internal override DnsMessageBase CreateFailureResponse()
+		{
+			throw new NotSupportedException();
 		}
 	}
 }

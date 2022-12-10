@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -41,7 +41,7 @@ namespace ARSoft.Tools.Net.Net
 		private readonly bool _enforceTlsaValidation;
 		private readonly SslStream _sslStream;
 
-		private DnsSecResult<TlsaRecord> _tlsaRecords;
+		private DnsSecResult<TlsaRecord>? _tlsaRecords;
 
 		/// <summary>
 		///   Creates a new instance of the TlsaStream class
@@ -54,7 +54,7 @@ namespace ARSoft.Tools.Net.Net
 		///   A callback to select client certificates to authenticate the client to
 		///   the server
 		/// </param>
-		public DaneStream(Stream innerStream, IDnsSecResolver resolver, bool enforceTlsaValidation = false, bool leaveInnerStreamOpen = false, LocalCertificateSelectionCallback userCertificateSelectionCallback = null)
+		public DaneStream(Stream innerStream, IDnsSecResolver resolver, bool enforceTlsaValidation = false, bool leaveInnerStreamOpen = false, LocalCertificateSelectionCallback? userCertificateSelectionCallback = null)
 			: base(innerStream, leaveInnerStreamOpen)
 		{
 			_resolver = resolver;
@@ -62,14 +62,14 @@ namespace ARSoft.Tools.Net.Net
 			_sslStream = new SslStream(innerStream, leaveInnerStreamOpen, ValidateRemoteCertificate, userCertificateSelectionCallback);
 		}
 
-		private bool ValidateRemoteCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+		private bool ValidateRemoteCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
 		{
 			IsAuthenticatedByDane = false;
 
-			switch (_tlsaRecords.ValidationResult)
+			switch (_tlsaRecords?.ValidationResult ?? DnsSecValidationResult.Indeterminate)
 			{
 				case DnsSecValidationResult.Signed:
-					if (_tlsaRecords.Records.Count == 0)
+					if (_tlsaRecords!.Records.Count == 0)
 						return !_enforceTlsaValidation && (sslPolicyErrors == SslPolicyErrors.None);
 
 					foreach (var tlsaRecord in _tlsaRecords.Records)
@@ -91,18 +91,18 @@ namespace ARSoft.Tools.Net.Net
 			}
 		}
 
-		private bool ValidateCertificateByTlsa(TlsaRecord tlsaRecord, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+		private bool ValidateCertificateByTlsa(TlsaRecord tlsaRecord, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
 		{
 			switch (tlsaRecord.CertificateUsage)
 			{
 				case TlsaRecord.TlsaCertificateUsage.PkixTA:
-					return chain.ChainElements.Cast<X509ChainElement>().Any(x => ValidateCertificateByTlsa(tlsaRecord, x.Certificate)) && (sslPolicyErrors == SslPolicyErrors.None);
+					return chain != null && chain.ChainElements.Cast<X509ChainElement>().Any(x => ValidateCertificateByTlsa(tlsaRecord, x.Certificate)) && (sslPolicyErrors == SslPolicyErrors.None);
 
 				case TlsaRecord.TlsaCertificateUsage.PkixEE:
 					return ValidateCertificateByTlsa(tlsaRecord, certificate) && (sslPolicyErrors == SslPolicyErrors.None);
 
 				case TlsaRecord.TlsaCertificateUsage.DaneTA:
-					return chain.ChainElements.Cast<X509ChainElement>().Any(x => ValidateCertificateByTlsa(tlsaRecord, x.Certificate)) && ((sslPolicyErrors | SslPolicyErrors.RemoteCertificateChainErrors) == SslPolicyErrors.RemoteCertificateChainErrors);
+					return chain != null && chain.ChainElements.Cast<X509ChainElement>().Any(x => ValidateCertificateByTlsa(tlsaRecord, x.Certificate)) && ((sslPolicyErrors | SslPolicyErrors.RemoteCertificateChainErrors) == SslPolicyErrors.RemoteCertificateChainErrors);
 
 				case TlsaRecord.TlsaCertificateUsage.DaneEE:
 					return ValidateCertificateByTlsa(tlsaRecord, certificate) && ((sslPolicyErrors | SslPolicyErrors.RemoteCertificateChainErrors) == SslPolicyErrors.RemoteCertificateChainErrors);
@@ -112,9 +112,9 @@ namespace ARSoft.Tools.Net.Net
 			}
 		}
 
-		private bool ValidateCertificateByTlsa(TlsaRecord tlsaRecord, X509Certificate certificate)
+		private bool ValidateCertificateByTlsa(TlsaRecord tlsaRecord, X509Certificate? certificate)
 		{
-			return TlsaRecord.GetCertificateAssocicationData(tlsaRecord.Selector, tlsaRecord.MatchingType, certificate).SequenceEqual(tlsaRecord.CertificateAssociationData);
+			return certificate != null && TlsaRecord.GetCertificateAssocicationData(tlsaRecord.Selector, tlsaRecord.MatchingType, certificate).SequenceEqual(tlsaRecord.CertificateAssociationData);
 		}
 
 		/// <summary>
@@ -137,7 +137,7 @@ namespace ARSoft.Tools.Net.Net
 		///   A Boolean value that specifies whether the certificate revocation list is
 		///   checked during authentication.
 		/// </param>
-		public void AuthenticateAsClient(string targetHost, int port, ProtocolType protocol = ProtocolType.Tcp, X509CertificateCollection clientCertificates = null, SslProtocols enabledSslProtocols = SslProtocols.Default, bool checkCertificateRevocation = false)
+		public void AuthenticateAsClient(string targetHost, int port, ProtocolType protocol = ProtocolType.Tcp, X509CertificateCollection? clientCertificates = null, SslProtocols enabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13, bool checkCertificateRevocation = false)
 		{
 			_tlsaRecords = _resolver.ResolveSecure<TlsaRecord>(DomainName.Parse("_" + port + "._" + EnumHelper<ProtocolType>.ToString(protocol).ToLower() + "." + targetHost), RecordType.Tlsa);
 			_sslStream.AuthenticateAsClient(targetHost, clientCertificates ?? new X509CertificateCollection(), enabledSslProtocols, checkCertificateRevocation);
@@ -155,7 +155,7 @@ namespace ARSoft.Tools.Net.Net
 		///   A Boolean value that specifies whether the certificate revocation list is
 		///   checked during authentication.
 		/// </param>
-		public async Task AuthenticateAsClientAsync(string targetHost, int port, ProtocolType protocol = ProtocolType.Tcp, X509CertificateCollection clientCertificates = null, SslProtocols enabledSslProtocols = SslProtocols.Default, bool checkCertificateRevocation = false)
+		public async Task AuthenticateAsClientAsync(string targetHost, int port, ProtocolType protocol = ProtocolType.Tcp, X509CertificateCollection? clientCertificates = null, SslProtocols enabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13, bool checkCertificateRevocation = false)
 		{
 			_tlsaRecords = await _resolver.ResolveSecureAsync<TlsaRecord>(DomainName.Parse("_" + port + "._" + EnumHelper<ProtocolType>.ToString(protocol).ToLower() + "." + targetHost), RecordType.Tlsa);
 			await _sslStream.AuthenticateAsClientAsync(targetHost, clientCertificates ?? new X509CertificateCollection(), enabledSslProtocols, checkCertificateRevocation);
@@ -233,7 +233,7 @@ namespace ARSoft.Tools.Net.Net
 		///   passed to the asyncCallback delegate when the operation completes.
 		/// </param>
 		/// <returns>An IAsyncResult object that indicates the status of the asynchronous operation.</returns>
-		public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback asyncCallback, object asyncState)
+		public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? asyncCallback, object? asyncState)
 		{
 			return _sslStream.BeginRead(buffer, offset, count, asyncCallback, asyncState);
 		}
@@ -263,7 +263,7 @@ namespace ARSoft.Tools.Net.Net
 		///   passed to the asyncCallback delegate when the operation completes.
 		/// </param>
 		/// <returns>An IAsyncResult object indicating the status of the asynchronous operation.</returns>
-		public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback asyncCallback, object asyncState)
+		public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? asyncCallback, object? asyncState)
 		{
 			return _sslStream.BeginWrite(buffer, offset, count, asyncCallback, asyncState);
 		}
@@ -327,12 +327,12 @@ namespace ARSoft.Tools.Net.Net
 		/// <summary>
 		///   Gets the certificate used to authenticate the local endpoint.
 		/// </summary>
-		public X509Certificate LocalCertificate => _sslStream.LocalCertificate;
+		public X509Certificate? LocalCertificate => _sslStream.LocalCertificate;
 
 		/// <summary>
 		///   Gets the certificate used to authenticate the remote endpoint.
 		/// </summary>
-		public X509Certificate RemoteCertificate => _sslStream.RemoteCertificate;
+		public X509Certificate? RemoteCertificate => _sslStream.RemoteCertificate;
 
 		/// <summary>
 		///   Gets a value that identifies the bulk encryption algorithm used by this SslStream.

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -32,19 +32,28 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Domain name
 		/// </summary>
-		public DomainName Name { get; internal set; }
+		public DomainName Name { get; protected set; }
 
 		/// <summary>
 		///   Type of the record
 		/// </summary>
-		public RecordType RecordType { get; internal set; }
+		public RecordType RecordType { get; protected set; }
 
 		/// <summary>
 		///   Class of the record
 		/// </summary>
-		public RecordClass RecordClass { get; internal set; }
+		public RecordClass RecordClass { get; protected set; }
 
 		internal abstract int MaximumLength { get; }
+
+		protected DnsMessageEntryBase(DomainName name, RecordType recordType, RecordClass recordClass)
+		{
+			_ = name ?? throw new ArgumentNullException(nameof(name));
+
+			Name = name;
+			RecordType = recordType;
+			RecordClass = recordClass;
+		}
 
 		/// <summary>
 		///   Returns the textual representation
@@ -68,17 +77,15 @@ namespace ARSoft.Tools.Net.Dns
 			return _hashCode.Value;
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return Equals(obj as DnsMessageEntryBase);
 		}
 
-		public bool Equals(DnsMessageEntryBase other)
+		public bool Equals(DnsMessageEntryBase? other)
 		{
-			if (other == null)
-				return false;
-
-			return Name.Equals(other.Name)
+			return other != null
+			       && Name.Equals(other.Name)
 			       && RecordType.Equals(other.RecordType)
 			       && RecordClass.Equals(other.RecordClass);
 		}

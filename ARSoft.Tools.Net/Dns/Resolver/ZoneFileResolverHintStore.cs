@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -15,12 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #endregion
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -46,12 +40,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="zone">The zone to save</param>
 		protected override void Save(Zone zone)
 		{
-			using (StreamWriter writer = new StreamWriter(_fileName))
+			using var writer = new StreamWriter(_fileName);
+			foreach (var record in zone)
 			{
-				foreach (DnsRecordBase record in zone)
-				{
-					writer.WriteLine(record.ToString());
-				}
+				writer.WriteLine(record.ToString());
 			}
 		}
 

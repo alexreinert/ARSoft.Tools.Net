@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,9 +27,9 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Next owner</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>
 	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc3755.html">RFC 3755</a>.
 	///   </para>
 	/// </summary>
 	public class NSecRecord : DnsRecordBase
@@ -44,7 +44,25 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<RecordType> Types { get; private set; }
 
-		internal NSecRecord() {}
+		internal NSecRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			int endPosition = currentPosition + length;
+
+			NextDomainName = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
+
+			Types = ParseTypeBitMap(resultData, ref currentPosition, endPosition);
+		}
+
+		internal NSecRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 2)
+				throw new FormatException();
+
+			NextDomainName = ParseDomainName(origin, stringRepresentation[0]);
+			Types = stringRepresentation.Skip(1).Select(RecordTypeHelper.ParseShortString).ToList();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the NSecRecord class
@@ -69,15 +87,6 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
-		{
-			int endPosition = currentPosition + length;
-
-			NextDomainName = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
-
-			Types = ParseTypeBitMap(resultData, ref currentPosition, endPosition);
-		}
-
 		internal static List<RecordType> ParseTypeBitMap(byte[] resultData, ref int currentPosition, int endPosition)
 		{
 			List<RecordType> types = new List<RecordType>();
@@ -99,16 +108,8 @@ namespace ARSoft.Tools.Net.Dns
 					}
 				}
 			}
+
 			return types;
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 2)
-				throw new FormatException();
-
-			NextDomainName = ParseDomainName(origin, stringRepresentation[0]);
-			Types = stringRepresentation.Skip(1).Select(RecordTypeHelper.ParseShortString).ToList();
 		}
 
 		internal override string RecordDataToString()
@@ -140,7 +141,7 @@ namespace ARSoft.Tools.Net.Dns
 			return res + 3 + lastType % 256 / 8;
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, NextDomainName, null, useCanonical);
 			EncodeTypeBitmap(messageData, ref currentPosition, Types);

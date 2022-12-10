@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -56,20 +56,20 @@ namespace ARSoft.Tools.Net.Spf
 				return new LoadRecordResult() { CouldBeLoaded = false, ErrorResult = SpfQualifier.Fail };
 			}
 
-			var senderIDTextRecords = dnsResult.Records
+			var senderIDTextRecords = dnsResult?.Records?
 				.Select(r => r.TextData)
 				.Where(t => SenderIDRecord.IsSenderIDRecord(t, Scope))
 				.ToList();
 
-			if (senderIDTextRecords.Count >= 1)
+			if (senderIDTextRecords?.Count >= 1)
 			{
 				var potentialRecords = new List<SenderIDRecord>();
 				foreach (var senderIDTextRecord in senderIDTextRecords)
 				{
-					SenderIDRecord tmpRecord;
+					SenderIDRecord? tmpRecord;
 					if (SenderIDRecord.TryParse(senderIDTextRecord, out tmpRecord))
 					{
-						potentialRecords.Add(tmpRecord);
+						potentialRecords.Add(tmpRecord!);
 					}
 					else
 					{

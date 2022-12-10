@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -103,7 +103,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="resolver"> The resolver instance, that should be used for queries </param>
 		/// <param name="address"> The address, that should be queried </param>
 		/// <returns> The reverse name of the IP address </returns>
-		public static DomainName ResolvePtr(this IDnsResolver resolver, IPAddress address)
+		public static DomainName? ResolvePtr(this IDnsResolver resolver, IPAddress address)
 		{
 			List<PtrRecord> ptrRecords = resolver.Resolve<PtrRecord>(address.GetReverseLookupDomain(), RecordType.Ptr);
 			return ptrRecords.Select(x => x.PointerDomainName).FirstOrDefault();
@@ -116,7 +116,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="address"> The address, that should be queried </param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns> The reverse name of the IP address </returns>
-		public static async Task<DomainName> ResolvePtrAsync(this IDnsResolver resolver, IPAddress address, CancellationToken token = default(CancellationToken))
+		public static async Task<DomainName?> ResolvePtrAsync(this IDnsResolver resolver, IPAddress address, CancellationToken token = default(CancellationToken))
 		{
 			List<PtrRecord> ptrRecords = await resolver.ResolveAsync<PtrRecord>(address.GetReverseLookupDomain(), RecordType.Ptr, token: token);
 			return ptrRecords.Select(x => x.PointerDomainName).FirstOrDefault();

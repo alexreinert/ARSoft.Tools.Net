@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Update lease option</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://files.dns-sd.org/draft-sekar-dns-ul.txt">draft-sekar-dns-ul</see>
+	///     <a href="http://files.dns-sd.org/draft-sekar-dns-ul.txt">draft-sekar-dns-ul</a>
 	///   </para>
 	/// </summary>
 	public class UpdateLeaseOption : EDnsOptionBase
@@ -37,21 +37,20 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public TimeSpan LeaseTime { get; private set; }
 
-		internal UpdateLeaseOption()
-			: base(EDnsOptionType.UpdateLease) {}
+		internal UpdateLeaseOption(byte[] resultData, int startPosition)
+			: base(EDnsOptionType.UpdateLease)
+		{
+			LeaseTime = TimeSpan.FromSeconds(DnsMessageBase.ParseInt(resultData, ref startPosition));
+		}
 
 		/// <summary>
 		///   Creates a new instance of the UpdateLeaseOption class
 		/// </summary>
+		/// <param name="leaseTime">Desired lease (request) or granted lease (response)</param>
 		public UpdateLeaseOption(TimeSpan leaseTime)
-			: this()
+			: base(EDnsOptionType.UpdateLease)
 		{
 			LeaseTime = leaseTime;
-		}
-
-		internal override void ParseData(byte[] resultData, int startPosition, int length)
-		{
-			LeaseTime = TimeSpan.FromSeconds(DnsMessageBase.ParseInt(resultData, ref startPosition));
 		}
 
 		internal override ushort DataLength => 4;

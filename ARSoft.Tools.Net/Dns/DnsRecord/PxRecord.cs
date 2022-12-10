@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>X.400 mail mapping information record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2163">RFC 2163</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2163.html">RFC 2163</a>.
 	///   </para>
 	/// </summary>
 	public class PxRecord : DnsRecordBase
@@ -47,7 +47,24 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public DomainName MapX400 { get; private set; }
 
-		internal PxRecord() {}
+		internal PxRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Preference = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Map822 = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
+			MapX400 = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
+		}
+
+		internal PxRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length != 3)
+				throw new FormatException();
+
+			Preference = UInt16.Parse(stringRepresentation[0]);
+			Map822 = ParseDomainName(origin, stringRepresentation[1]);
+			MapX400 = ParseDomainName(origin, stringRepresentation[2]);
+		}
 
 		/// <summary>
 		///   Creates a new instance of the PxRecord class
@@ -65,23 +82,6 @@ namespace ARSoft.Tools.Net.Dns
 			MapX400 = mapX400 ?? DomainName.Root;
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Preference = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Map822 = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
-			MapX400 = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 3)
-				throw new FormatException();
-
-			Preference = UInt16.Parse(stringRepresentation[0]);
-			Map822 = ParseDomainName(origin, stringRepresentation[1]);
-			MapX400 = ParseDomainName(origin, stringRepresentation[2]);
-		}
-
 		internal override string RecordDataToString()
 		{
 			return Preference
@@ -91,7 +91,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 6 + Map822.MaximumRecordDataLength + MapX400.MaximumRecordDataLength;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Map822, null, useCanonical);

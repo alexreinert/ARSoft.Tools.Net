@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 {
@@ -27,7 +28,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 	///   <para>Dynamic DNS update message</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2136.html">RFC 2136</a>.
 	///   </para>
 	/// </summary>
 	public class DnsUpdateMessage : DnsMessageBase
@@ -50,24 +51,20 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 			OperationCode = OperationCode.Update;
 		}
 
-		private List<PrequisiteBase> _prequisites;
-		private List<UpdateBase> _updates;
+		private List<PrequisiteBase> _prequisites = new List<PrequisiteBase>();
+		private List<UpdateBase> _updates = new List<UpdateBase>();
 
 		/// <summary>
 		///   Gets or sets the zone name
 		/// </summary>
-		public DomainName ZoneName
-		{
-			get { return Questions.Count > 0 ? Questions[0].Name : null; }
-			set { Questions = new List<DnsQuestion>() { new DnsQuestion(value, RecordType.Soa, RecordClass.INet) }; }
-		}
+		public DomainName ZoneName { get; set; } = DomainName.Root;
 
 		/// <summary>
 		///   Gets or sets the entries in the prerequisites section
 		/// </summary>
 		public List<PrequisiteBase> Prequisites
 		{
-			get { return _prequisites ?? (_prequisites = new List<PrequisiteBase>()); }
+			get { return _prequisites ??= new List<PrequisiteBase>(); }
 			set { _prequisites = value; }
 		}
 
@@ -76,7 +73,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// </summary>
 		public List<UpdateBase> Updates
 		{
-			get { return _updates ?? (_updates = new List<UpdateBase>()); }
+			get { return _updates ??= new List<UpdateBase>(); }
 			set { _updates = value; }
 		}
 
@@ -92,16 +89,23 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 				IsEDnsEnabled = IsEDnsEnabled,
 				IsQuery = false,
 				OperationCode = OperationCode,
-				Questions = new List<DnsQuestion>(Questions),
+				ZoneName = ZoneName,
 			};
 
 			if (IsEDnsEnabled)
 			{
-				result.EDnsOptions.Version = EDnsOptions.Version;
-				result.EDnsOptions.UdpPayloadSize = EDnsOptions.UdpPayloadSize;
+				result.EDnsOptions!.Version = EDnsOptions!.Version;
+				result.EDnsOptions!.UdpPayloadSize = EDnsOptions!.UdpPayloadSize;
 			}
 
 			return result;
+		}
+
+		protected internal override DnsMessageBase CreateFailureResponse()
+		{
+			DnsUpdateMessage msg = CreateResponseInstance();
+			msg.ReturnCode = ReturnCode.ServerFailure;
+			return msg;
 		}
 
 		internal override bool IsTcpUsingRequested => false;
@@ -113,69 +117,125 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 			return false;
 		}
 
-		protected override void PrepareEncoding()
+		protected override void ParseSections(byte[] data, ref int currentPosition)
 		{
-			AnswerRecords = Prequisites?.Cast<DnsRecordBase>().ToList() ?? new List<DnsRecordBase>();
-			AuthorityRecords = Updates?.Cast<DnsRecordBase>().ToList() ?? new List<DnsRecordBase>();
+			int questionCount = ParseUShort(data, ref currentPosition);
+			int prequisitesCount = ParseUShort(data, ref currentPosition);
+			int updatesCount = ParseUShort(data, ref currentPosition);
+			int additionalRecordCount = ParseUShort(data, ref currentPosition);
+
+			List<DnsQuestion> questions = new List<DnsQuestion>();
+			ParseQuestionSection(data, ref currentPosition, questions, questionCount);
+			ZoneName = questions.Count == 1 && questions[0].RecordType == RecordType.Soa && questions[0].RecordClass == RecordClass.INet ? questions[0].Name : DomainName.Root;
+
+			for (int i = 0; i < prequisitesCount; i++)
+			{
+				Prequisites.Add(PrequisiteBase.ParsePrequisiteFromMessage(data, ref currentPosition));
+			}
+
+			for (int i = 0; i < updatesCount; i++)
+			{
+				Updates.Add(UpdateBase.ParseUpdateFromMessage(data, ref currentPosition));
+			}
+
+			ParseRecordSection(data, ref currentPosition, AdditionalRecords, additionalRecordCount);
 		}
 
-		protected override void FinishParsing()
+		protected override int GetSectionsMaxLength()
 		{
-			Prequisites =
-				AnswerRecords.ConvertAll<PrequisiteBase>(
-					record =>
-					{
-						if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
-						{
-							return new RecordExistsPrequisite(record.Name, record.RecordType);
-						}
-						else if (record.RecordClass == RecordClass.Any)
-						{
-							return new RecordExistsPrequisite(record);
-						}
-						else if ((record.RecordClass == RecordClass.None) && (record.RecordDataLength == 0))
-						{
-							return new RecordNotExistsPrequisite(record.Name, record.RecordType);
-						}
-						else if ((record.RecordClass == RecordClass.Any) && (record.RecordType == RecordType.Any))
-						{
-							return new NameIsInUsePrequisite(record.Name);
-						}
-						else if ((record.RecordClass == RecordClass.None) && (record.RecordType == RecordType.Any))
-						{
-							return new NameIsNotInUsePrequisite(record.Name);
-						}
-						else
-						{
-							return null;
-						}
-					}).Where(prequisite => (prequisite != null)).ToList();
+			return 12
+			       + ZoneName.MaximumRecordDataLength + 6
+			       + Prequisites.Sum(record => record.MaximumLength)
+			       + Updates.Sum(record => record.MaximumLength)
+			       + AdditionalRecords.Sum(record => record.MaximumLength);
+		}
 
-			Updates =
-				AuthorityRecords.ConvertAll<UpdateBase>(
-					record =>
-					{
-						if (record.TimeToLive != 0)
-						{
-							return new AddRecordUpdate(record);
-						}
-						else if ((record.RecordType == RecordType.Any) && (record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
-						{
-							return new DeleteAllRecordsUpdate(record.Name);
-						}
-						else if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
-						{
-							return new DeleteRecordUpdate(record.Name, record.RecordType);
-						}
-						else if (record.RecordClass == RecordClass.None)
-						{
-							return new DeleteRecordUpdate(record);
-						}
-						else
-						{
-							return null;
-						}
-					}).Where(update => (update != null)).ToList();
+		protected override void EncodeSections(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
+		{
+			EncodeUShort(messageData, ref currentPosition, 1);
+			EncodeUShort(messageData, ref currentPosition, (ushort) Prequisites.Count);
+			EncodeUShort(messageData, ref currentPosition, (ushort) Updates.Count);
+			EncodeUShort(messageData, ref currentPosition, (ushort) AdditionalRecords.Count);
+
+			new DnsQuestion(ZoneName, RecordType.Soa, RecordClass.INet).Encode(messageData, offset, ref currentPosition, domainNames);
+			foreach (PrequisiteBase prequisite in Prequisites)
+			{
+				prequisite.Encode(messageData, offset, ref currentPosition, domainNames);
+			}
+
+			foreach (UpdateBase update in Updates)
+			{
+				update.Encode(messageData, offset, ref currentPosition, domainNames);
+			}
+
+			foreach (DnsRecordBase record in AdditionalRecords)
+			{
+				record.Encode(messageData, offset, ref currentPosition, domainNames);
+			}
+		}
+
+		//protected override void FinishParsing()
+		//{
+		//	Updates =
+		//		AuthorityRecords.ConvertAll<UpdateBase>(
+		//			record =>
+		//			{
+		//				if (record.TimeToLive != 0)
+		//				{
+		//					return new AddRecordUpdate(record);
+		//				}
+		//				else if ((record.RecordType == RecordType.Any) && (record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
+		//				{
+		//					return new DeleteAllRecordsUpdate(record.Name);
+		//				}
+		//				else if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
+		//				{
+		//					return new DeleteRecordUpdate(record.Name, record.RecordType);
+		//				}
+		//				else if (record.RecordClass == RecordClass.None)
+		//				{
+		//					return new DeleteRecordUpdate(record);
+		//				}
+		//				else
+		//				{
+		//					return null;
+		//				}
+		//			}).Where(update => (update != null)).ToList();
+		//}
+
+		internal override bool ValidateResponse(DnsMessageBase responseBase)
+		{
+			DnsUpdateMessage? response = responseBase as DnsUpdateMessage;
+
+			if (response == null)
+				return false;
+
+			if (TransactionID != response.TransactionID)
+				return false;
+
+			if ((response.ReturnCode == ReturnCode.NoError) || (response.ReturnCode == ReturnCode.NxDomain))
+			{
+				return response.ZoneName.Equals(ZoneName, false);
+			}
+
+			return true;
+		}
+
+		protected internal override void Add0x20Bits()
+		{
+			ZoneName = ZoneName.Add0x20Bits();
+		}
+
+		protected internal override void AddSubsequentResponse(DnsMessageBase respone)
+		{
+			throw new NotSupportedException();
+		}
+
+		protected internal override bool AllowMultipleResponses => false;
+
+		protected internal override IEnumerable<DnsMessageBase> SplitResponse()
+		{
+			throw new NotSupportedException();
 		}
 	}
 }

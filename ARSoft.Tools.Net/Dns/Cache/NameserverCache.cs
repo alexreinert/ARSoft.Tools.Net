@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -43,9 +43,9 @@ namespace ARSoft.Tools.Net.Dns
 				return Address.GetHashCode();
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				CacheValue second = obj as CacheValue;
+				CacheValue? second = obj as CacheValue;
 
 				if (second == null)
 					return false;
@@ -58,7 +58,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		public void Add(DomainName zoneName, IPAddress address, int timeToLive)
 		{
-			HashSet<CacheValue> addresses;
+			HashSet<CacheValue>? addresses;
 
 			if (_cache.TryGetValue(zoneName, out addresses))
 			{
@@ -73,11 +73,11 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		public bool TryGetAddresses(DomainName zoneName, out List<IPAddress> addresses)
+		public bool TryGetAddresses(DomainName zoneName, out List<IPAddress>? addresses)
 		{
 			DateTime utcNow = DateTime.UtcNow;
 
-			HashSet<CacheValue> cacheValues;
+			HashSet<CacheValue>? cacheValues;
 			if (_cache.TryGetValue(zoneName, out cacheValues))
 			{
 				addresses = new List<IPAddress>();
@@ -123,7 +123,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				lock (kvp.Value)
 				{
-					HashSet<CacheValue> tmp;
+					HashSet<CacheValue>? tmp;
 
 					kvp.Value.RemoveWhere(x => x.ExpireDateUtc < utcNow);
 					if (kvp.Value.Count == 0)

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -28,11 +28,7 @@ namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
 	///   Provides a one/shot client for querying Multicast DNS as defined in
-	///   <see
-	///     cref="!:http://tools.ietf.org/html/rfc6762">
-	///     RFC 6762
-	///   </see>
-	///   .
+	///   <a href="https://www.rfc-editor.org/rfc/rfc6762.html">RFC 6762</a>.
 	/// </summary>
 	public sealed class MulticastDnsOneShotClient : DnsClientBase
 	{
@@ -42,7 +38,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   Provides a new instance with a timeout of 2.5 seconds
 		/// </summary>
 		public MulticastDnsOneShotClient()
-			: this(2500) {}
+			: this(2500) { }
 
 		/// <summary>
 		///   Provides a new instance with a custom timeout
@@ -81,8 +77,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns> All available responses on the local network </returns>
 		public List<MulticastDnsMessage> Resolve(DomainName name, RecordType recordType = RecordType.Any)
 		{
-			if (name == null)
-				throw new ArgumentNullException(nameof(name), "Name must be provided");
+			_ = name ?? throw new ArgumentNullException(nameof(name), "Name must be provided");
 
 			MulticastDnsMessage message = new MulticastDnsMessage { IsQuery = true, OperationCode = OperationCode.Query };
 			message.Questions.Add(new DnsQuestion(name, recordType, RecordClass.INet));
@@ -99,8 +94,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns> All available responses on the local network </returns>
 		public Task<List<MulticastDnsMessage>> ResolveAsync(DomainName name, RecordType recordType = RecordType.Any, CancellationToken token = default(CancellationToken))
 		{
-			if (name == null)
-				throw new ArgumentNullException(nameof(name), "Name must be provided");
+			_ = name ?? throw new ArgumentNullException(nameof(name), "Name must be provided");
 
 			MulticastDnsMessage message = new MulticastDnsMessage { IsQuery = true, OperationCode = OperationCode.Query };
 			message.Questions.Add(new DnsQuestion(name, recordType, RecordClass.INet));

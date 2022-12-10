@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Dynamic Host Configuration Protocol (DHCP) Information record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4701">RFC 4701</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4701.html">RFC 4701</a>.
 	///   </para>
 	/// </summary>
 	public class DhcidRecord : DnsRecordBase
@@ -37,7 +37,20 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] RecordData { get; private set; }
 
-		internal DhcidRecord() {}
+		internal DhcidRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			RecordData = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length);
+		}
+
+		internal DhcidRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 1)
+				throw new FormatException();
+
+			RecordData = String.Join(String.Empty, stringRepresentation).FromBase64String();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the DhcidRecord class
@@ -51,19 +64,6 @@ namespace ARSoft.Tools.Net.Dns
 			RecordData = recordData ?? new byte[] { };
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 1)
-				throw new FormatException();
-
-			RecordData = String.Join(String.Empty, stringRepresentation).FromBase64String();
-		}
-
 		internal override string RecordDataToString()
 		{
 			return RecordData.ToBase64String();
@@ -71,7 +71,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => RecordData.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, RecordData);
 		}

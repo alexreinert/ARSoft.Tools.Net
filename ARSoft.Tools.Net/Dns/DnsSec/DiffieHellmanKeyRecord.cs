@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,13 +27,13 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Security Key record using Diffie Hellman algorithm</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>
 	///     ,
-	///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc3755.html">RFC 3755</a>
 	///     ,
-	///     <see cref="!:http://tools.ietf.org/html/rfc2535">RFC 2535</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2535.html">RFC 2535</a>
 	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2930.html">RFC 2930</a>.
 	///   </para>
 	/// </summary>
 	public class DiffieHellmanKeyRecord : KeyRecordBase
@@ -53,7 +53,16 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] PublicValue { get; private set; }
 
-		internal DiffieHellmanKeyRecord() {}
+		internal DiffieHellmanKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive, resultData, currentPosition, length)
+		{
+			int primeLength = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Prime = DnsMessageBase.ParseByteData(resultData, ref currentPosition, primeLength);
+			int generatorLength = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Generator = DnsMessageBase.ParseByteData(resultData, ref currentPosition, generatorLength);
+			int publicValueLength = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			PublicValue = DnsMessageBase.ParseByteData(resultData, ref currentPosition, publicValueLength);
+		}
 
 		/// <summary>
 		///   Creates a new instance of the DiffieHellmanKeyRecord class
@@ -67,26 +76,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="generator"> Binary data of the generator of the key </param>
 		/// <param name="publicValue"> Binary data of the public value </param>
 		public DiffieHellmanKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, ushort flags, ProtocolType protocol, byte[] prime, byte[] generator, byte[] publicValue)
+#pragma warning disable 0612
 			: base(name, recordClass, timeToLive, flags, protocol, DnsSecAlgorithm.DiffieHellman)
+#pragma warning restore 0612
 		{
 			Prime = prime ?? new byte[] { };
 			Generator = generator ?? new byte[] { };
 			PublicValue = publicValue ?? new byte[] { };
-		}
-
-		protected override void ParsePublicKey(byte[] resultData, int startPosition, int length)
-		{
-			int primeLength = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Prime = DnsMessageBase.ParseByteData(resultData, ref startPosition, primeLength);
-			int generatorLength = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Generator = DnsMessageBase.ParseByteData(resultData, ref startPosition, generatorLength);
-			int publicValueLength = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			PublicValue = DnsMessageBase.ParseByteData(resultData, ref startPosition, publicValueLength);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			throw new NotSupportedException();
 		}
 
 		protected override string PublicKeyToString()
@@ -101,7 +97,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected override int MaximumPublicKeyLength => 3 + Prime.Length + Generator.Length + PublicValue.Length;
 
-		protected override void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
+		protected override void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Prime.Length);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Prime);

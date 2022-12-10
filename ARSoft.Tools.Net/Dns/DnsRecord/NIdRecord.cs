@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>NID</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc6742">RFC 6742</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc6742.html">RFC 6742</a>.
 	///   </para>
 	/// </summary>
 	public class NIdRecord : DnsRecordBase
@@ -42,29 +42,15 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public ulong NodeID { get; private set; }
 
-		internal NIdRecord() {}
-
-		/// <summary>
-		///   Creates a new instance of the NIdRecord class
-		/// </summary>
-		/// <param name="name"> Domain name of the host </param>
-		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="preference"> The preference </param>
-		/// <param name="nodeID"> The Node ID </param>
-		public NIdRecord(DomainName name, int timeToLive, ushort preference, ulong nodeID)
-			: base(name, RecordType.NId, RecordClass.INet, timeToLive)
+		internal NIdRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
 		{
-			Preference = preference;
-			NodeID = nodeID;
+			Preference = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			NodeID = DnsMessageBase.ParseULong(resultData, ref currentPosition);
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Preference = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			NodeID = DnsMessageBase.ParseULong(resultData, ref startPosition);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
+		internal NIdRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
 		{
 			if (stringRepresentation.Length != 2)
 				throw new FormatException();
@@ -86,6 +72,20 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		/// <summary>
+		///   Creates a new instance of the NIdRecord class
+		/// </summary>
+		/// <param name="name"> Domain name of the host </param>
+		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
+		/// <param name="preference"> The preference </param>
+		/// <param name="nodeID"> The Node ID </param>
+		public NIdRecord(DomainName name, int timeToLive, ushort preference, ulong nodeID)
+			: base(name, RecordType.NId, RecordClass.INet, timeToLive)
+		{
+			Preference = preference;
+			NodeID = nodeID;
+		}
+
 		internal override string RecordDataToString()
 		{
 			string nodeID = NodeID.ToString("x16");
@@ -94,7 +94,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 10;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
 			DnsMessageBase.EncodeULong(messageData, ref currentPosition, NodeID);

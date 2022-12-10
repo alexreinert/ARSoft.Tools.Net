@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -45,7 +45,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   The response, which should be sent to the client
 		/// </summary>
-		public DnsMessageBase Response { get; set; }
+		public DnsMessageBase? Response { get; set; }
 
 		internal QueryReceivedEventArgs(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
 		{

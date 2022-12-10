@@ -1,5 +1,5 @@
 #region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -22,8 +22,15 @@ namespace ARSoft.Tools.Net.Dns
 {
 	internal class DnsClientEndpointInfo
 	{
-		public bool IsMulticast;
-		public IPAddress LocalAddress;
-		public IPAddress ServerAddress;
+		public bool IsMulticast { get; }
+		public IPAddress LocalAddress { get; }
+		public IPAddress ServerAddress { get; }
+
+		public DnsClientEndpointInfo(bool isMulticast, IPAddress serverAddress, IPAddress localAddress)
+		{
+			IsMulticast = isMulticast;
+			ServerAddress = serverAddress;
+			LocalAddress = localAddress;
+		}
 	}
 }

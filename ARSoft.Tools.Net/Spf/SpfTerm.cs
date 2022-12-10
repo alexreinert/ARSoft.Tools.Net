@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,12 +27,12 @@ namespace ARSoft.Tools.Net.Spf
 	/// <summary>
 	///   Represents a single term of a SPF record
 	/// </summary>
-	public class SpfTerm
+	public abstract class SpfTerm
 	{
 		private static readonly Regex _parseMechanismRegex = new Regex(@"^(\s)*(?<qualifier>[~+?-]?)(?<type>[a-z0-9]+)(:(?<domain>[^/]+))?(/(?<prefix>[0-9]+)(/(?<prefix6>[0-9]+))?)?(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		private static readonly Regex _parseModifierRegex = new Regex(@"^(\s)*(?<type>[a-z]+)=(?<domain>[^\s]+)(\s)*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		internal static bool TryParse(string s, out SpfTerm value)
+		internal static bool TryParse(string s, out SpfTerm? value)
 		{
 			if (String.IsNullOrEmpty(s))
 			{
@@ -44,47 +44,45 @@ namespace ARSoft.Tools.Net.Spf
 			Match match = _parseMechanismRegex.Match(s);
 			if (match.Success)
 			{
-				SpfMechanism mechanism = new SpfMechanism();
-
+				SpfQualifier qualifier;
 				switch (match.Groups["qualifier"].Value)
 				{
 					case "+":
-						mechanism.Qualifier = SpfQualifier.Pass;
+						qualifier = SpfQualifier.Pass;
 						break;
 					case "-":
-						mechanism.Qualifier = SpfQualifier.Fail;
+						qualifier = SpfQualifier.Fail;
 						break;
 					case "~":
-						mechanism.Qualifier = SpfQualifier.SoftFail;
+						qualifier = SpfQualifier.SoftFail;
 						break;
 					case "?":
-						mechanism.Qualifier = SpfQualifier.Neutral;
+						qualifier = SpfQualifier.Neutral;
 						break;
 
 					default:
-						mechanism.Qualifier = SpfQualifier.Pass;
+						qualifier = SpfQualifier.Pass;
 						break;
 				}
 
-				SpfMechanismType type;
-				mechanism.Type = EnumHelper<SpfMechanismType>.TryParse(match.Groups["type"].Value, true, out type) ? type : SpfMechanismType.Unknown;
-
-				mechanism.Domain = match.Groups["domain"].Value;
+				SpfMechanismType type = EnumHelper<SpfMechanismType>.TryParse(match.Groups["type"].Value, true, out SpfMechanismType t) ? t : SpfMechanismType.Unknown;
+				string? domain = match.Groups["domain"].Value;
 
 				string tmpPrefix = match.Groups["prefix"].Value;
-				int prefix;
-				if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out prefix))
+				int? prefix = null;
+				if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out int p))
 				{
-					mechanism.Prefix = prefix;
+					prefix = p;
 				}
 
 				tmpPrefix = match.Groups["prefix6"].Value;
-				if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out prefix))
+				int? prefix6 = null;
+				if (!String.IsNullOrEmpty(tmpPrefix) && Int32.TryParse(tmpPrefix, out int p6))
 				{
-					mechanism.Prefix6 = prefix;
+					prefix6 = p6;
 				}
 
-				value = mechanism;
+				value = new SpfMechanism(qualifier, type, domain, prefix, prefix6);
 				return true;
 			}
 			#endregion
@@ -93,13 +91,9 @@ namespace ARSoft.Tools.Net.Spf
 			match = _parseModifierRegex.Match(s);
 			if (match.Success)
 			{
-				SpfModifier modifier = new SpfModifier();
-
-				SpfModifierType type;
-				modifier.Type = EnumHelper<SpfModifierType>.TryParse(match.Groups["type"].Value, true, out type) ? type : SpfModifierType.Unknown;
-				modifier.Domain = match.Groups["domain"].Value;
-
-				value = modifier;
+				value = new SpfModifier(
+					EnumHelper<SpfModifierType>.TryParse(match.Groups["type"].Value, true, out SpfModifierType t) ? t : SpfModifierType.Unknown,
+					match.Groups["domain"].Value);
 				return true;
 			}
 			#endregion

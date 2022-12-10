@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,13 +27,13 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Security Key record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>
 	///     ,
-	///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc3755.html">RFC 3755</a>
 	///     ,
-	///     <see cref="!:http://tools.ietf.org/html/rfc2535">RFC 2535</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2535.html">RFC 2535</a>
 	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2930.html">RFC 2930</a>.
 	///   </para>
 	/// </summary>
 	public class KeyRecord : KeyRecordBase
@@ -43,7 +43,17 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] PublicKey { get; private set; }
 
-		internal KeyRecord() {}
+		internal KeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive, resultData, currentPosition, length)
+		{
+			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 4);
+		}
+
+		internal KeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, RecordClass.Any, 0, 0, ProtocolType.Any, DnsSecAlgorithm.Indirect)
+		{
+			throw new NotSupportedException();
+		}
 
 		/// <summary>
 		///   Creates of new instance of the KeyRecord class
@@ -61,19 +71,6 @@ namespace ARSoft.Tools.Net.Dns
 			PublicKey = publicKey ?? new byte[] { };
 		}
 
-		protected override void ParsePublicKey(byte[] resultData, int startPosition, int length)
-		{
-			PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 1)
-				throw new FormatException();
-
-			PublicKey = String.Join(String.Empty, stringRepresentation).FromBase64String();
-		}
-
 		protected override string PublicKeyToString()
 		{
 			return PublicKey.ToBase64String();
@@ -81,7 +78,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected override int MaximumPublicKeyLength => PublicKey.Length;
 
-		protected override void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
+		protected override void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
 		}

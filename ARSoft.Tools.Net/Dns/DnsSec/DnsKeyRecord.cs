@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -34,6 +34,7 @@ using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Math.EC;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
+using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -41,9 +42,9 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>DNS Key record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>
 	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc3755.html">RFC 3755</a>.
 	///   </para>
 	/// </summary>
 	public class DnsKeyRecord : DnsRecordBase
@@ -73,15 +74,15 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Binary data of the private key
 		/// </summary>
-		public byte[] PrivateKey { get; }
+		public byte[]? PrivateKey { get; }
 
 		/// <summary>
 		///   <para>Record holds a DNS zone key</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>
 		///     and
-		///     <see cref="!:http://tools.ietf.org/html/rfc3757">RFC 3757</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc3757.html">RFC 3757</a>.
 		///   </para>
 		/// </summary>
 		public bool IsZoneKey
@@ -104,9 +105,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Key is intended for use as a secure entry point</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>
 		///     and
-		///     <see cref="!:http://tools.ietf.org/html/rfc3757">RFC 3757</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc3757.html">RFC 3757</a>.
 		///   </para>
 		/// </summary>
 		public bool IsSecureEntryPoint
@@ -129,7 +130,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Key is intended for use as a secure entry point</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc5011">RFC 5011</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc5011.html">RFC 5011</a>.
 		///   </para>
 		/// </summary>
 		public bool IsRevoked
@@ -152,13 +153,15 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Calculates the key tag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>.
 		///   </para>
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>The key tag</returns>
 		public ushort CalculateKeyTag()
 		{
+#pragma warning disable 0612
 			if (Algorithm == DnsSecAlgorithm.RsaMd5)
+#pragma warning restore 0612
 				return (ushort) (PublicKey[PublicKey.Length - 4] & PublicKey[PublicKey.Length - 3] << 8);
 
 			byte[] buffer = new byte[MaximumRecordDataLength];
@@ -179,20 +182,26 @@ namespace ARSoft.Tools.Net.Dns
 			return res;
 		}
 
-		internal DnsKeyRecord() {}
+		internal DnsKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Flags = (DnsKeyFlags) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Protocol = resultData[currentPosition++];
+			Algorithm = (DnsSecAlgorithm) resultData[currentPosition++];
+			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 4);
+		}
 
-		/// <summary>
-		///   Creates a new instance of the DnsKeyRecord class
-		/// </summary>
-		/// <param name="name"> Name of the record </param>
-		/// <param name="recordClass"> Class of the record </param>
-		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
-		/// <param name="flags"> Flags of the key </param>
-		/// <param name="protocol"> Protocol field </param>
-		/// <param name="algorithm"> Algorithm of the key </param>
-		/// <param name="publicKey"> Binary data of the public key </param>
-		public DnsKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol, DnsSecAlgorithm algorithm, byte[] publicKey)
-			: this(name, recordClass, timeToLive, flags, protocol, algorithm, publicKey, null) {}
+		internal DnsKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 4)
+				throw new FormatException();
+
+			Flags = (DnsKeyFlags) UInt16.Parse(stringRepresentation[0]);
+			Protocol = Byte.Parse(stringRepresentation[1]);
+			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
+			PublicKey = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the DnsKeyRecord class
@@ -205,7 +214,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="algorithm"> Algorithm of the key </param>
 		/// <param name="publicKey"> Binary data of the public key </param>
 		/// <param name="privateKey"> Binary data of the private key </param>
-		public DnsKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol, DnsSecAlgorithm algorithm, byte[] publicKey, byte[] privateKey)
+		public DnsKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol, DnsSecAlgorithm algorithm, byte[] publicKey, byte[]? privateKey = null)
 			: base(name, RecordType.DnsKey, recordClass, timeToLive)
 		{
 			Flags = flags;
@@ -213,25 +222,6 @@ namespace ARSoft.Tools.Net.Dns
 			Algorithm = algorithm;
 			PublicKey = publicKey;
 			PrivateKey = privateKey;
-		}
-
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Flags = (DnsKeyFlags) DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Protocol = resultData[startPosition++];
-			Algorithm = (DnsSecAlgorithm) resultData[startPosition++];
-			PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 4);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 4)
-				throw new FormatException();
-
-			Flags = (DnsKeyFlags) UInt16.Parse(stringRepresentation[0]);
-			Protocol = Byte.Parse(stringRepresentation[1]);
-			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
-			PublicKey = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
 		}
 
 		internal override string RecordDataToString()
@@ -244,7 +234,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 4 + PublicKey.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Flags);
 			messageData[currentPosition++] = Protocol;
@@ -266,18 +256,17 @@ namespace ARSoft.Tools.Net.Dns
 				case DnsSecAlgorithm.RsaSha512:
 					return SignRsa(new Sha512Digest(), buffer, length);
 
-				case DnsSecAlgorithm.Dsa:
-				case DnsSecAlgorithm.DsaNsec3Sha1:
-					return SignDsa(buffer, length);
-
-				case DnsSecAlgorithm.EccGost:
-					return SignGost(buffer, length);
-
 				case DnsSecAlgorithm.EcDsaP256Sha256:
 					return SignEcDsa(new Sha256Digest(), buffer, length);
 
 				case DnsSecAlgorithm.EcDsaP384Sha384:
 					return SignEcDsa(new Sha384Digest(), buffer, length);
+
+				case DnsSecAlgorithm.Ed25519:
+					return SignEd25519(buffer, length);
+
+				case DnsSecAlgorithm.Ed448:
+					return SignEd448(buffer, length);
 
 				default:
 					throw new NotSupportedException();
@@ -292,50 +281,6 @@ namespace ARSoft.Tools.Net.Dns
 
 			signer.BlockUpdate(buffer, 0, length);
 			return signer.GenerateSignature();
-		}
-
-		private byte[] SignDsa(byte[] buffer, int length)
-		{
-			var signer = new DsaSigner();
-			signer.Init(true, new ParametersWithRandom(PrivateKeyFactory.CreateKey(PrivateKey), _secureRandom));
-
-			var sha1 = new Sha1Digest();
-
-			sha1.BlockUpdate(buffer, 0, length);
-			byte[] hash = new byte[sha1.GetDigestSize()];
-			sha1.DoFinal(hash, 0);
-
-			var signature = signer.GenerateSignature(hash);
-
-			byte[] res = new byte[41];
-
-			res[0] = PublicKey[0];
-
-			signature[0].ToByteArrayUnsigned().CopyTo(res, 1);
-			signature[1].ToByteArrayUnsigned().CopyTo(res, 21);
-
-			return res;
-		}
-
-		private byte[] SignGost(byte[] buffer, int length)
-		{
-			ECGost3410Signer signer = new ECGost3410Signer();
-			signer.Init(true, new ParametersWithRandom(PrivateKeyFactory.CreateKey(PrivateKey), _secureRandom));
-
-			var digest = new Gost3411Digest();
-
-			digest.BlockUpdate(buffer, 0, length);
-			byte[] hash = new byte[digest.GetDigestSize()];
-			digest.DoFinal(hash, 0);
-
-			var signature = signer.GenerateSignature(hash);
-
-			byte[] res = new byte[64];
-
-			signature[0].ToByteArrayUnsigned().CopyTo(res, 32);
-			signature[1].ToByteArrayUnsigned().CopyTo(res, 0);
-
-			return res;
 		}
 
 		private byte[] SignEcDsa(IDigest digest, byte[] buffer, int length)
@@ -360,6 +305,24 @@ namespace ARSoft.Tools.Net.Dns
 			return res;
 		}
 
+		private byte[] SignEd25519(byte[] buffer, int length)
+		{
+			Ed25519Signer signer = new Ed25519Signer();
+			signer.Init(true, new ParametersWithRandom(PrivateKeyFactory.CreateKey(PrivateKey), _secureRandom));
+
+			signer.BlockUpdate(buffer, 0, length);
+			return signer.GenerateSignature();
+		}
+
+		private byte[] SignEd448(byte[] buffer, int length)
+		{
+			Ed448Signer signer = new Ed448Signer(Array.Empty<byte>());
+			signer.Init(true, new ParametersWithRandom(PrivateKeyFactory.CreateKey(PrivateKey), _secureRandom));
+
+			signer.BlockUpdate(buffer, 0, length);
+			return signer.GenerateSignature();
+		}
+
 		internal bool Verify(byte[] buffer, int length, byte[] signature)
 		{
 			switch (Algorithm)
@@ -374,11 +337,9 @@ namespace ARSoft.Tools.Net.Dns
 				case DnsSecAlgorithm.RsaSha512:
 					return VerifyRsa(new Sha512Digest(), buffer, length, signature);
 
-				case DnsSecAlgorithm.Dsa:
-				case DnsSecAlgorithm.DsaNsec3Sha1:
-					return VerifyDsa(buffer, length, signature);
-
+#pragma warning disable 0612
 				case DnsSecAlgorithm.EccGost:
+#pragma warning restore 0612
 					return VerifyGost(buffer, length, signature);
 
 				case DnsSecAlgorithm.EcDsaP256Sha256:
@@ -386,6 +347,12 @@ namespace ARSoft.Tools.Net.Dns
 
 				case DnsSecAlgorithm.EcDsaP384Sha384:
 					return VerifyEcDsa(new Sha384Digest(), NistNamedCurves.GetByOid(SecObjectIdentifiers.SecP384r1), buffer, length, signature);
+
+				case DnsSecAlgorithm.Ed25519:
+					return VerifyEd25519(buffer, length, signature);
+
+				case DnsSecAlgorithm.Ed448:
+					return VerifyEd448(buffer, length, signature);
 
 				default:
 					throw new NotSupportedException();
@@ -409,39 +376,20 @@ namespace ARSoft.Tools.Net.Dns
 			return signer.VerifySignature(signature);
 		}
 
-		private bool VerifyDsa(byte[] buffer, int length, byte[] signature)
-		{
-			int numberSize = 64 + PublicKey[0] * 8;
-
-			DsaPublicKeyParameters parameters = new DsaPublicKeyParameters(
-				new BigInteger(1, PublicKey, 21 + 2 * numberSize, numberSize),
-				new DsaParameters(
-					new BigInteger(1, PublicKey, 21, numberSize),
-					new BigInteger(1, PublicKey, 1, 20),
-					new BigInteger(1, PublicKey, 21 + numberSize, numberSize))
-				);
-
-			var dsa = new DsaSigner();
-			dsa.Init(false, parameters);
-
-			var sha1 = new Sha1Digest();
-
-			sha1.BlockUpdate(buffer, 0, length);
-			byte[] hash = new byte[sha1.GetDigestSize()];
-			sha1.DoFinal(hash, 0);
-
-			return dsa.VerifySignature(hash, new BigInteger(1, signature, 1, 20), new BigInteger(1, signature, 21, 20));
-		}
-
 		private bool VerifyGost(byte[] buffer, int length, byte[] signature)
 		{
-			ECDomainParameters dParams = ECGost3410NamedCurves.GetByOid(CryptoProObjectIdentifiers.GostR3410x2001CryptoProA);
+			X9ECParameters curveParameter = ECGost3410NamedCurves.GetByOid(CryptoProObjectIdentifiers.GostR3410x2001CryptoProA);
+
+			ECDomainParameters dParams = new ECDomainParameters(
+				curveParameter.Curve,
+				curveParameter.G,
+				curveParameter.N,
+				curveParameter.H,
+				curveParameter.GetSeed());
+
 			byte[] reversedPublicKey = PublicKey.Reverse().ToArray();
 			ECPoint q = dParams.Curve.CreatePoint(new BigInteger(1, reversedPublicKey, 32, 32), new BigInteger(1, reversedPublicKey, 0, 32));
 			ECPublicKeyParameters parameters = new ECPublicKeyParameters(q, dParams);
-
-			var signer = new ECGost3410Signer();
-			signer.Init(false, parameters);
 
 			var digest = new Gost3411Digest();
 
@@ -449,7 +397,10 @@ namespace ARSoft.Tools.Net.Dns
 			byte[] hash = new byte[digest.GetDigestSize()];
 			digest.DoFinal(hash, 0);
 
-			return signer.VerifySignature(hash, new BigInteger(1, signature, 32, 32), new BigInteger(1, signature, 0, 32));
+			var signer = new ECGost3410Signer();
+			signer.Init(false, parameters);
+			var res = signer.VerifySignature(hash, new BigInteger(1, signature, 32, 32), new BigInteger(1, signature, 0, 32));
+			return res;
 		}
 
 		private bool VerifyEcDsa(IDigest digest, X9ECParameters curveParameter, byte[] buffer, int length, byte[] signature)
@@ -477,6 +428,28 @@ namespace ARSoft.Tools.Net.Dns
 			return signer.VerifySignature(hash, new BigInteger(1, signature, 0, digestSize), new BigInteger(1, signature, digestSize, digestSize));
 		}
 
+		private bool VerifyEd25519(byte[] buffer, int length, byte[] signature)
+		{
+			Ed25519PublicKeyParameters parameters = new Ed25519PublicKeyParameters(PublicKey);
+
+			var signer = new Ed25519Signer();
+			signer.Init(false, parameters);
+			signer.BlockUpdate(buffer, 0, length);
+
+			return signer.VerifySignature(signature);
+		}
+
+		private bool VerifyEd448(byte[] buffer, int length, byte[] signature)
+		{
+			Ed448PublicKeyParameters parameters = new Ed448PublicKeyParameters(PublicKey);
+
+			var signer = new Ed448Signer(Array.Empty<byte>());
+			signer.Init(false, parameters);
+			signer.BlockUpdate(buffer, 0, length);
+
+			return signer.VerifySignature(signature);
+		}
+
 		/// <summary>
 		///   Creates a new signing key pair
 		/// </summary>
@@ -487,7 +460,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="protocol">The protocol version</param>
 		/// <param name="algorithm">The key algorithm</param>
 		/// <param name="keyStrength">The key strength or 0 for default strength</param>
-		/// <returns></returns>
+		/// <returns>A new instance of <see cref="DnsKeyRecord" /> with a new created key pair/></returns>
 		public static DnsKeyRecord CreateSigningKey(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol, DnsSecAlgorithm algorithm, int keyStrength = 0)
 		{
 			byte[] privateKey;
@@ -521,53 +494,9 @@ namespace ARSoft.Tools.Net.Dns
 						publicKey = new byte[1 + rsaExponent.Length + rsaModulus.Length];
 						publicKey[0] = (byte) rsaExponent.Length;
 					}
+
 					DnsMessageBase.EncodeByteArray(publicKey, ref offset, rsaExponent);
 					DnsMessageBase.EncodeByteArray(publicKey, ref offset, rsaModulus);
-					break;
-
-				case DnsSecAlgorithm.Dsa:
-				case DnsSecAlgorithm.DsaNsec3Sha1:
-					if (keyStrength == 0)
-						keyStrength = 1024;
-
-					DsaParametersGenerator dsaParamsGen = new DsaParametersGenerator();
-					dsaParamsGen.Init(keyStrength, 12, _secureRandom);
-					DsaKeyPairGenerator dsaKeyGen = new DsaKeyPairGenerator();
-					dsaKeyGen.Init(new DsaKeyGenerationParameters(_secureRandom, dsaParamsGen.GenerateParameters()));
-					var dsaKey = dsaKeyGen.GenerateKeyPair();
-					privateKey = PrivateKeyInfoFactory.CreatePrivateKeyInfo(dsaKey.Private).GetDerEncoded();
-					var dsaPublicKey = (DsaPublicKeyParameters) dsaKey.Public;
-
-					var dsaY = dsaPublicKey.Y.ToByteArrayUnsigned();
-					var dsaP = dsaPublicKey.Parameters.P.ToByteArrayUnsigned();
-					var dsaQ = dsaPublicKey.Parameters.Q.ToByteArrayUnsigned();
-					var dsaG = dsaPublicKey.Parameters.G.ToByteArrayUnsigned();
-					var dsaT = (byte) ((dsaY.Length - 64) / 8);
-
-					publicKey = new byte[21 + 3 * dsaY.Length];
-					publicKey[0] = dsaT;
-					dsaQ.CopyTo(publicKey, 1);
-					dsaP.CopyTo(publicKey, 21);
-					dsaG.CopyTo(publicKey, 21 + dsaY.Length);
-					dsaY.CopyTo(publicKey, 21 + 2 * dsaY.Length);
-					break;
-
-				case DnsSecAlgorithm.EccGost:
-					ECDomainParameters gostEcDomainParameters = ECGost3410NamedCurves.GetByOid(CryptoProObjectIdentifiers.GostR3410x2001CryptoProA);
-
-					var gostKeyGen = new ECKeyPairGenerator();
-					gostKeyGen.Init(new ECKeyGenerationParameters(gostEcDomainParameters, _secureRandom));
-
-					var gostKey = gostKeyGen.GenerateKeyPair();
-					privateKey = PrivateKeyInfoFactory.CreatePrivateKeyInfo(gostKey.Private).GetDerEncoded();
-					var gostPublicKey = (ECPublicKeyParameters) gostKey.Public;
-
-					publicKey = new byte[64];
-
-					gostPublicKey.Q.AffineXCoord.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, 32);
-					gostPublicKey.Q.AffineYCoord.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, 0);
-
-					publicKey = publicKey.Reverse().ToArray();
 					break;
 
 				case DnsSecAlgorithm.EcDsaP256Sha256:
@@ -586,7 +515,7 @@ namespace ARSoft.Tools.Net.Dns
 						ecDsaCurveParameter = NistNamedCurves.GetByOid(SecObjectIdentifiers.SecP384r1);
 					}
 
-					ECDomainParameters ecDsaP384EcDomainParameters = new ECDomainParameters(
+					ECDomainParameters ecDsaDomainParameters = new ECDomainParameters(
 						ecDsaCurveParameter.Curve,
 						ecDsaCurveParameter.G,
 						ecDsaCurveParameter.N,
@@ -594,7 +523,7 @@ namespace ARSoft.Tools.Net.Dns
 						ecDsaCurveParameter.GetSeed());
 
 					var ecDsaKeyGen = new ECKeyPairGenerator();
-					ecDsaKeyGen.Init(new ECKeyGenerationParameters(ecDsaP384EcDomainParameters, _secureRandom));
+					ecDsaKeyGen.Init(new ECKeyGenerationParameters(ecDsaDomainParameters, _secureRandom));
 
 					var ecDsaKey = ecDsaKeyGen.GenerateKeyPair();
 					privateKey = PrivateKeyInfoFactory.CreatePrivateKeyInfo(ecDsaKey.Private).GetDerEncoded();
@@ -604,6 +533,18 @@ namespace ARSoft.Tools.Net.Dns
 
 					ecDsaPublicKey.Q.AffineXCoord.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, 0);
 					ecDsaPublicKey.Q.AffineYCoord.ToBigInteger().ToByteArrayUnsigned().CopyTo(publicKey, ecDsaDigestSize);
+					break;
+
+				case DnsSecAlgorithm.Ed25519:
+					Ed25519PrivateKeyParameters ed25519Key = new Ed25519PrivateKeyParameters(_secureRandom);
+					privateKey = PrivateKeyInfoFactory.CreatePrivateKeyInfo(ed25519Key).GetDerEncoded();
+					publicKey = ed25519Key.GeneratePublicKey().GetEncoded();
+					break;
+
+				case DnsSecAlgorithm.Ed448:
+					Ed448PrivateKeyParameters ed448Key = new Ed448PrivateKeyParameters(_secureRandom);
+					privateKey = PrivateKeyInfoFactory.CreatePrivateKeyInfo(ed448Key).GetDerEncoded();
+					publicKey = ed448Key.GeneratePublicKey().GetEncoded();
 					break;
 
 				default:

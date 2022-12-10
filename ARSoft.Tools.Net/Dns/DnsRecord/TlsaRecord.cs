@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -31,7 +31,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>TLSA</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 	///   </para>
 	/// </summary>
 	public class TlsaRecord : DnsRecordBase
@@ -45,7 +45,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>CA constraint</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			// ReSharper disable once InconsistentNaming
@@ -55,7 +55,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>Service certificate constraint</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			// ReSharper disable once InconsistentNaming
@@ -65,7 +65,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para> Trust anchor assertion</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			// ReSharper disable once InconsistentNaming
@@ -77,7 +77,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   </para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			// ReSharper disable once InconsistentNaming
@@ -89,7 +89,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   </para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			PrivCert = 255,
@@ -104,7 +104,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>Full certificate</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			FullCertificate = 0,
@@ -113,7 +113,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>DER-encoded binary structure</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			SubjectPublicKeyInfo = 1,
@@ -128,7 +128,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>No hash used</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			Full = 0,
@@ -137,7 +137,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>SHA-256 hash</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			Sha256Hash = 1,
@@ -146,7 +146,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>SHA-512 hash</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			Sha512Hash = 2,
@@ -155,7 +155,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>Reserved for Private Use</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6698">RFC 6698</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6698.html">RFC 6698</a>.
 			///   </para>
 			/// </summary>
 			PrivMatch = 255,
@@ -181,7 +181,26 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] CertificateAssociationData { get; private set; }
 
-		internal TlsaRecord() {}
+		internal TlsaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			CertificateUsage = (TlsaCertificateUsage) resultData[currentPosition++];
+			Selector = (TlsaSelector) resultData[currentPosition++];
+			MatchingType = (TlsaMatchingType) resultData[currentPosition++];
+			CertificateAssociationData = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 3);
+		}
+
+		internal TlsaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 4)
+				throw new FormatException();
+
+			CertificateUsage = (TlsaCertificateUsage) Byte.Parse(stringRepresentation[0]);
+			Selector = (TlsaSelector) Byte.Parse(stringRepresentation[1]);
+			MatchingType = (TlsaMatchingType) Byte.Parse(stringRepresentation[2]);
+			CertificateAssociationData = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase16String();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the TlsaRecord class
@@ -264,25 +283,6 @@ namespace ARSoft.Tools.Net.Dns
 			return matchingBytes;
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			CertificateUsage = (TlsaCertificateUsage) resultData[startPosition++];
-			Selector = (TlsaSelector) resultData[startPosition++];
-			MatchingType = (TlsaMatchingType) resultData[startPosition++];
-			CertificateAssociationData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 3);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 4)
-				throw new FormatException();
-
-			CertificateUsage = (TlsaCertificateUsage) Byte.Parse(stringRepresentation[0]);
-			Selector = (TlsaSelector) Byte.Parse(stringRepresentation[1]);
-			MatchingType = (TlsaMatchingType) Byte.Parse(stringRepresentation[2]);
-			CertificateAssociationData = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase16String();
-		}
-
 		internal override string RecordDataToString()
 		{
 			return (byte) CertificateUsage
@@ -293,7 +293,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 3 + CertificateAssociationData.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) CertificateUsage;
 			messageData[currentPosition++] = (byte) Selector;

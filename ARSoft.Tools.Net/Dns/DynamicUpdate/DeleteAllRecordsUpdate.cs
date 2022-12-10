@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -26,15 +26,28 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 	/// <summary>
 	///   Delete all records action
 	/// </summary>
-	public class DeleteAllRecordsUpdate : DeleteRecordUpdate
+	public class DeleteAllRecordsUpdate : UpdateBase
 	{
-		internal DeleteAllRecordsUpdate() {}
+		/// <summary>
+		///   RecordType of records which should be deleted
+		/// </summary>
+		public RecordType RecordType { get; }
 
 		/// <summary>
 		///   Creates a new instance of the DeleteAllRecordsUpdate class
 		/// </summary>
 		/// <param name="name"> Name of records, that should be deleted </param>
-		public DeleteAllRecordsUpdate(DomainName name)
-			: base(name, RecordType.Any) {}
+		/// <param name="recordType"> RecordType of records which should be deleted </param>
+		public DeleteAllRecordsUpdate(DomainName name, RecordType recordType = RecordType.Any)
+			: base(name)
+		{
+			RecordType = recordType;
+		}
+
+		protected override RecordType RecordTypeInternal => RecordType;
+
+		protected override RecordClass RecordClassInternal => RecordClass.INet;
+
+		protected override int TimeToLive => 0;
 	}
 }

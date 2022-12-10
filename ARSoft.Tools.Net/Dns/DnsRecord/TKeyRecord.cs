@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Transaction key</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2930.html">RFC 2930</a>.
 	///   </para>
 	/// </summary>
 	// ReSharper disable once InconsistentNaming
@@ -43,7 +43,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>Server assignment</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc2930.html">RFC 2930</a>.
 			///   </para>
 			/// </summary>
 			ServerAssignment = 1, // RFC2930
@@ -52,7 +52,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>Diffie-Hellman exchange</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc2930.html">RFC 2930</a>.
 			///   </para>
 			/// </summary>
 			DiffieHellmanExchange = 2, // RFC2930
@@ -61,7 +61,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>GSS-API negotiation</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc2930.html">RFC 2930</a>.
 			///   </para>
 			/// </summary>
 			GssNegotiation = 3, // RFC2930
@@ -70,7 +70,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>Resolver assignment</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc2930.html">RFC 2930</a>.
 			///   </para>
 			/// </summary>
 			ResolverAssignment = 4, // RFC2930
@@ -79,7 +79,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>Key deletion</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc2930">RFC 2930</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc2930.html">RFC 2930</a>.
 			///   </para>
 			/// </summary>
 			KeyDeletion = 5, // RFC2930
@@ -120,7 +120,25 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] OtherData { get; private set; }
 
-		internal TKeyRecord() {}
+		internal TKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Algorithm = TSigAlgorithmHelper.GetAlgorithmByName(DnsMessageBase.ParseDomainName(resultData, ref currentPosition));
+			Inception = ParseDateTime(resultData, ref currentPosition);
+			Expiration = ParseDateTime(resultData, ref currentPosition);
+			Mode = (TKeyMode) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Error = (ReturnCode) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			int keyLength = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Key = DnsMessageBase.ParseByteData(resultData, ref currentPosition, keyLength);
+			int otherDataLength = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			OtherData = DnsMessageBase.ParseByteData(resultData, ref currentPosition, otherDataLength);
+		}
+
+		internal TKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			throw new NotSupportedException();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the TKeyRecord class
@@ -145,24 +163,6 @@ namespace ARSoft.Tools.Net.Dns
 			OtherData = otherData ?? new byte[] { };
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Algorithm = TSigAlgorithmHelper.GetAlgorithmByName(DnsMessageBase.ParseDomainName(resultData, ref startPosition));
-			Inception = ParseDateTime(resultData, ref startPosition);
-			Expiration = ParseDateTime(resultData, ref startPosition);
-			Mode = (TKeyMode) DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Error = (ReturnCode) DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			int keyLength = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Key = DnsMessageBase.ParseByteData(resultData, ref startPosition, keyLength);
-			int otherDataLength = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			OtherData = DnsMessageBase.ParseByteData(resultData, ref startPosition, otherDataLength);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			throw new NotSupportedException();
-		}
-
 		internal override string RecordDataToString()
 		{
 			return TSigAlgorithmHelper.GetDomainName(Algorithm)
@@ -176,7 +176,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 18 + TSigAlgorithmHelper.GetDomainName(Algorithm).MaximumRecordDataLength + Key.Length + OtherData.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, TSigAlgorithmHelper.GetDomainName(Algorithm), null, false);
 			EncodeDateTime(messageData, ref currentPosition, Inception);

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -53,9 +53,9 @@ namespace ARSoft.Tools.Net.Dns
 				return _hashCode;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				CacheKey other = obj as CacheKey;
+				CacheKey? other = obj as CacheKey;
 
 				if (other == null)
 					return false;
@@ -99,13 +99,13 @@ namespace ARSoft.Tools.Net.Dns
 			_cache.TryAdd(key, new CacheValue(records, timeToLive));
 		}
 
-		public bool TryGetRecords<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, out List<TRecord> records)
+		public bool TryGetRecords<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, out List<TRecord>? records)
 			where TRecord : DnsRecordBase
 		{
 			CacheKey key = new CacheKey(name, recordType, recordClass);
 			DateTime utcNow = DateTime.UtcNow;
 
-			CacheValue cacheValue;
+			CacheValue? cacheValue;
 			if (_cache.TryGetValue(key, out cacheValue))
 			{
 				if (cacheValue.ExpireDateUtc < utcNow)
@@ -136,13 +136,13 @@ namespace ARSoft.Tools.Net.Dns
 			return false;
 		}
 
-		public bool TryGetRecords<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, out DnsCacheRecordList<TRecord> records)
+		public bool TryGetRecords<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, out DnsCacheRecordList<TRecord>? records)
 			where TRecord : DnsRecordBase
 		{
 			CacheKey key = new CacheKey(name, recordType, recordClass);
 			DateTime utcNow = DateTime.UtcNow;
 
-			CacheValue cacheValue;
+			CacheValue? cacheValue;
 			if (_cache.TryGetValue(key, out cacheValue))
 			{
 				if (cacheValue.ExpireDateUtc < utcNow)
@@ -181,7 +181,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			foreach (var kvp in _cache)
 			{
-				CacheValue tmp;
+				CacheValue? tmp;
 				if (kvp.Value.ExpireDateUtc < utcNow)
 					_cache.TryRemove(kvp.Key, out tmp);
 			}

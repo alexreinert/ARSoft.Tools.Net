@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -32,7 +32,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Normal query</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 		///   </para>
 		/// </summary>
 		Query = 0,
@@ -41,17 +41,16 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Inverse query</para>
 		///   <para>
 		///     Obsoleted by
-		///     <see cref="!:http://tools.ietf.org/html/rfc3425">RFC 3425</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc3425.html">RFC 3425</a>.
 		///   </para>
 		/// </summary>
-		[Obsolete]
-		InverseQuery = 1,
+		[Obsolete] InverseQuery = 1,
 
 		/// <summary>
 		///   <para>Server status request</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 		///   </para>
 		/// </summary>
 		Status = 2,
@@ -60,7 +59,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Notify of zone change</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc1996">RFC 1996</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc1996.html">RFC 1996</a>.
 		///   </para>
 		/// </summary>
 		Notify = 4,
@@ -69,7 +68,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Dynamic update</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc2136.html">RFC 2136</a>.
 		///   </para>
 		/// </summary>
 		Update = 5,

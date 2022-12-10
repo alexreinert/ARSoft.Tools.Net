@@ -1,7 +1,11 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARSoft.Tools.Net", "ARSoft.Tools.Net\ARSoft.Tools.Net.csproj", "{65BFA748-C640-49B0-B506-34BBB165233A}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ARSoft.Tools.Net", "ARSoft.Tools.Net\ARSoft.Tools.Net.csproj", "{65BFA748-C640-49B0-B506-34BBB165233A}"
+EndProject
+Project("{7CF6DF6D-3B04-46F8-A40B-537D21BCA0B4}") = "Documentation", "Documentation\Documentation.shfbproj", "{D84BE2AC-9E8C-45CA-9511-D986D0B06D9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,8 +17,14 @@ Global
 		{65BFA748-C640-49B0-B506-34BBB165233A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65BFA748-C640-49B0-B506-34BBB165233A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65BFA748-C640-49B0-B506-34BBB165233A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D84BE2AC-9E8C-45CA-9511-D986D0B06D9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D84BE2AC-9E8C-45CA-9511-D986D0B06D9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D84BE2AC-9E8C-45CA-9511-D986D0B06D9B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2F9903B1-2247-460D-943A-163F1D62980B}
 	EndGlobalSection
 EndGlobal

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -37,7 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Record class Internet (IN)</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 		///   </para>
 		/// </summary>
 		// ReSharper disable once InconsistentNaming
@@ -62,7 +62,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Record class NONE</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc2136">RFC 2136</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc2136.html">RFC 2136</a>.
 		///   </para>
 		/// </summary>
 		None = 254,
@@ -71,7 +71,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Record class * (ANY)</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 		///   </para>
 		/// </summary>
 		Any = 255
@@ -146,6 +146,7 @@ namespace ARSoft.Tools.Net.Dns
 							return true;
 						}
 					}
+
 					recordClass = RecordClass.Invalid;
 					return false;
 			}

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>SSH key fingerprint record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4255">RFC 4255</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4255.html">RFC 4255</a>.
 	///   </para>
 	/// </summary>
 	public class SshFpRecord : DnsRecordBase
@@ -46,7 +46,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>RSA</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4255">RFC 4255</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4255.html">RFC 4255</a>.
 			///   </para>
 			/// </summary>
 			Rsa = 1,
@@ -55,7 +55,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>DSA</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4255">RFC 4255</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4255.html">RFC 4255</a>.
 			///   </para>
 			/// </summary>
 			Dsa = 2,
@@ -64,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>ECDSA</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6594">RFC 6594</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6594.html">RFC 6594</a>.
 			///   </para>
 			/// </summary>
 			EcDsa = 3,
@@ -73,7 +73,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>Ed25519</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc7479">RFC 7479</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc7479.html">RFC 7479</a>.
 			///   </para>
 			/// </summary>
 			Ed25519 = 4,
@@ -93,7 +93,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>SHA-1</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4255">RFC 4255</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4255.html">RFC 4255</a>.
 			///   </para>
 			/// </summary>
 			Sha1 = 1,
@@ -102,7 +102,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>SHA-1</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc6594">RFC 6594</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc6594.html">RFC 6594</a>.
 			///   </para>
 			/// </summary>
 			Sha256 = 2,
@@ -123,7 +123,24 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] FingerPrint { get; private set; }
 
-		internal SshFpRecord() {}
+		internal SshFpRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Algorithm = (SshFpAlgorithm) resultData[currentPosition++];
+			FingerPrintType = (SshFpFingerPrintType) resultData[currentPosition++];
+			FingerPrint = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 2);
+		}
+
+		internal SshFpRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 3)
+				throw new FormatException();
+
+			Algorithm = (SshFpAlgorithm) Byte.Parse(stringRepresentation[0]);
+			FingerPrintType = (SshFpFingerPrintType) Byte.Parse(stringRepresentation[1]);
+			FingerPrint = String.Join("", stringRepresentation.Skip(2)).FromBase16String();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the SshFpRecord class
@@ -141,23 +158,6 @@ namespace ARSoft.Tools.Net.Dns
 			FingerPrint = fingerPrint ?? new byte[] { };
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
-		{
-			Algorithm = (SshFpAlgorithm) resultData[currentPosition++];
-			FingerPrintType = (SshFpFingerPrintType) resultData[currentPosition++];
-			FingerPrint = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 2);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 3)
-				throw new FormatException();
-
-			Algorithm = (SshFpAlgorithm) Byte.Parse(stringRepresentation[0]);
-			FingerPrintType = (SshFpFingerPrintType) Byte.Parse(stringRepresentation[1]);
-			FingerPrint = String.Join("", stringRepresentation.Skip(2)).FromBase16String();
-		}
-
 		internal override string RecordDataToString()
 		{
 			return (byte) Algorithm
@@ -167,7 +167,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 2 + FingerPrint.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) Algorithm;
 			messageData[currentPosition++] = (byte) FingerPrintType;

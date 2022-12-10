@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="b8c09800-f83d-4b77-8687-2df3d6cd74e8" revisionNumber="1">
+	<developerSampleDocument
+	  xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+	  xmlns:xlink="http://www.w3.org/1999/xlink">
+
+		<introduction>
+			<para>Some small examples of creating a DNS Server</para>
+		</introduction>
+
+		<section>
+			<title>Really simple dns server</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNS_Server_Simple_Server.cs" />
+			</content>
+		</section>
+		<section>
+			<title>Simple forwarding server</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNS_Server_Forwarding_Server.cs" />
+			</content>
+		</section>
+		<section>
+			<title>Restrict to local request only</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNS_Server_Local_Only_Requests.cs" />
+			</content>
+		</section>
+	</developerSampleDocument>
+</topic>

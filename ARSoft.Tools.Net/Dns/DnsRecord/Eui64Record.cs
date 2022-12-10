@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>EUI64</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc7043">RFC 7043</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc7043.html">RFC 7043</a>.
 	///   </para>
 	/// </summary>
 	public class Eui64Record : DnsRecordBase
@@ -37,7 +37,23 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] Address { get; private set; }
 
-		internal Eui64Record() {}
+		internal Eui64Record(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Address = DnsMessageBase.ParseByteData(resultData, ref currentPosition, 8);
+		}
+
+		internal Eui64Record(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new NotSupportedException();
+
+			Address = stringRepresentation[0].Split('-').Select(x => Convert.ToByte(x, 16)).ToArray();
+
+			if (Address.Length != 8)
+				throw new NotSupportedException();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the Eui48Record class
@@ -51,30 +67,14 @@ namespace ARSoft.Tools.Net.Dns
 			Address = address ?? new byte[8];
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Address = DnsMessageBase.ParseByteData(resultData, ref startPosition, 8);
-		}
-
 		internal override string RecordDataToString()
 		{
 			return String.Join("-", Address.Select(x => x.ToString("x2")).ToArray());
 		}
 
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 1)
-				throw new NotSupportedException();
-
-			Address = stringRepresentation[0].Split('-').Select(x => Convert.ToByte(x, 16)).ToArray();
-
-			if (Address.Length != 8)
-				throw new NotSupportedException();
-		}
-
 		protected internal override int MaximumRecordDataLength => 8;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address);
 		}

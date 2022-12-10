@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -29,7 +29,8 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>EDNS0 Client Subnet Option</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-02">draft-vandergaast-edns-client-subnet</see>
+	///     <a href="http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-02">draft-vandergaast-edns-client-subnet</a>
+	///     .
 	///   </para>
 	/// </summary>
 	public class ClientSubnetOption : EDnsOptionBase
@@ -54,32 +55,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public IPAddress Address { get; private set; }
 
-		internal ClientSubnetOption()
-			: base(EDnsOptionType.ClientSubnet) {}
-
-		/// <summary>
-		///   Creates a new instance of the OwnerOption class
-		/// </summary>
-		/// <param name="sourceNetmask"> The source subnet mask </param>
-		/// <param name="address"> The address </param>
-		public ClientSubnetOption(byte sourceNetmask, IPAddress address)
-			: this(sourceNetmask, 0, address) {}
-
-		/// <summary>
-		///   Creates a new instance of the OwnerOption class
-		/// </summary>
-		/// <param name="sourceNetmask"> The source subnet mask </param>
-		/// <param name="scopeNetmask"> The scope subnet mask </param>
-		/// <param name="address"> The address </param>
-		public ClientSubnetOption(byte sourceNetmask, byte scopeNetmask, IPAddress address)
-			: this()
-		{
-			SourceNetmask = sourceNetmask;
-			ScopeNetmask = scopeNetmask;
-			Address = address;
-		}
-
-		internal override void ParseData(byte[] resultData, int startPosition, int length)
+		internal ClientSubnetOption(byte[] resultData, int startPosition, int length)
+			: base(EDnsOptionType.ClientSubnet)
 		{
 			ushort family = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			SourceNetmask = resultData[startPosition++];
@@ -89,6 +66,28 @@ namespace ARSoft.Tools.Net.Dns
 			Buffer.BlockCopy(resultData, startPosition, addressData, 0, GetAddressLength());
 
 			Address = new IPAddress(addressData);
+		}
+
+		/// <summary>
+		///   Creates a new instance of the OwnerOption class
+		/// </summary>
+		/// <param name="sourceNetmask"> The source subnet mask </param>
+		/// <param name="address"> The address </param>
+		public ClientSubnetOption(byte sourceNetmask, IPAddress address)
+			: this(sourceNetmask, 0, address) { }
+
+		/// <summary>
+		///   Creates a new instance of the OwnerOption class
+		/// </summary>
+		/// <param name="sourceNetmask"> The source subnet mask </param>
+		/// <param name="scopeNetmask"> The scope subnet mask </param>
+		/// <param name="address"> The address </param>
+		public ClientSubnetOption(byte sourceNetmask, byte scopeNetmask, IPAddress address)
+			: base(EDnsOptionType.ClientSubnet)
+		{
+			SourceNetmask = sourceNetmask;
+			ScopeNetmask = scopeNetmask;
+			Address = address;
 		}
 
 		internal override ushort DataLength => (ushort) (4 + GetAddressLength());

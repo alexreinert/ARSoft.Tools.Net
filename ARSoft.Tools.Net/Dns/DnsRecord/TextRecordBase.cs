@@ -1,5 +1,5 @@
 #region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,10 +27,31 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public abstract class TextRecordBase : DnsRecordBase, ITextRecord
 	{
-		protected TextRecordBase() {}
+		protected TextRecordBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			int endPosition = currentPosition + length;
+
+			List<string> textParts = new List<string>();
+			while (currentPosition < endPosition)
+			{
+				textParts.Add(DnsMessageBase.ParseText(resultData, ref currentPosition));
+			}
+
+			TextParts = textParts;
+		}
+
+		internal TextRecordBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length == 0)
+				throw new FormatException();
+
+			TextParts = stringRepresentation;
+		}
 
 		protected TextRecordBase(DomainName name, RecordType recordType, int timeToLive, string textData)
-			: this(name, recordType, timeToLive, new List<string> { textData ?? String.Empty }) {}
+			: this(name, recordType, timeToLive, new[] { textData ?? String.Empty }) { }
 
 		protected TextRecordBase(DomainName name, RecordType recordType, int timeToLive, IEnumerable<string> textParts)
 			: base(name, recordType, RecordClass.INet, timeToLive)
@@ -53,33 +74,12 @@ namespace ARSoft.Tools.Net.Dns
 			get { return TextParts.Sum(p => p.Length + (p.Length / 255) + (p.Length % 255 == 0 ? 0 : 1)); }
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			int endPosition = startPosition + length;
-
-			List<string> textParts = new List<string>();
-			while (startPosition < endPosition)
-			{
-				textParts.Add(DnsMessageBase.ParseText(resultData, ref startPosition));
-			}
-
-			TextParts = textParts;
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length == 0)
-				throw new FormatException();
-
-			TextParts = stringRepresentation;
-		}
-
 		internal override string RecordDataToString()
 		{
 			return String.Join(" ", TextParts.Select(x => "\"" + x.ToMasterfileLabelRepresentation() + "\""));
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			foreach (var part in TextParts)
 			{

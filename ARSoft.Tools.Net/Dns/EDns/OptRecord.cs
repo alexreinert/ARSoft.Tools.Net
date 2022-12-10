@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>OPT record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2671">RFC 2671</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2671.html">RFC 2671</a>.
 	///   </para>
 	/// </summary>
 	public class OptRecord : DnsRecordBase
@@ -71,9 +71,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Gets or sets the DNSSEC OK (DO) flag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4035">RFC 4035</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4035.html">RFC 4035</a>.
 		///     and
-		///     <see cref="!:http://tools.ietf.org/html/rfc3225">RFC 3225</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc3225.html">RFC 3225</a>.
 		///   </para>
 		/// </summary>
 		public bool IsDnsSecOk
@@ -100,79 +100,81 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Creates a new instance of the OptRecord
 		/// </summary>
-		public OptRecord()
-			: base(DomainName.Root, RecordType.Opt, unchecked((RecordClass) 512), 0)
+		/// <param name="udpPayloadSize">The sender's UDP payload size</param>
+		/// <param name="options">Additional EDNS options</param>
+		public OptRecord(ushort udpPayloadSize = 4096, params EDnsOptionBase[] options)
+			: base(DomainName.Root, RecordType.Opt, unchecked((RecordClass) udpPayloadSize), 0)
 		{
-			UdpPayloadSize = 4096;
-			Options = new List<EDnsOptionBase>();
+			Options = options.ToList();
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
+		internal OptRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
 		{
-			int endPosition = startPosition + length;
+			int endPosition = currentPosition + length;
 
 			Options = new List<EDnsOptionBase>();
-			while (startPosition < endPosition)
+			while (currentPosition < endPosition)
 			{
-				EDnsOptionType type = (EDnsOptionType) DnsMessageBase.ParseUShort(resultData, ref startPosition);
-				ushort dataLength = DnsMessageBase.ParseUShort(resultData, ref startPosition);
+				EDnsOptionType type = (EDnsOptionType) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+				ushort dataLength = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
 
 				EDnsOptionBase option;
 
 				switch (type)
 				{
 					case EDnsOptionType.LongLivedQuery:
-						option = new LongLivedQueryOption();
+						option = new LongLivedQueryOption(resultData, currentPosition);
 						break;
 
 					case EDnsOptionType.UpdateLease:
-						option = new UpdateLeaseOption();
+						option = new UpdateLeaseOption(resultData, currentPosition);
 						break;
 
 					case EDnsOptionType.NsId:
-						option = new NsIdOption();
+						option = new NsIdOption(resultData, currentPosition, dataLength);
 						break;
 
 					case EDnsOptionType.Owner:
-						option = new OwnerOption();
+						option = new OwnerOption(resultData, currentPosition, dataLength);
 						break;
 
 					case EDnsOptionType.DnssecAlgorithmUnderstood:
-						option = new DnssecAlgorithmUnderstoodOption();
+						option = new DnssecAlgorithmUnderstoodOption(resultData, currentPosition, dataLength);
 						break;
 
 					case EDnsOptionType.DsHashUnderstood:
-						option = new DsHashUnderstoodOption();
+						option = new DsHashUnderstoodOption(resultData, currentPosition, dataLength);
 						break;
 
 					case EDnsOptionType.Nsec3HashUnderstood:
-						option = new Nsec3HashUnderstoodOption();
+						option = new Nsec3HashUnderstoodOption(resultData, currentPosition, dataLength);
 						break;
 
 					case EDnsOptionType.ClientSubnet:
-						option = new ClientSubnetOption();
+						option = new ClientSubnetOption(resultData, currentPosition, dataLength);
 						break;
 
 					case EDnsOptionType.Expire:
-						option = new ExpireOption();
+						option = new ExpireOption(resultData, currentPosition, dataLength);
 						break;
 
 					case EDnsOptionType.Cookie:
-						option = new CookieOption();
+						option = new CookieOption(resultData, currentPosition, dataLength);
 						break;
 
 					default:
-						option = new UnknownOption(type);
+						option = new UnknownOption(type, resultData, currentPosition, dataLength);
 						break;
 				}
 
-				option.ParseData(resultData, startPosition, dataLength);
 				Options.Add(option);
-				startPosition += dataLength;
+				currentPosition += dataLength;
 			}
 		}
 
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
+		internal OptRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
 		{
 			throw new NotSupportedException();
 		}
@@ -207,7 +209,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			if ((Options != null) && (Options.Count != 0))
 			{

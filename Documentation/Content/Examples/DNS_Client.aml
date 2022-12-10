@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="D0338225-7D11-4977-87CF-9FBABC1BF6E6" revisionNumber="1">
+	<developerSampleDocument
+		xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+		xmlns:xlink="http://www.w3.org/1999/xlink">
+
+		<introduction>
+			<para>Some small examples of using the DNS Client</para>
+			<alert>
+				<para>
+					The DNS Client still work and can be used for direct communication with a DNS server.
+					If you just want to resolve data, you should take a look on the <link xlink:href="6C911611-9F33-45DC-A6B2-0D7728A245AB">DNS Resolver examples</link>.
+				</para>
+			</alert>
+		</introduction>
+
+		<section>
+			<title>Get addresses for a domain name (IPv4)</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNS_Client_ResolveHost.cs" />
+			</content>
+		</section>
+		<section>
+			<title>Get reverse lookup address for an ip address</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNS_Client_ResolvePtr.cs" />
+			</content>
+		</section>
+		<section>
+			<title>Get mail exchangers for a domain name</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNS_Client_ResolveMX.cs" />
+			</content>
+		</section>
+		<section>
+			<title>Send dynamic update</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNS_Client_SendUpdate.cs" />
+			</content>
+		</section>
+	</developerSampleDocument>
+</topic>

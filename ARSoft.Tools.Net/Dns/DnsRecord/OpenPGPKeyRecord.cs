@@ -1,5 +1,5 @@
 #region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -25,7 +25,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>OpenPGP Key</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/draft-ietf-dane-openpgpkey">draft-ietf-dane-openpgpkey</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc7929.html">RFC 7929</a>.
 	///   </para>
 	/// </summary>
 	// ReSharper disable once InconsistentNaming
@@ -36,7 +36,20 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] PublicKey { get; private set; }
 
-		internal OpenPGPKeyRecord() {}
+		internal OpenPGPKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length);
+		}
+
+		internal OpenPGPKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length == 0)
+				throw new NotSupportedException();
+
+			PublicKey = String.Join(String.Empty, stringRepresentation).FromBase64String();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the OpenPGPKeyRecord class
@@ -50,19 +63,6 @@ namespace ARSoft.Tools.Net.Dns
 			PublicKey = publicKey ?? new byte[] { };
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length == 0)
-				throw new NotSupportedException();
-
-			PublicKey = String.Join(String.Empty, stringRepresentation).FromBase64String();
-		}
-
 		internal override string RecordDataToString()
 		{
 			return PublicKey.ToBase64String();
@@ -70,7 +70,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => PublicKey.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
 		}

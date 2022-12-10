@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Certificate storage record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 	///   </para>
 	/// </summary>
 	public class CertRecord : DnsRecordBase
@@ -46,7 +46,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>X.509 as per PKIX</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 			///   </para>
 			/// </summary>
 			Pkix = 1,
@@ -55,7 +55,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>SPKI certificate</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 			///   </para>
 			/// </summary>
 			Spki = 2,
@@ -64,7 +64,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>OpenPGP packet</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 			///   </para>
 			/// </summary>
 			Pgp = 3,
@@ -73,7 +73,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>The URL of an X.509 data object</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 			///   </para>
 			/// </summary>
 			// ReSharper disable once InconsistentNaming
@@ -83,7 +83,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>The URL of an SPKI certificate</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 			///   </para>
 			/// </summary>
 			// ReSharper disable once InconsistentNaming
@@ -93,7 +93,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>The fingerprint and URL of an OpenPGP packet</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 			///   </para>
 			/// </summary>
 			// ReSharper disable once InconsistentNaming
@@ -103,7 +103,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>Attribute Certificate</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 			///   </para>
 			/// </summary>
 			Acpkix = 7,
@@ -112,7 +112,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>The URL of an Attribute Certificate</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 			///   </para>
 			/// </summary>
 			// ReSharper disable once InconsistentNaming
@@ -122,7 +122,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>URI private</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 			///   </para>
 			/// </summary>
 			Uri = 253,
@@ -131,7 +131,7 @@ namespace ARSoft.Tools.Net.Dns
 			///   <para>OID private</para>
 			///   <para>
 			///     Defined in
-			///     <see cref="!:http://tools.ietf.org/html/rfc4398">RFC 4398</see>
+			///     <a href="https://www.rfc-editor.org/rfc/rfc4398.html">RFC 4398</a>.
 			///   </para>
 			/// </summary>
 			Oid = 254,
@@ -157,7 +157,26 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] Certificate { get; private set; }
 
-		internal CertRecord() {}
+		internal CertRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Type = (CertType) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			KeyTag = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Algorithm = (DnsSecAlgorithm) resultData[currentPosition++];
+			Certificate = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 5);
+		}
+
+		internal CertRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 4)
+				throw new FormatException();
+
+			Type = (CertType) UInt16.Parse(stringRepresentation[0]);
+			KeyTag = UInt16.Parse(stringRepresentation[1]);
+			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
+			Certificate = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
+		}
 
 		/// <summary>
 		///   Creates a new instace of the CertRecord class
@@ -177,25 +196,6 @@ namespace ARSoft.Tools.Net.Dns
 			Certificate = certificate ?? new byte[] { };
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Type = (CertType) DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			KeyTag = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Algorithm = (DnsSecAlgorithm) resultData[startPosition++];
-			Certificate = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 5);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 4)
-				throw new FormatException();
-
-			Type = (CertType) UInt16.Parse(stringRepresentation[0]);
-			KeyTag = UInt16.Parse(stringRepresentation[1]);
-			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
-			Certificate = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
-		}
-
 		internal override string RecordDataToString()
 		{
 			return (ushort) Type
@@ -206,7 +206,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 5 + Certificate.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Type);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, KeyTag);

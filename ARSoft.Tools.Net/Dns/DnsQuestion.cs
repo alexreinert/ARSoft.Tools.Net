@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -35,17 +35,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="name"> Domain name </param>
 		/// <param name="recordType"> Record type </param>
 		/// <param name="recordClass"> Record class </param>
-		public DnsQuestion(DomainName name, RecordType recordType, RecordClass recordClass)
-		{
-			if (name == null)
-				throw new ArgumentNullException(nameof(name));
-
-			Name = name;
-			RecordType = recordType;
-			RecordClass = recordClass;
-		}
-
-		internal DnsQuestion() {}
+		public DnsQuestion(DomainName name, RecordType recordType, RecordClass recordClass) : base(name, recordType, recordClass) { }
 
 		internal override int MaximumLength => Name.MaximumRecordDataLength + 6;
 
@@ -69,12 +59,12 @@ namespace ARSoft.Tools.Net.Dns
 			return _hashCode.Value;
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return Equals(obj as DnsQuestion);
 		}
 
-		public bool Equals(DnsQuestion other)
+		public bool Equals(DnsQuestion? other)
 		{
 			if (other == null)
 				return false;

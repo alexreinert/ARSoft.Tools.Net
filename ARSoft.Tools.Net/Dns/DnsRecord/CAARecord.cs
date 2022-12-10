@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>CAA</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc6844">RFC 6844</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc6844.html">RFC 6844</a>.
 	///   </para>
 	/// </summary>
 	// ReSharper disable once InconsistentNaming
@@ -48,7 +48,24 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public string Value { get; private set; }
 
-		internal CAARecord() {}
+		internal CAARecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Flags = resultData[currentPosition++];
+			Tag = DnsMessageBase.ParseText(resultData, ref currentPosition);
+			Value = DnsMessageBase.ParseText(resultData, ref currentPosition, length - (2 + Tag.Length));
+		}
+
+		internal CAARecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length != 3)
+				throw new FormatException();
+
+			Flags = Byte.Parse(stringRepresentation[0]);
+			Tag = stringRepresentation[1];
+			Value = stringRepresentation[2];
+		}
 
 		/// <summary>
 		///   Creates a new instance of the CAARecord class
@@ -66,23 +83,6 @@ namespace ARSoft.Tools.Net.Dns
 			Value = value;
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Flags = resultData[startPosition++];
-			Tag = DnsMessageBase.ParseText(resultData, ref startPosition);
-			Value = DnsMessageBase.ParseText(resultData, ref startPosition, length - (2 + Tag.Length));
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 3)
-				throw new FormatException();
-
-			Flags = Byte.Parse(stringRepresentation[0]);
-			Tag = stringRepresentation[1];
-			Value = stringRepresentation[2];
-		}
-
 		internal override string RecordDataToString()
 		{
 			return Flags + " " + Tag.ToMasterfileLabelRepresentation() + " " + Value.ToMasterfileLabelRepresentation();
@@ -90,7 +90,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 2 + Tag.Length + Value.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = Flags;
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, Tag);

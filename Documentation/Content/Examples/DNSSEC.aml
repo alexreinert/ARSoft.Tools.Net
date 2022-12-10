@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="96AB056E-152C-4605-86A2-4CBB9A9574ED" revisionNumber="1">
+	<developerSampleDocument
+		xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+		xmlns:xlink="http://www.w3.org/1999/xlink">
+
+		<introduction>
+			<para>Some small DNSSEC related examples</para>
+		</introduction>
+
+		<section>
+			<title>Get all signed SSH fingerprints for a domain name using a self validating stub resolver</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNSSEC_ResolveSSHFP.cs" />
+			</content>
+		</section>
+		<section>
+			<title>DANE secured connection using a recursive DNSSEC resolver</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNSSEC_DANE_Stream.cs" />
+			</content>
+		</section>
+	</developerSampleDocument>
+</topic>

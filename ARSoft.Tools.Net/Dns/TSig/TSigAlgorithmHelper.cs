@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -16,11 +16,8 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
+using Org.BouncyCastle.Crypto.Digests;
+using Org.BouncyCastle.Crypto.Macs;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -35,15 +32,23 @@ namespace ARSoft.Tools.Net.Dns
 					return DomainName.Parse("hmac-md5.sig-alg.reg.int");
 				case TSigAlgorithm.Sha1:
 					return DomainName.Parse("hmac-sha1");
+				case TSigAlgorithm.Sha224:
+					return DomainName.Parse("hmac-sha224");
 				case TSigAlgorithm.Sha256:
 					return DomainName.Parse("hmac-sha256");
+				case TSigAlgorithm.Sha256_128:
+					return DomainName.Parse("hmac-sha256-128");
 				case TSigAlgorithm.Sha384:
 					return DomainName.Parse("hmac-sha384");
+				case TSigAlgorithm.Sha384_192:
+					return DomainName.Parse("hmac-sha384-192");
 				case TSigAlgorithm.Sha512:
 					return DomainName.Parse("hmac-sha512");
+				case TSigAlgorithm.Sha512_256:
+					return DomainName.Parse("hmac-sha512-256");
 
 				default:
-					return null;
+					return DomainName.Parse("unknown");
 			}
 		}
 
@@ -51,59 +56,71 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			switch (name.ToString().ToLower())
 			{
-				case "hmac-md5.sig-alg.reg.int":
+				case "hmac-md5.sig-alg.reg.int.":
 					return TSigAlgorithm.Md5;
-				case "hmac-sha1":
+				case "hmac-sha1.":
 					return TSigAlgorithm.Sha1;
-				case "hmac-sha256":
+				case "hmac-sha224.":
+					return TSigAlgorithm.Sha224;
+				case "hmac-sha256.":
 					return TSigAlgorithm.Sha256;
-				case "hmac-sha384":
+				case "hmac-sha256-128.":
+					return TSigAlgorithm.Sha256_128;
+				case "hmac-sha384.":
 					return TSigAlgorithm.Sha384;
-				case "hmac-sha512":
+				case "hmac-sha384-192.":
+					return TSigAlgorithm.Sha384_192;
+				case "hmac-sha512.":
 					return TSigAlgorithm.Sha512;
+				case "hmac-sha512-256.":
+					return TSigAlgorithm.Sha512_256;
 
 				default:
 					return TSigAlgorithm.Unknown;
 			}
 		}
 
-		public static KeyedHashAlgorithm GetHashAlgorithm(TSigAlgorithm algorithm)
+		public static HMac? GetHashAlgorithm(TSigAlgorithm algorithm)
 		{
 			switch (algorithm)
 			{
 				case TSigAlgorithm.Md5:
-					return new HMACMD5();
+					return new HMac(new MD5Digest());
 				case TSigAlgorithm.Sha1:
-					return new HMACSHA1();
+					return new HMac(new Sha1Digest());
+				case TSigAlgorithm.Sha224:
+					return new HMac(new Sha224Digest());
 				case TSigAlgorithm.Sha256:
-					return new HMACSHA256();
+				case TSigAlgorithm.Sha256_128:
+					return new HMac(new Sha256Digest());
 				case TSigAlgorithm.Sha384:
-					return new HMACSHA384();
+				case TSigAlgorithm.Sha384_192:
+					return new HMac(new Sha256Digest());
 				case TSigAlgorithm.Sha512:
-					return new HMACSHA512();
+				case TSigAlgorithm.Sha512_256:
+					return new HMac(new Sha512Digest());
 
 				default:
 					return null;
 			}
 		}
 
-		internal static int GetHashSize(TSigAlgorithm algorithm)
+		internal static int GetMaxHashSize(TSigAlgorithm algorithm)
+		{
+			return GetHashAlgorithm(algorithm)?.GetMacSize() ?? 0;
+		}
+
+		internal static bool IsTruncationAllowed(TSigAlgorithm algorithm)
 		{
 			switch (algorithm)
 			{
-				case TSigAlgorithm.Md5:
-					return 16;
-				case TSigAlgorithm.Sha1:
-					return 20;
-				case TSigAlgorithm.Sha256:
-					return 32;
-				case TSigAlgorithm.Sha384:
-					return 48;
-				case TSigAlgorithm.Sha512:
-					return 64;
+				case TSigAlgorithm.Sha256_128:
+				case TSigAlgorithm.Sha384_192:
+				case TSigAlgorithm.Sha512_256:
+					return true;
 
 				default:
-					return 0;
+					return false;
 			}
 		}
 	}

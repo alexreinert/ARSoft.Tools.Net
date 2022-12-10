@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -28,7 +28,10 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 	/// </summary>
 	public class RecordNotExistsPrequisite : PrequisiteBase
 	{
-		internal RecordNotExistsPrequisite() {}
+		/// <summary>
+		///   RecordType that should be checked
+		/// </summary>
+		public RecordType RecordType { get; }
 
 		/// <summary>
 		///   Creates a new instance of the RecordNotExistsPrequisite class
@@ -36,12 +39,13 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 		/// <param name="name"> Name of record that should be checked </param>
 		/// <param name="recordType"> Type of record that should be checked </param>
 		public RecordNotExistsPrequisite(DomainName name, RecordType recordType)
-			: base(name, recordType, RecordClass.None, 0) {}
+			: base(name)
+		{
+			RecordType = recordType;
+		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length) {}
+		protected override RecordType RecordTypeInternal => RecordType;
 
-		protected internal override int MaximumRecordDataLength => 0;
-
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical) {}
+		protected override RecordClass RecordClassInternal => RecordClass.None;
 	}
 }

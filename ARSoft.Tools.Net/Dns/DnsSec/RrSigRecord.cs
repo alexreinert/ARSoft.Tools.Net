@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -28,9 +28,9 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Record signature record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>
 	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc3755">RFC 3755</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc3755.html">RFC 3755</a>.
 	///   </para>
 	/// </summary>
 	public class RrSigRecord : DnsRecordBase
@@ -80,7 +80,38 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] Signature { get; internal set; }
 
-		internal RrSigRecord() {}
+		internal RrSigRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			int startPosition = currentPosition;
+
+			TypeCovered = (RecordType) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Algorithm = (DnsSecAlgorithm) resultData[currentPosition++];
+			Labels = resultData[currentPosition++];
+			OriginalTimeToLive = DnsMessageBase.ParseInt(resultData, ref currentPosition);
+			SignatureExpiration = ParseDateTime(resultData, ref currentPosition);
+			SignatureInception = ParseDateTime(resultData, ref currentPosition);
+			KeyTag = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			SignersName = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
+			Signature = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length + startPosition - currentPosition);
+		}
+
+		internal RrSigRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 9)
+				throw new FormatException();
+
+			TypeCovered = RecordTypeHelper.ParseShortString(stringRepresentation[0]);
+			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
+			Labels = Byte.Parse(stringRepresentation[2]);
+			OriginalTimeToLive = Int32.Parse(stringRepresentation[3]);
+			SignatureExpiration = DateTime.ParseExact(stringRepresentation[4], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+			SignatureInception = DateTime.ParseExact(stringRepresentation[5], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+			KeyTag = UInt16.Parse(stringRepresentation[6]);
+			SignersName = ParseDomainName(origin, stringRepresentation[7]);
+			Signature = String.Join(String.Empty, stringRepresentation.Skip(8)).FromBase64String();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the RrSigRecord class
@@ -135,37 +166,6 @@ namespace ARSoft.Tools.Net.Dns
 			Signature = key.Sign(signBuffer, signBufferLength);
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			int currentPosition = startPosition;
-
-			TypeCovered = (RecordType) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
-			Algorithm = (DnsSecAlgorithm) resultData[currentPosition++];
-			Labels = resultData[currentPosition++];
-			OriginalTimeToLive = DnsMessageBase.ParseInt(resultData, ref currentPosition);
-			SignatureExpiration = ParseDateTime(resultData, ref currentPosition);
-			SignatureInception = ParseDateTime(resultData, ref currentPosition);
-			KeyTag = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
-			SignersName = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
-			Signature = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length + startPosition - currentPosition);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 9)
-				throw new FormatException();
-
-			TypeCovered = RecordTypeHelper.ParseShortString(stringRepresentation[0]);
-			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
-			Labels = Byte.Parse(stringRepresentation[2]);
-			OriginalTimeToLive = Int32.Parse(stringRepresentation[3]);
-			SignatureExpiration = DateTime.ParseExact(stringRepresentation[4], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
-			SignatureInception = DateTime.ParseExact(stringRepresentation[5], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
-			KeyTag = UInt16.Parse(stringRepresentation[6]);
-			SignersName = ParseDomainName(origin, stringRepresentation[7]);
-			Signature = String.Join(String.Empty, stringRepresentation.Skip(8)).FromBase64String();
-		}
-
 		internal override string RecordDataToString()
 		{
 			return TypeCovered.ToShortString()
@@ -181,12 +181,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 20 + SignersName.MaximumRecordDataLength + Signature.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			EncodeRecordData(messageData, offset, ref currentPosition, domainNames, useCanonical, true);
 		}
 
-		internal void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical, bool encodeSignature)
+		internal void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical, bool encodeSignature)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) TypeCovered);
 			messageData[currentPosition++] = (byte) Algorithm;
@@ -246,6 +246,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					throw new Exception("Encoding of records with less labels than RrSigRecord is not allowed");
 				}
+
 				DnsMessageBase.EncodeUShort(messageData, ref length, (ushort) record.RecordType);
 				DnsMessageBase.EncodeUShort(messageData, ref length, (ushort) record.RecordClass);
 				DnsMessageBase.EncodeInt(messageData, ref length, OriginalTimeToLive);

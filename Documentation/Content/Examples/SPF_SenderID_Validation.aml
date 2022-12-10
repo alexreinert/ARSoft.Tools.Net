@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="9D9054AB-F69D-4D02-848F-B7526E094557" revisionNumber="1">
+	<developerSampleDocument
+		xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+		xmlns:xlink="http://www.w3.org/1999/xlink">
+
+		<introduction>
+			<para>Some small examples of SPF and SenderID validation</para>
+		</introduction>
+
+		<section>
+			<title>Get result for a SPF validation</title>
+			<content>
+				<code language="c#" source="Content\Examples\SPF_Validation.cs" />
+			</content>
+		</section>
+		<section>
+			<title>Get result for a SenderID validation</title>
+			<content>
+				<code language="c#" source="Content\Examples\SenderID_Validation.cs" />
+			</content>
+		</section>
+	</developerSampleDocument>
+</topic>

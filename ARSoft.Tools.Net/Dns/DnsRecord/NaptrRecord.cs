@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,11 +27,11 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Naming authority pointer record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc2915">RFC 2915</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2915.html">RFC 2915</a>
 	///     ,
-	///     <see cref="!:http://tools.ietf.org/html/rfc2168">RFC 2168</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2168.html">RFC 2168</a>
 	///     and
-	///     <see cref="!:http://tools.ietf.org/html/rfc3403">RFC 3403</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc3403.html">RFC 3403</a>.
 	///   </para>
 	/// </summary>
 	public class NaptrRecord : DnsRecordBase
@@ -66,7 +66,30 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public DomainName Replacement { get; private set; }
 
-		internal NaptrRecord() {}
+		internal NaptrRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Order = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Preference = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Flags = DnsMessageBase.ParseText(resultData, ref currentPosition);
+			Services = DnsMessageBase.ParseText(resultData, ref currentPosition);
+			RegExp = DnsMessageBase.ParseText(resultData, ref currentPosition);
+			Replacement = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
+		}
+
+		internal NaptrRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length != 6)
+				throw new NotSupportedException();
+
+			Order = UInt16.Parse(stringRepresentation[0]);
+			Preference = UInt16.Parse(stringRepresentation[1]);
+			Flags = stringRepresentation[2];
+			Services = stringRepresentation[3];
+			RegExp = stringRepresentation[4];
+			Replacement = ParseDomainName(origin, stringRepresentation[5]);
+		}
 
 		/// <summary>
 		///   Creates a new instance of the NaptrRecord class
@@ -90,29 +113,6 @@ namespace ARSoft.Tools.Net.Dns
 			Replacement = replacement ?? DomainName.Root;
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Order = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Preference = DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Flags = DnsMessageBase.ParseText(resultData, ref startPosition);
-			Services = DnsMessageBase.ParseText(resultData, ref startPosition);
-			RegExp = DnsMessageBase.ParseText(resultData, ref startPosition);
-			Replacement = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 6)
-				throw new NotSupportedException();
-
-			Order = UInt16.Parse(stringRepresentation[0]);
-			Preference = UInt16.Parse(stringRepresentation[1]);
-			Flags = stringRepresentation[2];
-			Services = stringRepresentation[3];
-			RegExp = stringRepresentation[4];
-			Replacement = ParseDomainName(origin, stringRepresentation[5]);
-		}
-
 		internal override string RecordDataToString()
 		{
 			return Order
@@ -125,7 +125,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => Flags.Length + Services.Length + RegExp.Length + Replacement.MaximumRecordDataLength + 13;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Order);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);

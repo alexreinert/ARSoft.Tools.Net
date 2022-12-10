@@ -1,5 +1,5 @@
 #region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -28,8 +28,7 @@ namespace ARSoft.Tools.Net
 
 		internal static string FromMasterfileLabelRepresentation(this string s)
 		{
-			if (s == null)
-				return null;
+			_ = s ?? throw new ArgumentNullException(nameof(s));
 
 			return _fromStringRepresentationRegex.Replace(s, k =>
 			{
@@ -52,8 +51,7 @@ namespace ARSoft.Tools.Net
 
 		internal static string ToMasterfileLabelRepresentation(this string s, bool encodeDots = false)
 		{
-			if (s == null)
-				return null;
+			_ = s ?? throw new ArgumentNullException(nameof(s));
 
 			StringBuilder sb = new StringBuilder();
 
@@ -87,6 +85,7 @@ namespace ARSoft.Tools.Net
 		}
 
 		private static readonly Random _random = new Random();
+
 		// ReSharper disable once InconsistentNaming
 		internal static string Add0x20Bits(this string s)
 		{

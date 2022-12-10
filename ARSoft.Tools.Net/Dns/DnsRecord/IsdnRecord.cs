@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>ISDN address</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1183">RFC 1183</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc1183.html">RFC 1183</a>.
 	///   </para>
 	/// </summary>
 	public class IsdnRecord : DnsRecordBase
@@ -42,7 +42,24 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public string SubAddress { get; private set; }
 
-		internal IsdnRecord() {}
+		internal IsdnRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			int endPosition = currentPosition + length;
+
+			IsdnAddress = DnsMessageBase.ParseText(resultData, ref currentPosition);
+			SubAddress = (currentPosition < endPosition) ? DnsMessageBase.ParseText(resultData, ref currentPosition) : String.Empty;
+		}
+
+		internal IsdnRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length > 2)
+				throw new FormatException();
+
+			IsdnAddress = stringRepresentation[0];
+			SubAddress = stringRepresentation.Length > 1 ? stringRepresentation[1] : String.Empty;
+		}
 
 		/// <summary>
 		///   Creates a new instance of the IsdnRecord class
@@ -51,7 +68,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="timeToLive"> Seconds the record should be cached at most </param>
 		/// <param name="isdnAddress"> ISDN number </param>
 		public IsdnRecord(DomainName name, int timeToLive, string isdnAddress)
-			: this(name, timeToLive, isdnAddress, String.Empty) {}
+			: this(name, timeToLive, isdnAddress, String.Empty) { }
 
 		/// <summary>
 		///   Creates a new instance of the IsdnRecord class
@@ -67,25 +84,6 @@ namespace ARSoft.Tools.Net.Dns
 			SubAddress = subAddress ?? String.Empty;
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int currentPosition, int length)
-		{
-			int endPosition = currentPosition + length;
-
-			IsdnAddress = DnsMessageBase.ParseText(resultData, ref currentPosition);
-			SubAddress = (currentPosition < endPosition) ? DnsMessageBase.ParseText(resultData, ref currentPosition) : String.Empty;
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length > 2)
-				throw new FormatException();
-
-			IsdnAddress = stringRepresentation[0];
-
-			if (stringRepresentation.Length > 1)
-				SubAddress = stringRepresentation[1];
-		}
-
 		internal override string RecordDataToString()
 		{
 			return IsdnAddress.ToMasterfileLabelRepresentation()
@@ -94,7 +92,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 2 + IsdnAddress.Length + SubAddress.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, IsdnAddress);
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, SubAddress);

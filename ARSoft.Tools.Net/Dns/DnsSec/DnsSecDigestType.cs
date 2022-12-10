@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -32,7 +32,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>SHA-1</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc3658">RFC 3658</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc3658.html">RFC 3658</a>.
 		///   </para>
 		/// </summary>
 		Sha1 = 1,
@@ -41,7 +41,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>SHA-256</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4509">RFC 4509</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4509.html">RFC 4509</a>.
 		///   </para>
 		/// </summary>
 		Sha256 = 2,
@@ -50,7 +50,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>GOST R 34.11-94</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc5933">RFC 5933</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc5933.html">RFC 5933</a>.
 		///   </para>
 		/// </summary>
 		EccGost = 3,
@@ -59,9 +59,27 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>SHA-384</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc6605">RFC 6605</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc6605.html">RFC 6605</a>.
 		///   </para>
 		/// </summary>
 		Sha384 = 4,
+	}
+
+	internal static class DnsSecDigestTypeHelper
+	{
+		public static bool IsSupported(this DnsSecDigestType digest)
+		{
+			switch (digest)
+			{
+				case DnsSecDigestType.Sha1:
+				case DnsSecDigestType.Sha256:
+				case DnsSecDigestType.EccGost:
+				case DnsSecDigestType.Sha384:
+					return true;
+
+				default:
+					return false;
+			}
+		}
 	}
 }

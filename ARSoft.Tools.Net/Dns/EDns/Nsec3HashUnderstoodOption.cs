@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>NSEC3 Hash Unterstood option</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc6975">RFC 6975</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc6975.html">RFC 6975</a>.
 	///   </para>
 	/// </summary>
 	public class Nsec3HashUnderstoodOption : EDnsOptionBase
@@ -35,28 +35,26 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   List of Algorithms
 		/// </summary>
-		public List<DnsSecAlgorithm> Algorithms { get; private set; }
+		public List<NSec3HashAlgorithm> Algorithms { get; private set; }
 
-		internal Nsec3HashUnderstoodOption()
-			: base(EDnsOptionType.Nsec3HashUnderstood) {}
+		internal Nsec3HashUnderstoodOption(byte[] resultData, int startPosition, int length)
+			: base(EDnsOptionType.Nsec3HashUnderstood)
+		{
+			Algorithms = new List<NSec3HashAlgorithm>(length);
+			for (int i = 0; i < length; i++)
+			{
+				Algorithms.Add((NSec3HashAlgorithm) resultData[startPosition++]);
+			}
+		}
 
 		/// <summary>
 		///   Creates a new instance of the Nsec3HashUnderstoodOption class
 		/// </summary>
 		/// <param name="algorithms">The list of algorithms</param>
-		public Nsec3HashUnderstoodOption(List<DnsSecAlgorithm> algorithms)
-			: this()
+		public Nsec3HashUnderstoodOption(params NSec3HashAlgorithm[] algorithms)
+			: base(EDnsOptionType.Nsec3HashUnderstood)
 		{
-			Algorithms = algorithms;
-		}
-
-		internal override void ParseData(byte[] resultData, int startPosition, int length)
-		{
-			Algorithms = new List<DnsSecAlgorithm>(length);
-			for (int i = 0; i < length; i++)
-			{
-				Algorithms.Add((DnsSecAlgorithm) resultData[startPosition++]);
-			}
+			Algorithms = algorithms.ToList();
 		}
 
 		internal override ushort DataLength => (ushort) (Algorithms?.Count ?? 0);

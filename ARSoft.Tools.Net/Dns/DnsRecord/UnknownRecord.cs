@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -16,6 +16,7 @@
 // limitations under the License.
 #endregion
 
+using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +34,32 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] RecordData { get; private set; }
 
-		internal UnknownRecord() {}
+		internal UnknownRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			RecordData = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length);
+		}
+
+		internal UnknownRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if ((stringRepresentation.Length > 0) && (stringRepresentation[0] == @"\#"))
+			{
+				if (stringRepresentation.Length < 2)
+					throw new FormatException();
+
+				if (stringRepresentation[0] != @"\#")
+					throw new FormatException();
+
+				int length = Int32.Parse(stringRepresentation[1]);
+
+				RecordData = String.Join("", stringRepresentation.Skip(2)).FromBase16String();
+			}
+			else
+			{
+				throw new FormatException();
+			}
+		}
 
 		/// <summary>
 		///   Creates a new instance of the UnknownRecord class
@@ -49,16 +75,6 @@ namespace ARSoft.Tools.Net.Dns
 			RecordData = recordData ?? new byte[] { };
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			RecordData = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			ParseUnknownRecordData(stringRepresentation);
-		}
-
 		internal override string RecordDataToString()
 		{
 			return @"\# " + ((RecordData == null) ? "0" : RecordData.Length + " " + RecordData.ToBase16String());
@@ -66,7 +82,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => RecordData.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, RecordData);
 		}

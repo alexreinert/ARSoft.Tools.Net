@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -29,7 +29,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>RSA MD5</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc5155">RFC 5155</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc5155.html">RFC 5155</a>.
 		///   </para>
 		/// </summary>
 		Sha1 = 1,

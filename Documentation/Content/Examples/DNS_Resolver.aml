@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="6C911611-9F33-45DC-A6B2-0D7728A245AB" revisionNumber="1">
+	<developerSampleDocument
+		xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+		xmlns:xlink="http://www.w3.org/1999/xlink">
+
+		<introduction>
+			<para>Some small examples of using the DNS Resolver</para>
+		</introduction>
+
+		<section>
+			<title>Get all addresses for a domain name using the local configured DNS servers</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNS_Resolver_ResolveHost.cs" />
+			</content>
+		</section>
+		<section>
+			<title>Get reverse domain name for a specified IP address using local configured DNS servers</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNS_Resolver_ResolvePtr.cs" />
+			</content>
+		</section>
+		<section>
+			<title>Get all MX records for a domain using a recursive resolver</title>
+			<content>
+				<code language="c#" source="Content\Examples\DNS_Resolver_ResolveMX.cs" />
+			</content>
+		</section>
+	</developerSampleDocument>
+</topic>

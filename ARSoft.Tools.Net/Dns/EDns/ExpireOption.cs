@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Expire EDNS Option</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc7314">RFC 7314</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc7314.html">RFC 7314</a>.
 	///   </para>
 	/// </summary>
 	public class ExpireOption : EDnsOptionBase
@@ -37,26 +37,21 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public int? SoaExpire { get; private set; }
 
-		/// <summary>
-		///   Creates a new instance of the ExpireOption class
-		/// </summary>
-		public ExpireOption()
-			: base(EDnsOptionType.Expire) {}
+		internal ExpireOption(byte[] resultData, int startPosition, int length)
+			: base(EDnsOptionType.Expire)
+		{
+			if (length == 4)
+				SoaExpire = DnsMessageBase.ParseInt(resultData, ref startPosition);
+		}
 
 		/// <summary>
 		///   Creates a new instance of the ExpireOption class
 		/// </summary>
 		/// <param name="soaExpire">The expiration of the SOA record in seconds</param>
 		public ExpireOption(int soaExpire)
-			: this()
+			: base(EDnsOptionType.Expire)
 		{
 			SoaExpire = soaExpire;
-		}
-
-		internal override void ParseData(byte[] resultData, int startPosition, int length)
-		{
-			if (length == 4)
-				SoaExpire = DnsMessageBase.ParseInt(resultData, ref startPosition);
 		}
 
 		internal override ushort DataLength => (ushort) (SoaExpire.HasValue ? 4 : 0);

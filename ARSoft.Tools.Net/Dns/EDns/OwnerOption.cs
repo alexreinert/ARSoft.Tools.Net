@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -28,7 +28,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>EDNS0 Owner Option</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://files.dns-sd.org/draft-sekar-dns-llq.txt">draft-cheshire-edns0-owner-option</see>
+	///     <a href="http://files.dns-sd.org/draft-sekar-dns-llq.txt">draft-cheshire-edns0-owner-option</a>
 	///   </para>
 	/// </summary>
 	public class OwnerOption : EDnsOptionBase
@@ -51,81 +51,15 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   The Wakeup MAC address
 		/// </summary>
-		public PhysicalAddress WakeupMacAddress { get; private set; }
+		public PhysicalAddress? WakeupMacAddress { get; private set; }
 
 		/// <summary>
 		///   The password, should be empty, 4 bytes long or 6 bytes long
 		/// </summary>
-		public byte[] Password { get; private set; }
+		public byte[]? Password { get; private set; }
 
-		internal OwnerOption()
-			: base(EDnsOptionType.Owner) {}
-
-		/// <summary>
-		///   Creates a new instance of the OwnerOption class
-		/// </summary>
-		/// <param name="sequence"> The sequence number </param>
-		/// <param name="primaryMacAddress"> The primary MAC address </param>
-		public OwnerOption(byte sequence, PhysicalAddress primaryMacAddress)
-			: this(0, sequence, primaryMacAddress, null) {}
-
-		/// <summary>
-		///   Creates a new instance of the OwnerOption class
-		/// </summary>
-		/// <param name="version"> The version </param>
-		/// <param name="sequence"> The sequence number </param>
-		/// <param name="primaryMacAddress"> The primary MAC address </param>
-		public OwnerOption(byte version, byte sequence, PhysicalAddress primaryMacAddress)
-			: this(version, sequence, primaryMacAddress, null) {}
-
-		/// <summary>
-		///   Creates a new instance of the OwnerOption class
-		/// </summary>
-		/// <param name="sequence"> The sequence number </param>
-		/// <param name="primaryMacAddress"> The primary MAC address </param>
-		/// <param name="wakeupMacAddress"> The wakeup MAC address </param>
-		public OwnerOption(byte sequence, PhysicalAddress primaryMacAddress, PhysicalAddress wakeupMacAddress)
-			: this(0, sequence, primaryMacAddress, wakeupMacAddress) {}
-
-		/// <summary>
-		///   Creates a new instance of the OwnerOption class
-		/// </summary>
-		/// <param name="version"> The version </param>
-		/// <param name="sequence"> The sequence number </param>
-		/// <param name="primaryMacAddress"> The primary MAC address </param>
-		/// <param name="wakeupMacAddress"> The wakeup MAC address </param>
-		public OwnerOption(byte version, byte sequence, PhysicalAddress primaryMacAddress, PhysicalAddress wakeupMacAddress)
-			: this(version, sequence, primaryMacAddress, wakeupMacAddress, null) {}
-
-		/// <summary>
-		///   Creates a new instance of the OwnerOption class
-		/// </summary>
-		/// <param name="sequence"> The sequence number </param>
-		/// <param name="primaryMacAddress"> The primary MAC address </param>
-		/// <param name="wakeupMacAddress"> The wakeup MAC address </param>
-		/// <param name="password"> The password, should be empty, 4 bytes long or 6 bytes long </param>
-		public OwnerOption(byte sequence, PhysicalAddress primaryMacAddress, PhysicalAddress wakeupMacAddress, byte[] password)
-			: this(0, sequence, primaryMacAddress, wakeupMacAddress, password) {}
-
-		/// <summary>
-		///   Creates a new instance of the OwnerOption class
-		/// </summary>
-		/// <param name="version"> The version </param>
-		/// <param name="sequence"> The sequence number </param>
-		/// <param name="primaryMacAddress"> The primary MAC address </param>
-		/// <param name="wakeupMacAddress"> The wakeup MAC address </param>
-		/// <param name="password"> The password, should be empty, 4 bytes long or 6 bytes long </param>
-		public OwnerOption(byte version, byte sequence, PhysicalAddress primaryMacAddress, PhysicalAddress wakeupMacAddress, byte[] password)
-			: this()
-		{
-			Version = version;
-			Sequence = sequence;
-			PrimaryMacAddress = primaryMacAddress;
-			WakeupMacAddress = wakeupMacAddress;
-			Password = password;
-		}
-
-		internal override void ParseData(byte[] resultData, int startPosition, int length)
+		internal OwnerOption(byte[] resultData, int startPosition, int length)
+			: base(EDnsOptionType.Owner)
 		{
 			Version = resultData[startPosition++];
 			Sequence = resultData[startPosition++];
@@ -136,7 +70,35 @@ namespace ARSoft.Tools.Net.Dns
 				Password = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 14);
 		}
 
-		internal override ushort DataLength => (ushort) (8 + (WakeupMacAddress != null ? 6 : 0) + (Password?.Length ?? 0));
+		/// <summary>
+		///   Creates a new instance of the OwnerOption class
+		/// </summary>
+		/// <param name="sequence"> The sequence number </param>
+		/// <param name="primaryMacAddress"> The primary MAC address </param>
+		/// <param name="wakeupMacAddress"> The wakeup MAC address </param>
+		/// <param name="password"> The password, should be empty, 4 bytes long or 6 bytes long </param>
+		public OwnerOption(byte sequence, PhysicalAddress primaryMacAddress, PhysicalAddress? wakeupMacAddress = null, byte[]? password = null)
+			: this(0, sequence, primaryMacAddress, wakeupMacAddress, password) { }
+
+		/// <summary>
+		///   Creates a new instance of the OwnerOption class
+		/// </summary>
+		/// <param name="version"> The version </param>
+		/// <param name="sequence"> The sequence number </param>
+		/// <param name="primaryMacAddress"> The primary MAC address </param>
+		/// <param name="wakeupMacAddress"> The wakeup MAC address </param>
+		/// <param name="password"> The password, should be empty, 4 bytes long or 6 bytes long </param>
+		public OwnerOption(byte version, byte sequence, PhysicalAddress primaryMacAddress, PhysicalAddress? wakeupMacAddress = null, byte[]? password = null)
+			: base(EDnsOptionType.Owner)
+		{
+			Version = version;
+			Sequence = sequence;
+			PrimaryMacAddress = primaryMacAddress;
+			WakeupMacAddress = wakeupMacAddress;
+			Password = password;
+		}
+
+		internal override ushort DataLength => (ushort) (8 + (WakeupMacAddress != null || Password != null ? 6 : 0) + (Password?.Length ?? 0));
 
 		internal override void EncodeData(byte[] messageData, ref int currentPosition)
 		{
@@ -144,7 +106,14 @@ namespace ARSoft.Tools.Net.Dns
 			messageData[currentPosition++] = Sequence;
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PrimaryMacAddress.GetAddressBytes());
 			if (WakeupMacAddress != null)
+			{
 				DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, WakeupMacAddress.GetAddressBytes());
+			}
+			else if (Password != null)
+			{
+				DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PrimaryMacAddress.GetAddressBytes());
+			}
+
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Password);
 		}
 	}

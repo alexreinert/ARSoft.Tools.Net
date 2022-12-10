@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -26,7 +26,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Child DNS Key record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc7344">RFC 7344</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc7344.html">RFC 7344</a>.
 	///   </para>
 	/// </summary>
 	public class CDnsKeyRecord : DnsRecordBase
@@ -54,15 +54,15 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Binary data of the private key
 		/// </summary>
-		public byte[] PrivateKey { get; private set; }
+		public byte[]? PrivateKey { get; private set; }
 
 		/// <summary>
 		///   <para>Record holds a DNS zone key</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>
 		///     and
-		///     <see cref="!:http://tools.ietf.org/html/rfc3757">RFC 3757</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc3757.html">RFC 3757</a>.
 		///   </para>
 		/// </summary>
 		public bool IsZoneKey
@@ -85,9 +85,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Key is intended for use as a secure entry point</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>
 		///     and
-		///     <see cref="!:http://tools.ietf.org/html/rfc3757">RFC 3757</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc3757.html">RFC 3757</a>.
 		///   </para>
 		/// </summary>
 		public bool IsSecureEntryPoint
@@ -110,7 +110,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Key is intended for use as a secure entry point</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc5011">RFC 5011</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc5011.html">RFC 5011</a>.
 		///   </para>
 		/// </summary>
 		public bool IsRevoked
@@ -133,13 +133,15 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Calculates the key tag</para>
 		///   <para>
 		///     Defined in
-		///     <see cref="!:http://tools.ietf.org/html/rfc4034">RFC 4034</see>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4034.html">RFC 4034</a>.
 		///   </para>
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>The key tag</returns>
 		public ushort CalculateKeyTag()
 		{
+#pragma warning disable 0612
 			if (Algorithm == DnsSecAlgorithm.RsaMd5)
+#pragma warning restore 0612
 				return (ushort) (PublicKey[PublicKey.Length - 4] & PublicKey[PublicKey.Length - 3] << 8);
 
 			byte[] buffer = new byte[MaximumRecordDataLength];
@@ -160,7 +162,26 @@ namespace ARSoft.Tools.Net.Dns
 			return res;
 		}
 
-		internal CDnsKeyRecord() {}
+		internal CDnsKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Flags = (DnsKeyFlags) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+			Protocol = resultData[currentPosition++];
+			Algorithm = (DnsSecAlgorithm) resultData[currentPosition++];
+			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 4);
+		}
+
+		internal CDnsKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 4)
+				throw new FormatException();
+
+			Flags = (DnsKeyFlags) UInt16.Parse(stringRepresentation[0]);
+			Protocol = Byte.Parse(stringRepresentation[1]);
+			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
+			PublicKey = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
+		}
 
 		/// <summary>
 		///   Creates a new instance of the DnsKeyRecord class
@@ -173,7 +194,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="algorithm"> Algorithm of the key </param>
 		/// <param name="publicKey"> Binary data of the public key </param>
 		public CDnsKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol, DnsSecAlgorithm algorithm, byte[] publicKey)
-			: this(name, recordClass, timeToLive, flags, protocol, algorithm, publicKey, null) {}
+			: this(name, recordClass, timeToLive, flags, protocol, algorithm, publicKey, null) { }
 
 		/// <summary>
 		///   Creates a new instance of the DnsKeyRecord class
@@ -186,7 +207,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="algorithm"> Algorithm of the key </param>
 		/// <param name="publicKey"> Binary data of the public key </param>
 		/// <param name="privateKey"> Binary data of the private key </param>
-		public CDnsKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol, DnsSecAlgorithm algorithm, byte[] publicKey, byte[] privateKey)
+		public CDnsKeyRecord(DomainName name, RecordClass recordClass, int timeToLive, DnsKeyFlags flags, byte protocol, DnsSecAlgorithm algorithm, byte[] publicKey, byte[]? privateKey)
 			: base(name, RecordType.CDnsKey, recordClass, timeToLive)
 		{
 			Flags = flags;
@@ -194,25 +215,6 @@ namespace ARSoft.Tools.Net.Dns
 			Algorithm = algorithm;
 			PublicKey = publicKey;
 			PrivateKey = privateKey;
-		}
-
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Flags = (DnsKeyFlags) DnsMessageBase.ParseUShort(resultData, ref startPosition);
-			Protocol = resultData[startPosition++];
-			Algorithm = (DnsSecAlgorithm) resultData[startPosition++];
-			PublicKey = DnsMessageBase.ParseByteData(resultData, ref startPosition, length - 4);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length < 4)
-				throw new FormatException();
-
-			Flags = (DnsKeyFlags) UInt16.Parse(stringRepresentation[0]);
-			Protocol = Byte.Parse(stringRepresentation[1]);
-			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
-			PublicKey = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
 		}
 
 		internal override string RecordDataToString()
@@ -225,7 +227,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 4 + PublicKey.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Flags);
 			messageData[currentPosition++] = Protocol;

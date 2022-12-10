@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Host information</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 	///   </para>
 	/// </summary>
 	public class HInfoRecord : DnsRecordBase
@@ -42,7 +42,22 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public string OperatingSystem { get; private set; }
 
-		internal HInfoRecord() {}
+		internal HInfoRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			Cpu = DnsMessageBase.ParseText(resultData, ref currentPosition);
+			OperatingSystem = DnsMessageBase.ParseText(resultData, ref currentPosition);
+		}
+
+		internal HInfoRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length != 2)
+				throw new FormatException();
+
+			Cpu = stringRepresentation[0];
+			OperatingSystem = stringRepresentation[1];
+		}
 
 		/// <summary>
 		///   Creates a new instance of the HInfoRecord class
@@ -58,21 +73,6 @@ namespace ARSoft.Tools.Net.Dns
 			OperatingSystem = operatingSystem ?? String.Empty;
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			Cpu = DnsMessageBase.ParseText(resultData, ref startPosition);
-			OperatingSystem = DnsMessageBase.ParseText(resultData, ref startPosition);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 2)
-				throw new FormatException();
-
-			Cpu = stringRepresentation[0];
-			OperatingSystem = stringRepresentation[1];
-		}
-
 		internal override string RecordDataToString()
 		{
 			return "\"" + Cpu.ToMasterfileLabelRepresentation() + "\""
@@ -81,7 +81,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 2 + Cpu.Length + OperatingSystem.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, Cpu);
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, OperatingSystem);

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Authoritatitve name server record</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 	///   </para>
 	/// </summary>
 	public class NsRecord : DnsRecordBase
@@ -37,7 +37,20 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public DomainName NameServer { get; private set; }
 
-		internal NsRecord() {}
+		internal NsRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			NameServer = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
+		}
+
+		internal NsRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length != 1)
+				throw new FormatException();
+
+			NameServer = ParseDomainName(origin, stringRepresentation[0]);
+		}
 
 		/// <summary>
 		///   Creates a new instance of the NsRecord class
@@ -51,19 +64,6 @@ namespace ARSoft.Tools.Net.Dns
 			NameServer = nameServer ?? DomainName.Root;
 		}
 
-		internal override void ParseRecordData(byte[] resultData, int startPosition, int length)
-		{
-			NameServer = DnsMessageBase.ParseDomainName(resultData, ref startPosition);
-		}
-
-		internal override void ParseRecordData(DomainName origin, string[] stringRepresentation)
-		{
-			if (stringRepresentation.Length != 1)
-				throw new FormatException();
-
-			NameServer = ParseDomainName(origin, stringRepresentation[0]);
-		}
-
 		internal override string RecordDataToString()
 		{
 			return NameServer.ToString();
@@ -71,7 +71,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => NameServer.MaximumRecordDataLength + 2;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, NameServer, domainNames, useCanonical);
 		}

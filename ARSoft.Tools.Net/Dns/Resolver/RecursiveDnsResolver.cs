@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2017 Alexander Reinert
+// Copyright 2010..2022 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -16,14 +16,8 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ARSoft.Tools.Net.Dns
 {
@@ -31,14 +25,15 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Recursive resolver</para>
 	///   <para>
 	///     Defined in
-	///     <see cref="!:http://tools.ietf.org/html/rfc1035">RFC 1035</see>
+	///     <a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035</a>.
 	///   </para>
 	/// </summary>
 	public class RecursiveDnsResolver : IDnsResolver
 	{
-		private class State
+		private class ResolveContext
 		{
 			public int QueryCount;
+			public readonly ResolveLoopProtector LoopProtector = new();
 		}
 
 		private DnsCache _cache = new DnsCache();
@@ -50,7 +45,7 @@ namespace ARSoft.Tools.Net.Dns
 		///   Provides a new instance with custom root server hints
 		/// </summary>
 		/// <param name="resolverHintStore"> The resolver hint store with the IP addresses of the root server hints</param>
-		public RecursiveDnsResolver(IResolverHintStore resolverHintStore = null)
+		public RecursiveDnsResolver(IResolverHintStore? resolverHintStore = null)
 		{
 			_resolverHintStore = resolverHintStore ?? new StaticResolverHintStore();
 			IsResponseValidationEnabled = true;
@@ -70,19 +65,13 @@ namespace ARSoft.Tools.Net.Dns
 
 		/// <summary>
 		///   Gets or set a value indicating whether the response is validated as described in
-		///   <see
-		///     cref="!:http://tools.ietf.org/id/draft-vixie-dnsext-dns0x20-00.txt">
-		///     draft-vixie-dnsext-dns0x20-00
-		///   </see>
+		///   <a href="http://tools.ietf.org/id/draft-vixie-dnsext-dns0x20-00.txt">draft-vixie-dnsext-dns0x20-00</a>
 		/// </summary>
 		public bool IsResponseValidationEnabled { get; set; }
 
 		/// <summary>
 		///   Gets or set a value indicating whether the query labels are used for additional validation as described in
-		///   <see
-		///     cref="!:http://tools.ietf.org/id/draft-vixie-dnsext-dns0x20-00.txt">
-		///     draft-vixie-dnsext-dns0x20-00
-		///   </see>
+		///   <a href="http://tools.ietf.org/id/draft-vixie-dnsext-dns0x20-00.txt">draft-vixie-dnsext-dns0x20-00</a>
 		/// </summary>
 		// ReSharper disable once InconsistentNaming
 		public bool Is0x20ValidationEnabled { get; set; }
@@ -124,17 +113,16 @@ namespace ARSoft.Tools.Net.Dns
 		public Task<List<T>> ResolveAsync<T>(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet, CancellationToken token = default(CancellationToken))
 			where T : DnsRecordBase
 		{
-			if (name == null)
-				throw new ArgumentNullException(nameof(name), "Name must be provided");
+			_ = name ?? throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-			return ResolveAsyncInternal<T>(name, recordType, recordClass, new State(), token);
+			return ResolveAsyncInternal<T>(name, recordType, recordClass, new ResolveContext(), token);
 		}
 
-		private async Task<DnsMessage> ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, State state, CancellationToken token)
+		private async Task<DnsMessage> ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, ResolveContext state, CancellationToken token)
 		{
 			for (; state.QueryCount <= MaximumReferalCount; state.QueryCount++)
 			{
-				DnsMessage msg = await new DnsClient(GetBestNameservers(recordType == RecordType.Ds ? name.GetParentName() : name), QueryTimeout)
+				DnsMessage? msg = await new DnsClient(GetBestNameservers(recordType == RecordType.Ds ? name.GetParentName() : name), QueryTimeout)
 				{
 					IsResponseValidationEnabled = IsResponseValidationEnabled,
 					Is0x20ValidationEnabled = Is0x20ValidationEnabled
@@ -199,68 +187,70 @@ namespace ARSoft.Tools.Net.Dns
 			throw new Exception("Could not resolve " + name);
 		}
 
-		private async Task<List<T>> ResolveAsyncInternal<T>(DomainName name, RecordType recordType, RecordClass recordClass, State state, CancellationToken token)
+		private async Task<List<T>> ResolveAsyncInternal<T>(DomainName name, RecordType recordType, RecordClass recordClass, ResolveContext context, CancellationToken token)
 			where T : DnsRecordBase
 		{
-			List<T> cachedResults;
-			if (_cache.TryGetRecords(name, recordType, recordClass, out cachedResults))
+			using (context.LoopProtector.AddOrThrow(name, recordType, recordClass))
 			{
-				return cachedResults;
-			}
-
-			List<CNameRecord> cachedCNames;
-			if (_cache.TryGetRecords(name, RecordType.CName, recordClass, out cachedCNames))
-			{
-				return await ResolveAsyncInternal<T>(cachedCNames.First().CanonicalName, recordType, recordClass, state, token);
-			}
-
-			DnsMessage msg = await ResolveMessageAsync(name, recordType, recordClass, state, token);
-
-			// check for cname
-			List<DnsRecordBase> cNameRecords = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
-			if (cNameRecords.Count > 0)
-			{
-				_cache.Add(name, RecordType.CName, recordClass, cNameRecords, DnsSecValidationResult.Indeterminate, cNameRecords.Min(x => x.TimeToLive));
-
-				DomainName canonicalName = ((CNameRecord) cNameRecords.First()).CanonicalName;
-
-				List<DnsRecordBase> matchingAdditionalRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(canonicalName)).ToList();
-				if (matchingAdditionalRecords.Count > 0)
+				if (_cache.TryGetRecords(name, recordType, recordClass, out List<T>? cachedResults))
 				{
-					_cache.Add(canonicalName, recordType, recordClass, matchingAdditionalRecords, DnsSecValidationResult.Indeterminate, matchingAdditionalRecords.Min(x => x.TimeToLive));
-					return matchingAdditionalRecords.OfType<T>().ToList();
+					return cachedResults!;
 				}
 
-				return await ResolveAsyncInternal<T>(canonicalName, recordType, recordClass, state, token);
+				if (_cache.TryGetRecords(name, RecordType.CName, recordClass, out List<CNameRecord>? cachedCNames))
+				{
+					var canonicalName = cachedCNames!.First().CanonicalName;
+					return await ResolveAsyncInternal<T>(canonicalName, recordType, recordClass, context, token);
+				}
+
+				DnsMessage msg = await ResolveMessageAsync(name, recordType, recordClass, context, token);
+
+				// check for cname
+				List<DnsRecordBase> cNameRecords = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
+				if (cNameRecords.Count > 0)
+				{
+					_cache.Add(name, RecordType.CName, recordClass, cNameRecords, DnsSecValidationResult.Indeterminate, cNameRecords.Min(x => x.TimeToLive));
+
+					DomainName canonicalName = ((CNameRecord) cNameRecords.First()).CanonicalName;
+
+					List<DnsRecordBase> matchingAdditionalRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(canonicalName)).ToList();
+					if (matchingAdditionalRecords.Count > 0)
+					{
+						_cache.Add(canonicalName, recordType, recordClass, matchingAdditionalRecords, DnsSecValidationResult.Indeterminate, matchingAdditionalRecords.Min(x => x.TimeToLive));
+						return matchingAdditionalRecords.OfType<T>().ToList();
+					}
+
+					return await ResolveAsyncInternal<T>(canonicalName, recordType, recordClass, context, token);
+				}
+
+				// check for "normal" answer
+				List<DnsRecordBase> answerRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
+				if (answerRecords.Count > 0)
+				{
+					_cache.Add(name, recordType, recordClass, answerRecords, DnsSecValidationResult.Indeterminate, answerRecords.Min(x => x.TimeToLive));
+					return answerRecords.OfType<T>().ToList();
+				}
+
+				// check for negative answer
+				SoaRecord? soaRecord = msg.AuthorityRecords
+					.Where(x =>
+						(x.RecordType == RecordType.Soa)
+						&& (name.Equals(x.Name) || name.IsSubDomainOf(x.Name)))
+					.OfType<SoaRecord>()
+					.FirstOrDefault();
+
+				if (soaRecord != null)
+				{
+					_cache.Add(name, recordType, recordClass, new List<DnsRecordBase>(), DnsSecValidationResult.Indeterminate, soaRecord.NegativeCachingTTL);
+					return new List<T>();
+				}
+
+				// authoritive response does not contain answer
+				throw new Exception("Could not resolve " + name);
 			}
-
-			// check for "normal" answer
-			List<DnsRecordBase> answerRecords = msg.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
-			if (answerRecords.Count > 0)
-			{
-				_cache.Add(name, recordType, recordClass, answerRecords, DnsSecValidationResult.Indeterminate, answerRecords.Min(x => x.TimeToLive));
-				return answerRecords.OfType<T>().ToList();
-			}
-
-			// check for negative answer
-			SoaRecord soaRecord = msg.AuthorityRecords
-				.Where(x =>
-					(x.RecordType == RecordType.Soa)
-					&& (name.Equals(x.Name) || name.IsSubDomainOf(x.Name)))
-				.OfType<SoaRecord>()
-				.FirstOrDefault();
-
-			if (soaRecord != null)
-			{
-				_cache.Add(name, recordType, recordClass, new List<DnsRecordBase>(), DnsSecValidationResult.Indeterminate, soaRecord.NegativeCachingTTL);
-				return new List<T>();
-			}
-
-			// authoritive response does not contain answer
-			throw new Exception("Could not resolve " + name);
 		}
 
-		private async Task<List<Tuple<IPAddress, int>>> ResolveHostWithTtlAsync(DomainName name, State state, CancellationToken token)
+		private async Task<List<Tuple<IPAddress, int>>> ResolveHostWithTtlAsync(DomainName name, ResolveContext state, CancellationToken token)
 		{
 			List<Tuple<IPAddress, int>> result = new List<Tuple<IPAddress, int>>();
 
@@ -275,14 +265,13 @@ namespace ARSoft.Tools.Net.Dns
 
 		private IEnumerable<IPAddress> GetBestNameservers(DomainName name)
 		{
-			Random rnd = new Random();
+			var rnd = new Random();
 
 			while (name.LabelCount > 0)
 			{
-				List<IPAddress> cachedAddresses;
-				if (_nameserverCache.TryGetAddresses(name, out cachedAddresses))
+				if (_nameserverCache.TryGetAddresses(name, out var cachedAddresses))
 				{
-					return cachedAddresses.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ThenBy(x => rnd.Next());
+					return cachedAddresses!.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ThenBy(x => rnd.Next());
 				}
 
 				name = name.GetParentName();
