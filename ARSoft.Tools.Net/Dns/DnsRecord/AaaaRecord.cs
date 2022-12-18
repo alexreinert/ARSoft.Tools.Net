@@ -33,8 +33,8 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public class AaaaRecord : AddressRecordBase
 	{
-		internal AaaaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int startPosition, int length)
-			: base(name, recordType, recordClass, timeToLive, resultData, startPosition, length) { }
+		internal AaaaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive, resultData, currentPosition, length) { }
 
 
 		internal AaaaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)

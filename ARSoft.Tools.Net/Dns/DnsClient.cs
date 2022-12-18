@@ -42,24 +42,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public static DnsClient Default { get; private set; }
 
-		/// <summary>
-		///   Gets or sets a value indicationg whether queries can be sent using UDP.
-		/// </summary>
-		public new bool IsUdpEnabled
-		{
-			get { return base.IsUdpEnabled; }
-			set { base.IsUdpEnabled = value; }
-		}
-
-		/// <summary>
-		///   Gets or sets a value indicationg whether queries can be sent using TCP.
-		/// </summary>
-		public new bool IsTcpEnabled
-		{
-			get { return base.IsTcpEnabled; }
-			set { base.IsTcpEnabled = value; }
-		}
-
 		static DnsClient()
 		{
 			Default = new DnsClient(GetLocalConfiguredDnsServers(), 10000) { IsResponseValidationEnabled = true };
@@ -78,14 +60,21 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="dnsServers"> The IPAddresses of the dns servers to use </param>
 		/// <param name="queryTimeout"> Query timeout in milliseconds </param>
-		public DnsClient(IEnumerable<IPAddress> dnsServers, int queryTimeout)
-			: base(dnsServers, queryTimeout, 53)
-		{
-			IsUdpEnabled = true;
-			IsTcpEnabled = true;
-		}
+		public DnsClient(IEnumerable<IPAddress> dnsServers, int queryTimeout = 10000)
+			: base(dnsServers, queryTimeout, new IClientTransport[] { new UdpClientTransport(), new TcpClientTransport() }, true) { }
 
-		protected override int MaximumQueryMessageSize => 512;
+		/// <summary>
+		///   Provides a new instance with custom dns servers and query timeout
+		/// </summary>
+		/// <param name="dnsServers"> The IPAddresses of the dns servers to use </param>
+		/// <param name="transports"> The transports which is used </param>
+		/// <param name="disposeTransport">
+		///   A value indicating, if the transports should be disposed when the DnsClient instance is
+		///   disposed
+		/// </param>
+		/// <param name="queryTimeout"> Query timeout in milliseconds </param>
+		public DnsClient(IEnumerable<IPAddress> dnsServers, IClientTransport[] transports, bool disposeTransport = false, int queryTimeout = 10000)
+			: base(dnsServers, queryTimeout, transports, disposeTransport) { }
 
 		/// <summary>
 		///   Queries a dns server for specified records.

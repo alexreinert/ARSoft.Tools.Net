@@ -62,7 +62,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<RecordType> Types { get; private set; }
 
-		internal NSec3Record(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal NSec3Record(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			int endPosition = currentPosition + length;
@@ -134,7 +134,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 6 + Salt.Length + NextHashedOwnerName.Length + NSecRecord.GetMaximumTypeBitmapLength(Types);
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) HashAlgorithm;
 			messageData[currentPosition++] = (byte) Flags;

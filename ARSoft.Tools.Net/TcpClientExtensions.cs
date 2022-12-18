@@ -29,39 +29,46 @@ namespace ARSoft.Tools.Net
 {
 	internal static class TcpClientExtensions
 	{
-		public static bool TryConnect(this TcpClient tcpClient, IPEndPoint endPoint, int timeout)
+		public static bool TryConnect(this TcpClient tcpClient, IPAddress address, int port, int timeout)
 		{
-			IAsyncResult ar = tcpClient.BeginConnect(endPoint.Address, endPoint.Port, null, null);
-			var wh = ar.AsyncWaitHandle;
 			try
 			{
+				var ar = tcpClient.BeginConnect(address, port, null, null);
+
 				if (!ar.AsyncWaitHandle.WaitOne(TimeSpan.FromMilliseconds(timeout), false))
 				{
 					tcpClient.Close();
-					return false;
 				}
 
 				tcpClient.EndConnect(ar);
-				return true;
 			}
-			finally
+			catch
 			{
-				wh.Close();
+				return false;
 			}
+
+			return true;
 		}
 
 		public static async Task<bool> TryConnectAsync(this TcpClient tcpClient, IPAddress address, int port, int timeout, CancellationToken token)
 		{
-			var connectTask = tcpClient.ConnectAsync(address, port);
-			var timeoutTask = Task.Delay(timeout, token);
+			try
+			{
+				var connectTask = tcpClient.ConnectAsync(address, port, token).AsTask();
+				var timeoutTask = Task.Delay(timeout, token);
 
-			await Task.WhenAny(connectTask, timeoutTask);
+				await Task.WhenAny(connectTask, timeoutTask);
 
-			if (connectTask.IsCompleted)
-				return true;
+				if (connectTask.IsCompleted)
+					return true;
 
-			tcpClient.Close();
-			return false;
+				tcpClient.Close();
+				return false;
+			}
+			catch
+			{
+				return false;
+			}
 		}
 
 		public static bool IsConnected(this TcpClient client)

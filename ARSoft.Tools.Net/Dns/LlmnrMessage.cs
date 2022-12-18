@@ -109,11 +109,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 		#endregion
 
-		internal override bool IsTcpUsingRequested => (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr));
+		internal override bool IsReliableSendingRequested => false;
 
-		internal override bool IsTcpResendingRequested => IsTruncated;
+		internal override bool IsReliableResendingRequested => IsTruncated;
 
-		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
+		internal override bool IsNextMessageWaiting(bool isSubsequentResponseMessage)
 		{
 			return false;
 		}

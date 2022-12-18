@@ -27,7 +27,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public abstract class TextRecordBase : DnsRecordBase, ITextRecord
 	{
-		protected TextRecordBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		protected TextRecordBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			int endPosition = currentPosition + length;
@@ -79,7 +79,7 @@ namespace ARSoft.Tools.Net.Dns
 			return String.Join(" ", TextParts.Select(x => "\"" + x.ToMasterfileLabelRepresentation() + "\""));
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			foreach (var part in TextParts)
 			{

@@ -55,15 +55,15 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public IPAddress Address { get; private set; }
 
-		internal ClientSubnetOption(byte[] resultData, int startPosition, int length)
+		internal ClientSubnetOption(IList<byte> resultData, int startPosition, int length)
 			: base(EDnsOptionType.ClientSubnet)
 		{
-			ushort family = DnsMessageBase.ParseUShort(resultData, ref startPosition);
+			var family = DnsMessageBase.ParseUShort(resultData, ref startPosition);
 			SourceNetmask = resultData[startPosition++];
 			ScopeNetmask = resultData[startPosition++];
 
-			byte[] addressData = new byte[family == 1 ? 4 : 16];
-			Buffer.BlockCopy(resultData, startPosition, addressData, 0, GetAddressLength());
+			var addressData = new byte[family == 1 ? 4 : 16];
+			DnsMessageBase.ParseByteData(resultData, ref startPosition, GetAddressLength()).CopyTo(addressData, 0);
 
 			Address = new IPAddress(addressData);
 		}
@@ -92,14 +92,12 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override ushort DataLength => (ushort) (4 + GetAddressLength());
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
+		internal override void EncodeData(IList<byte> messageData, ref int currentPosition)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) (Family == AddressFamily.InterNetwork ? 1 : 2));
 			messageData[currentPosition++] = SourceNetmask;
 			messageData[currentPosition++] = ScopeNetmask;
-
-			byte[] data = Address.GetAddressBytes();
-			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, data, GetAddressLength());
+			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes(), GetAddressLength());
 		}
 
 		private int GetAddressLength()

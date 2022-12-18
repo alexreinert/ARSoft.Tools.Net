@@ -37,25 +37,16 @@ namespace ARSoft.Tools.Net.Dns
 		///   Represents the method, that will be called to get the keydata for processing a tsig signed message
 		/// </summary>
 		/// <param name="algorithm"> The algorithm which is used in the message </param>
+		/// <param name="isTruncated"> A value indicating if the MAC was truncated </param>
 		/// <param name="keyName"> The keyname which is used in the message </param>
 		/// <returns> Binary representation of the key </returns>
-		public delegate byte[]? SelectTsigKey(TSigAlgorithm algorithm, DomainName keyName);
+		public delegate byte[]? SelectTsigKey(TSigAlgorithm algorithm, bool isTruncated, DomainName keyName);
 
-		private const int _DNS_PORT = 53;
+		public const int DEFAULT_DNS_PORT = 53;
 
-		private readonly object _listenerLock = new object();
-		private TcpListener? _tcpListener;
-		private UdpClient? _udpListener;
-		private readonly IPEndPoint _bindEndPoint;
-
-		private readonly int _udpListenerCount;
-		private readonly int _tcpListenerCount;
-
-		private int _availableUdpListener;
-		private bool _hasActiveUdpListener;
-
-		private int _availableTcpListener;
-		private bool _hasActiveTcpListener;
+		private readonly IServerTransport[] _transports;
+		private Task[] _transportTasks = Array.Empty<Task>();
+		private CancellationTokenSource _serverCancellationTokenSource = new();
 
 		/// <summary>
 		///   Method that will be called to get the keydata for processing a tsig signed message
@@ -63,41 +54,25 @@ namespace ARSoft.Tools.Net.Dns
 		public SelectTsigKey? TsigKeySelector;
 
 		/// <summary>
-		///   Gets or sets the timeout for sending and receiving data
+		///   Creates a new dns server instance which will listen on UDP and TCP on all available interfaces
 		/// </summary>
-		public int Timeout { get; set; }
-
-		/// <summary>
-		///   Creates a new dns server instance which will listen on all available interfaces
-		/// </summary>
-		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
-		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
-		public DnsServer(int udpListenerCount, int tcpListenerCount)
-			: this(IPAddress.Any, udpListenerCount, tcpListenerCount) { }
+		/// <param name="timeout"> The timeout in milliseconds </param>
+		/// <param name="keepAlive"> The keepalive period in milliseconds to wait for additional queries on the same connection </param>
+		public DnsServer(int timeout = 5000, int keepAlive = 120000)
+			: this(
+				new UdpServerTransport(IPAddress.IPv6Any, timeout),
+				new TcpServerTransport(IPAddress.IPv6Any, timeout, keepAlive)) { }
 
 		/// <summary>
 		///   Creates a new dns server instance
 		/// </summary>
-		/// <param name="bindAddress"> The address, on which should be listend </param>
-		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
-		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
-		public DnsServer(IPAddress bindAddress, int udpListenerCount, int tcpListenerCount)
-			: this(new IPEndPoint(bindAddress, _DNS_PORT), udpListenerCount, tcpListenerCount) { }
-
-		/// <summary>
-		///   Creates a new dns server instance
-		/// </summary>
-		/// <param name="bindEndPoint"> The endpoint, on which should be listend </param>
-		/// <param name="udpListenerCount"> The count of threads listings on udp, 0 to deactivate udp </param>
-		/// <param name="tcpListenerCount"> The count of threads listings on tcp, 0 to deactivate tcp </param>
-		public DnsServer(IPEndPoint bindEndPoint, int udpListenerCount, int tcpListenerCount)
+		/// <param name="transports"> Transports, which should be used </param>
+		public DnsServer(params IServerTransport[] transports)
 		{
-			_bindEndPoint = bindEndPoint;
+			if (transports.Length == 0)
+				throw new ArgumentException("At least one transport must be given");
 
-			_udpListenerCount = udpListenerCount;
-			_tcpListenerCount = tcpListenerCount;
-
-			Timeout = 120000;
+			_transports = transports;
 		}
 
 		/// <summary>
@@ -105,28 +80,15 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public void Start()
 		{
-			if (_udpListenerCount > 0)
+			foreach (var transport in _transports)
 			{
-				lock (_listenerLock)
-				{
-					_availableUdpListener = _udpListenerCount;
-				}
-
-				_udpListener = new UdpClient(_bindEndPoint);
-				StartUdpListenerTask();
+				transport.Bind();
 			}
 
-			if (_tcpListenerCount > 0)
-			{
-				lock (_listenerLock)
-				{
-					_availableTcpListener = _tcpListenerCount;
-				}
+			_serverCancellationTokenSource = new CancellationTokenSource();
 
-				_tcpListener = new TcpListener(_bindEndPoint);
-				_tcpListener.Start();
-				StartTcpListenerTask();
-			}
+			_transportTasks = _transports.Select<IServerTransport, Task>(t =>
+				Task.Run(() => ConnectionLoopAsync(t, _serverCancellationTokenSource.Token), _serverCancellationTokenSource.Token)).ToArray();
 		}
 
 		/// <summary>
@@ -134,14 +96,213 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public void Stop()
 		{
-			if (_udpListenerCount > 0)
-			{
-				_udpListener!.Close();
-			}
+			_serverCancellationTokenSource.Cancel();
 
-			if (_tcpListenerCount > 0)
+			Task.WaitAll(_transportTasks);
+
+			foreach (var transport in _transports)
 			{
-				_tcpListener!.Stop();
+				transport.Close();
+			}
+		}
+
+		private async void ConnectionLoopAsync(IServerTransport transport, CancellationToken token)
+		{
+			while (!token.IsCancellationRequested)
+			{
+				var connection = await transport.AcceptConnectionAsync(token);
+
+				if (connection == null)
+					continue;
+
+#pragma warning disable CS4014
+				Task.Run(() => ProcessConnectionAsync(connection, token), token);
+#pragma warning restore CS4014
+			}
+		}
+
+		private async void ProcessConnectionAsync(IServerConnection connection, CancellationToken token)
+		{
+			var clientConnectedEventArgs = new ClientConnectedEventArgs(connection.Transport.TransportProtocol, connection.RemoteEndPoint, connection.LocalEndPoint);
+			await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
+
+			if (clientConnectedEventArgs.RefuseConnect)
+				return;
+
+			try
+			{
+				while (connection.CanRead)
+				{
+					var queryPackage = await connection.ReceiveAsync(token);
+
+					if (queryPackage == null)
+						break;
+
+					DnsMessageBase query;
+					byte[]? tsigMac;
+					try
+					{
+						query = DnsMessageBase.CreateByFlag(queryPackage.ToArraySegment(false), TsigKeySelector, null);
+						tsigMac = query.TSigOptions?.Mac;
+					}
+					catch (Exception e)
+					{
+						throw new Exception("Error parsing dns query", e);
+					}
+
+					DnsMessageBase response;
+					try
+					{
+						response = await ProcessMessageAsync(query, ProtocolType.Tcp, connection.RemoteEndPoint!);
+					}
+					catch (Exception ex)
+					{
+						OnExceptionThrownAsync(ex);
+
+						response = query.CreateFailureResponse();
+					}
+
+					var responsePackage = response.Encode(tsigMac, false, out var newTsigMac);
+
+					if (responsePackage.Length <= connection.Transport.DefaultAllowedResponseSize)
+					{
+						await connection.SendAsync(responsePackage, token);
+					}
+					else
+					{
+						if (response.AllowMultipleResponses)
+						{
+							var isSubSequentResponse = false;
+
+							foreach (var partialResponse in response.SplitResponse())
+							{
+								responsePackage = partialResponse.Encode(tsigMac, isSubSequentResponse, out newTsigMac);
+								await connection.SendAsync(responsePackage, token);
+								isSubSequentResponse = true;
+								tsigMac = newTsigMac;
+							}
+						}
+						else if (connection.Transport.AllowTruncatedResponses)
+						{
+							#region Truncating
+							if (response is DnsMessage message)
+							{
+								int maxLength = connection.Transport.DefaultAllowedResponseSize;
+								if (query.IsEDnsEnabled && message.IsEDnsEnabled)
+								{
+									maxLength = Math.Max(connection.Transport.DefaultAllowedResponseSize, (int) message.EDnsOptions!.UdpPayloadSize);
+								}
+
+								while (responsePackage.Length > maxLength)
+								{
+									// First step: remove data from additional records except the opt record
+									if ((message.IsEDnsEnabled && (message.AdditionalRecords.Count > 1)) || (!message.IsEDnsEnabled && (message.AdditionalRecords.Count > 0)))
+									{
+										for (var i = message.AdditionalRecords.Count - 1; i >= 0; i--)
+										{
+											if (message.AdditionalRecords[i].RecordType != RecordType.Opt)
+											{
+												message.AdditionalRecords.RemoveAt(i);
+											}
+										}
+
+										responsePackage = message.Encode(tsigMac);
+										continue;
+									}
+
+									var savedLength = 0;
+									if (message.AuthorityRecords.Count > 0)
+									{
+										for (var i = message.AuthorityRecords.Count - 1; i >= 0; i--)
+										{
+											savedLength += message.AuthorityRecords[i].MaximumLength;
+											message.AuthorityRecords.RemoveAt(i);
+
+											if ((responsePackage.Length - savedLength) < maxLength)
+											{
+												break;
+											}
+										}
+
+										message.IsTruncated = true;
+
+										responsePackage = message.Encode(tsigMac);
+										continue;
+									}
+
+									if (message.AnswerRecords.Count > 0)
+									{
+										for (var i = message.AnswerRecords.Count - 1; i >= 0; i--)
+										{
+											savedLength += message.AnswerRecords[i].MaximumLength;
+											message.AnswerRecords.RemoveAt(i);
+
+											if ((responsePackage.Length - savedLength) < maxLength)
+											{
+												break;
+											}
+										}
+
+										message.IsTruncated = true;
+
+										responsePackage = message.Encode(tsigMac);
+										continue;
+									}
+
+									if (message.Questions.Count > 0)
+									{
+										for (var i = message.Questions.Count - 1; i >= 0; i--)
+										{
+											savedLength += message.Questions[i].MaximumLength;
+											message.Questions.RemoveAt(i);
+
+											if ((responsePackage.Length - savedLength) < maxLength)
+											{
+												break;
+											}
+										}
+
+										message.IsTruncated = true;
+
+										responsePackage = message.Encode(tsigMac);
+									}
+								}
+							}
+							#endregion
+
+							await connection.SendAsync(responsePackage, token);
+						}
+						else
+						{
+							OnExceptionThrownAsync(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
+
+							response = query.CreateFailureResponse();
+
+							responsePackage = response.Encode(tsigMac, false, out newTsigMac);
+							await connection.SendAsync(responsePackage, token);
+						}
+					}
+
+					// Since support for multiple tsig signed messages is not finished, just close connection after response to first signed query
+					if (newTsigMac != null)
+						break;
+				}
+			}
+			catch (Exception ex)
+			{
+				OnExceptionThrownAsync(ex);
+			}
+			finally
+			{
+				try
+				{
+					// ReSharper disable once ConstantConditionalAccessQualifier
+					connection?.Dispose();
+				}
+				catch
+				{
+					// ignored
+				}
 			}
 		}
 
@@ -201,367 +362,6 @@ namespace ARSoft.Tools.Net.Dns
 			QueryReceivedEventArgs eventArgs = new QueryReceivedEventArgs(query, protocolType, remoteEndpoint);
 			await QueryReceived.RaiseAsync(this, eventArgs);
 			return eventArgs.Response ?? query.CreateFailureResponse();
-		}
-
-		private void StartUdpListenerTask()
-		{
-			lock (_listenerLock)
-			{
-				if ((_udpListener!.Client == null) || !_udpListener!.Client.IsBound) // server is stopped
-					return;
-
-				if ((_availableUdpListener > 0) && !_hasActiveUdpListener)
-				{
-					_availableUdpListener--;
-					_hasActiveUdpListener = true;
-					HandleUdpListenerAsync();
-				}
-			}
-		}
-
-		private async void HandleUdpListenerAsync()
-		{
-			try
-			{
-				UdpReceiveResult receiveResult;
-				try
-				{
-					receiveResult = await _udpListener!.ReceiveAsync();
-				}
-				catch (ObjectDisposedException)
-				{
-					return;
-				}
-				finally
-				{
-					lock (_listenerLock)
-					{
-						_hasActiveUdpListener = false;
-					}
-				}
-
-				ClientConnectedEventArgs clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Udp, receiveResult.RemoteEndPoint);
-				await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
-
-				if (clientConnectedEventArgs.RefuseConnect)
-					return;
-
-				StartUdpListenerTask();
-
-				byte[] buffer = receiveResult.Buffer;
-
-				DnsMessageBase query;
-				byte[]? originalMac;
-				try
-				{
-					query = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
-					originalMac = query.TSigOptions?.Mac;
-				}
-				catch (Exception e)
-				{
-					throw new Exception("Error parsing dns query", e);
-				}
-
-				DnsMessageBase? response;
-				try
-				{
-					response = await ProcessMessageAsync(query, ProtocolType.Udp, receiveResult.RemoteEndPoint);
-				}
-				catch (Exception ex)
-				{
-					OnExceptionThrownAsync(ex);
-					response = null;
-				}
-
-				if (response == null)
-				{
-					response = query;
-					query.IsQuery = false;
-					query.ReturnCode = ReturnCode.ServerFailure;
-				}
-
-				int length = response.Encode(false, originalMac, out buffer);
-
-				#region Truncating
-				DnsMessage? message = response as DnsMessage;
-
-				if (message != null)
-				{
-					int maxLength = 512;
-					if (query.IsEDnsEnabled && message.IsEDnsEnabled)
-					{
-						maxLength = Math.Max(512, (int) message.EDnsOptions!.UdpPayloadSize);
-					}
-
-					while (length > maxLength)
-					{
-						// First step: remove data from additional records except the opt record
-						if ((message.IsEDnsEnabled && (message.AdditionalRecords.Count > 1)) || (!message.IsEDnsEnabled && (message.AdditionalRecords.Count > 0)))
-						{
-							for (int i = message.AdditionalRecords.Count - 1; i >= 0; i--)
-							{
-								if (message.AdditionalRecords[i].RecordType != RecordType.Opt)
-								{
-									message.AdditionalRecords.RemoveAt(i);
-								}
-							}
-
-							length = message.Encode(false, originalMac, out buffer);
-							continue;
-						}
-
-						int savedLength = 0;
-						if (message.AuthorityRecords.Count > 0)
-						{
-							for (int i = message.AuthorityRecords.Count - 1; i >= 0; i--)
-							{
-								savedLength += message.AuthorityRecords[i].MaximumLength;
-								message.AuthorityRecords.RemoveAt(i);
-
-								if ((length - savedLength) < maxLength)
-								{
-									break;
-								}
-							}
-
-							message.IsTruncated = true;
-
-							length = message.Encode(false, originalMac, out buffer);
-							continue;
-						}
-
-						if (message.AnswerRecords.Count > 0)
-						{
-							for (int i = message.AnswerRecords.Count - 1; i >= 0; i--)
-							{
-								savedLength += message.AnswerRecords[i].MaximumLength;
-								message.AnswerRecords.RemoveAt(i);
-
-								if ((length - savedLength) < maxLength)
-								{
-									break;
-								}
-							}
-
-							message.IsTruncated = true;
-
-							length = message.Encode(false, originalMac, out buffer);
-							continue;
-						}
-
-						if (message.Questions.Count > 0)
-						{
-							for (int i = message.Questions.Count - 1; i >= 0; i--)
-							{
-								savedLength += message.Questions[i].MaximumLength;
-								message.Questions.RemoveAt(i);
-
-								if ((length - savedLength) < maxLength)
-								{
-									break;
-								}
-							}
-
-							message.IsTruncated = true;
-
-							length = message.Encode(false, originalMac, out buffer);
-						}
-					}
-				}
-				#endregion
-
-				await _udpListener.SendAsync(buffer, length, receiveResult.RemoteEndPoint);
-			}
-			catch (Exception ex)
-			{
-				OnExceptionThrownAsync(ex);
-			}
-			finally
-			{
-				lock (_listenerLock)
-				{
-					_availableUdpListener++;
-				}
-
-				StartUdpListenerTask();
-			}
-		}
-
-		private void StartTcpListenerTask()
-		{
-			lock (_listenerLock)
-			{
-				if ((_tcpListener!.Server == null) || !_tcpListener!.Server.IsBound) // server is stopped
-					return;
-
-				if ((_availableTcpListener > 0) && !_hasActiveTcpListener)
-				{
-					_availableTcpListener--;
-					_hasActiveTcpListener = true;
-					HandleTcpListenerAsync();
-				}
-			}
-		}
-
-		private async void HandleTcpListenerAsync()
-		{
-			TcpClient? client = null;
-
-			try
-			{
-				try
-				{
-					client = await _tcpListener!.AcceptTcpClientAsync();
-
-					if (client == null)
-						return;
-
-					ClientConnectedEventArgs clientConnectedEventArgs = new ClientConnectedEventArgs(ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint!);
-					await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
-
-					if (clientConnectedEventArgs.RefuseConnect)
-						return;
-				}
-				finally
-				{
-					lock (_listenerLock)
-					{
-						_hasActiveTcpListener = false;
-					}
-				}
-
-				StartTcpListenerTask();
-
-				using (NetworkStream stream = client.GetStream())
-				{
-					while (true)
-					{
-						byte[]? buffer = await ReadIntoBufferAsync(client, stream, 2);
-						if (buffer == null) // client disconneted while reading or timeout
-							break;
-
-						int offset = 0;
-						int length = DnsMessageBase.ParseUShort(buffer, ref offset);
-
-						buffer = await ReadIntoBufferAsync(client, stream, length);
-						if (buffer == null) // client disconneted while reading or timeout
-						{
-							throw new Exception("Client disconnted or timed out while sending data");
-						}
-
-						DnsMessageBase query;
-						byte[]? tsigMac;
-						try
-						{
-							query = DnsMessageBase.CreateByFlag(buffer, TsigKeySelector, null);
-							tsigMac = query.TSigOptions?.Mac;
-						}
-						catch (Exception e)
-						{
-							throw new Exception("Error parsing dns query", e);
-						}
-
-						DnsMessageBase response;
-						try
-						{
-							response = await ProcessMessageAsync(query, ProtocolType.Tcp, (IPEndPoint) client.Client.RemoteEndPoint!);
-						}
-						catch (Exception ex)
-						{
-							OnExceptionThrownAsync(ex);
-
-							response = query.CreateFailureResponse();
-						}
-
-						byte[]? newTsigMac;
-
-						length = response.Encode(true, tsigMac, false, out buffer, out newTsigMac);
-
-						if (length <= 65535)
-						{
-							await stream.WriteAsync(buffer, 0, length);
-						}
-						else
-						{
-							if (response.AllowMultipleResponses)
-							{
-								bool isSubSequentResponse = false;
-
-								foreach (DnsMessageBase partialResponse in response.SplitResponse())
-								{
-									length = response.Encode(true, tsigMac, isSubSequentResponse, out buffer, out newTsigMac);
-									await stream.WriteAsync(buffer, 0, length);
-									isSubSequentResponse = true;
-									tsigMac = newTsigMac;
-								}
-							}
-							else
-							{
-								OnExceptionThrownAsync(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
-
-								response = query.CreateFailureResponse();
-
-								length = response.Encode(true, tsigMac, false, out buffer, out newTsigMac);
-								await stream.WriteAsync(buffer, 0, length);
-							}
-						}
-
-						// Since support for multiple tsig signed messages is not finished, just close connection after response to first signed query
-						if (newTsigMac != null)
-							break;
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				OnExceptionThrownAsync(ex);
-			}
-			finally
-			{
-				try
-				{
-					// ReSharper disable once ConstantConditionalAccessQualifier
-					client?.Close();
-				}
-				catch
-				{
-					// ignored
-				}
-
-				lock (_listenerLock)
-				{
-					_availableTcpListener++;
-				}
-
-				StartTcpListenerTask();
-			}
-		}
-
-		private async Task<byte[]?> ReadIntoBufferAsync(TcpClient client, NetworkStream stream, int count)
-		{
-			CancellationToken token = new CancellationTokenSource(Timeout).Token;
-
-			byte[] buffer = new byte[count];
-
-			if (await TryReadAsync(client, stream, buffer, count, token))
-				return buffer;
-
-			return null;
-		}
-
-		private async Task<bool> TryReadAsync(TcpClient client, NetworkStream stream, byte[] buffer, int length, CancellationToken token)
-		{
-			int readBytes = 0;
-
-			while (readBytes < length)
-			{
-				if (token.IsCancellationRequested || !client.IsConnected())
-					return false;
-
-				readBytes += await stream.ReadAsync(buffer, readBytes, length - readBytes, token);
-			}
-
-			return true;
 		}
 
 		private void OnExceptionThrownAsync(Exception e)

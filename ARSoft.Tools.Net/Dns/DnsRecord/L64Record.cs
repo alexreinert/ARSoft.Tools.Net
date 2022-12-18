@@ -42,7 +42,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public ulong Locator64 { get; private set; }
 
-		internal L64Record(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal L64Record(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			Preference = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
@@ -81,7 +81,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 10;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
 			DnsMessageBase.EncodeULong(messageData, ref currentPosition, Locator64);

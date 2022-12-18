@@ -250,28 +250,28 @@ namespace ARSoft.Tools.Net.Dns
 					return new DnsSecResult<T>(cNameResult.Records, cachedCNames!.ValidationResult == cNameResult.ValidationResult ? cachedCNames.ValidationResult : DnsSecValidationResult.Unsigned);
 				}
 
-				DnsMessage? msg = await ResolveMessageAsync(name, recordType, recordClass, resolveContext, token);
+				var msg = await ResolveMessageAsync(name, recordType, recordClass, resolveContext, token);
 
 				// check for cname
-				List<DnsRecordBase>? cNameRecords = msg?.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
+				var cNameRecords = msg?.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
 				if (cNameRecords?.Count > 0)
 				{
-					DnsSecValidationResult cNameValidationResult = await _validator.ValidateAsync(name, RecordType.CName, recordClass, msg!, cNameRecords, resolveContext, token);
+					var cNameValidationResult = await _validator.ValidateAsync(name, RecordType.CName, recordClass, msg!, cNameRecords, resolveContext, token);
 					if ((cNameValidationResult == DnsSecValidationResult.Bogus) || (cNameValidationResult == DnsSecValidationResult.Indeterminate))
 						throw new DnsSecValidationException("CNAME record could not be validated");
 
 					_cache.Add(name, RecordType.CName, recordClass, cNameRecords, cNameValidationResult, cNameRecords.Min(x => x.TimeToLive));
 
-					DomainName canonicalName = ((CNameRecord) cNameRecords.First()).CanonicalName;
+					var canonicalName = ((CNameRecord) cNameRecords.First()).CanonicalName;
 
-					List<DnsRecordBase>? matchingAdditionalRecords = msg?.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(canonicalName)).ToList();
+					var matchingAdditionalRecords = msg?.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(canonicalName)).ToList();
 					if (matchingAdditionalRecords?.Count > 0)
 					{
-						DnsSecValidationResult matchingValidationResult = await _validator.ValidateAsync(canonicalName, recordType, recordClass, msg!, matchingAdditionalRecords, resolveContext, token);
+						var matchingValidationResult = await _validator.ValidateAsync(canonicalName, recordType, recordClass, msg!, matchingAdditionalRecords, resolveContext, token);
 						if ((matchingValidationResult == DnsSecValidationResult.Bogus) || (matchingValidationResult == DnsSecValidationResult.Indeterminate))
 							throw new DnsSecValidationException("CNAME matching records could not be validated");
 
-						DnsSecValidationResult validationResult = cNameValidationResult == matchingValidationResult ? cNameValidationResult : DnsSecValidationResult.Unsigned;
+						var validationResult = cNameValidationResult == matchingValidationResult ? cNameValidationResult : DnsSecValidationResult.Unsigned;
 						_cache.Add(canonicalName, recordType, recordClass, matchingAdditionalRecords, validationResult, matchingAdditionalRecords.Min(x => x.TimeToLive));
 
 						return new DnsSecResult<T>(matchingAdditionalRecords.OfType<T>().ToList(), validationResult);
@@ -282,10 +282,10 @@ namespace ARSoft.Tools.Net.Dns
 				}
 
 				// check for "normal" answer
-				List<DnsRecordBase>? answerRecords = msg?.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
+				var answerRecords = msg?.AnswerRecords.Where(x => (x.RecordType == recordType) && (x.RecordClass == recordClass) && x.Name.Equals(name)).ToList();
 				if (answerRecords?.Count > 0)
 				{
-					DnsSecValidationResult validationResult = await _validator.ValidateAsync(name, recordType, recordClass, msg!, answerRecords, resolveContext, token);
+					var validationResult = await _validator.ValidateAsync(name, recordType, recordClass, msg!, answerRecords, resolveContext, token);
 					if ((validationResult == DnsSecValidationResult.Bogus) || (validationResult == DnsSecValidationResult.Indeterminate))
 						throw new DnsSecValidationException("Response records could not be validated");
 
@@ -294,7 +294,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 
 				// check for negative answer
-				SoaRecord? soaRecord = msg?.AuthorityRecords
+				var soaRecord = msg?.AuthorityRecords
 					.Where(x =>
 						(x.RecordType == RecordType.Soa)
 						&& (name.Equals(x.Name) || name.IsSubDomainOf(x.Name)))
@@ -303,7 +303,7 @@ namespace ARSoft.Tools.Net.Dns
 
 				if (soaRecord != null)
 				{
-					DnsSecValidationResult validationResult = await _validator.ValidateAsync(name, recordType, recordClass, msg!, answerRecords ?? new List<DnsRecordBase>(), resolveContext, token);
+					var validationResult = await _validator.ValidateAsync(name, recordType, recordClass, msg!, answerRecords ?? new List<DnsRecordBase>(), resolveContext, token);
 					if ((validationResult == DnsSecValidationResult.Bogus) || (validationResult == DnsSecValidationResult.Indeterminate))
 						throw new DnsSecValidationException("Negative answer could not be validated");
 
@@ -319,7 +319,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private async Task<List<Tuple<IPAddress, int>>> ResolveHostWithTtlAsync(DomainName name, ResolveContext resolveContext, CancellationToken token)
 		{
-			List<Tuple<IPAddress, int>> result = new List<Tuple<IPAddress, int>>();
+			var result = new List<Tuple<IPAddress, int>>();
 
 			var aaaaRecords = await ResolveAsyncInternal<AaaaRecord>(name, RecordType.Aaaa, RecordClass.INet, resolveContext, token);
 			result.AddRange(aaaaRecords.Records.Select(x => new Tuple<IPAddress, int>(x.Address, x.TimeToLive)));
@@ -332,12 +332,11 @@ namespace ARSoft.Tools.Net.Dns
 
 		private IEnumerable<IPAddress> GetBestNameservers(DomainName name)
 		{
-			Random rnd = new Random();
+			var rnd = new Random();
 
 			while (name.LabelCount > 0)
 			{
-				List<IPAddress>? cachedAddresses;
-				if (_nameserverCache.TryGetAddresses(name, out cachedAddresses))
+				if (_nameserverCache.TryGetAddresses(name, out var cachedAddresses))
 				{
 					return cachedAddresses!.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ThenBy(x => rnd.Next());
 				}

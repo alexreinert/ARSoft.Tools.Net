@@ -39,7 +39,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] ServerCookie { get; private set; }
 
-		internal CookieOption(byte[] resultData, int startPosition, int length)
+		internal CookieOption(IList<byte> resultData, int startPosition, int length)
 			: base(EDnsOptionType.Cookie)
 		{
 			ClientCookie = DnsMessageBase.ParseByteData(resultData, ref startPosition, 8);
@@ -63,7 +63,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override ushort DataLength => (ushort) (8 + ServerCookie.Length);
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
+		internal override void EncodeData(IList<byte> messageData, ref int currentPosition)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, ClientCookie);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, ServerCookie);

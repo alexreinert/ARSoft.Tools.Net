@@ -71,7 +71,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<RecordType> Types { get; private set; }
 
-		internal CSyncRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal CSyncRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			int endPosition = currentPosition + length;
@@ -117,7 +117,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		internal static List<RecordType> ParseTypeBitMap(byte[] resultData, ref int currentPosition, int endPosition)
+		internal static List<RecordType> ParseTypeBitMap(IList<byte> resultData, ref int currentPosition, int endPosition)
 		{
 			List<RecordType> types = new List<RecordType>();
 			while (currentPosition < endPosition)
@@ -171,14 +171,14 @@ namespace ARSoft.Tools.Net.Dns
 			return res + 3 + lastType % 256 / 8;
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUInt(messageData, ref currentPosition, SerialNumber);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Flags);
 			EncodeTypeBitmap(messageData, ref currentPosition, Types);
 		}
 
-		internal static void EncodeTypeBitmap(byte[] messageData, ref int currentPosition, List<RecordType> types)
+		internal static void EncodeTypeBitmap(IList<byte> messageData, ref int currentPosition, List<RecordType> types)
 		{
 			int windowEnd = 255;
 			byte[] windowData = new byte[32];

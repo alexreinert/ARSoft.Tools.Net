@@ -126,7 +126,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] PublicKey { get; private set; }
 
-		internal IpSecKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal IpSecKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			int startPosition = currentPosition;
@@ -252,7 +252,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = Precedence;
 			messageData[currentPosition++] = (byte) GatewayType;
@@ -265,7 +265,7 @@ namespace ARSoft.Tools.Net.Dns
 					DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, addressBuffer);
 					break;
 				case IpSecGatewayType.Domain:
-					DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, ParseDomainName(DomainName.Root, Gateway), null, false);
+					DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, ParseDomainName(DomainName.Root, Gateway), null, false);
 					break;
 			}
 

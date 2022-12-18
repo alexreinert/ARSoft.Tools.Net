@@ -37,7 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public DomainName PointerDomainName { get; private set; }
 
-		internal PtrRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal PtrRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			PointerDomainName = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
@@ -71,9 +71,9 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => PointerDomainName.MaximumRecordDataLength + 2;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, PointerDomainName, domainNames, useCanonical);
+			DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, PointerDomainName, domainNames, useCanonical);
 		}
 	}
 }

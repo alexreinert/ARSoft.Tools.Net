@@ -181,7 +181,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] CertificateAssociationData { get; private set; }
 
-		internal TlsaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal TlsaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			CertificateUsage = (TlsaCertificateUsage) resultData[currentPosition++];
@@ -293,7 +293,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 3 + CertificateAssociationData.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) CertificateUsage;
 			messageData[currentPosition++] = (byte) Selector;

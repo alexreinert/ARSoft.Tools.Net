@@ -109,19 +109,5 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			return GetHashAlgorithm(algorithm)?.GetMacSize() ?? 0;
 		}
-
-		internal static bool IsTruncationAllowed(TSigAlgorithm algorithm)
-		{
-			switch (algorithm)
-			{
-				case TSigAlgorithm.Sha256_128:
-				case TSigAlgorithm.Sha384_192:
-				case TSigAlgorithm.Sha512_256:
-					return true;
-
-				default:
-					return false;
-			}
-		}
 	}
 }

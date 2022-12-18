@@ -42,7 +42,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public string SubAddress { get; private set; }
 
-		internal IsdnRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal IsdnRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			int endPosition = currentPosition + length;
@@ -92,7 +92,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 2 + IsdnAddress.Length + SubAddress.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, IsdnAddress);
 			DnsMessageBase.EncodeTextBlock(messageData, ref currentPosition, SubAddress);

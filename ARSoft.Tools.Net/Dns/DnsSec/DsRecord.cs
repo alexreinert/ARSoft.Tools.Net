@@ -57,7 +57,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] Digest { get; private set; }
 
-		internal DsRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal DsRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			KeyTag = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
@@ -122,7 +122,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 4 + Digest.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, KeyTag);
 			messageData[currentPosition++] = (byte) Algorithm;
@@ -156,8 +156,8 @@ namespace ARSoft.Tools.Net.Dns
 
 			int currentPosition = 0;
 
-			DnsMessageBase.EncodeDomainName(buffer, 0, ref currentPosition, dnsKeyRecord.Name, null, true);
-			dnsKeyRecord.EncodeRecordData(buffer, 0, ref currentPosition, null, true);
+			DnsMessageBase.EncodeDomainName(buffer, ref currentPosition, dnsKeyRecord.Name, null, true);
+			dnsKeyRecord.EncodeRecordData(buffer, ref currentPosition, null, true);
 
 			var hashAlgorithm = GetHashAlgorithm();
 

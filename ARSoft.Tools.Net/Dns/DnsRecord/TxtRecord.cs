@@ -32,8 +32,8 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public class TxtRecord : TextRecordBase
 	{
-		internal TxtRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int startPosition, int length)
-			: base(name, recordType, recordClass, timeToLive, resultData, startPosition, length) { }
+		internal TxtRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive, resultData, currentPosition, length) { }
 
 		internal TxtRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
 			: base(name, recordType, recordClass, timeToLive, origin, stringRepresentation) { }

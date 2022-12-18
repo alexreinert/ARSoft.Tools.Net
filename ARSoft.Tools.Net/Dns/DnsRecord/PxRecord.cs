@@ -47,7 +47,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public DomainName MapX400 { get; private set; }
 
-		internal PxRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal PxRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			Preference = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
@@ -91,11 +91,11 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 6 + Map822.MaximumRecordDataLength + MapX400.MaximumRecordDataLength;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, Preference);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Map822, null, useCanonical);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MapX400, null, useCanonical);
+			DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, Map822, null, useCanonical);
+			DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, MapX400, null, useCanonical);
 		}
 	}
 }

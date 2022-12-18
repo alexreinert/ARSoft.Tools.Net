@@ -28,7 +28,6 @@ namespace ARSoft.Tools.Net.Dns
 	{
 		private List<DnsQuestion> _questions = new List<DnsQuestion>();
 		private List<DnsRecordBase> _answerRecords = new List<DnsRecordBase>();
-		private List<DnsRecordBase> _authorityRecords = new List<DnsRecordBase>();
 
 		/// <summary>
 		///   Gets or sets the entries in the question section
@@ -51,13 +50,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Gets or sets the entries in the authority records section
 		/// </summary>
-		public List<DnsRecordBase> AuthorityRecords
-		{
-			get { return _authorityRecords; }
-			set { _authorityRecords = (value ?? new List<DnsRecordBase>()); }
-		}
+		public List<DnsRecordBase> AuthorityRecords { get; set; } = new();
 
-		protected override void ParseSections(byte[] data, ref int currentPosition)
+		protected override void ParseSections(IList<byte> data, ref int currentPosition)
 		{
 			int questionCount = ParseUShort(data, ref currentPosition);
 			int answerRecordCount = ParseUShort(data, ref currentPosition);
@@ -79,7 +74,7 @@ namespace ARSoft.Tools.Net.Dns
 			       + AdditionalRecords.Sum(record => record.MaximumLength);
 		}
 
-		protected override void EncodeSections(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
+		protected override void EncodeSections(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
 		{
 			EncodeUShort(messageData, ref currentPosition, (ushort) Questions.Count);
 			EncodeUShort(messageData, ref currentPosition, (ushort) AnswerRecords.Count);
@@ -88,47 +83,42 @@ namespace ARSoft.Tools.Net.Dns
 
 			foreach (DnsQuestion question in Questions)
 			{
-				question.Encode(messageData, offset, ref currentPosition, domainNames);
+				question.Encode(messageData, ref currentPosition, domainNames);
 			}
 
 			foreach (DnsRecordBase record in AnswerRecords)
 			{
-				record.Encode(messageData, offset, ref currentPosition, domainNames);
+				record.Encode(messageData, ref currentPosition, domainNames);
 			}
 
 			foreach (DnsRecordBase record in AuthorityRecords)
 			{
-				record.Encode(messageData, offset, ref currentPosition, domainNames);
+				record.Encode(messageData, ref currentPosition, domainNames);
 			}
 
 			foreach (DnsRecordBase record in AdditionalRecords)
 			{
-				record.Encode(messageData, offset, ref currentPosition, domainNames);
+				record.Encode(messageData, ref currentPosition, domainNames);
 			}
 		}
 
 		internal override bool ValidateResponse(DnsMessageBase responseBase)
 		{
-			DnsRecordMessageBase? response = responseBase as DnsRecordMessageBase;
-
-			if (response == null)
+			if (responseBase is not DnsRecordMessageBase response)
 				return false;
 
 			if (TransactionID != response.TransactionID)
 				return false;
 
-			if ((response.ReturnCode == ReturnCode.NoError) || (response.ReturnCode == ReturnCode.NxDomain))
+			if (response.ReturnCode is ReturnCode.NoError or ReturnCode.NxDomain)
 			{
-				if ((Questions == null) || (response.Questions == null))
-					return false;
-
 				if ((Questions.Count != response.Questions.Count))
 					return false;
 
-				for (int j = 0; j < Questions.Count; j++)
+				for (var j = 0; j < Questions.Count; j++)
 				{
-					DnsQuestion queryQuestion = Questions[j];
-					DnsQuestion responseQuestion = response.Questions[j];
+					var queryQuestion = Questions[j];
+					var responseQuestion = response.Questions[j];
 
 					if ((queryQuestion.RecordClass != responseQuestion.RecordClass)
 					    || (queryQuestion.RecordType != responseQuestion.RecordType)
@@ -152,10 +142,7 @@ namespace ARSoft.Tools.Net.Dns
 			AnswerRecords.AddRange(((DnsRecordMessageBase) response).AnswerRecords);
 		}
 
-		protected internal override bool AllowMultipleResponses
-		{
-			get { return IsQuery == false && (Questions.Count == 0 || Questions[0].RecordType == RecordType.Axfr || Questions[0].RecordType == RecordType.Ixfr); }
-		}
+		protected internal override bool AllowMultipleResponses => IsQuery == false && (Questions.Count == 0 || Questions[0].RecordType is RecordType.Axfr or RecordType.Ixfr);
 
 		protected internal override IEnumerable<DnsMessageBase> SplitResponse() => new SplitResponseEnumerable(this);
 
@@ -163,9 +150,9 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			private class SplitResponseEnumerator : IEnumerator<DnsMessageBase>
 			{
-				private List<DnsRecordBase> _answerRecords;
-				int _recordOffset = 0;
-				private DnsRecordMessageBase _current;
+				private readonly List<DnsRecordBase> _answerRecords;
+				private int _recordOffset;
+				private readonly DnsRecordMessageBase _current;
 
 				public SplitResponseEnumerator(DnsRecordMessageBase response)
 				{
@@ -187,12 +174,12 @@ namespace ARSoft.Tools.Net.Dns
 					if (_recordOffset >= _answerRecords.Count)
 						return false;
 
-					List<DnsRecordBase> batch = new List<DnsRecordBase>();
-					int maxBatchOffset = Math.Min(_recordOffset + 100, _answerRecords.Count);
-					int batchRecordMaxLength = 0;
+					var batch = new List<DnsRecordBase>();
+					var maxBatchOffset = Math.Min(_recordOffset + 100, _answerRecords.Count);
+					var batchRecordMaxLength = 0;
 					for (; _recordOffset < maxBatchOffset && batchRecordMaxLength < 32000; _recordOffset++)
 					{
-						DnsRecordBase record = _answerRecords[_recordOffset];
+						var record = _answerRecords[_recordOffset];
 						batchRecordMaxLength += record.MaximumLength;
 						batch.Add(record);
 					}
@@ -204,7 +191,7 @@ namespace ARSoft.Tools.Net.Dns
 				public void Reset() { }
 			}
 
-			private DnsRecordMessageBase _response;
+			private readonly DnsRecordMessageBase _response;
 
 			public SplitResponseEnumerable(DnsRecordMessageBase response)
 			{

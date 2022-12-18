@@ -39,9 +39,9 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override int MaximumLength => Name.MaximumRecordDataLength + 6;
 
-		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
+		internal void Encode(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, domainNames, false);
+			DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, Name, domainNames, false);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordClass);
 		}

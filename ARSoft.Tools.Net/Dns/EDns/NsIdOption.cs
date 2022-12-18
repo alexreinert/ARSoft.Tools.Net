@@ -37,7 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] Payload { get; private set; }
 
-		internal NsIdOption(byte[] resultData, int startPosition, int length)
+		internal NsIdOption(IList<byte> resultData, int startPosition, int length)
 			: base(EDnsOptionType.NsId)
 		{
 			Payload = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
@@ -55,7 +55,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override ushort DataLength => (ushort) (Payload?.Length ?? 0);
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
+		internal override void EncodeData(IList<byte> messageData, ref int currentPosition)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Payload);
 		}

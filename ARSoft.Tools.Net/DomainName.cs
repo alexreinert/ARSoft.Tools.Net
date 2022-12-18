@@ -39,9 +39,9 @@ namespace ARSoft.Tools.Net
 		/// <summary>
 		///   The DNS root name (.)
 		/// </summary>
-		public static DomainName Root { get; } = new DomainName(new string[] { });
+		public static DomainName Root { get; } = new(Array.Empty<string>());
 
-		internal static DomainName Asterisk { get; } = new DomainName(new[] { "*" });
+		internal static DomainName Asterisk { get; } = new(new[] { "*" });
 
 		/// <summary>
 		///   Creates a new instance of the DomainName class
@@ -153,13 +153,13 @@ namespace ARSoft.Tools.Net
 					throw new NotSupportedException();
 			}
 
-			byte[] buffer = new byte[Math.Max(MaximumRecordDataLength + 1, digest.GetDigestSize()) + salt.Length];
+			var buffer = new byte[Math.Max(MaximumRecordDataLength + 1, digest.GetDigestSize()) + salt.Length];
 
-			int length = 0;
+			var length = 0;
 
-			DnsMessageBase.EncodeDomainName(buffer, 0, ref length, this, null, true);
+			DnsMessageBase.EncodeDomainName(buffer, ref length, this, null, true);
 
-			for (int i = 0; i <= iterations; i++)
+			for (var i = 0; i <= iterations; i++)
 			{
 				DnsMessageBase.EncodeByteArray(buffer, ref length, salt);
 
@@ -169,13 +169,13 @@ namespace ARSoft.Tools.Net
 				length = digest.GetDigestSize();
 			}
 
-			byte[] res = new byte[length];
+			var res = new byte[length];
 			Buffer.BlockCopy(buffer, 0, res, 0, length);
 
 			return res;
 		}
 
-		internal DomainName GetNsec3HashName(NSec3HashAlgorithm algorithm, int iterations, byte[] salt, DomainName zoneApex)
+		internal DomainName GetNSec3HashName(NSec3HashAlgorithm algorithm, int iterations, byte[] salt, DomainName zoneApex)
 		{
 			return new DomainName(GetNSec3Hash(algorithm, iterations, salt).ToBase32HexString(), zoneApex);
 		}
@@ -185,11 +185,11 @@ namespace ARSoft.Tools.Net
 			if (s == ".")
 				return Root;
 
-			List<string> labels = new List<string>();
+			var labels = new List<string>();
 
-			int lastOffset = 0;
+			var lastOffset = 0;
 
-			for (int i = 0; i < s.Length; ++i)
+			for (var i = 0; i < s.Length; ++i)
 			{
 				if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
 				{
@@ -213,9 +213,7 @@ namespace ARSoft.Tools.Net
 		/// <returns>A new instance of the DomainName class</returns>
 		public static DomainName Parse(string s)
 		{
-			DomainName? res;
-
-			if (TryParse(s, out res))
+			if (TryParse(s, out var res))
 				return res!;
 
 			throw new ArgumentException("Domain name could not be parsed", nameof(s));
@@ -279,8 +277,8 @@ namespace ARSoft.Tools.Net
 			return true;
 		}
 
-		private static readonly IdnMapping _idnParser = new IdnMapping() { UseStd3AsciiRules = true };
-		private static readonly Regex _asciiNameRegex = new Regex("^[a-zA-Z0-9_-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+		private static readonly IdnMapping _idnParser = new() { UseStd3AsciiRules = true };
+		private static readonly Regex _asciiNameRegex = new("^[a-zA-Z0-9_-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
 		private static bool TryParseLabel(string s, out string? label)
 		{

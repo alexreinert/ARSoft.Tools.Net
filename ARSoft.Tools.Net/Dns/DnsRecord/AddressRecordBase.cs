@@ -34,7 +34,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public IPAddress Address { get; private set; }
 
-		protected AddressRecordBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		protected AddressRecordBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			Address = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref currentPosition, MaximumRecordDataLength));
@@ -60,7 +60,7 @@ namespace ARSoft.Tools.Net.Dns
 			return Address.ToString();
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Address.GetAddressBytes());
 		}

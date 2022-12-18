@@ -51,9 +51,9 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		protected override int TimeToLive => 0;
 
-		protected override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
-			Record.EncodeRecordData(messageData, offset, ref currentPosition, domainNames, useCanonical);
+			Record.EncodeRecordData(messageData, ref currentPosition, domainNames, useCanonical);
 		}
 	}
 }

@@ -34,7 +34,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="data">Buffer, that contains the message data</param>
 		/// <returns>A new instance of the DnsMessage class</returns>
-		public static DnsMessage Parse(byte[] data)
+		public static DnsMessage Parse(ArraySegment<byte> data)
 		{
 			return Parse<DnsMessage>(data);
 		}
@@ -246,11 +246,11 @@ namespace ARSoft.Tools.Net.Dns
 			return msg;
 		}
 
-		internal override bool IsTcpUsingRequested => (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr));
+		internal override bool IsReliableSendingRequested => (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr) || (Questions[0].RecordType == RecordType.Any));
 
-		internal override bool IsTcpResendingRequested => IsTruncated;
+		internal override bool IsReliableResendingRequested => IsTruncated;
 
-		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
+		internal override bool IsNextMessageWaiting(bool isSubsequentResponseMessage)
 		{
 			if (isSubsequentResponseMessage)
 			{

@@ -164,13 +164,13 @@ namespace ARSoft.Tools.Net.Dns
 #pragma warning restore 0612
 				return (ushort) (PublicKey[PublicKey.Length - 4] & PublicKey[PublicKey.Length - 3] << 8);
 
-			byte[] buffer = new byte[MaximumRecordDataLength];
-			int currentPosition = 0;
-			EncodeRecordData(buffer, 0, ref currentPosition, null, false);
+			var buffer = new byte[MaximumRecordDataLength];
+			var currentPosition = 0;
+			EncodeRecordData(buffer, ref currentPosition, null, false);
 
 			ulong ac = 0;
 
-			for (int i = 0; i < currentPosition; ++i)
+			for (var i = 0; i < currentPosition; ++i)
 			{
 				ac += ((i & 1) == 1) ? buffer[i] : (ulong) buffer[i] << 8;
 			}
@@ -182,7 +182,7 @@ namespace ARSoft.Tools.Net.Dns
 			return res;
 		}
 
-		internal DnsKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal DnsKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			Flags = (DnsKeyFlags) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
@@ -234,7 +234,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 4 + PublicKey.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Flags);
 			messageData[currentPosition++] = Protocol;

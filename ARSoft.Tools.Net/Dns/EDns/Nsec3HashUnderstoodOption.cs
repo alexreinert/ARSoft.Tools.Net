@@ -37,7 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<NSec3HashAlgorithm> Algorithms { get; private set; }
 
-		internal Nsec3HashUnderstoodOption(byte[] resultData, int startPosition, int length)
+		internal Nsec3HashUnderstoodOption(IList<byte> resultData, int startPosition, int length)
 			: base(EDnsOptionType.Nsec3HashUnderstood)
 		{
 			Algorithms = new List<NSec3HashAlgorithm>(length);
@@ -59,7 +59,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override ushort DataLength => (ushort) (Algorithms?.Count ?? 0);
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
+		internal override void EncodeData(IList<byte> messageData, ref int currentPosition)
 		{
 			foreach (var algorithm in Algorithms)
 			{

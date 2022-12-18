@@ -108,16 +108,16 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 			return msg;
 		}
 
-		internal override bool IsTcpUsingRequested => false;
+		internal override bool IsReliableSendingRequested => false;
 
-		internal override bool IsTcpResendingRequested => false;
+		internal override bool IsReliableResendingRequested => false;
 
-		internal override bool IsTcpNextMessageWaiting(bool isSubsequentResponseMessage)
+		internal override bool IsNextMessageWaiting(bool isSubsequentResponseMessage)
 		{
 			return false;
 		}
 
-		protected override void ParseSections(byte[] data, ref int currentPosition)
+		protected override void ParseSections(IList<byte> data, ref int currentPosition)
 		{
 			int questionCount = ParseUShort(data, ref currentPosition);
 			int prequisitesCount = ParseUShort(data, ref currentPosition);
@@ -150,58 +150,29 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 			       + AdditionalRecords.Sum(record => record.MaximumLength);
 		}
 
-		protected override void EncodeSections(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
+		protected override void EncodeSections(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
 		{
 			EncodeUShort(messageData, ref currentPosition, 1);
 			EncodeUShort(messageData, ref currentPosition, (ushort) Prequisites.Count);
 			EncodeUShort(messageData, ref currentPosition, (ushort) Updates.Count);
 			EncodeUShort(messageData, ref currentPosition, (ushort) AdditionalRecords.Count);
 
-			new DnsQuestion(ZoneName, RecordType.Soa, RecordClass.INet).Encode(messageData, offset, ref currentPosition, domainNames);
+			new DnsQuestion(ZoneName, RecordType.Soa, RecordClass.INet).Encode(messageData, ref currentPosition, domainNames);
 			foreach (PrequisiteBase prequisite in Prequisites)
 			{
-				prequisite.Encode(messageData, offset, ref currentPosition, domainNames);
+				prequisite.Encode(messageData, ref currentPosition, domainNames);
 			}
 
 			foreach (UpdateBase update in Updates)
 			{
-				update.Encode(messageData, offset, ref currentPosition, domainNames);
+				update.Encode(messageData, ref currentPosition, domainNames);
 			}
 
 			foreach (DnsRecordBase record in AdditionalRecords)
 			{
-				record.Encode(messageData, offset, ref currentPosition, domainNames);
+				record.Encode(messageData, ref currentPosition, domainNames);
 			}
 		}
-
-		//protected override void FinishParsing()
-		//{
-		//	Updates =
-		//		AuthorityRecords.ConvertAll<UpdateBase>(
-		//			record =>
-		//			{
-		//				if (record.TimeToLive != 0)
-		//				{
-		//					return new AddRecordUpdate(record);
-		//				}
-		//				else if ((record.RecordType == RecordType.Any) && (record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
-		//				{
-		//					return new DeleteAllRecordsUpdate(record.Name);
-		//				}
-		//				else if ((record.RecordClass == RecordClass.Any) && (record.RecordDataLength == 0))
-		//				{
-		//					return new DeleteRecordUpdate(record.Name, record.RecordType);
-		//				}
-		//				else if (record.RecordClass == RecordClass.None)
-		//				{
-		//					return new DeleteRecordUpdate(record);
-		//				}
-		//				else
-		//				{
-		//					return null;
-		//				}
-		//			}).Where(update => (update != null)).ToList();
-		//}
 
 		internal override bool ValidateResponse(DnsMessageBase responseBase)
 		{

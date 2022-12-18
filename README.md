@@ -9,7 +9,7 @@ In addition you can donate via [Ko-fi](https://ko-fi.com/alexreinert), [Paypal](
 The library is avaible on Nuget, too: [http://nuget.org/packages/ARSoft.Tools.Net](http://nuget.org/packages/ARSoft.Tools.Net)
 
 # API Documentation
-A API documentation can be found at [https://docs.ar-soft.de/arsoft.tools.net]
+A API documentation can be found at [https://docs.ar-soft.de/arsoft.tools.net](https://docs.ar-soft.de/arsoft.tools.net)
 
 # Features
 **Parsing and Validating of SPF/SenderID records:**

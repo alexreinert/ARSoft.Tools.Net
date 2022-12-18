@@ -52,7 +52,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<DomainName> RendezvousServers { get; private set; }
 
-		internal HipRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal HipRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			int endPosition = currentPosition + length;
@@ -119,7 +119,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) Hit.Length;
 			messageData[currentPosition++] = (byte) Algorithm;
@@ -128,7 +128,7 @@ namespace ARSoft.Tools.Net.Dns
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
 			foreach (DomainName server in RendezvousServers)
 			{
-				DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, server, null, false);
+				DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, server, null, false);
 			}
 		}
 	}

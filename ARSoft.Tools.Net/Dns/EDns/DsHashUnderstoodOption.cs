@@ -37,7 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<DnsSecDigestType> Digests { get; private set; }
 
-		internal DsHashUnderstoodOption(byte[] resultData, int startPosition, int length)
+		internal DsHashUnderstoodOption(IList<byte> resultData, int startPosition, int length)
 			: base(EDnsOptionType.DsHashUnderstood)
 		{
 			Digests = new List<DnsSecDigestType>(length);
@@ -59,7 +59,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override ushort DataLength => (ushort) (Digests?.Count ?? 0);
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
+		internal override void EncodeData(IList<byte> messageData, ref int currentPosition)
 		{
 			foreach (var algorithm in Digests)
 			{

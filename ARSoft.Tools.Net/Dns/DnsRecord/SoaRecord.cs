@@ -72,7 +72,7 @@ namespace ARSoft.Tools.Net.Dns
 		// ReSharper disable once InconsistentNaming
 		public int NegativeCachingTTL { get; private set; }
 
-		internal SoaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal SoaRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			MasterName = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
@@ -145,10 +145,10 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => MasterName.MaximumRecordDataLength + ResponsibleName.MaximumRecordDataLength + 24;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, MasterName, domainNames, useCanonical);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, ResponsibleName, domainNames, useCanonical);
+			DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, MasterName, domainNames, useCanonical);
+			DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, ResponsibleName, domainNames, useCanonical);
 			DnsMessageBase.EncodeUInt(messageData, ref currentPosition, SerialNumber);
 			DnsMessageBase.EncodeInt(messageData, ref currentPosition, RefreshInterval);
 			DnsMessageBase.EncodeInt(messageData, ref currentPosition, RetryInterval);

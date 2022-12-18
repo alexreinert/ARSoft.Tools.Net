@@ -58,7 +58,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[]? Password { get; private set; }
 
-		internal OwnerOption(byte[] resultData, int startPosition, int length)
+		internal OwnerOption(IList<byte> resultData, int startPosition, int length)
 			: base(EDnsOptionType.Owner)
 		{
 			Version = resultData[startPosition++];
@@ -100,7 +100,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override ushort DataLength => (ushort) (8 + (WakeupMacAddress != null || Password != null ? 6 : 0) + (Password?.Length ?? 0));
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
+		internal override void EncodeData(IList<byte> messageData, ref int currentPosition)
 		{
 			messageData[currentPosition++] = Version;
 			messageData[currentPosition++] = Sequence;

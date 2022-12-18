@@ -53,7 +53,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] PublicValue { get; private set; }
 
-		internal DiffieHellmanKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal DiffieHellmanKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive, resultData, currentPosition, length)
 		{
 			int primeLength = DnsMessageBase.ParseUShort(resultData, ref currentPosition);
@@ -90,14 +90,14 @@ namespace ARSoft.Tools.Net.Dns
 			byte[] publicKey = new byte[MaximumPublicKeyLength];
 			int currentPosition = 0;
 
-			EncodePublicKey(publicKey, 0, ref currentPosition, null);
+			EncodePublicKey(publicKey, ref currentPosition, null);
 
-			return publicKey.ToBase64String();
+			return publicKey.ToBase64String(0, currentPosition);
 		}
 
 		protected override int MaximumPublicKeyLength => 3 + Prime.Length + Generator.Length + PublicValue.Length;
 
-		protected override void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames)
+		protected override void EncodePublicKey(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) Prime.Length);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Prime);

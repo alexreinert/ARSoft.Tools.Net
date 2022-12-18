@@ -123,7 +123,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] FingerPrint { get; private set; }
 
-		internal SshFpRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal SshFpRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			Algorithm = (SshFpAlgorithm) resultData[currentPosition++];
@@ -167,7 +167,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 2 + FingerPrint.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			messageData[currentPosition++] = (byte) Algorithm;
 			messageData[currentPosition++] = (byte) FingerPrintType;

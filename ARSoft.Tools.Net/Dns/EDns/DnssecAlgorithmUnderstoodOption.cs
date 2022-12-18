@@ -37,7 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<DnsSecAlgorithm> Algorithms { get; private set; }
 
-		internal DnssecAlgorithmUnderstoodOption(byte[] resultData, int startPosition, int length)
+		internal DnssecAlgorithmUnderstoodOption(IList<byte> resultData, int startPosition, int length)
 			: base(EDnsOptionType.DnssecAlgorithmUnderstood)
 		{
 			Algorithms = new List<DnsSecAlgorithm>(length);
@@ -59,7 +59,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override ushort DataLength => (ushort) (Algorithms?.Count ?? 0);
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
+		internal override void EncodeData(IList<byte> messageData, ref int currentPosition)
 		{
 			foreach (var algorithm in Algorithms)
 			{

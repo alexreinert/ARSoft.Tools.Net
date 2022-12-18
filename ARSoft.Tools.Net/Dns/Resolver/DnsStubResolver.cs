@@ -48,18 +48,11 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		///   Provides a new instance using a list of custom DNS servers and a default query timeout of 10 seconds
-		/// </summary>
-		/// <param name="servers"> The list of servers to use </param>
-		public DnsStubResolver(IEnumerable<IPAddress> servers)
-			: this(new DnsClient(servers, 10000)) { }
-
-		/// <summary>
 		///   Provides a new instance using a list of custom DNS servers and a custom query timeout
 		/// </summary>
 		/// <param name="servers"> The list of servers to use </param>
 		/// <param name="queryTimeout"> The query timeout in milliseconds </param>
-		public DnsStubResolver(IEnumerable<IPAddress> servers, int queryTimeout)
+		public DnsStubResolver(IEnumerable<IPAddress> servers, int queryTimeout = 10000)
 			: this(new DnsClient(servers, queryTimeout)) { }
 
 		/// <summary>

@@ -32,6 +32,8 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public sealed class LlmnrClient : DnsClientBase
 	{
+		public const int DEFAULT_PORT = 5355;
+
 		private static readonly List<IPAddress> _addresses = new List<IPAddress> { IPAddress.Parse("FF02::1:3"), IPAddress.Parse("224.0.0.252") };
 
 		/// <summary>
@@ -45,29 +47,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="queryTimeout"> Query timeout in milliseconds </param>
 		public LlmnrClient(int queryTimeout)
-			: base(_addresses, queryTimeout, 5355)
-		{
-			int maximumMessageSize = 0;
-
-			try
-			{
-				maximumMessageSize = NetworkInterface.GetAllNetworkInterfaces()
-					.Where(n => n.SupportsMulticast && (n.NetworkInterfaceType != NetworkInterfaceType.Loopback) && (n.OperationalStatus == OperationalStatus.Up) && (n.Supports(NetworkInterfaceComponent.IPv4)))
-					.Select(n => n.GetIPProperties())
-					.Min(p => Math.Min(p.GetIPv4Properties().Mtu, p.GetIPv6Properties().Mtu));
-			}
-			catch
-			{
-				// ignored
-			}
-
-			MaximumQueryMessageSize = Math.Max(512, maximumMessageSize);
-
-			IsUdpEnabled = true;
-			IsTcpEnabled = false;
-		}
-
-		protected override int MaximumQueryMessageSize { get; }
+			: base(_addresses, queryTimeout, new IClientTransport[] { new MulticastClientTransport(DEFAULT_PORT), new TcpClientTransport(DEFAULT_PORT) }, true) { }
 
 		/// <summary>
 		///   Queries for specified records.

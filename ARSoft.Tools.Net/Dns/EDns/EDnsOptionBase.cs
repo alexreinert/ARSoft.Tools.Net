@@ -39,6 +39,6 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		internal abstract ushort DataLength { get; }
-		internal abstract void EncodeData(byte[] messageData, ref int currentPosition);
+		internal abstract void EncodeData(IList<byte> messageData, ref int currentPosition);
 	}
 }

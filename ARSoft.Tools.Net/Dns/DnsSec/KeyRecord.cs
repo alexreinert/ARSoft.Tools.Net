@@ -43,7 +43,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] PublicKey { get; private set; }
 
-		internal KeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal KeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive, resultData, currentPosition, length)
 		{
 			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 4);
@@ -78,7 +78,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected override int MaximumPublicKeyLength => PublicKey.Length;
 
-		protected override void EncodePublicKey(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames)
+		protected override void EncodePublicKey(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, PublicKey);
 		}

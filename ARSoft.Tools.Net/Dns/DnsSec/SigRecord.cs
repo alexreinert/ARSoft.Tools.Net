@@ -84,7 +84,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[] Signature { get; private set; }
 
-		internal SigRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal SigRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			int startPosition = currentPosition;
@@ -165,7 +165,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => 20 + SignersName.MaximumRecordDataLength + Signature.Length;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) TypeCovered);
 			messageData[currentPosition++] = (byte) Algorithm;
@@ -174,17 +174,17 @@ namespace ARSoft.Tools.Net.Dns
 			EncodeDateTime(messageData, ref currentPosition, SignatureExpiration);
 			EncodeDateTime(messageData, ref currentPosition, SignatureInception);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, KeyTag);
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, SignersName, null, useCanonical);
+			DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, SignersName, null, useCanonical);
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Signature);
 		}
 
-		internal static void EncodeDateTime(byte[] buffer, ref int currentPosition, DateTime value)
+		internal static void EncodeDateTime(IList<byte> buffer, ref int currentPosition, DateTime value)
 		{
 			int timeStamp = (int) (value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
 			DnsMessageBase.EncodeInt(buffer, ref currentPosition, timeStamp);
 		}
 
-		private static DateTime ParseDateTime(byte[] buffer, ref int currentPosition)
+		private static DateTime ParseDateTime(IList<byte> buffer, ref int currentPosition)
 		{
 			int timeStamp = DnsMessageBase.ParseInt(buffer, ref currentPosition);
 			return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timeStamp).ToLocalTime();

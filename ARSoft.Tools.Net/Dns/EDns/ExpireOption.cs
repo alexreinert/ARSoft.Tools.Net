@@ -37,7 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public int? SoaExpire { get; private set; }
 
-		internal ExpireOption(byte[] resultData, int startPosition, int length)
+		internal ExpireOption(IList<byte> resultData, int startPosition, int length)
 			: base(EDnsOptionType.Expire)
 		{
 			if (length == 4)
@@ -56,7 +56,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override ushort DataLength => (ushort) (SoaExpire.HasValue ? 4 : 0);
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
+		internal override void EncodeData(IList<byte> messageData, ref int currentPosition)
 		{
 			if (SoaExpire.HasValue)
 				DnsMessageBase.EncodeInt(messageData, ref currentPosition, SoaExpire.Value);

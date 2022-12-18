@@ -35,8 +35,8 @@ namespace ARSoft.Tools.Net.Dns
 	[Obsolete]
 	public class SpfRecord : TextRecordBase
 	{
-		internal SpfRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int startPosition, int length)
-			: base(name, recordType, recordClass, timeToLive, resultData, startPosition, length) { }
+		internal SpfRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
+			: base(name, recordType, recordClass, timeToLive, resultData, currentPosition, length) { }
 
 		internal SpfRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
 			: base(name, recordType, recordClass, timeToLive, origin, stringRepresentation) { }

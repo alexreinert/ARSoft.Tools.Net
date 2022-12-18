@@ -126,28 +126,27 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public List<AddressPrefix> Prefixes { get; private set; }
 
-		internal AplRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int currentPosition, int length)
+		internal AplRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
 		{
-			int endPosition = currentPosition + length;
+			var endPosition = currentPosition + length;
 
 			Prefixes = new List<AddressPrefix>();
 			while (currentPosition < endPosition)
 			{
-				Family family = (Family) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
-				byte prefix = resultData[currentPosition++];
+				var family = (Family) DnsMessageBase.ParseUShort(resultData, ref currentPosition);
+				var prefix = resultData[currentPosition++];
 
-				byte addressLength = resultData[currentPosition++];
-				bool isNegated = false;
+				var addressLength = resultData[currentPosition++];
+				var isNegated = false;
 				if (addressLength > 127)
 				{
 					isNegated = true;
 					addressLength -= 128;
 				}
 
-				byte[] addressData = new byte[(family == Family.IpV4) ? 4 : 16];
-				Buffer.BlockCopy(resultData, currentPosition, addressData, 0, addressLength);
-				currentPosition += addressLength;
+				var addressData = new byte[(family == Family.IpV4) ? 4 : 16];
+				DnsMessageBase.ParseByteData(resultData, ref currentPosition, addressLength).CopyTo(addressData, 0);
 
 				Prefixes.Add(new AddressPrefix(isNegated, new IPAddress(addressData), prefix));
 			}
@@ -181,7 +180,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal override int MaximumRecordDataLength => Prefixes.Count * 20;
 
-		protected internal override void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		protected internal override void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			foreach (AddressPrefix addressPrefix in Prefixes)
 			{

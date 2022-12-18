@@ -17,19 +17,41 @@
 #endregion
 
 using System.Net;
+using System.Net.Sockets;
 
 namespace ARSoft.Tools.Net.Dns
 {
-	internal class DnsClientEndpointInfo
+	/// <summary>
+	///   Endpoint info of a connection from a client to a server
+	/// </summary>
+	public class DnsClientEndpointInfo
 	{
+		/// <summary>
+		///   Returns a value indicating if multicast communication is used
+		/// </summary>
 		public bool IsMulticast { get; }
-		public IPAddress LocalAddress { get; }
-		public IPAddress ServerAddress { get; }
 
-		public DnsClientEndpointInfo(bool isMulticast, IPAddress serverAddress, IPAddress localAddress)
+		/// <summary>
+		///   The remote IP address
+		/// </summary>
+		public IPAddress DestinationAddress { get; }
+
+		/// <summary>
+		///   The local IP address
+		/// </summary>
+		public IPAddress LocalAddress { get; }
+
+		/// <summary>
+		///   Creates a new instance of the DnsClientEndpointInfo class
+		///   ///
+		/// </summary>
+		/// <param name="isMulticast">A value indicating if multicast communication is used</param>
+		/// <param name="destinationAddress">The remote IP</param>
+		/// <param name="localAddress">The local IP</param>
+		public DnsClientEndpointInfo(bool isMulticast, IPAddress destinationAddress, IPAddress localAddress)
 		{
 			IsMulticast = isMulticast;
-			ServerAddress = serverAddress;
+			DestinationAddress = destinationAddress;
 			LocalAddress = localAddress;
 		}
 	}

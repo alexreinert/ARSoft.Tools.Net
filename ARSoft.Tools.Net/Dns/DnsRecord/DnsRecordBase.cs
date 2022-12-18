@@ -59,7 +59,7 @@ namespace ARSoft.Tools.Net.Dns
 		#endregion
 
 		#region Parsing
-		internal static DnsRecordBase ParseRecordFromMessage(byte[] resultData, ref int currentPosition)
+		internal static DnsRecordBase ParseRecordFromMessage(IList<byte> resultData, ref int currentPosition)
 		{
 			int startPosition = currentPosition;
 			DomainName name = DnsMessageBase.ParseDomainName(resultData, ref currentPosition);
@@ -74,7 +74,7 @@ namespace ARSoft.Tools.Net.Dns
 			return ParseRecordFromBinary(startPosition, name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
 		}
 
-		internal static DnsRecordBase ParseRecordFromBinary(int recordStartPosition, DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, byte[] resultData, int recordDataPosition, int recordDataLength)
+		internal static DnsRecordBase ParseRecordFromBinary(int recordStartPosition, DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int recordDataPosition, int recordDataLength)
 		{
 			switch (recordType)
 			{
@@ -360,30 +360,30 @@ namespace ARSoft.Tools.Net.Dns
 		#endregion
 
 		#region Encoding
-		internal override sealed int MaximumLength => Name.MaximumRecordDataLength + 12 + MaximumRecordDataLength;
+		internal sealed override int MaximumLength => Name.MaximumRecordDataLength + 12 + MaximumRecordDataLength;
 
-		internal void Encode(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical = false)
+		internal void Encode(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical = false)
 		{
-			EncodeRecordHeader(messageData, offset, ref currentPosition, domainNames, useCanonical);
-			EncodeRecordBody(messageData, offset, ref currentPosition, domainNames, useCanonical);
+			EncodeRecordHeader(messageData, ref currentPosition, domainNames, useCanonical);
+			EncodeRecordBody(messageData, ref currentPosition, domainNames, useCanonical);
 		}
 
-		internal void EncodeRecordHeader(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+		internal void EncodeRecordHeader(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
 		{
-			DnsMessageBase.EncodeDomainName(messageData, offset, ref currentPosition, Name, domainNames, useCanonical);
+			DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, Name, domainNames, useCanonical);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
 			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordClass);
 			DnsMessageBase.EncodeInt(messageData, ref currentPosition, TimeToLive);
 		}
 
-		internal void EncodeRecordBody(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
+		internal void EncodeRecordBody(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 		{
 			int recordDataOffset = currentPosition + 2;
-			EncodeRecordData(messageData, offset, ref recordDataOffset, domainNames, useCanonical);
-			EncodeRecordLength(messageData, offset, ref currentPosition, recordDataOffset);
+			EncodeRecordData(messageData, ref recordDataOffset, domainNames, useCanonical);
+			EncodeRecordLength(messageData, ref currentPosition, recordDataOffset);
 		}
 
-		internal void EncodeRecordLength(byte[] messageData, int offset, ref int recordDataOffset, int recordPosition)
+		internal void EncodeRecordLength(IList<byte> messageData, ref int recordDataOffset, int recordPosition)
 		{
 			DnsMessageBase.EncodeUShort(messageData, ref recordDataOffset, (ushort) (recordPosition - recordDataOffset - 2));
 			recordDataOffset = recordPosition;
@@ -391,7 +391,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected internal abstract int MaximumRecordDataLength { get; }
 
-		protected internal abstract void EncodeRecordData(byte[] messageData, int offset, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical);
+		protected internal abstract void EncodeRecordData(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical);
 		#endregion
 
 		internal T Clone<T>()
@@ -421,13 +421,13 @@ namespace ARSoft.Tools.Net.Dns
 			if (compare != 0)
 				return compare;
 
-			byte[] thisBuffer = new byte[MaximumRecordDataLength];
+			var thisBuffer = new byte[MaximumRecordDataLength];
 			int thisLength = 0;
-			EncodeRecordData(thisBuffer, 0, ref thisLength, null, false);
+			EncodeRecordData(thisBuffer, ref thisLength, null, false);
 
-			byte[] otherBuffer = new byte[other.MaximumRecordDataLength];
+			var otherBuffer = new byte[other.MaximumRecordDataLength];
 			int otherLength = 0;
-			other.EncodeRecordData(otherBuffer, 0, ref otherLength, null, false);
+			other.EncodeRecordData(otherBuffer, ref otherLength, null, false);
 
 			for (int i = 0; i < Math.Min(thisLength, otherLength); i++)
 			{

@@ -516,18 +516,18 @@ namespace ARSoft.Tools.Net.Dns
 					}
 				}
 
-				byte[] hash = recordsByName[i].Item1.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
-				nSec3Records.Add(new NSec3Record(DomainName.ParseFromMasterfile(hash.ToBase32HexString()) + Name, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, hash, recordTypes));
+				var nsec3Hash = recordsByName[i].Item1.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
+				nSec3Records.Add(new NSec3Record(new DomainName(nsec3Hash.ToBase32String(), Name), soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, nsec3Hash, recordTypes));
 
 				allNames.Add(currentName);
 				for (int j = currentName.LabelCount - Name.LabelCount; j > 0; j--)
 				{
-					DomainName possibleNonTerminal = currentName.GetParentName(j);
+					var possibleNonTerminal = currentName.GetParentName(j);
 
 					if (!allNames.Contains(possibleNonTerminal))
 					{
-						hash = possibleNonTerminal.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
-						nSec3Records.Add(new NSec3Record(DomainName.ParseFromMasterfile(hash.ToBase32HexString()) + Name, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, hash, new List<RecordType>()));
+						nsec3Hash = possibleNonTerminal.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
+						nSec3Records.Add(new NSec3Record(new DomainName(nsec3Hash.ToBase32String(), Name), soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, nsec3Hash, new List<RecordType>()));
 
 						allNames.Add(possibleNonTerminal);
 					}

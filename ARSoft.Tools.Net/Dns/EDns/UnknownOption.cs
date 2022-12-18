@@ -33,7 +33,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public byte[]? Data { get; private set; }
 
-		internal UnknownOption(EDnsOptionType type, byte[] resultData, int startPosition, int length)
+		internal UnknownOption(EDnsOptionType type, IList<byte> resultData, int startPosition, int length)
 			: base(type)
 		{
 			Data = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
@@ -52,7 +52,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override ushort DataLength => (ushort) (Data?.Length ?? 0);
 
-		internal override void EncodeData(byte[] messageData, ref int currentPosition)
+		internal override void EncodeData(IList<byte> messageData, ref int currentPosition)
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Data);
 		}

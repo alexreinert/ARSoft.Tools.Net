@@ -163,7 +163,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			var nsec3Parameter = nsecRecords.Where(x => x.Name.GetParentName().Equals(zoneApex)).Where(x => x.HashAlgorithm.IsSupported()).Select(x => new { x.HashAlgorithm, x.Iterations, x.Salt }).OrderBy(x => x.HashAlgorithm.GetPriority()).First();
 
-			DomainName hashedName = name.GetNsec3HashName(nsec3Parameter.HashAlgorithm, nsec3Parameter.Iterations, nsec3Parameter.Salt, zoneApex);
+			DomainName hashedName = name.GetNSec3HashName(nsec3Parameter.HashAlgorithm, nsec3Parameter.Iterations, nsec3Parameter.Salt, zoneApex);
 
 			if (recordType == RecordType.Ds && nsecRecords.Any(x => (x.Flags == NSec3Flags.OptOut) && (x.IsCovering(hashedName))))
 				return DnsSecValidationResult.Unsigned;
@@ -188,7 +188,7 @@ namespace ARSoft.Tools.Net.Dns
 
 				current = current.GetParentName();
 				previousHashedName = hashedName;
-				hashedName = current.GetNsec3HashName(nsec3Parameter.HashAlgorithm, nsec3Parameter.Iterations, nsec3Parameter.Salt, zoneApex);
+				hashedName = current.GetNSec3HashName(nsec3Parameter.HashAlgorithm, nsec3Parameter.Iterations, nsec3Parameter.Salt, zoneApex);
 			}
 
 			if (!nsecRecords.Any(x => x.IsCovering(previousHashedName)))
@@ -196,7 +196,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			if (checkWildcard)
 			{
-				DomainName wildcardHashName = (DomainName.Asterisk + current).GetNsec3HashName(nsec3Parameter.HashAlgorithm, nsec3Parameter.Iterations, nsec3Parameter.Salt, zoneApex);
+				DomainName wildcardHashName = (DomainName.Asterisk + current).GetNSec3HashName(nsec3Parameter.HashAlgorithm, nsec3Parameter.Iterations, nsec3Parameter.Salt, zoneApex);
 
 				var wildcardDirectMatch = nsecRecords.FirstOrDefault(x => x.Name.Equals(wildcardHashName));
 				if ((wildcardDirectMatch != null) && (!wildcardDirectMatch.Types.Contains(recordType)))
