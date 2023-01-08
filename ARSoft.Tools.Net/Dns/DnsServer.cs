@@ -153,7 +153,7 @@ namespace ARSoft.Tools.Net.Dns
 					DnsMessageBase response;
 					try
 					{
-						response = await ProcessMessageAsync(query, ProtocolType.Tcp, connection.RemoteEndPoint!);
+						response = await ProcessMessageAsync(query, connection.Transport.TransportProtocol == TransportProtocol.Udp ? ProtocolType.Udp : ProtocolType.Tcp, connection.RemoteEndPoint!);
 					}
 					catch (Exception ex)
 					{
