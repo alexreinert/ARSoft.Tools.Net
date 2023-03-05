@@ -92,7 +92,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			EncodePublicKey(publicKey, ref currentPosition, null);
 
-			return publicKey.ToBase64String(0, currentPosition);
+			return publicKey[0..currentPosition].ToBase64String();
 		}
 
 		protected override int MaximumPublicKeyLength => 3 + Prime.Length + Generator.Length + PublicValue.Length;

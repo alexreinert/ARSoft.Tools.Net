@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ARSoft.Tools.Net", "ARSoft.
 EndProject
 Project("{7CF6DF6D-3B04-46F8-A40B-537D21BCA0B4}") = "Documentation", "Documentation\Documentation.shfbproj", "{D84BE2AC-9E8C-45CA-9511-D986D0B06D9B}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ARSoft.Tools.Net.Tests", "ARSoft.Tools.Net.Tests\ARSoft.Tools.Net.Tests.csproj", "{8E416DC5-41C1-42BD-8D64-E54F6D6A5F24}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{D84BE2AC-9E8C-45CA-9511-D986D0B06D9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D84BE2AC-9E8C-45CA-9511-D986D0B06D9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D84BE2AC-9E8C-45CA-9511-D986D0B06D9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E416DC5-41C1-42BD-8D64-E54F6D6A5F24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E416DC5-41C1-42BD-8D64-E54F6D6A5F24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E416DC5-41C1-42BD-8D64-E54F6D6A5F24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E416DC5-41C1-42BD-8D64-E54F6D6A5F24}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
