@@ -61,7 +61,7 @@ public class UdpServerTransport : IServerTransport
 	/// <param name="bindAddress">The IP address on which the transport should listen</param>
 	/// <param name="timeout">The read an write timeout in milliseconds</param>
 	public UdpServerTransport(IPAddress bindAddress, int timeout = 5000)
-		: this(new IPEndPoint(IPAddress.IPv6Any, DEFAULT_PORT), timeout) { }
+		: this(new IPEndPoint(bindAddress, DEFAULT_PORT), timeout) { }
 
 	/// <summary>
 	///   Creates a new instance of the UdpServerTransport

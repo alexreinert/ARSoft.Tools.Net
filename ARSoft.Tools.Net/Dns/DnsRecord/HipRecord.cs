@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2022 Alexander Reinert
+// Copyright 2010..2023 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -94,9 +94,9 @@ namespace ARSoft.Tools.Net.Dns
 			: base(name, RecordType.Hip, RecordClass.INet, timeToLive)
 		{
 			Algorithm = algorithm;
-			Hit = hit ?? new byte[] { };
-			PublicKey = publicKey ?? new byte[] { };
-			RendezvousServers = rendezvousServers ?? new List<DomainName>();
+			Hit = hit;
+			PublicKey = publicKey;
+			RendezvousServers = rendezvousServers;
 		}
 
 		internal override string RecordDataToString()
@@ -104,7 +104,7 @@ namespace ARSoft.Tools.Net.Dns
 			return (byte) Algorithm
 			       + " " + Hit.ToBase16String()
 			       + " " + PublicKey.ToBase64String()
-			       + " " + String.Join(" ", RendezvousServers.Select(s => s.ToString()));
+			       + " " + String.Join(" ", RendezvousServers.Select(s => s.ToString(true)));
 		}
 
 		protected internal override int MaximumRecordDataLength

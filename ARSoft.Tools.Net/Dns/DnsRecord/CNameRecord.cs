@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2022 Alexander Reinert
+// Copyright 2010..2023 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -67,7 +67,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return CanonicalName.ToString();
+			return CanonicalName.ToString(true);
 		}
 
 		protected internal override int MaximumRecordDataLength => CanonicalName.MaximumRecordDataLength + 2;

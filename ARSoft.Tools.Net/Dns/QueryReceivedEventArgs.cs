@@ -35,7 +35,13 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Protocol used by the client
 		/// </summary>
-		public ProtocolType ProtocolType { get; private set; }
+		[Obsolete("Use property TransportProtocol instead")]
+		public ProtocolType ProtocolType => TransportProtocol.ToProtocolType();
+
+		/// <summary>
+		///   Protocol used by the client
+		/// </summary>
+		public TransportProtocol TransportProtocol { get; private set; }
 
 		/// <summary>
 		///   Remote endpoint of the client
@@ -47,10 +53,10 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public DnsMessageBase? Response { get; set; }
 
-		internal QueryReceivedEventArgs(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
+		internal QueryReceivedEventArgs(DnsMessageBase query, TransportProtocol transportProtocol, IPEndPoint remoteEndpoint)
 		{
 			Query = query;
-			ProtocolType = protocolType;
+			TransportProtocol = transportProtocol;
 			RemoteEndpoint = remoteEndpoint;
 		}
 	}

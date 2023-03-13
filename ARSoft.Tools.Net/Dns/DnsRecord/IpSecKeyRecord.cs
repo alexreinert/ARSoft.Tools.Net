@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2022 Alexander Reinert
+// Copyright 2010..2023 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -143,7 +143,7 @@ namespace ARSoft.Tools.Net.Dns
 					Gateway = new IPAddress(DnsMessageBase.ParseByteData(resultData, ref currentPosition, 16)).ToString();
 					break;
 				case IpSecGatewayType.Domain:
-					Gateway = DnsMessageBase.ParseDomainName(resultData, ref currentPosition).ToString();
+					Gateway = DnsMessageBase.ParseDomainName(resultData, ref currentPosition).ToString(true);
 					break;
 				default:
 					Gateway = String.Empty;
@@ -181,8 +181,8 @@ namespace ARSoft.Tools.Net.Dns
 			Precedence = precedence;
 			GatewayType = IpSecGatewayType.Domain;
 			Algorithm = algorithm;
-			Gateway = (gateway ?? DomainName.Root).ToString();
-			PublicKey = publicKey ?? new byte[] { };
+			Gateway = gateway.ToString(true);
+			PublicKey = publicKey;
 		}
 
 		/// <summary>

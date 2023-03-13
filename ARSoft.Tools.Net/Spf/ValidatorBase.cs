@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2022 Alexander Reinert
+// Copyright 2010..2023 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -554,7 +554,7 @@ namespace ARSoft.Tools.Net.Spf
 							letter = sender.Split('@')[1];
 							break;
 						case "d":
-							letter = domain.ToString();
+							letter = domain.ToString(false);
 							break;
 						case "i":
 							letter = String.Join(".", ip.GetAddressBytes().Select(b => b.ToString()));
@@ -581,12 +581,12 @@ namespace ARSoft.Tools.Net.Spf
 									{
 										// use value, if first record or subdomain
 										// but evaluate the other records
-										letter = ptrRecord.PointerDomainName.ToString();
+										letter = ptrRecord.PointerDomainName.ToString(false);
 									}
 									else if (ptrRecord.PointerDomainName.Equals(domain))
 									{
 										// ptr equal domain --> best match, use it
-										letter = ptrRecord.PointerDomainName.ToString();
+										letter = ptrRecord.PointerDomainName.ToString(false);
 										break;
 									}
 								}
@@ -597,7 +597,7 @@ namespace ARSoft.Tools.Net.Spf
 							letter = (ip.AddressFamily == AddressFamily.InterNetworkV6) ? "ip6" : "in-addr";
 							break;
 						case "h":
-							letter = HeloDomain?.ToString() ?? "unknown";
+							letter = HeloDomain?.ToString(false) ?? "unknown";
 							break;
 						case "c":
 							IPAddress address =
@@ -611,7 +611,7 @@ namespace ARSoft.Tools.Net.Spf
 							letter = address.ToString();
 							break;
 						case "r":
-							letter = LocalDomain?.ToString() ?? System.Net.Dns.GetHostName();
+							letter = LocalDomain?.ToString(false) ?? System.Net.Dns.GetHostName();
 							break;
 						case "t":
 							letter = ((int) (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) - DateTime.Now).TotalSeconds).ToString();

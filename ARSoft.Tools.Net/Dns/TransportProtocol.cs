@@ -16,6 +16,8 @@
 // limitations under the License.
 #endregion
 
+using System.Net.Sockets;
+
 namespace ARSoft.Tools.Net.Dns;
 
 /// <summary>
@@ -47,4 +49,24 @@ public enum TransportProtocol
 	///   Custom
 	/// </summary>
 	Custom
+}
+
+internal static class TransportProtocolHelper
+{
+	public static ProtocolType ToProtocolType(this TransportProtocol protocol)
+	{
+		switch (protocol)
+		{
+			case TransportProtocol.Udp:
+				return ProtocolType.Udp;
+
+			case TransportProtocol.Tcp:
+			case TransportProtocol.Tls:
+			case TransportProtocol.Https:
+				return ProtocolType.Tcp;
+
+			default:
+				return ProtocolType.Unknown;
+		}
+	}
 }

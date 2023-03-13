@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2022 Alexander Reinert
+// Copyright 2010..2023 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -302,18 +302,22 @@ namespace ARSoft.Tools.Net
 			}
 		}
 
-		private string? _toString;
-
 		/// <summary>
 		///   Returns the string representation of the domain name
 		/// </summary>
 		/// <returns>The string representation of the domain name</returns>
 		public override string ToString()
 		{
-			if (_toString != null)
-				return _toString;
+			return ToString(false);
+		}
 
-			return (_toString = String.Join(".", _labels.Select(x => x.ToMasterfileLabelRepresentation(true))) + ".");
+		private string? _toString;
+
+		public string ToString(bool asAbsoluteFqdn)
+		{
+			_toString ??= String.Join(".", _labels.Select(x => x.ToMasterfileLabelRepresentation(true)));
+
+			return (asAbsoluteFqdn ? _toString + "." : _toString);
 		}
 
 		private int? _hashCode;

@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2022 Alexander Reinert
+// Copyright 2010..2023 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -54,25 +54,25 @@ namespace ARSoft.Tools.Net.Dns
 
 		public static TSigAlgorithm GetAlgorithmByName(DomainName name)
 		{
-			switch (name.ToString().ToLower())
+			switch (name.ToString(false).ToLower())
 			{
-				case "hmac-md5.sig-alg.reg.int.":
+				case "hmac-md5.sig-alg.reg.int":
 					return TSigAlgorithm.Md5;
-				case "hmac-sha1.":
+				case "hmac-sha1":
 					return TSigAlgorithm.Sha1;
-				case "hmac-sha224.":
+				case "hmac-sha224":
 					return TSigAlgorithm.Sha224;
-				case "hmac-sha256.":
+				case "hmac-sha256":
 					return TSigAlgorithm.Sha256;
-				case "hmac-sha256-128.":
+				case "hmac-sha256-128":
 					return TSigAlgorithm.Sha256_128;
-				case "hmac-sha384.":
+				case "hmac-sha384":
 					return TSigAlgorithm.Sha384;
-				case "hmac-sha384-192.":
+				case "hmac-sha384-192":
 					return TSigAlgorithm.Sha384_192;
-				case "hmac-sha512.":
+				case "hmac-sha512":
 					return TSigAlgorithm.Sha512;
-				case "hmac-sha512-256.":
+				case "hmac-sha512-256":
 					return TSigAlgorithm.Sha512_256;
 
 				default:

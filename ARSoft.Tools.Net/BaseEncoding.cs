@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2022 Alexander Reinert
+// Copyright 2010..2023 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -232,6 +232,9 @@ namespace ARSoft.Tools.Net
 
 		private static byte[] FromBase32CharArray(this char[] inData, int offset, int length, Dictionary<char, byte> alphabet)
 		{
+			if (length == 0)
+				return Array.Empty<byte>();
+
 			int paddingCount = 0;
 			while (paddingCount < 6)
 			{
@@ -278,7 +281,7 @@ namespace ARSoft.Tools.Net
 				}
 
 				res[outPos++] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
-				res[outPos++] = (byte) (((buffer[1] >> 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
+				res[outPos++] = (byte) (((buffer[1] << 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
 				res[outPos++] = (byte) (((buffer[3] << 4) & 0xf0) | ((buffer[4] >> 1) & 0x0f));
 				res[outPos++] = (byte) (((buffer[4] << 7) & 0x80) | (buffer[5] << 2) | ((buffer[6] >> 3) & 0x03));
 				res[outPos++] = (byte) (((buffer[6] << 5) & 0xe0) | buffer[7]);
@@ -298,16 +301,16 @@ namespace ARSoft.Tools.Net
 						break;
 					case 2:
 						res[outPos++] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
-						res[outPos] = (byte) (((buffer[1] >> 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
+						res[outPos] = (byte) (((buffer[1] << 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
 						break;
 					case 3:
 						res[outPos++] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
-						res[outPos++] = (byte) (((buffer[1] >> 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
+						res[outPos++] = (byte) (((buffer[1] << 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
 						res[outPos] = (byte) (((buffer[3] << 4) & 0xf0) | ((buffer[4] >> 1) & 0x0f));
 						break;
 					case 4:
 						res[outPos++] = (byte) ((buffer[0] << 3) | ((buffer[1] >> 2) & 0x07));
-						res[outPos++] = (byte) (((buffer[1] >> 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
+						res[outPos++] = (byte) (((buffer[1] << 6) & 0xc0) | (buffer[2] << 1) | ((buffer[3] >> 4) & 0x01));
 						res[outPos++] = (byte) (((buffer[3] << 4) & 0xf0) | ((buffer[4] >> 1) & 0x0f));
 						res[outPos] = (byte) (((buffer[4] << 7) & 0x80) | (buffer[5] << 2) | ((buffer[6] >> 3) & 0x03));
 						break;
@@ -493,6 +496,9 @@ namespace ARSoft.Tools.Net
 		{
 			int paddingCount;
 			int remain;
+
+			if (length == 0)
+				return Array.Empty<byte>();
 
 			if (alphabet[inData[offset + length - 2]] == 64)
 			{

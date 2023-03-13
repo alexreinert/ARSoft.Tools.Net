@@ -153,7 +153,7 @@ namespace ARSoft.Tools.Net.Dns
 					DnsMessageBase response;
 					try
 					{
-						response = await ProcessMessageAsync(query, ProtocolType.Tcp, connection.RemoteEndPoint!);
+						response = await ProcessMessageAsync(query, connection.Transport.TransportProtocol, connection.RemoteEndPoint!);
 					}
 					catch (Exception ex)
 					{
@@ -306,7 +306,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		private async Task<DnsMessageBase> ProcessMessageAsync(DnsMessageBase query, ProtocolType protocolType, IPEndPoint remoteEndpoint)
+		private async Task<DnsMessageBase> ProcessMessageAsync(DnsMessageBase query, TransportProtocol transportProtocol, IPEndPoint remoteEndpoint)
 		{
 			if (query.TSigOptions != null)
 			{
@@ -319,7 +319,7 @@ namespace ARSoft.Tools.Net.Dns
 						response.TSigOptions = null;
 
 #pragma warning disable 4014
-						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
+						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, transportProtocol, remoteEndpoint));
 #pragma warning restore 4014
 
 						return response;
@@ -334,7 +334,7 @@ namespace ARSoft.Tools.Net.Dns
 						response.TSigOptions = new TSigRecord(query.TSigOptions.Name, query.TSigOptions.Algorithm, query.TSigOptions.TimeSigned, query.TSigOptions.Fudge, query.TSigOptions.OriginalID, query.TSigOptions.ValidationResult, null, null);
 
 #pragma warning disable 4014
-						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
+						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, transportProtocol, remoteEndpoint));
 #pragma warning restore 4014
 
 						return response;
@@ -351,7 +351,7 @@ namespace ARSoft.Tools.Net.Dns
 						response.TSigOptions = new TSigRecord(query.TSigOptions.Name, query.TSigOptions.Algorithm, query.TSigOptions.TimeSigned, query.TSigOptions.Fudge, query.TSigOptions.OriginalID, query.TSigOptions.ValidationResult, otherData, null);
 
 #pragma warning disable 4014
-						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, protocolType, remoteEndpoint));
+						InvalidSignedMessageReceived.RaiseAsync(this, new InvalidSignedMessageEventArgs(query, transportProtocol, remoteEndpoint));
 #pragma warning restore 4014
 
 						return response;
@@ -359,7 +359,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 			}
 
-			QueryReceivedEventArgs eventArgs = new QueryReceivedEventArgs(query, protocolType, remoteEndpoint);
+			QueryReceivedEventArgs eventArgs = new QueryReceivedEventArgs(query, transportProtocol, remoteEndpoint);
 			await QueryReceived.RaiseAsync(this, eventArgs);
 			return eventArgs.Response ?? query.CreateFailureResponse();
 		}
