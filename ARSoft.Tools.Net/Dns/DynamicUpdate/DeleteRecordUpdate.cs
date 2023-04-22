@@ -29,7 +29,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 	public class DeleteRecordUpdate : UpdateBase
 	{
 		/// <summary>
-		///   Record which should be added
+		///   Record which should be deleted
 		/// </summary>
 		public DnsRecordBase Record { get; }
 
@@ -47,7 +47,11 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		protected override RecordType RecordTypeInternal => Record.RecordType;
 
-		protected override RecordClass RecordClassInternal => Record.RecordClass;
+        /// <summary>
+        /// According to RFC2136 section 2.5.4 (Delete An RR From An RRset) 
+        /// "CLASS must be specified as NONE to distinguish this from an RR addition"
+        /// </summary>
+		protected override RecordClass RecordClassInternal => RecordClass.None;
 
 		protected override int TimeToLive => 0;
 

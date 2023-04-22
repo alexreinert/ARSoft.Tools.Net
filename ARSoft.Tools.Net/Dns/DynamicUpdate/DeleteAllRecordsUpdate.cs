@@ -46,7 +46,11 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		protected override RecordType RecordTypeInternal => RecordType;
 
-		protected override RecordClass RecordClassInternal => RecordClass.INet;
+        /// <summary>
+        /// According to RFC2136 section 2.5.2 (Delete An RRset) 
+		/// "CLASS must be specified as ANY"
+        /// </summary>
+        protected override RecordClass RecordClassInternal => RecordClass.Any;
 
 		protected override int TimeToLive => 0;
 	}
