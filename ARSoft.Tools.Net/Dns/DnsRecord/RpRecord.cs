@@ -77,8 +77,8 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return MailBox
-			       + " " + TxtDomainName;
+			return MailBox.ToString(true)
+			       + " " + TxtDomainName.ToString(true);
 		}
 
 		protected internal override int MaximumRecordDataLength => 4 + MailBox.MaximumRecordDataLength + TxtDomainName.MaximumRecordDataLength;

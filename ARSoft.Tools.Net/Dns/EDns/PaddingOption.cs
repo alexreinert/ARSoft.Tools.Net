@@ -16,57 +16,42 @@
 // limitations under the License.
 #endregion
 
-using System.Net.Sockets;
-
 namespace ARSoft.Tools.Net.Dns;
 
 /// <summary>
-///   Protocol of a transport
+///   <para>The EDNS(0) Padding Option</para>
+///   <para>
+///     Defined in
+///     <a href="https://www.rfc-editor.org/rfc/rfc7830.html">RFC 7830</a>.
+///   </para>
 /// </summary>
-public enum TransportProtocol
+public class PaddingOption : EDnsOptionBase
 {
 	/// <summary>
-	///   UDP
+	///   The padding
 	/// </summary>
-	Udp,
+	public byte[]? Padding { get; }
 
-	/// <summary>
-	///   TCP
-	/// </summary>
-	Tcp,
-
-	/// <summary>
-	///   TLS
-	/// </summary>
-	Tls,
-
-	/// <summary>
-	///   HTTPS
-	/// </summary>
-	Https,
-
-	/// <summary>
-	///   Custom
-	/// </summary>
-	Custom
-}
-
-internal static class TransportProtocolHelper
-{
-	public static ProtocolType ToProtocolType(this TransportProtocol protocol)
+	internal PaddingOption(IList<byte> resultData, int startPosition, int length)
+		: base(EDnsOptionType.Padding)
 	{
-		switch (protocol)
-		{
-			case TransportProtocol.Udp:
-				return ProtocolType.Udp;
+		Padding = DnsMessageBase.ParseByteData(resultData, ref startPosition, length);
+	}
 
-			case TransportProtocol.Tcp:
-			case TransportProtocol.Tls:
-			case TransportProtocol.Https:
-				return ProtocolType.Tcp;
+	/// <summary>
+	///   Creates a new instance of the PaddingOption class
+	/// </summary>
+	/// <param name="padding">The padding</param>
+	public PaddingOption(byte[]? padding = null)
+		: base(EDnsOptionType.Padding)
+	{
+		Padding = padding;
+	}
 
-			default:
-				return ProtocolType.Unknown;
-		}
+	internal override ushort DataLength => (ushort) (Padding?.Length ?? 0);
+
+	internal override void EncodeData(IList<byte> messageData, ref int currentPosition)
+	{
+		DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, Padding);
 	}
 }

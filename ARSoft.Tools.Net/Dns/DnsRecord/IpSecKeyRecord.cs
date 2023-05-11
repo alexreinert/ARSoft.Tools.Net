@@ -61,6 +61,24 @@ namespace ARSoft.Tools.Net.Dns
 			///   </para>
 			/// </summary>
 			Dsa = 2,
+
+			/// <summary>
+			///   <para>ECDSA</para>
+			///   <para>
+			///     Defined in
+			///     <a href="https://www.rfc-editor.org/rfc/rfc8005.html">RFC 8005</a>.
+			///   </para>
+			/// </summary>
+			EcDsa = 3,
+
+			/// <summary>
+			///   <para>EdDSA</para>
+			///   <para>
+			///     Defined in
+			///     <a href="https://www.rfc-editor.org/rfc/rfc9373.html">RFC 9373</a>.
+			///   </para>
+			/// </summary>
+			EdDsa = 4,
 		}
 
 		/// <summary>
@@ -104,27 +122,27 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Precedence of the record
 		/// </summary>
-		public byte Precedence { get; private set; }
+		public byte Precedence { get; }
 
 		/// <summary>
 		///   Type of gateway
 		/// </summary>
-		public IpSecGatewayType GatewayType { get; private set; }
+		public IpSecGatewayType GatewayType { get; }
 
 		/// <summary>
 		///   Algorithm of the key
 		/// </summary>
-		public IpSecAlgorithm Algorithm { get; private set; }
+		public IpSecAlgorithm Algorithm { get; }
 
 		/// <summary>
 		///   Address of the gateway
 		/// </summary>
-		public string Gateway { get; private set; }
+		public string Gateway { get; }
 
 		/// <summary>
 		///   Binary data of the public key
 		/// </summary>
-		public byte[] PublicKey { get; private set; }
+		public byte[] PublicKey { get; }
 
 		internal IpSecKeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive)
@@ -162,7 +180,42 @@ namespace ARSoft.Tools.Net.Dns
 			Precedence = Byte.Parse(stringRepresentation[0]);
 			GatewayType = (IpSecGatewayType) Byte.Parse(stringRepresentation[1]);
 			Algorithm = (IpSecAlgorithm) Byte.Parse(stringRepresentation[2]);
-			Gateway = stringRepresentation[3];
+			switch (GatewayType)
+			{
+				case IpSecGatewayType.IpV4:
+				{
+					if (IPAddress.TryParse(stringRepresentation[3], out var address) && address.AddressFamily == AddressFamily.InterNetwork)
+					{
+						Gateway = address.ToString();
+					}
+					else
+					{
+						throw new FormatException();
+					}
+
+					break;
+				}
+				case IpSecGatewayType.IpV6:
+				{
+					if (IPAddress.TryParse(stringRepresentation[3], out var address) && address.AddressFamily == AddressFamily.InterNetworkV6)
+					{
+						Gateway = address.ToString();
+					}
+					else
+					{
+						throw new FormatException();
+					}
+
+					break;
+				}
+				case IpSecGatewayType.Domain:
+					Gateway = ParseDomainName(origin, stringRepresentation[3]).ToString(true);
+					break;
+				default:
+					Gateway = DomainName.Root.ToString(true);
+					break;
+			}
+
 			PublicKey = String.Join(String.Empty, stringRepresentation.Skip(4)).FromBase64String();
 		}
 
@@ -201,7 +254,7 @@ namespace ARSoft.Tools.Net.Dns
 			GatewayType = (gateway.AddressFamily == AddressFamily.InterNetwork) ? IpSecGatewayType.IpV4 : IpSecGatewayType.IpV6;
 			Algorithm = algorithm;
 			Gateway = gateway.ToString();
-			PublicKey = publicKey ?? new byte[] { };
+			PublicKey = publicKey;
 		}
 
 		internal override string RecordDataToString()
@@ -209,24 +262,8 @@ namespace ARSoft.Tools.Net.Dns
 			return Precedence
 			       + " " + (byte) GatewayType
 			       + " " + (byte) Algorithm
-			       + " " + GatewayToString()
+			       + " " + Gateway
 			       + " " + PublicKey.ToBase64String();
-		}
-
-		private string GatewayToString()
-		{
-			switch (GatewayType)
-			{
-				case IpSecGatewayType.Domain:
-					return Gateway.ToMasterfileLabelRepresentation() + ".";
-
-				case IpSecGatewayType.IpV4:
-				case IpSecGatewayType.IpV6:
-					return Gateway;
-
-				default:
-					return ".";
-			}
 		}
 
 		protected internal override int MaximumRecordDataLength

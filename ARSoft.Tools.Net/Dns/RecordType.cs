@@ -538,10 +538,20 @@ namespace ARSoft.Tools.Net.Dns
 		Tlsa = 52,
 
 		/// <summary>
+		///   <para>SMIMEA</para>
+		///   <para>
+		///     Defined in
+		///     <a href="https://www.rfc-editor.org/rfc/rfc8162.html">RFC 8162</a>.
+		///   </para>
+		/// </summary>
+		SMimeA = 53,
+
+		/// <summary>
 		///   <para>Host identity protocol</para>
 		///   <para>
 		///     Defined in
-		///     <a href="https://www.rfc-editor.org/rfc/rfc5205.html">RFC 5205</a>.
+		///     <a href="https://www.rfc-editor.org/rfc/rfc5205.html">RFC 5205</a>
+		///     and <a href="https://www.rfc-editor.org/rfc/rfc8005.html">RFC 8005</a>.
 		///   </para>
 		/// </summary>
 		Hip = 55,
@@ -601,6 +611,24 @@ namespace ARSoft.Tools.Net.Dns
 		///   </para>
 		/// </summary>
 		CSync = 62,
+
+		/// <summary>
+		///   <para>Service Binding</para>
+		///   <para>
+		///     Defined in
+		///     <a href="https://datatracker.ietf.org/doc/draft-ietf-dnsop-svcb-https/12/">draft-ietf-dnsop-svcb-https</a>.
+		///   </para>
+		/// </summary>
+		SvcB = 64,
+
+		/// <summary>
+		///   <para>HTTPS Service Binding</para>
+		///   <para>
+		///     Defined in
+		///     <a href="https://datatracker.ietf.org/doc/draft-ietf-dnsop-svcb-https/12/">draft-ietf-dnsop-svcb-https</a>.
+		///   </para>
+		/// </summary>
+		Https = 65,
 
 		/// <summary>
 		///   <para>Sender Policy Framework</para>
@@ -781,6 +809,16 @@ namespace ARSoft.Tools.Net.Dns
 		CAA = 257,
 
 		/// <summary>
+		///   <para>Automatic Multicast Tunneling Relay</para>
+		///   <para>
+		///     Defined in
+		///     <a href="https://www.rfc-editor.org/rfc/rfc8777.html">RFC 8777</a>.
+		///   </para>
+		/// </summary>
+		// ReSharper disable once InconsistentNaming
+		AMTRelay = 260,
+
+		/// <summary>
 		///   <para>DNSSEC trust authorities</para>
 		///   <para>Defined by Sam Weiler, &lt;weiler+iana@tislabs.com&gt;</para>
 		/// </summary>
@@ -790,10 +828,12 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>DNSSEC lookaside validation</para>
 		///   <para>
 		///     Defined in
-		///     <a href="https://www.rfc-editor.org/rfc/rfc4431.html">RFC 4431</a>.
+		///     <a href="https://www.rfc-editor.org/rfc/rfc4431.html">RFC 4431</a>
+		///     and
+		///     <a href="https://www.rfc-editor.org/rfc/rfc8749.html">RFC 8749</a>.
 		///   </para>
 		/// </summary>
-		Dlv = 32769,
+		[Obsolete] Dlv = 32769,
 	}
 
 	internal static class RecordTypeHelper

@@ -55,30 +55,4 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 			Record?.EncodeRecordData(messageData, ref currentPosition, domainNames, useCanonical);
 		}
 	}
-
-	/// <summary>
-	///   Prequisite, that a record with given values exists
-	/// </summary>
-	public class RecordExistsValueIndependantPrequisite : PrequisiteBase
-	{
-		/// <summary>
-		///   RecordType that should be checked
-		/// </summary>
-		public RecordType RecordType { get; }
-
-		/// <summary>
-		///   Creates a new instance of the RecordExistsValueDependantPrequisite class
-		/// </summary>
-		/// <param name="name"> Name that should be checked </param>
-		/// <param name="recordType"> RecordType that should be checked </param>
-		public RecordExistsValueIndependantPrequisite(DomainName name, RecordType recordType)
-			: base(name)
-		{
-			RecordType = recordType;
-		}
-
-		protected override RecordType RecordTypeInternal => RecordType;
-
-		protected override RecordClass RecordClassInternal => RecordClass.Any;
-	}
 }

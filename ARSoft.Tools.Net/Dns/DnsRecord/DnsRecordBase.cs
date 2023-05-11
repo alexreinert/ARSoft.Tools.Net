@@ -31,8 +31,6 @@ namespace ARSoft.Tools.Net.Dns
 	/// </summary>
 	public abstract class DnsRecordBase : DnsMessageEntryBase, IComparable<DnsRecordBase>, IEquatable<DnsRecordBase>
 	{
-		internal ushort RecordDataLength { get; set; }
-
 		/// <summary>
 		///   Seconds which a record should be cached at most
 		/// </summary>
@@ -54,7 +52,7 @@ namespace ARSoft.Tools.Net.Dns
 		public override string ToString()
 		{
 			string recordData = RecordDataToString();
-			return Name + " " + TimeToLive + " " + RecordClass.ToShortString() + " " + RecordType.ToShortString() + (String.IsNullOrEmpty(recordData) ? "" : " " + recordData);
+			return Name.ToString(true) + " " + TimeToLive + " " + RecordClass.ToShortString() + " " + RecordType.ToShortString() + (String.IsNullOrEmpty(recordData) ? "" : " " + recordData);
 		}
 		#endregion
 
@@ -163,6 +161,8 @@ namespace ARSoft.Tools.Net.Dns
 					return new NSec3ParamRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
 				case RecordType.Tlsa:
 					return new TlsaRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
+				case RecordType.SMimeA:
+					return new SMimeARecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
 				case RecordType.Hip:
 					return new HipRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
 				case RecordType.CDs:
@@ -173,6 +173,10 @@ namespace ARSoft.Tools.Net.Dns
 					return new OpenPGPKeyRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
 				case RecordType.CSync:
 					return new CSyncRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
+				case RecordType.SvcB:
+					return new SvcBRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
+				case RecordType.Https:
+					return new HttpsRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
 #pragma warning disable 0612
 				case RecordType.Spf:
 					return new SpfRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
@@ -197,8 +201,12 @@ namespace ARSoft.Tools.Net.Dns
 					return new UriRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
 				case RecordType.CAA:
 					return new CAARecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
+				case RecordType.AMTRelay:
+					return new AMTRelayRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
+#pragma warning disable 0612
 				case RecordType.Dlv:
 					return new DlvRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
+#pragma warning restore 0612
 
 				default:
 					return new UnknownRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
@@ -207,12 +215,9 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static DnsRecordBase ParseFromStringRepresentation(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
 		{
-			if ((stringRepresentation.Length > 0) && (stringRepresentation[0] == @"\#"))
+			if ((stringRepresentation.Length > 0) && (stringRepresentation[0] == "#"))
 			{
 				if (stringRepresentation.Length < 2)
-					throw new FormatException();
-
-				if (stringRepresentation[0] != @"\#")
 					throw new FormatException();
 
 				int length = Int32.Parse(stringRepresentation[1]);
@@ -304,6 +309,8 @@ namespace ARSoft.Tools.Net.Dns
 						return new NSec3ParamRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
 					case RecordType.Tlsa:
 						return new TlsaRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
+					case RecordType.SMimeA:
+						return new SMimeARecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
 					case RecordType.Hip:
 						return new HipRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
 					case RecordType.CDs:
@@ -314,6 +321,10 @@ namespace ARSoft.Tools.Net.Dns
 						return new OpenPGPKeyRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
 					case RecordType.CSync:
 						return new CSyncRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
+					case RecordType.SvcB:
+						return new SvcBRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
+					case RecordType.Https:
+						return new HttpsRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
 #pragma warning disable 0612
 					case RecordType.Spf:
 						return new SpfRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
@@ -338,8 +349,12 @@ namespace ARSoft.Tools.Net.Dns
 						return new UriRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
 					case RecordType.CAA:
 						return new CAARecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
+					case RecordType.AMTRelay:
+						return new AMTRelayRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
+#pragma warning disable 0612
 					case RecordType.Dlv:
 						return new DlvRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
+#pragma warning restore 0612
 
 					default:
 						return new UnknownRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
@@ -349,13 +364,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		protected DomainName ParseDomainName(DomainName origin, string name)
 		{
-			if (String.IsNullOrEmpty(name))
-				throw new ArgumentException("Name must be provided", nameof(name));
-
-			if (name.EndsWith("."))
-				return DomainName.ParseFromMasterfile(name);
-
-			return DomainName.ParseFromMasterfile(name) + origin;
+			return DomainName.ParseFromMasterfile(name, origin);
 		}
 		#endregion
 

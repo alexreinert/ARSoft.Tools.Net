@@ -27,9 +27,12 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>DNSSEC lookaside validation</para>
 	///   <para>
 	///     Defined in
-	///     <a href="https://www.rfc-editor.org/rfc/rfc4431.html">RFC 4431</a>.
+	///     <a href="https://www.rfc-editor.org/rfc/rfc4431.html">RFC 4431</a>
+	///     and
+	///     <a href="https://www.rfc-editor.org/rfc/rfc8749.html">RFC 8749</a>.
 	///   </para>
 	/// </summary>
+	[Obsolete]
 	public class DlvRecord : DnsRecordBase
 	{
 		/// <summary>

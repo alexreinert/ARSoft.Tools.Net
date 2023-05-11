@@ -111,12 +111,12 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Algorithm of fingerprint
 		/// </summary>
-		public SshFpAlgorithm Algorithm { get; private set; }
+		public SshFpAlgorithm Algorithm { get; }
 
 		/// <summary>
 		///   Type of fingerprint
 		/// </summary>
-		public SshFpFingerPrintType FingerPrintType { get; private set; }
+		public SshFpFingerPrintType FingerPrintType { get; }
 
 		/// <summary>
 		///   Binary data of the fingerprint

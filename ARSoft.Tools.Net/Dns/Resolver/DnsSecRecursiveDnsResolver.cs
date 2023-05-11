@@ -225,12 +225,12 @@ namespace ARSoft.Tools.Net.Dns
 					}
 
 					// Response of best known server is not authoritive and has no referrals --> No chance to get a result
-					throw new Exception("Could not resolve " + name);
+					throw new Exception("Could not resolve " + name.ToString(false));
 				}
 			}
 
 			// query limit reached without authoritive answer
-			throw new Exception("Could not resolve " + name);
+			throw new Exception("Could not resolve " + name.ToString(false));
 		}
 
 		private async Task<DnsSecResult<T>> ResolveAsyncInternal<T>(DomainName name, RecordType recordType, RecordClass recordClass, ResolveContext resolveContext, CancellationToken token)
@@ -312,7 +312,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 
 				// authoritive response does not contain answer
-				throw new Exception("Could not resolve " + name);
+				throw new Exception("Could not resolve " + name.ToString(false));
 			}
 		}
 

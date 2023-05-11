@@ -175,7 +175,7 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + SignatureExpiration.ToUniversalTime().ToString("yyyyMMddHHmmss")
 			       + " " + SignatureInception.ToUniversalTime().ToString("yyyyMMddHHmmss")
 			       + " " + KeyTag
-			       + " " + SignersName
+			       + " " + SignersName.ToString(true)
 			       + " " + Signature.ToBase64String();
 		}
 

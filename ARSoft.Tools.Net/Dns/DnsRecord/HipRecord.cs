@@ -27,7 +27,8 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Host identity protocol</para>
 	///   <para>
 	///     Defined in
-	///     <a href="https://www.rfc-editor.org/rfc/rfc5205.html">RFC 5205</a>.
+	///     <a href="https://www.rfc-editor.org/rfc/rfc5205.html">RFC 5205</a>
+	///     and <a href="https://www.rfc-editor.org/rfc/rfc8005.html">RFC 8005</a>.
 	///   </para>
 	/// </summary>
 	public class HipRecord : DnsRecordBase

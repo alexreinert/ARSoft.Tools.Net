@@ -683,7 +683,7 @@ namespace ARSoft.Tools.Net.Dns
 				return;
 			}
 
-			var isCompressionAllowed = !useCanonical & (domainNames != null);
+			var isCompressionAllowed = !useCanonical && (domainNames != null);
 
 			if (isCompressionAllowed && domainNames!.TryGetValue(name, out var pointer))
 			{

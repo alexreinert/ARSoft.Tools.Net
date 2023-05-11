@@ -47,7 +47,7 @@ namespace ARSoft.Tools.Net.Dns.DynamicUpdate
 
 		protected override RecordType RecordTypeInternal => Record.RecordType;
 
-		protected override RecordClass RecordClassInternal => Record.RecordClass;
+		protected override RecordClass RecordClassInternal => RecordClass.None;
 
 		protected override int TimeToLive => 0;
 

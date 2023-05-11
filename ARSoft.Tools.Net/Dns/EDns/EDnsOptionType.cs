@@ -92,10 +92,10 @@ namespace ARSoft.Tools.Net.Dns
 		Nsec3HashUnderstood = 7,
 
 		/// <summary>
-		///   <para>ClientSubnet</para>
+		///   <para>Client Subnet</para>
 		///   <para>
 		///     Defined in
-		///     <a href="http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet">draft-vandergaast-edns-client-subnet</a>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc7871.html">RFC 7871</a>.
 		///   </para>
 		/// </summary>
 		ClientSubnet = 8,
@@ -113,9 +113,27 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>Cookie Option</para>
 		///   <para>
 		///     Defined in
-		///     <a href="http://tools.ietf.org/html/draft-ietf-dnsop-cookies">draft-ietf-dnsop-cookies</a>
+		///     <a href="https://www.rfc-editor.org/rfc/rfc7873.html">RFC 7873</a>.
 		///   </para>
 		/// </summary>
 		Cookie = 10,
+
+		/// <summary>
+		///   <para>edns-tcp-keepalive EDNS0 Option</para>
+		///   <para>
+		///     Defined in
+		///     <a href="https://www.rfc-editor.org/rfc/rfc7828.html">RFC 7828</a>.
+		///   </para>
+		/// </summary>
+		TcpKeepAlive = 11,
+
+		/// <summary>
+		///   <para>The EDNS(0) Padding Option</para>
+		///   <para>
+		///     Defined in
+		///     <a href="https://www.rfc-editor.org/rfc/rfc7830.html">RFC 7830</a>.
+		///   </para>
+		/// </summary>
+		Padding = 12,
 	}
 }

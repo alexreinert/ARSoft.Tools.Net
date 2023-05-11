@@ -76,7 +76,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return Preference
-			       + " " + ExchangeDomainName;
+			       + " " + ExchangeDomainName.ToString(true);
 		}
 
 		protected internal override int MaximumRecordDataLength => ExchangeDomainName.MaximumRecordDataLength + 4;

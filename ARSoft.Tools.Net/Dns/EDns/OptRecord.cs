@@ -27,7 +27,8 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>OPT record</para>
 	///   <para>
 	///     Defined in
-	///     <a href="https://www.rfc-editor.org/rfc/rfc2671.html">RFC 2671</a>.
+	///     <a href="https://www.rfc-editor.org/rfc/rfc2671.html">RFC 2671</a>
+	///     and <a href="https://www.rfc-editor.org/rfc/rfc6891.html">RFC 6891</a>.
 	///   </para>
 	/// </summary>
 	public class OptRecord : DnsRecordBase
@@ -161,6 +162,14 @@ namespace ARSoft.Tools.Net.Dns
 
 					case EDnsOptionType.Cookie:
 						option = new CookieOption(resultData, currentPosition, dataLength);
+						break;
+
+					case EDnsOptionType.TcpKeepAlive:
+						option = new TcpKeepAliveOption(resultData, currentPosition, dataLength);
+						break;
+
+					case EDnsOptionType.Padding:
+						option = new PaddingOption(resultData, currentPosition, dataLength);
 						break;
 
 					default:

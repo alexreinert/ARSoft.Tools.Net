@@ -102,7 +102,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return (byte) SubType
-			       + " " + Hostname;
+			       + " " + Hostname.ToString(true);
 		}
 
 		protected internal override int MaximumRecordDataLength => Hostname.MaximumRecordDataLength + 4;

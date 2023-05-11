@@ -65,7 +65,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			public override string ToString()
 			{
-				return _name + " " + _recordClass.ToShortString() + " " + _recordType.ToShortString();
+				return _name.ToString(true) + " " + _recordClass.ToShortString() + " " + _recordType.ToShortString();
 			}
 		}
 

@@ -76,7 +76,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return Preference
-			       + " " + IntermediateHost;
+			       + " " + IntermediateHost.ToString(true);
 		}
 
 		protected internal override int MaximumRecordDataLength => IntermediateHost.MaximumRecordDataLength + 4;

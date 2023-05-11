@@ -77,7 +77,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return Preference + " " + FQDN;
+			return Preference + " " + FQDN.ToString(true);
 		}
 
 		protected internal override int MaximumRecordDataLength => 4 + FQDN.MaximumRecordDataLength;

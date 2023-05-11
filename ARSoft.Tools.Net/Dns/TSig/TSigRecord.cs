@@ -127,7 +127,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return TSigAlgorithmHelper.GetDomainName(Algorithm)
+			return TSigAlgorithmHelper.GetDomainName(Algorithm).ToString(false)
 			       + " " + (int) (TimeSigned - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
 			       + " " + (ushort) Fudge.TotalSeconds
 			       + " " + Mac.Length

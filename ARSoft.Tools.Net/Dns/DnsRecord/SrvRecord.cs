@@ -96,7 +96,7 @@ namespace ARSoft.Tools.Net.Dns
 			return Priority
 			       + " " + Weight
 			       + " " + Port
-			       + " " + Target;
+			       + " " + Target.ToString(true);
 		}
 
 		protected internal override int MaximumRecordDataLength => Target.MaximumRecordDataLength + 8;

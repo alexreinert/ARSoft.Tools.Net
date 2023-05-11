@@ -246,7 +246,7 @@ namespace ARSoft.Tools.Net.Dns
 			return msg;
 		}
 
-		internal override bool IsReliableSendingRequested => (Questions.Count > 0) && ((Questions[0].RecordType == RecordType.Axfr) || (Questions[0].RecordType == RecordType.Ixfr) || (Questions[0].RecordType == RecordType.Any));
+		internal override bool IsReliableSendingRequested => (Questions.Count > 0) && Questions[0].RecordType is RecordType.Axfr or RecordType.Ixfr or RecordType.Any or RecordType.SMimeA;
 
 		internal override bool IsReliableResendingRequested => IsTruncated;
 
@@ -254,7 +254,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			if (isSubsequentResponseMessage)
 			{
-				return (AnswerRecords.Count > 0) && (AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa);
+				return (AnswerRecords.Count > 0) && (AnswerRecords[^1].RecordType != RecordType.Soa);
 			}
 
 			if (Questions.Count == 0)
@@ -265,7 +265,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			return (AnswerRecords.Count > 0)
 			       && (AnswerRecords[0].RecordType == RecordType.Soa)
-			       && ((AnswerRecords.Count == 1) || (AnswerRecords[AnswerRecords.Count - 1].RecordType != RecordType.Soa));
+			       && ((AnswerRecords.Count == 1) || (AnswerRecords[^1].RecordType != RecordType.Soa));
 		}
 	}
 }

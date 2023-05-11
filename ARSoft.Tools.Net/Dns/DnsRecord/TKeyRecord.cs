@@ -165,7 +165,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return TSigAlgorithmHelper.GetDomainName(Algorithm)
+			return TSigAlgorithmHelper.GetDomainName(Algorithm).ToString(false)
 			       + " " + (int) (Inception - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
 			       + " " + (int) (Expiration - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds
 			       + " " + (ushort) Mode

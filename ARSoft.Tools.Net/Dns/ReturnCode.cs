@@ -134,7 +134,8 @@ namespace ARSoft.Tools.Net.Dns
 		///   <para>EDNS version is not supported by responder</para>
 		///   <para>
 		///     Defined in
-		///     <a href="https://www.rfc-editor.org/rfc/rfc2671.html">RFC 2671</a>.
+		///     <a href="https://www.rfc-editor.org/rfc/rfc2671.html">RFC 2671</a>
+		///     and <a href="https://www.rfc-editor.org/rfc/rfc6891.html">RFC 6891</a>.
 		///   </para>
 		/// </summary>
 		BadVersion = 16,

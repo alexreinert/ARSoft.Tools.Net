@@ -29,8 +29,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>EDNS0 Client Subnet Option</para>
 	///   <para>
 	///     Defined in
-	///     <a href="http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-02">draft-vandergaast-edns-client-subnet</a>
-	///     .
+	///     <a href="https://www.rfc-editor.org/rfc/rfc7871.html">RFC 7871</a>.
 	///   </para>
 	/// </summary>
 	public class ClientSubnetOption : EDnsOptionBase
@@ -43,17 +42,17 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   The source subnet mask
 		/// </summary>
-		public byte SourceNetmask { get; private set; }
+		public byte SourceNetmask { get; }
 
 		/// <summary>
 		///   The scope subnet mask
 		/// </summary>
-		public byte ScopeNetmask { get; private set; }
+		public byte ScopeNetmask { get; }
 
 		/// <summary>
 		///   The address
 		/// </summary>
-		public IPAddress Address { get; private set; }
+		public IPAddress Address { get; }
 
 		internal ClientSubnetOption(IList<byte> resultData, int startPosition, int length)
 			: base(EDnsOptionType.ClientSubnet)

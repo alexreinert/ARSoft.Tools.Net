@@ -134,8 +134,8 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return MasterName
-			       + " " + ResponsibleName
+			return MasterName.ToString(true)
+			       + " " + ResponsibleName.ToString(true)
 			       + " " + SerialNumber
 			       + " " + RefreshInterval
 			       + " " + RetryInterval

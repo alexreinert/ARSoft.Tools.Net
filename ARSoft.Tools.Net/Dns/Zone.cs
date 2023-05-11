@@ -35,9 +35,6 @@ namespace ARSoft.Tools.Net.Dns
 	{
 		private static readonly SecureRandom _secureRandom = new SecureRandom(new CryptoApiRandomGenerator());
 
-		private static readonly Regex _commentRemoverRegex = new Regex(@"^(?<data>(\\\""|[^\""]|(?<!\\)\"".*?(?<!\\)\"")*?)(;.*)?$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-		private static readonly Regex _lineSplitterRegex = new Regex("([^\\s\"]+)|\"(.*?(?<!\\\\))\"", RegexOptions.Compiled);
-
 		private readonly List<DnsRecordBase> _records;
 
 		/// <summary>
@@ -129,48 +126,47 @@ namespace ARSoft.Tools.Net.Dns
 
 			while (!reader.EndOfStream)
 			{
-				string? line = ReadRecordLine(reader);
+				var line = ReadRecordLine(reader);
 
 				if (!String.IsNullOrEmpty(line))
 				{
-					string[] parts = _lineSplitterRegex.Matches(line).Cast<Match>().Select(x => x.Groups.Cast<Group>().Last(g => g.Success).Value.FromMasterfileLabelRepresentation()).ToArray();
+					var parts = line.SplitWithQuoting(new[] { ' ', '\t' }, true, true).Select(x => x.FromMasterfileLabelRepresentation()).ToArray();
 
 					if (parts[0].Equals("$origin", StringComparison.InvariantCultureIgnoreCase))
 					{
-						origin = DomainName.ParseFromMasterfile(parts[1]);
-					}
+						if (parts.Length != 2)
+							throw new FormatException();
 
-					if (parts[0].Equals("$ttl", StringComparison.InvariantCultureIgnoreCase))
+						origin = DomainName.ParseFromMasterfile(parts[1], origin);
+					}
+					else if (parts[0].Equals("$ttl", StringComparison.InvariantCultureIgnoreCase))
 					{
+						if (parts.Length != 2)
+							throw new FormatException();
+
 						ttl = Int32.Parse(parts[1]);
 					}
-
-					if (parts[0].Equals("$include", StringComparison.InvariantCultureIgnoreCase))
+					else if (parts[0].Equals("$include", StringComparison.InvariantCultureIgnoreCase))
 					{
-						FileStream? fileStream = reader.BaseStream as FileStream;
-
-						if (fileStream == null)
-							throw new NotSupportedException("Includes only supported when loading files");
+						if (reader.BaseStream is not FileStream fileStream)
+							throw new NotSupportedException("Includes are only supported when loading files");
 
 						// ReSharper disable once AssignNullToNotNullAttribute
-						string path = Path.Combine(new FileInfo(fileStream!.Name).DirectoryName!, parts[1]);
+						var path = Path.Combine(new FileInfo(fileStream!.Name).DirectoryName!, parts[1]);
 
-						DomainName includeOrigin = (parts.Length > 2) ? DomainName.ParseFromMasterfile(parts[2]) : origin;
+						var includeOrigin = (parts.Length > 2) ? DomainName.ParseFromMasterfile(parts[2], origin) : origin;
 
-						using (StreamReader includeReader = new StreamReader(path))
-						{
-							records.AddRange(ParseRecords(includeReader, includeOrigin, ttl, lastRecord));
-						}
+						using var includeReader = new StreamReader(path);
+						records.AddRange(ParseRecords(includeReader, includeOrigin, ttl, lastRecord));
 					}
 					else
 					{
 						string? domainString;
 						RecordType recordType;
 						RecordClass recordClass;
-						int recordTtl;
 						string[] rrData;
 
-						if (Int32.TryParse(parts[0], out recordTtl))
+						if (Int32.TryParse(parts[0], out var recordTtl))
 						{
 							// no domain, starts with ttl
 							if (RecordClassHelper.TryParseShortString(parts[1], out recordClass, false))
@@ -273,13 +269,9 @@ namespace ARSoft.Tools.Net.Dns
 						{
 							domain = origin;
 						}
-						else if (domainString.EndsWith("."))
-						{
-							domain = DomainName.ParseFromMasterfile(domainString);
-						}
 						else
 						{
-							domain = DomainName.ParseFromMasterfile(domainString) + origin;
+							domain = DomainName.ParseFromMasterfile(domainString, origin);
 						}
 
 						if (recordClass == RecordClass.Invalid)
@@ -313,13 +305,13 @@ namespace ARSoft.Tools.Net.Dns
 
 		private static string? ReadRecordLine(StreamReader reader)
 		{
-			string? line = ReadLineWithoutComment(reader);
+			var line = ReadLineWithoutComment(reader);
 
 			if (line == null)
 				return null;
 
 			int bracketPos;
-			if ((bracketPos = line.IndexOf('(')) != -1)
+			if ((bracketPos = line.IndexOfWithQuoting('(')) != -1)
 			{
 				StringBuilder sb = new StringBuilder();
 
@@ -336,15 +328,15 @@ namespace ARSoft.Tools.Net.Dns
 					if (line == null)
 						return null;
 
-					if ((bracketPos = line.IndexOf(')')) == -1)
+					if ((bracketPos = line.IndexOfWithQuoting(')')) == -1)
 					{
 						sb.Append(line);
 					}
 					else
 					{
-						sb.Append(line.Substring(0, bracketPos));
+						sb.Append(line[..bracketPos]);
 						sb.Append(" ");
-						sb.Append(line.Substring(bracketPos + 1));
+						sb.Append(line[(bracketPos + 1)..]);
 						line = sb.ToString();
 						break;
 					}
@@ -354,15 +346,16 @@ namespace ARSoft.Tools.Net.Dns
 			return line;
 		}
 
-		private static string? ReadLineWithoutComment(StreamReader reader)
+		internal static string? ReadLineWithoutComment(StreamReader reader)
 		{
 			string? line = reader.ReadLine();
 
 			if (line == null)
 				return null;
 
-			// ReSharper disable once AssignNullToNotNullAttribute
-			return _commentRemoverRegex.Match(line).Groups["data"].Value;
+			var index = line.IndexOfWithQuoting(';');
+
+			return index < 0 ? line : line[..index];
 		}
 
 		/// <summary>

@@ -61,7 +61,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <returns> Textual representation </returns>
 		public override string ToString()
 		{
-			return Name + " " + RecordType + " " + RecordClass;
+			return Name.ToString(true) + " " + RecordType + " " + RecordClass;
 		}
 
 		private int? _hashCode;

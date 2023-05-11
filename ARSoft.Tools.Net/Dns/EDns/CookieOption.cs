@@ -24,7 +24,7 @@ namespace ARSoft.Tools.Net.Dns
 	///   <para>Cookie Option</para>
 	///   <para>
 	///     Defined in
-	///     <a href="!:http://tools.ietf.org/html/draft-ietf-dnsop-cookies">draft-ietf-dnsop-cookies</a>.
+	///     <a href="https://www.rfc-editor.org/rfc/rfc7873.html">RFC 7873</a>.
 	///   </para>
 	/// </summary>
 	public class CookieOption : EDnsOptionBase
@@ -37,7 +37,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Server cookie
 		/// </summary>
-		public byte[] ServerCookie { get; private set; }
+		public byte[] ServerCookie { get; }
 
 		internal CookieOption(IList<byte> resultData, int startPosition, int length)
 			: base(EDnsOptionType.Cookie)

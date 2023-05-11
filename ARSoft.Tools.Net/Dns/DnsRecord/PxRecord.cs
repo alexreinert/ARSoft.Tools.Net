@@ -85,8 +85,8 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return Preference
-			       + " " + Map822
-			       + " " + MapX400;
+			       + " " + Map822.ToString(true)
+			       + " " + MapX400.ToString(true);
 		}
 
 		protected internal override int MaximumRecordDataLength => 6 + Map822.MaximumRecordDataLength + MapX400.MaximumRecordDataLength;

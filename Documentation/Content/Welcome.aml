@@ -359,22 +359,49 @@
 								<para>RFC 7344 - Automating DNSSEC Delegation Trust Maintenance</para>
 							</listItem>
 							<listItem>
-								<para>RFC 7479 - Using Ed25519 in SSHFP Resource Records</para>
+								<para>RFC 7477 - Child-to-Parent Synchronization in DNS</para>
 							</listItem>
 							<listItem>
-								<para>RFC 7477 - Child-to-Parent Synchronization in DNS</para>
+								<para>RFC 7479 - Using Ed25519 in SSHFP Resource Records</para>
 							</listItem>
 							<listItem>
 								<para>RFC 7553 - The Uniform Resource Identifier (URI) DNS Resource Record</para>
 							</listItem>
 							<listItem>
+								<para>RFC 7828 - The edns-tcp-keepalive EDNS0 Option (Option parsing only)</para>
+							</listItem>
+							<listItem>
+								<para>RFC 7830 - The EDNS(0) Padding Option</para>
+							</listItem>
+							<listItem>
+								<para>RFC 7871 - Client Subnet in DNS Queries (Option parsing only)</para>
+							</listItem>
+							<listItem>
+								<para>RFC 7873 - Domain Name System (DNS) Cookies (Option parsing only)</para>
+							</listItem>
+							<listItem>
 								<para>RFC 7929 - DNS-Based Authentication of Named Entities (DANE) Bindings for OpenPGP</para>
+							</listItem>
+							<listItem>
+								<para>RFC 8005 - Host Identity Protocol (HIP) Domain Name System (DNS) Extension</para>
 							</listItem>
 							<listItem>
 								<para>RFC 8080 - Edwards-Curve Digital Security Algorithm (EdDSA) for DNSSEC</para>
 							</listItem>
 							<listItem>
+								<para>RFC 8162 - Using Secure DNS to Associate Certificates with Domain Names for S/MIME</para>
+							</listItem>
+							<listItem>
+								<para>RFC 8749 - Moving DNSSEC Lookaside Validation (DLV) to Historic Status</para>
+							</listItem>
+							<listItem>
+								<para>RFC 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery</para>
+							</listItem>
+							<listItem>
 								<para>RFC 8945 - Secret Key Transaction Authentication for DNS (TSIG)</para>
+							</listItem>
+							<listItem>
+								<para>RFC 9373 - EdDSA Value for IPSECKEY</para>
 							</listItem>
 							<listItem>
 								<para>draft-vixie-dnsext-dns0x20 - Use of Bit 0x20 in DNS Labels to Improve Transaction Identity</para>
@@ -389,10 +416,7 @@
 								<para>draft-cheshire-edns0-owner-option - EDNS0 OWNER Option</para>
 							</listItem>
 							<listItem>
-								<para>draft-vandergaast-edns-client-subnet - Client Subnet in DNS Requests</para>
-							</listItem>
-							<listItem>
-								<para>draft-ietf-dnsop-cookies - Domain Name System (DNS) Cookies (Option parsing only)</para>
+								<para>draft-ietf-dnsop-svcb-https - Service binding and parameter specification via the DNS (DNS SVCB and HTTPS RRs) (Record parsing only)</para>
 							</listItem>
 						</list>
 					</content>

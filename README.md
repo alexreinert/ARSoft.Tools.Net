@@ -1,7 +1,7 @@
 # Project Description
 This project contains a complete managed .Net SPF validation, SenderID validation and a dns client and dns server implementation written in C#.
 
-# Donations [<img src="https://ko-fi.com/img/githubbutton_sm.svg" height="20" alt="Support me on Ko-fi">](https://ko-fi.com/alexreinert) [<img src="https://img.shields.io/badge/donate-PayPal-green.svg" height="20" alt="Donate via Paypal">](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=4PW43VJ2DZ7R2)
+# Donations
 If you use this library, please send me your feedback and add a link to this page.
 In addition you can donate via [Ko-fi](https://ko-fi.com/alexreinert), [Paypal](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=4PW43VJ2DZ7R2) or send me a gift from my [Amazon.de wishlist](https://www.amazon.de/gp/registry/wishlist/3NNUQIQO20AAP/ref=nav_wishlist_lists_1)
 
@@ -111,18 +111,26 @@ A API documentation can be found at [https://docs.ar-soft.de/arsoft.tools.net](h
 * RFC 7218 - Adding Acronyms to Simplify Conversations about DNS-Based Authentication of Named Entities (DANE)
 * RFC 7314 - Extension Mechanisms for DNS (EDNS) EXPIRE Option
 * RFC 7344 - Automating DNSSEC Delegation Trust Maintenance
-* RFC 7479 - Using Ed25519 in SSHFP Resource Records
 * RFC 7477 - Child-to-Parent Synchronization in DNS
+* RFC 7479 - Using Ed25519 in SSHFP Resource Records
 * RFC 7553 - The Uniform Resource Identifier (URI) DNS Resource Record
+* RFC 7828 - The edns-tcp-keepalive EDNS0 Option (Option parsing only)
+* RFC 7830 - The EDNS(0) Padding Option
+* RFC 7871 - Client Subnet in DNS Queries (Option parsing only)
+* RFC 7873 - Domain Name System (DNS) Cookies (Option parsing only)
 * RFC 7929 - DNS-Based Authentication of Named Entities (DANE) Bindings for OpenPGP
+* RFC 8005 - Host Identity Protocol (HIP) Domain Name System (DNS) Extension
 * RFC 8080 - Edwards-Curve Digital Security Algorithm (EdDSA) for DNSSEC
+* RFC 8162 - Using Secure DNS to Associate Certificates with Domain Names for S/MIME
+* RFC 8749 - Moving DNSSEC Lookaside Validation (DLV) to Historic Status
+* RFC 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery
 * RFC 8945 - Secret Key Transaction Authentication for DNS (TSIG)
+* RFC 9373 - EdDSA Value for IPSECKEY
 * draft-vixie-dnsext-dns0x20 - Use of Bit 0x20 in DNS Labels to Improve Transaction Identity
 * draft-sekar-dns-llq - DNS Long-Lived Queries
 * draft-sekar-dns-ul - Dynamic DNS Update Leases
 * draft-cheshire-edns0-owner-option - EDNS0 OWNER Option
-* draft-vandergaast-edns-client-subnet - Client Subnet in DNS Requests
-* draft-ietf-dnsop-cookies - Domain Name System (DNS) Cookies (Option parsing only)
+* draft-ietf-dnsop-svcb-https - Service binding and parameter specification via the DNS (DNS SVCB and HTTPS RRs) (Record parsing only)
 
 # License
 The library is released under [Apache License 2.0](https://github.com/alexreinert/ARSoft.Tools.Net/blob/master/LICENSE)

@@ -16,57 +16,30 @@
 // limitations under the License.
 #endregion
 
-using System.Net.Sockets;
-
-namespace ARSoft.Tools.Net.Dns;
+namespace ARSoft.Tools.Net.Dns.DynamicUpdate;
 
 /// <summary>
-///   Protocol of a transport
+///   Prequisite, that a record with given values exists
 /// </summary>
-public enum TransportProtocol
+public class RecordExistsValueIndependantPrequisite : PrequisiteBase
 {
 	/// <summary>
-	///   UDP
+	///   RecordType that should be checked
 	/// </summary>
-	Udp,
+	public RecordType RecordType { get; }
 
 	/// <summary>
-	///   TCP
+	///   Creates a new instance of the RecordExistsValueIndependantPrequisite class
 	/// </summary>
-	Tcp,
-
-	/// <summary>
-	///   TLS
-	/// </summary>
-	Tls,
-
-	/// <summary>
-	///   HTTPS
-	/// </summary>
-	Https,
-
-	/// <summary>
-	///   Custom
-	/// </summary>
-	Custom
-}
-
-internal static class TransportProtocolHelper
-{
-	public static ProtocolType ToProtocolType(this TransportProtocol protocol)
+	/// <param name="name"> Name that should be checked </param>
+	/// <param name="recordType"> RecordType that should be checked </param>
+	public RecordExistsValueIndependantPrequisite(DomainName name, RecordType recordType)
+		: base(name)
 	{
-		switch (protocol)
-		{
-			case TransportProtocol.Udp:
-				return ProtocolType.Udp;
-
-			case TransportProtocol.Tcp:
-			case TransportProtocol.Tls:
-			case TransportProtocol.Https:
-				return ProtocolType.Tcp;
-
-			default:
-				return ProtocolType.Unknown;
-		}
+		RecordType = recordType;
 	}
+
+	protected override RecordType RecordTypeInternal => RecordType;
+
+	protected override RecordClass RecordClassInternal => RecordClass.Any;
 }

@@ -120,7 +120,7 @@ namespace ARSoft.Tools.Net.Dns
 			       + " \"" + Flags.ToMasterfileLabelRepresentation() + "\""
 			       + " \"" + Services.ToMasterfileLabelRepresentation() + "\""
 			       + " \"" + RegExp.ToMasterfileLabelRepresentation() + "\""
-			       + " " + Replacement;
+			       + " " + Replacement.ToString(true);
 		}
 
 		protected internal override int MaximumRecordDataLength => Flags.Length + Services.Length + RegExp.Length + Replacement.MaximumRecordDataLength + 13;

@@ -114,7 +114,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal override string RecordDataToString()
 		{
-			return NextDomainName
+			return NextDomainName.ToString(true)
 			       + " " + String.Join(" ", Types.Select(RecordTypeHelper.ToShortString));
 		}
 

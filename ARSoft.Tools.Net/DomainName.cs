@@ -180,30 +180,14 @@ namespace ARSoft.Tools.Net
 			return new DomainName(GetNSec3Hash(algorithm, iterations, salt).ToBase32HexString(), zoneApex);
 		}
 
-		internal static DomainName ParseFromMasterfile(string s)
+		internal static DomainName ParseFromMasterfile(string name, DomainName origin)
 		{
-			if (s == ".")
-				return Root;
+			if (String.IsNullOrEmpty(name))
+				throw new ArgumentException("Name must be provided", nameof(name));
 
-			var labels = new List<string>();
+			var parsed = Parse(name);
 
-			var lastOffset = 0;
-
-			for (var i = 0; i < s.Length; ++i)
-			{
-				if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
-				{
-					labels.Add(s.Substring(lastOffset, i - lastOffset).FromMasterfileLabelRepresentation());
-					lastOffset = i + 1;
-				}
-			}
-
-			labels.Add(s.Substring(lastOffset, s.Length - lastOffset).FromMasterfileLabelRepresentation());
-
-			if (labels[labels.Count - 1] == String.Empty)
-				labels.RemoveAt(labels.Count - 1);
-
-			return new DomainName(labels.ToArray());
+			return name.EndsWith(".") ? parsed : parsed + origin;
 		}
 
 		/// <summary>
@@ -230,6 +214,12 @@ namespace ARSoft.Tools.Net
 		/// <returns>true, if s was parsed successfully; otherwise, false</returns>
 		public static bool TryParse(string s, out DomainName? name)
 		{
+			if (String.IsNullOrEmpty(s))
+			{
+				name = null;
+				return false;
+			}
+
 			if (s == ".")
 			{
 				name = Root;
@@ -239,23 +229,19 @@ namespace ARSoft.Tools.Net
 			List<string> labels = new List<string>();
 
 			int lastOffset = 0;
+			int nextOffset;
 
-			string? label;
-
-			for (int i = 0; i < s.Length; ++i)
+			while ((nextOffset = s.IndexOfWithQuoting('.', lastOffset)) != -1)
 			{
-				if (s[i] == '.' && (i == 0 || s[i - 1] != '\\'))
+				if (TryParseLabel(s.Substring(lastOffset, nextOffset - lastOffset), out string? label))
 				{
-					if (TryParseLabel(s.Substring(lastOffset, i - lastOffset), out label))
-					{
-						labels.Add(label!);
-						lastOffset = i + 1;
-					}
-					else
-					{
-						name = null;
-						return false;
-					}
+					labels.Add(label!);
+					lastOffset = nextOffset + 1;
+				}
+				else
+				{
+					name = null;
+					return false;
 				}
 			}
 
@@ -263,7 +249,7 @@ namespace ARSoft.Tools.Net
 			{
 				// empty label --> name ends with dot
 			}
-			else if (TryParseLabel(s.Substring(lastOffset, s.Length - lastOffset), out label))
+			else if (TryParseLabel(s.Substring(lastOffset, s.Length - lastOffset), out string? label))
 			{
 				labels.Add(label!);
 			}
@@ -273,27 +259,37 @@ namespace ARSoft.Tools.Net
 				return false;
 			}
 
+			if (labels.Sum(l => l.Length) + labels.Count > 255 || labels.Any(l => l.Length == 0))
+			{
+				name = null;
+				return false;
+			}
+
 			name = new DomainName(labels.ToArray());
 			return true;
 		}
 
 		private static readonly IdnMapping _idnParser = new() { UseStd3AsciiRules = true };
-		private static readonly Regex _asciiNameRegex = new("^[a-zA-Z0-9_-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
 		private static bool TryParseLabel(string s, out string? label)
 		{
 			try
 			{
-				if (_asciiNameRegex.IsMatch(s))
+				s = s.FromMasterfileLabelRepresentation();
+
+				if (s.Length > 63)
 				{
-					label = s;
-					return true;
+					label = null;
+					return false;
 				}
-				else
+
+				if (s.Any(c => c > 127))
 				{
-					label = _idnParser.GetAscii(s);
-					return true;
+					s = _idnParser.GetAscii(s);
 				}
+
+				label = s;
+				return true;
 			}
 			catch
 			{
@@ -308,7 +304,7 @@ namespace ARSoft.Tools.Net
 		/// <returns>The string representation of the domain name</returns>
 		public override string ToString()
 		{
-			return ToString(false);
+			return ToString(true);
 		}
 
 		private string? _toString;
@@ -384,7 +380,7 @@ namespace ARSoft.Tools.Net
 		/// <param name="name1">The first name</param>
 		/// <param name="name2">The second name</param>
 		/// <returns>true, if the names are not identical</returns>
-		public static bool operator !=(DomainName name1, DomainName name2)
+		public static bool operator !=(DomainName? name1, DomainName? name2)
 		{
 			return !(name1 == name2);
 		}
