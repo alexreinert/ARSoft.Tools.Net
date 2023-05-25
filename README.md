@@ -122,6 +122,7 @@ A API documentation can be found at [https://docs.ar-soft.de/arsoft.tools.net](h
 * RFC 8005 - Host Identity Protocol (HIP) Domain Name System (DNS) Extension
 * RFC 8080 - Edwards-Curve Digital Security Algorithm (EdDSA) for DNSSEC
 * RFC 8162 - Using Secure DNS to Associate Certificates with Domain Names for S/MIME
+* RFC 8427 - Representing DNS Messages in JSON
 * RFC 8749 - Moving DNSSEC Lookaside Validation (DLV) to Historic Status
 * RFC 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery
 * RFC 8945 - Secret Key Transaction Authentication for DNS (TSIG)

@@ -392,6 +392,9 @@
 								<para>RFC 8162 - Using Secure DNS to Associate Certificates with Domain Names for S/MIME</para>
 							</listItem>
 							<listItem>
+								<para>RFC 8427 - Representing DNS Messages in JSON</para>
+							</listItem>
+							<listItem>
 								<para>RFC 8749 - Moving DNSSEC Lookaside Validation (DLV) to Historic Status</para>
 							</listItem>
 							<listItem>

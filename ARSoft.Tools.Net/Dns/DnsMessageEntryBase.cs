@@ -21,73 +21,75 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns;
+
+/// <summary>
+///   Base class for a dns name identity
+/// </summary>
+public abstract class DnsMessageEntryBase : IEquatable<DnsMessageEntryBase>
 {
 	/// <summary>
-	///   Base class for a dns name identity
+	///   Domain name
 	/// </summary>
-	public abstract class DnsMessageEntryBase : IEquatable<DnsMessageEntryBase>
+	public DomainName Name { get; protected set; }
+
+	/// <summary>
+	///   Type of the record
+	/// </summary>
+	public RecordType RecordType { get; protected set; }
+
+	/// <summary>
+	///   Class of the record
+	/// </summary>
+	public RecordClass RecordClass { get; protected set; }
+
+	internal abstract int MaximumLength { get; }
+
+	protected DnsMessageEntryBase(DomainName name, RecordType recordType, RecordClass recordClass)
 	{
-		/// <summary>
-		///   Domain name
-		/// </summary>
-		public DomainName Name { get; protected set; }
+		_ = name ?? throw new ArgumentNullException(nameof(name));
 
-		/// <summary>
-		///   Type of the record
-		/// </summary>
-		public RecordType RecordType { get; protected set; }
+		Name = name;
+		RecordType = recordType;
+		RecordClass = recordClass;
+	}
 
-		/// <summary>
-		///   Class of the record
-		/// </summary>
-		public RecordClass RecordClass { get; protected set; }
+	protected internal abstract void WriteRfc8427Json(Utf8JsonWriter writer, JsonSerializerOptions options);
 
-		internal abstract int MaximumLength { get; }
+	/// <summary>
+	///   Returns the textual representation
+	/// </summary>
+	/// <returns> Textual representation </returns>
+	public override string ToString()
+	{
+		return Name.ToString(true) + " " + RecordType + " " + RecordClass;
+	}
 
-		protected DnsMessageEntryBase(DomainName name, RecordType recordType, RecordClass recordClass)
+	private int? _hashCode;
+
+	[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+	public override int GetHashCode()
+	{
+		if (!_hashCode.HasValue)
 		{
-			_ = name ?? throw new ArgumentNullException(nameof(name));
-
-			Name = name;
-			RecordType = recordType;
-			RecordClass = recordClass;
+			_hashCode = ToString().GetHashCode();
 		}
 
-		/// <summary>
-		///   Returns the textual representation
-		/// </summary>
-		/// <returns> Textual representation </returns>
-		public override string ToString()
-		{
-			return Name.ToString(true) + " " + RecordType + " " + RecordClass;
-		}
+		return _hashCode.Value;
+	}
 
-		private int? _hashCode;
+	public override bool Equals(object? obj)
+	{
+		return Equals(obj as DnsMessageEntryBase);
+	}
 
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
-		{
-			if (!_hashCode.HasValue)
-			{
-				_hashCode = ToString().GetHashCode();
-			}
-
-			return _hashCode.Value;
-		}
-
-		public override bool Equals(object? obj)
-		{
-			return Equals(obj as DnsMessageEntryBase);
-		}
-
-		public bool Equals(DnsMessageEntryBase? other)
-		{
-			return other != null
-			       && Name.Equals(other.Name)
-			       && RecordType.Equals(other.RecordType)
-			       && RecordClass.Equals(other.RecordClass);
-		}
+	public bool Equals(DnsMessageEntryBase? other)
+	{
+		return other != null
+		       && Name.Equals(other.Name)
+		       && RecordType.Equals(other.RecordType)
+		       && RecordClass.Equals(other.RecordClass);
 	}
 }

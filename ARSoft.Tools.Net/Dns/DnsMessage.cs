@@ -21,12 +21,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
 	///   Message returned as result to a dns query
 	/// </summary>
+	[JsonConverter(typeof(Rfc8427JsonConverter<DnsMessage>))]
 	public class DnsMessage : DnsRecordMessageBase
 	{
 		/// <summary>
@@ -49,18 +51,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsAuthoritiveAnswer
 		{
-			get { return (Flags & 0x0400) != 0; }
-			set
-			{
-				if (value)
-				{
-					Flags |= 0x0400;
-				}
-				else
-				{
-					Flags &= 0xfbff;
-				}
-			}
+			get => AAFlagInternal;
+			set => AAFlagInternal = value;
 		}
 
 		/// <summary>
@@ -72,18 +64,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsTruncated
 		{
-			get { return (Flags & 0x0200) != 0; }
-			set
-			{
-				if (value)
-				{
-					Flags |= 0x0200;
-				}
-				else
-				{
-					Flags &= 0xfdff;
-				}
-			}
+			get => TCFlagInternal;
+			set => TCFlagInternal = value;
 		}
 
 		/// <summary>
@@ -95,18 +77,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsRecursionDesired
 		{
-			get { return (Flags & 0x0100) != 0; }
-			set
-			{
-				if (value)
-				{
-					Flags |= 0x0100;
-				}
-				else
-				{
-					Flags &= 0xfeff;
-				}
-			}
+			get => RDFlagInternal;
+			set => RDFlagInternal = value;
 		}
 
 		/// <summary>
@@ -118,18 +90,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsRecursionAllowed
 		{
-			get { return (Flags & 0x0080) != 0; }
-			set
-			{
-				if (value)
-				{
-					Flags |= 0x0080;
-				}
-				else
-				{
-					Flags &= 0xff7f;
-				}
-			}
+			get => RAFlagInternal;
+			set => RAFlagInternal = value;
 		}
 
 		/// <summary>
@@ -141,18 +103,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsAuthenticData
 		{
-			get { return (Flags & 0x0020) != 0; }
-			set
-			{
-				if (value)
-				{
-					Flags |= 0x0020;
-				}
-				else
-				{
-					Flags &= 0xffdf;
-				}
-			}
+			get => ADFlagInternal;
+			set => ADFlagInternal = value;
 		}
 
 		/// <summary>
@@ -164,18 +116,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsCheckingDisabled
 		{
-			get { return (Flags & 0x0010) != 0; }
-			set
-			{
-				if (value)
-				{
-					Flags |= 0x0010;
-				}
-				else
-				{
-					Flags &= 0xffef;
-				}
-			}
+			get => CDFlagInternal;
+			set => CDFlagInternal = value;
 		}
 		#endregion
 
@@ -223,7 +165,7 @@ namespace ARSoft.Tools.Net.Dns
 				TransactionID = TransactionID,
 				IsEDnsEnabled = IsEDnsEnabled,
 				IsQuery = false,
-				OperationCode = OperationCode,
+				OperationCodeInternal = OperationCodeInternal,
 				IsRecursionDesired = IsRecursionDesired,
 				IsCheckingDisabled = IsCheckingDisabled,
 				IsDnsSecOk = IsDnsSecOk,

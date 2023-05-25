@@ -98,6 +98,46 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		public static RecordClass ParseShortString(string s, bool allowAny = true)
+		{
+			if (String.IsNullOrEmpty(s))
+				throw new ArgumentOutOfRangeException(nameof(s));
+
+			switch (s.ToUpperInvariant())
+			{
+				case "IN":
+					return RecordClass.INet;
+
+				case "CH":
+					return RecordClass.Chaos;
+
+				case "HS":
+					return RecordClass.Hesiod;
+
+				case "NONE":
+					return RecordClass.None;
+
+				case "*":
+					if (allowAny)
+						return RecordClass.Any;
+					break;
+
+				default:
+					if (s.StartsWith("CLASS", StringComparison.InvariantCultureIgnoreCase))
+					{
+						ushort classValue;
+						if (UInt16.TryParse(s.Substring(5), out classValue))
+						{
+							return (RecordClass)classValue;
+						}
+					}
+					break;
+			}
+
+			throw new ArgumentOutOfRangeException(nameof(s));
+		}
+
+
 		public static bool TryParseShortString(string s, out RecordClass recordClass, bool allowAny = true)
 		{
 			if (String.IsNullOrEmpty(s))

@@ -18,6 +18,11 @@
 
 using System.Collections;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using System.Xml;
 using ARSoft.Tools.Net.Dns.DynamicUpdate;
 using Org.BouncyCastle.Crypto.Macs;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -30,22 +35,17 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   Base class for a dns message
 	/// </summary>
+	[JsonConverter(typeof(Rfc8427JsonConverter<DnsMessageBase>))]
 	public abstract class DnsMessageBase
 	{
 		private static readonly SecureRandom _secureRandom = new SecureRandom(new CryptoApiRandomGenerator());
 
 		protected ushort Flags;
 
-		private List<DnsRecordBase> _additionalRecords = new List<DnsRecordBase>();
-
 		/// <summary>
 		///   Gets or sets the entries in the additional records section
 		/// </summary>
-		public List<DnsRecordBase> AdditionalRecords
-		{
-			get => _additionalRecords;
-			set => _additionalRecords = (value ?? new List<DnsRecordBase>());
-		}
+		public List<DnsRecordBase> AdditionalRecords { get; set; } = new();
 
 		internal abstract bool IsReliableSendingRequested { get; }
 		internal abstract bool IsReliableResendingRequested { get; }
@@ -78,16 +78,109 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		/// <summary>
-		///   Gets or sets the Operation Code (OPCODE)
-		/// </summary>
-		public OperationCode OperationCode
+		protected OperationCode OperationCodeInternal
 		{
 			get => (OperationCode) ((Flags & 0x7800) >> 11);
 			set
 			{
 				var clearedOp = (ushort) (Flags & 0x8700);
 				Flags = (ushort) (clearedOp | (ushort) value << 11);
+			}
+		}
+
+		protected internal bool AAFlagInternal
+		{
+			get => (Flags & 0x0400) != 0;
+			set
+			{
+				if (value)
+				{
+					Flags |= 0x0400;
+				}
+				else
+				{
+					Flags &= 0xfbff;
+				}
+			}
+		}
+
+		protected internal bool TCFlagInternal
+		{
+			get => (Flags & 0x0200) != 0;
+			set
+			{
+				if (value)
+				{
+					Flags |= 0x0200;
+				}
+				else
+				{
+					Flags &= 0xfdff;
+				}
+			}
+		}
+
+		protected internal bool RDFlagInternal
+		{
+			get => (Flags & 0x0100) != 0;
+			set
+			{
+				if (value)
+				{
+					Flags |= 0x0100;
+				}
+				else
+				{
+					Flags &= 0xfeff;
+				}
+			}
+		}
+
+		protected internal bool RAFlagInternal
+		{
+			get => (Flags & 0x0080) != 0;
+			set
+			{
+				if (value)
+				{
+					Flags |= 0x0080;
+				}
+				else
+				{
+					Flags &= 0xff7f;
+				}
+			}
+		}
+
+		protected internal bool ADFlagInternal
+		{
+			get => (Flags & 0x0020) != 0;
+			set
+			{
+				if (value)
+				{
+					Flags |= 0x0020;
+				}
+				else
+				{
+					Flags &= 0xffdf;
+				}
+			}
+		}
+
+		protected internal bool CDFlagInternal
+		{
+			get => (Flags & 0x0010) != 0;
+			set
+			{
+				if (value)
+				{
+					Flags |= 0x0010;
+				}
+				else
+				{
+					Flags &= 0xffef;
+				}
 			}
 		}
 
@@ -146,16 +239,16 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsEDnsEnabled
 		{
-			get => _additionalRecords.Any(record => (record.RecordType == RecordType.Opt));
+			get => AdditionalRecords.Any(record => (record.RecordType == RecordType.Opt));
 			set
 			{
 				if (value && !IsEDnsEnabled)
 				{
-					_additionalRecords.Add(new OptRecord());
+					AdditionalRecords.Add(new OptRecord());
 				}
 				else if (!value && IsEDnsEnabled)
 				{
-					_additionalRecords.RemoveAll(record => (record.RecordType == RecordType.Opt));
+					AdditionalRecords.RemoveAll(record => (record.RecordType == RecordType.Opt));
 				}
 			}
 		}
@@ -165,7 +258,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public OptRecord? EDnsOptions
 		{
-			get => (OptRecord?) _additionalRecords?.Find(record => (record.RecordType == RecordType.Opt));
+			get => (OptRecord?) AdditionalRecords?.Find(record => (record.RecordType == RecordType.Opt));
 			set
 			{
 				if (value == null)
@@ -174,12 +267,12 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else if (IsEDnsEnabled)
 				{
-					var pos = _additionalRecords.FindIndex(record => (record.RecordType == RecordType.Opt));
-					_additionalRecords[pos] = value;
+					var pos = AdditionalRecords.FindIndex(record => (record.RecordType == RecordType.Opt));
+					AdditionalRecords[pos] = value;
 				}
 				else
 				{
-					_additionalRecords.Add(value);
+					AdditionalRecords.Add(value);
 				}
 			}
 		}
@@ -191,6 +284,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		// ReSharper disable once InconsistentNaming
 		public TSigRecord? TSigOptions { get; set; }
+		#endregion
 
 		internal static DnsMessageBase CreateByFlag(IList<byte> package, DnsServer.SelectTsigKey? tsigKeySelector, byte[]? originalMac)
 		{
@@ -215,6 +309,7 @@ namespace ARSoft.Tools.Net.Dns
 			return res;
 		}
 
+		#region Parsing
 		internal static TMessage Parse<TMessage>(IList<byte> package)
 			where TMessage : DnsMessageBase, new()
 		{
@@ -233,55 +328,69 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			int currentPosition = 0;
 
-			TransactionID = ParseUShort(data, ref currentPosition);
-			Flags = ParseUShort(data, ref currentPosition);
+			ParseHeader(data, ref currentPosition, out int questionCount, out int answerRecordCount, out int authorityRecordCount, out int additionalRecordCount);
 
-			ParseSections(data, ref currentPosition);
+			ParseQuestionSection(data, ref currentPosition, questionCount);
+			ParseAnswerSection(data, ref currentPosition, answerRecordCount);
+			ParseAuthoritySection(data, ref currentPosition, authorityRecordCount);
+			AdditionalRecords = ParseRecordSection(data, ref currentPosition, additionalRecordCount);
 
-			if (_additionalRecords.Count > 0)
+			if (AdditionalRecords.Count > 0)
 			{
-				var tSigPos = _additionalRecords.FindIndex(record => (record.RecordType == RecordType.TSig));
-				if (tSigPos == (_additionalRecords.Count - 1))
+				var tSigPos = AdditionalRecords.FindIndex(record => (record.RecordType == RecordType.TSig));
+				if (tSigPos == (AdditionalRecords.Count - 1))
 				{
-					TSigOptions = (TSigRecord) _additionalRecords[tSigPos];
+					TSigOptions = (TSigRecord) AdditionalRecords[tSigPos];
 
-					_additionalRecords.RemoveAt(tSigPos);
+					AdditionalRecords.RemoveAt(tSigPos);
 
-					TSigOptions.ValidationResult = TSigOptions.ValidateTSig(data, _additionalRecords.Count, tsigKeySelector, originalMac);
+					TSigOptions.ValidationResult = TSigOptions.ValidateTSig(data, AdditionalRecords.Count, tsigKeySelector, originalMac);
 				}
 			}
-
-			FinishParsing();
 		}
 
-		protected abstract void ParseSections(IList<byte> resultData, ref int currentPosition);
-		#endregion
-
-		#region Parsing
-		protected virtual void FinishParsing() { }
-
-		#region Methods for parsing answer
-		protected void ParseQuestionSection(IList<byte> data, ref int currentPosition, List<DnsQuestion> sectionList, int recordCount)
+		private void ParseHeader(IList<byte> data, ref int currentPosition, out int questionCount, out int answerRecordCount, out int authorityRecordCount, out int additionalRecordCount)
 		{
+			TransactionID = ParseUShort(data, ref currentPosition);
+			Flags = ParseUShort(data, ref currentPosition);
+			questionCount = ParseUShort(data, ref currentPosition);
+			answerRecordCount = ParseUShort(data, ref currentPosition);
+			authorityRecordCount = ParseUShort(data, ref currentPosition);
+			additionalRecordCount = ParseUShort(data, ref currentPosition);
+		}
+
+		protected void ParseQuestionSection(IList<byte> data, ref int currentPosition, int recordCount)
+		{
+			var questions = new List<DnsQuestion>(recordCount);
+
 			for (var i = 0; i < recordCount; i++)
 			{
 				DnsQuestion question = new DnsQuestion(
 					ParseDomainName(data, ref currentPosition),
-					(RecordType) ParseUShort(data, ref currentPosition),
-					(RecordClass) ParseUShort(data, ref currentPosition));
+					(RecordType)ParseUShort(data, ref currentPosition),
+					(RecordClass)ParseUShort(data, ref currentPosition));
 
-				sectionList.Add(question);
+				questions.Add(question);
 			}
+
+			SetQuestionSection(questions);
 		}
 
-		protected static void ParseRecordSection(IList<byte> resultData, ref int currentPosition, List<DnsRecordBase> sectionList, int recordCount)
+		protected abstract void ParseAnswerSection(IList<byte> data, ref int currentPosition, int recordCount);
+
+		protected abstract void ParseAuthoritySection(IList<byte> data, ref int currentPosition, int recordCount);
+
+		protected static List<DnsRecordBase> ParseRecordSection(IList<byte> resultData, ref int currentPosition, int recordCount)
 		{
+			var sectionList = new List<DnsRecordBase>(recordCount);
+
 			for (var i = 0; i < recordCount; i++)
 			{
 				sectionList.Add(DnsRecordBase.ParseRecordFromMessage(resultData, ref currentPosition));
 			}
+
+			return sectionList;
 		}
-		#endregion
 
 		#region Helper methods for parsing records
 		internal static string ParseText(IList<byte> resultData, ref int currentPosition)
@@ -596,7 +705,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 
 				EncodeUShort(messageData, 0, TransactionID);
-				EncodeUShort(messageData, 10, (ushort) (_additionalRecords.Count + 1));
+				EncodeUShort(messageData, 10, (ushort) (AdditionalRecords.Count + 1));
 
 				TSigOptions.Encode(messageData, ref currentMessageDataPosition, domainNames, newTSigMac);
 			}
@@ -800,5 +909,179 @@ namespace ARSoft.Tools.Net.Dns
 		protected internal abstract bool AllowMultipleResponses { get; }
 
 		protected internal abstract IEnumerable<DnsMessageBase> SplitResponse();
+
+		internal void WriteRfc8427Json(Utf8JsonWriter writer, JsonSerializerOptions options)
+		{
+			writer.WriteStartObject();
+
+			writer.WriteNumber("ID", TransactionID);
+			writer.WriteNumber("QR", IsQuery ? 0 : 1);
+			writer.WriteNumber("Opcode", (ushort) OperationCodeInternal);
+			writer.WriteNumber("AA", AAFlagInternal ? 1 : 0);
+			writer.WriteNumber("TC", TCFlagInternal ? 1 : 0);
+			writer.WriteNumber("RD", RDFlagInternal ? 1 : 0);
+			writer.WriteNumber("RA", RAFlagInternal ? 1 : 0);
+			writer.WriteNumber("AD", ADFlagInternal ? 1 : 0);
+			writer.WriteNumber("CD", CDFlagInternal ? 1 : 0);
+			writer.WriteNumber("RCODE", ((ushort) ReturnCode) & 0xf);
+
+			WriteRfc8427JsonSections(writer, options);
+
+			writer.WriteEndObject();
+		}
+
+		protected abstract void WriteRfc8427JsonSections(Utf8JsonWriter writer, JsonSerializerOptions options);
+
+		protected void WriteRfc8427JsonSection<T>(string name, List<T> records, Utf8JsonWriter writer, JsonSerializerOptions options)
+			where T : DnsMessageEntryBase
+		{
+			if (records.Count == 0)
+				return;
+
+			writer.WriteStartArray(name);
+
+			foreach (var record in records)
+			{
+				record.WriteRfc8427Json(writer, options);
+			}
+
+			writer.WriteEndArray();
+		}
+
+		internal static TMessage ParseRfc8427Json<TMessage>(JsonElement json)
+			where TMessage : DnsMessageBase, new()
+		{
+			var msg = new TMessage();
+
+			DomainName? qname = null;
+			var qclass = RecordClass.Invalid;
+			var qtype = RecordType.Invalid;
+
+			foreach (var prop in json.EnumerateObject())
+			{
+				if (prop.Value.ValueKind == JsonValueKind.Null)
+					continue;
+
+				switch (prop.Name)
+				{
+					case "ID":
+						msg.TransactionID = prop.Value.GetUInt16();
+						break;
+					case "QR":
+						msg.IsQuery = !ReadBoolFlag(prop.Value);
+						break;
+					case "Opcode":
+						msg.OperationCodeInternal = (OperationCode)prop.Value.GetUInt16();
+						break;
+					case "AA":
+						msg.AAFlagInternal = ReadBoolFlag(prop.Value);
+						break;
+					case "TC":
+						msg.TCFlagInternal = ReadBoolFlag(prop.Value);
+						break;
+					case "RD":
+						msg.RDFlagInternal = ReadBoolFlag(prop.Value);
+						break;
+					case "RA":
+						msg.RAFlagInternal = ReadBoolFlag(prop.Value);
+						break;
+					case "AD":
+						msg.ADFlagInternal = ReadBoolFlag(prop.Value);
+						break;
+					case "CD":
+						msg.CDFlagInternal = ReadBoolFlag(prop.Value);
+						break;
+					case "RCODE":
+						msg.ReturnCode = (ReturnCode)prop.Value.GetUInt16();
+						break;
+					case "QNAME":
+						qname = DomainName.Parse(prop.Value.GetString() ?? String.Empty);
+						break;
+					case "QTYPE":
+						qtype = (RecordType) prop.Value.GetUInt16();
+						break;
+					case "QTYPEname":
+						qtype = RecordTypeHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
+						break;
+					case "QCLASS":
+						qclass = (RecordClass)prop.Value.GetUInt16();
+						break;
+					case "QCLASSname":
+						qclass = RecordClassHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
+						break;
+					case "questionRRs":
+						msg.ParseRfc8427JsonQuestionSection(prop.Value);
+						break;
+					case "answerRRs":
+						msg.ParseRfc8427JsonAnswerSection(prop.Value);
+						break;
+					case "authorityRRs":
+						msg.ParseRfc8427JsonAuthoritySection(prop.Value);
+						break;
+					case "additionalRRs":
+						msg.AdditionalRecords = ParseRfc8427JsonRecordSection(prop.Value);
+						break;
+					case "messageOctetsHEX":
+						msg.ParseInternal(prop.Value.GetString()!.FromBase16String(), null, null);
+						return msg;
+				}
+			}
+
+			if (!json.TryGetProperty("questionRRs", out _) && (qname != null || qtype != RecordType.Invalid || qclass != RecordClass.Invalid))
+				msg.SetQuestionSection(new List<DnsQuestion>() { new(qname ?? DomainName.Root, qtype, qclass) });
+
+			return msg;
+		}
+
+		private void ParseRfc8427JsonQuestionSection(JsonElement json)
+		{
+			var questions = new List<DnsQuestion>();
+
+			foreach (var questionJson in json.EnumerateArray())
+			{
+				questions.Add(DnsQuestion.ParseRfc8427Json(questionJson));
+			}
+
+			SetQuestionSection(questions);
+		}
+
+		protected static List<DnsRecordBase> ParseRfc8427JsonRecordSection(JsonElement json)
+		{
+			var sectionList = new List<DnsRecordBase>();
+
+			foreach (var recordJson in json.EnumerateArray())
+			{
+				if (recordJson.TryGetProperty("rrSet", out var rrsetArrayJson))
+				{
+					foreach (var rrsetJson in rrsetArrayJson.EnumerateArray())
+					{
+						sectionList.Add(DnsRecordBase.ParseRfc8427Json(recordJson, rrsetJson));
+					}
+				}
+				else
+				{
+					sectionList.Add(DnsRecordBase.ParseRfc8427Json(recordJson, recordJson));
+				}
+			}
+
+			return sectionList;
+		}
+
+		protected abstract void ParseRfc8427JsonAnswerSection(JsonElement json);
+
+		protected abstract void ParseRfc8427JsonAuthoritySection(JsonElement json);
+
+		protected abstract void SetQuestionSection(List<DnsQuestion> questionSection);
+
+		private static bool ReadBoolFlag(JsonElement json)
+		{
+			switch (json.GetInt32())
+			{
+				case 0: return false;
+				case 1: return true;
+				default: throw new JsonException("Not a valid boolean flag: '" + json.GetRawText() + "'");
+			}
+		}
+
 	}
 }

@@ -9,8 +9,9 @@
     <Topic id="b8c09800-f83d-4b77-8687-2df3d6cd74e8" visible="True" title="DNS Server" />
     <Topic id="6C911611-9F33-45DC-A6B2-0D7728A245AB" visible="True" title="DNS Resolver" />
     <Topic id="D0338225-7D11-4977-87CF-9FBABC1BF6E6" visible="True" title="DNS Client" />
-    <Topic id="96AB056E-152C-4605-86A2-4CBB9A9574ED" visible="True" isSelected="true" title="DNSSEC" />
+    <Topic id="96AB056E-152C-4605-86A2-4CBB9A9574ED" visible="True" title="DNSSEC" />
     <Topic id="9D9054AB-F69D-4D02-848F-B7526E094557" visible="True" title="SPF and SenderID validation" />
+    <Topic id="93CEAE66-0053-40E3-B4A4-9A7913B2AA6D" visible="True" isSelected="true" title="JSON Serialization and deserialization" />
   </Topic>
   <Topic id="15edcbb1-6cf3-445c-971f-18ba0093f6a6" visible="True" noFile="true" apiParentMode="InsertAsChild" title="API Reference" />
 </Topics>

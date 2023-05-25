@@ -16,7 +16,7 @@
 		<PackageLicenseUrl>https://github.com/alexreinert/ARSoft.Tools.Net/blob/master/LICENSE</PackageLicenseUrl>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Copyright>Copyright 2010..2023 Alexander Reinert</Copyright>
-		<VersionPrefix>3.2.0</VersionPrefix>
+		<VersionPrefix>3.3.0</VersionPrefix>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -36,7 +36,12 @@
 	  </None>
 	</ItemGroup>
 
-	<ItemGroup>
+	<ItemGroup Condition="!Exists('..\..\arsoft.pfx')">
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>ARSoft.Tools.Net.Tests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+	<ItemGroup Condition="Exists('..\..\arsoft.pfx')">
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
 			<_Parameter1>ARSoft.Tools.Net.Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001009B3C03B877D82BDB95D93615C1521BAE3C1D5E9AF140B9BE44BE07ADF2E2E303481FEF06BE780C26E9422384E9E5B0EFD7CF77B5F1F500BD79062D076F47F4F955BF3090AEEF3CE0D3FD2E9C27F496035D2055D40CFF7835CB4DC40A337C890BBE2973BDDDFEC2DE8EFB7B8B375BDBD96EE5B278D8A69866841BC5D06E817CB5</_Parameter1>
 		</AssemblyAttribute>

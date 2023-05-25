@@ -21,192 +21,231 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns;
+
+[JsonConverter(typeof(Rfc8427JsonConverter<DnsRecordMessageBase>))]
+public abstract class DnsRecordMessageBase : DnsMessageBase
 {
-	public abstract class DnsRecordMessageBase : DnsMessageBase
+	/// <summary>
+	///   Gets or sets the Operation Code (OPCODE)
+	/// </summary>
+	public OperationCode OperationCode
 	{
-		private List<DnsQuestion> _questions = new List<DnsQuestion>();
-		private List<DnsRecordBase> _answerRecords = new List<DnsRecordBase>();
+		get => OperationCodeInternal;
+		set => OperationCodeInternal = value;
+	}
 
-		/// <summary>
-		///   Gets or sets the entries in the question section
-		/// </summary>
-		public List<DnsQuestion> Questions
+	/// <summary>
+	///   Gets or sets the entries in the question section
+	/// </summary>
+	public List<DnsQuestion> Questions { get; set; } = new();
+
+	/// <summary>
+	///   Gets or sets the entries in the answer records section
+	/// </summary>
+	public List<DnsRecordBase> AnswerRecords { get; set; } = new();
+
+	/// <summary>
+	///   Gets or sets the entries in the authority records section
+	/// </summary>
+	public List<DnsRecordBase> AuthorityRecords { get; set; } = new();
+
+	protected override void ParseAnswerSection(IList<byte> data, ref int currentPosition, int recordCount)
+	{
+		AnswerRecords = ParseRecordSection(data, ref currentPosition, recordCount);
+	}
+
+	protected override void ParseAuthoritySection(IList<byte> data, ref int currentPosition, int recordCount)
+	{
+		AuthorityRecords = ParseRecordSection(data, ref currentPosition, recordCount);
+	}
+
+	protected override int GetSectionsMaxLength()
+	{
+		return 12
+		       + Questions.Sum(question => question.MaximumLength)
+		       + AnswerRecords.Sum(record => record.MaximumLength)
+		       + AuthorityRecords.Sum(record => record.MaximumLength)
+		       + AdditionalRecords.Sum(record => record.MaximumLength);
+	}
+
+	protected override void EncodeSections(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
+	{
+		EncodeUShort(messageData, ref currentPosition, (ushort) Questions.Count);
+		EncodeUShort(messageData, ref currentPosition, (ushort) AnswerRecords.Count);
+		EncodeUShort(messageData, ref currentPosition, (ushort) AuthorityRecords.Count);
+		EncodeUShort(messageData, ref currentPosition, (ushort) AdditionalRecords.Count);
+
+		foreach (DnsQuestion question in Questions)
 		{
-			get { return _questions; }
-			set { _questions = (value ?? new List<DnsQuestion>()); }
+			question.Encode(messageData, ref currentPosition, domainNames);
 		}
 
-		/// <summary>
-		///   Gets or sets the entries in the answer records section
-		/// </summary>
-		public List<DnsRecordBase> AnswerRecords
+		foreach (DnsRecordBase record in AnswerRecords)
 		{
-			get { return _answerRecords; }
-			set { _answerRecords = (value ?? new List<DnsRecordBase>()); }
+			record.Encode(messageData, ref currentPosition, domainNames);
 		}
 
-		/// <summary>
-		///   Gets or sets the entries in the authority records section
-		/// </summary>
-		public List<DnsRecordBase> AuthorityRecords { get; set; } = new();
-
-		protected override void ParseSections(IList<byte> data, ref int currentPosition)
+		foreach (DnsRecordBase record in AuthorityRecords)
 		{
-			int questionCount = ParseUShort(data, ref currentPosition);
-			int answerRecordCount = ParseUShort(data, ref currentPosition);
-			int authorityRecordCount = ParseUShort(data, ref currentPosition);
-			int additionalRecordCount = ParseUShort(data, ref currentPosition);
-
-			ParseQuestionSection(data, ref currentPosition, Questions, questionCount);
-			ParseRecordSection(data, ref currentPosition, AnswerRecords, answerRecordCount);
-			ParseRecordSection(data, ref currentPosition, AuthorityRecords, authorityRecordCount);
-			ParseRecordSection(data, ref currentPosition, AdditionalRecords, additionalRecordCount);
+			record.Encode(messageData, ref currentPosition, domainNames);
 		}
 
-		protected override int GetSectionsMaxLength()
+		foreach (DnsRecordBase record in AdditionalRecords)
 		{
-			return 12
-			       + Questions.Sum(question => question.MaximumLength)
-			       + AnswerRecords.Sum(record => record.MaximumLength)
-			       + AuthorityRecords.Sum(record => record.MaximumLength)
-			       + AdditionalRecords.Sum(record => record.MaximumLength);
+			record.Encode(messageData, ref currentPosition, domainNames);
 		}
+	}
 
-		protected override void EncodeSections(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
+	internal override bool ValidateResponse(DnsMessageBase responseBase)
+	{
+		if (responseBase is not DnsRecordMessageBase response)
+			return false;
+
+		if (TransactionID != response.TransactionID)
+			return false;
+
+		if (response.ReturnCode is ReturnCode.NoError or ReturnCode.NxDomain)
 		{
-			EncodeUShort(messageData, ref currentPosition, (ushort) Questions.Count);
-			EncodeUShort(messageData, ref currentPosition, (ushort) AnswerRecords.Count);
-			EncodeUShort(messageData, ref currentPosition, (ushort) AuthorityRecords.Count);
-			EncodeUShort(messageData, ref currentPosition, (ushort) AdditionalRecords.Count);
-
-			foreach (DnsQuestion question in Questions)
-			{
-				question.Encode(messageData, ref currentPosition, domainNames);
-			}
-
-			foreach (DnsRecordBase record in AnswerRecords)
-			{
-				record.Encode(messageData, ref currentPosition, domainNames);
-			}
-
-			foreach (DnsRecordBase record in AuthorityRecords)
-			{
-				record.Encode(messageData, ref currentPosition, domainNames);
-			}
-
-			foreach (DnsRecordBase record in AdditionalRecords)
-			{
-				record.Encode(messageData, ref currentPosition, domainNames);
-			}
-		}
-
-		internal override bool ValidateResponse(DnsMessageBase responseBase)
-		{
-			if (responseBase is not DnsRecordMessageBase response)
+			if ((Questions.Count != response.Questions.Count))
 				return false;
 
-			if (TransactionID != response.TransactionID)
-				return false;
-
-			if (response.ReturnCode is ReturnCode.NoError or ReturnCode.NxDomain)
+			for (var j = 0; j < Questions.Count; j++)
 			{
-				if ((Questions.Count != response.Questions.Count))
+				var queryQuestion = Questions[j];
+				var responseQuestion = response.Questions[j];
+
+				if ((queryQuestion.RecordClass != responseQuestion.RecordClass)
+				    || (queryQuestion.RecordType != responseQuestion.RecordType)
+				    || (!queryQuestion.Name.Equals(responseQuestion.Name, false)))
+				{
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	protected internal override void Add0x20Bits()
+	{
+		Questions = Questions.Select(q => new DnsQuestion(q.Name.Add0x20Bits(), q.RecordType, q.RecordClass)).ToList();
+	}
+
+	protected internal override void AddSubsequentResponse(DnsMessageBase response)
+	{
+		AnswerRecords.AddRange(((DnsRecordMessageBase) response).AnswerRecords);
+	}
+
+	protected internal override bool AllowMultipleResponses => IsQuery == false && (Questions.Count == 0 || Questions[0].RecordType is RecordType.Axfr or RecordType.Ixfr);
+
+	protected internal override IEnumerable<DnsMessageBase> SplitResponse() => new SplitResponseEnumerable(this);
+
+	private class SplitResponseEnumerable : IEnumerable<DnsMessageBase>
+	{
+		private class SplitResponseEnumerator : IEnumerator<DnsMessageBase>
+		{
+			private readonly List<DnsRecordBase> _answerRecords;
+			private int _recordOffset;
+			private readonly DnsRecordMessageBase _current;
+
+			public SplitResponseEnumerator(DnsRecordMessageBase response)
+			{
+				_current = response;
+				_answerRecords = response.AnswerRecords;
+			}
+
+			public DnsMessageBase Current => _current;
+
+			object IEnumerator.Current => Current;
+
+			public void Dispose()
+			{
+				_current.AnswerRecords = _answerRecords;
+			}
+
+			public bool MoveNext()
+			{
+				if (_recordOffset >= _answerRecords.Count)
 					return false;
 
-				for (var j = 0; j < Questions.Count; j++)
+				var batch = new List<DnsRecordBase>();
+				var maxBatchOffset = Math.Min(_recordOffset + 100, _answerRecords.Count);
+				var batchRecordMaxLength = 0;
+				for (; _recordOffset < maxBatchOffset && batchRecordMaxLength < 32000; _recordOffset++)
 				{
-					var queryQuestion = Questions[j];
-					var responseQuestion = response.Questions[j];
-
-					if ((queryQuestion.RecordClass != responseQuestion.RecordClass)
-					    || (queryQuestion.RecordType != responseQuestion.RecordType)
-					    || (!queryQuestion.Name.Equals(responseQuestion.Name, false)))
-					{
-						return false;
-					}
+					var record = _answerRecords[_recordOffset];
+					batchRecordMaxLength += record.MaximumLength;
+					batch.Add(record);
 				}
+
+				_current.AnswerRecords = batch;
+				return true;
 			}
 
-			return true;
+			public void Reset() { }
 		}
 
-		protected internal override void Add0x20Bits()
+		private readonly DnsRecordMessageBase _response;
+
+		public SplitResponseEnumerable(DnsRecordMessageBase response)
 		{
-			Questions = Questions.Select(q => new DnsQuestion(q.Name.Add0x20Bits(), q.RecordType, q.RecordClass)).ToList();
+			_response = response;
 		}
 
-		protected internal override void AddSubsequentResponse(DnsMessageBase response)
+		public IEnumerator<DnsMessageBase> GetEnumerator()
 		{
-			AnswerRecords.AddRange(((DnsRecordMessageBase) response).AnswerRecords);
+			return new SplitResponseEnumerator(_response);
 		}
 
-		protected internal override bool AllowMultipleResponses => IsQuery == false && (Questions.Count == 0 || Questions[0].RecordType is RecordType.Axfr or RecordType.Ixfr);
-
-		protected internal override IEnumerable<DnsMessageBase> SplitResponse() => new SplitResponseEnumerable(this);
-
-		private class SplitResponseEnumerable : IEnumerable<DnsMessageBase>
+		IEnumerator IEnumerable.GetEnumerator()
 		{
-			private class SplitResponseEnumerator : IEnumerator<DnsMessageBase>
-			{
-				private readonly List<DnsRecordBase> _answerRecords;
-				private int _recordOffset;
-				private readonly DnsRecordMessageBase _current;
-
-				public SplitResponseEnumerator(DnsRecordMessageBase response)
-				{
-					_current = response;
-					_answerRecords = response.AnswerRecords;
-				}
-
-				public DnsMessageBase Current => _current;
-
-				object IEnumerator.Current => Current;
-
-				public void Dispose()
-				{
-					_current.AnswerRecords = _answerRecords;
-				}
-
-				public bool MoveNext()
-				{
-					if (_recordOffset >= _answerRecords.Count)
-						return false;
-
-					var batch = new List<DnsRecordBase>();
-					var maxBatchOffset = Math.Min(_recordOffset + 100, _answerRecords.Count);
-					var batchRecordMaxLength = 0;
-					for (; _recordOffset < maxBatchOffset && batchRecordMaxLength < 32000; _recordOffset++)
-					{
-						var record = _answerRecords[_recordOffset];
-						batchRecordMaxLength += record.MaximumLength;
-						batch.Add(record);
-					}
-
-					_current.AnswerRecords = batch;
-					return true;
-				}
-
-				public void Reset() { }
-			}
-
-			private readonly DnsRecordMessageBase _response;
-
-			public SplitResponseEnumerable(DnsRecordMessageBase response)
-			{
-				_response = response;
-			}
-
-			public IEnumerator<DnsMessageBase> GetEnumerator()
-			{
-				return new SplitResponseEnumerator(_response);
-			}
-
-			IEnumerator IEnumerable.GetEnumerator()
-			{
-				return GetEnumerator();
-			}
+			return GetEnumerator();
 		}
+	}
+
+	protected override void SetQuestionSection(List<DnsQuestion> questionSection)
+	{
+		Questions = questionSection;
+	}
+
+	protected override void ParseRfc8427JsonAnswerSection(JsonElement json)
+	{
+		AnswerRecords = ParseRfc8427JsonRecordSection(json);
+	}
+
+	protected override void ParseRfc8427JsonAuthoritySection(JsonElement json)
+	{
+		AuthorityRecords = ParseRfc8427JsonRecordSection(json);
+	}
+
+	protected override void WriteRfc8427JsonSections(Utf8JsonWriter writer, JsonSerializerOptions options)
+	{
+		writer.WriteNumber("QDCOUNT", Questions.Count);
+		writer.WriteNumber("ANCOUNT", AnswerRecords.Count);
+		writer.WriteNumber("NSCOUNT", AuthorityRecords.Count);
+		writer.WriteNumber("ARCOUNT", AdditionalRecords.Count);
+
+		if (Questions.Count == 1)
+		{
+			var question = Questions[0];
+			writer.WriteString("QNAME", question.Name.ToString(true));
+			writer.WriteNumber("QTYPE", (ushort) question.RecordType);
+			writer.WriteString("QTYPEname", question.RecordType.ToShortString());
+			writer.WriteNumber("QCLASS", (ushort) question.RecordClass);
+			writer.WriteString("QCLASSname", question.RecordClass.ToShortString());
+		}
+		else
+		{
+			WriteRfc8427JsonSection("questionRRs", Questions, writer, options);
+		}
+
+		WriteRfc8427JsonSection("answerRRs", AnswerRecords, writer, options);
+		WriteRfc8427JsonSection("authorityRRs", AuthorityRecords, writer, options);
+		WriteRfc8427JsonSection("additionalRRs", AdditionalRecords, writer, options);
 	}
 }

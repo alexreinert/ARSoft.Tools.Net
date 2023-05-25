@@ -21,55 +21,99 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns;
+
+/// <summary>
+///   A single entry of the Question section of a dns query
+/// </summary>
+public class DnsQuestion : DnsMessageEntryBase, IEquatable<DnsQuestion>
 {
 	/// <summary>
-	///   A single entry of the Question section of a dns query
+	///   Creates a new instance of the DnsQuestion class
 	/// </summary>
-	public class DnsQuestion : DnsMessageEntryBase, IEquatable<DnsQuestion>
+	/// <param name="name"> Domain name </param>
+	/// <param name="recordType"> Record type </param>
+	/// <param name="recordClass"> Record class </param>
+	public DnsQuestion(DomainName name, RecordType recordType, RecordClass recordClass) : base(name, recordType, recordClass) { }
+
+	internal override int MaximumLength => Name.MaximumRecordDataLength + 6;
+
+	internal void Encode(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
 	{
-		/// <summary>
-		///   Creates a new instance of the DnsQuestion class
-		/// </summary>
-		/// <param name="name"> Domain name </param>
-		/// <param name="recordType"> Record type </param>
-		/// <param name="recordClass"> Record class </param>
-		public DnsQuestion(DomainName name, RecordType recordType, RecordClass recordClass) : base(name, recordType, recordClass) { }
+		DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, Name, domainNames, false);
+		DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
+		DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordClass);
+	}
 
-		internal override int MaximumLength => Name.MaximumRecordDataLength + 6;
+	internal static DnsQuestion ParseRfc8427Json(JsonElement json)
+	{
+		var qname = DomainName.Root;
+		var qclass = RecordClass.INet;
+		var qtype = RecordType.Invalid;
 
-		internal void Encode(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames)
+		foreach (var prop in json.EnumerateObject())
 		{
-			DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, Name, domainNames, false);
-			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
-			DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordClass);
-		}
-
-		private int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
-		{
-			if (!_hashCode.HasValue)
+			switch (prop.Name)
 			{
-				_hashCode = ToString().GetHashCode();
+				case "NAME":
+					qname = DomainName.Parse(prop.Value.GetString() ?? String.Empty);
+					break;
+				case "TYPE":
+					qtype = (RecordType)prop.Value.GetUInt16();
+					break;
+				case "TYPEname":
+					qtype = RecordTypeHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
+					break;
+				case "CLASS":
+					qclass = (RecordClass)prop.Value.GetUInt16();
+					break;
+				case "CLASSname":
+					qclass = RecordClassHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
+					break;
 			}
-
-			return _hashCode.Value;
 		}
 
-		public override bool Equals(object? obj)
+		return new DnsQuestion(qname, qtype, qclass);
+	}
+
+	protected internal override void WriteRfc8427Json(Utf8JsonWriter writer, JsonSerializerOptions options)
+	{
+		writer.WriteStartObject();
+
+		writer.WriteString("NAME", Name.ToString(true));
+		writer.WriteNumber("TYPE", (ushort)RecordType);
+		writer.WriteString("TYPEname", RecordType.ToShortString());
+		writer.WriteNumber("CLASS", (ushort)RecordClass);
+		writer.WriteString("CLASSname", RecordClass.ToShortString());
+
+		writer.WriteEndObject();
+	}
+
+	private int? _hashCode;
+
+	[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+	public override int GetHashCode()
+	{
+		if (!_hashCode.HasValue)
 		{
-			return Equals(obj as DnsQuestion);
+			_hashCode = ToString().GetHashCode();
 		}
 
-		public bool Equals(DnsQuestion? other)
-		{
-			if (other == null)
-				return false;
+		return _hashCode.Value;
+	}
 
-			return base.Equals(other);
-		}
+	public override bool Equals(object? obj)
+	{
+		return Equals(obj as DnsQuestion);
+	}
+
+	public bool Equals(DnsQuestion? other)
+	{
+		if (other == null)
+			return false;
+
+		return base.Equals(other);
 	}
 }

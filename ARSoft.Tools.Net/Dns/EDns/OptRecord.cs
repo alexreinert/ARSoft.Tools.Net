@@ -230,5 +230,8 @@ namespace ARSoft.Tools.Net.Dns
 				}
 			}
 		}
+
+		protected override bool AvoidRfc8427Cleartext => true;
+
 	}
 }

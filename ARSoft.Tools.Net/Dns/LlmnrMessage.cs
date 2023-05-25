@@ -20,12 +20,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace ARSoft.Tools.Net.Dns
 {
 	/// <summary>
 	///   Message returned as result to a LLMNR query
 	/// </summary>
+	[JsonConverter(typeof(Rfc8427JsonConverter<LlmnrMessage>))]
 	public class LlmnrMessage : DnsRecordMessageBase
 	{
 		/// <summary>
@@ -48,18 +50,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsConflict
 		{
-			get { return (Flags & 0x0400) != 0; }
-			set
-			{
-				if (value)
-				{
-					Flags |= 0x0400;
-				}
-				else
-				{
-					Flags &= 0xfbff;
-				}
-			}
+			get => AAFlagInternal;
+			set => AAFlagInternal = value;
 		}
 
 		/// <summary>
@@ -71,18 +63,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsTruncated
 		{
-			get { return (Flags & 0x0200) != 0; }
-			set
-			{
-				if (value)
-				{
-					Flags |= 0x0200;
-				}
-				else
-				{
-					Flags &= 0xfdff;
-				}
-			}
+			get => TCFlagInternal;
+			set => TCFlagInternal = value;
 		}
 
 		/// <summary>
@@ -94,18 +76,8 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		public bool IsTentive
 		{
-			get { return (Flags & 0x0100) != 0; }
-			set
-			{
-				if (value)
-				{
-					Flags |= 0x0100;
-				}
-				else
-				{
-					Flags &= 0xfeff;
-				}
-			}
+			get => RDFlagInternal;
+			set => RDFlagInternal = value;
 		}
 		#endregion
 

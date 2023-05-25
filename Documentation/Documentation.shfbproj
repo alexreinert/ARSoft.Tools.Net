@@ -116,6 +116,8 @@
     <None Include="Content\Examples\DNS_Server_Forwarding_Server.cs" />
     <None Include="Content\Examples\DNS_Server_Local_Only_Requests.cs" />
     <None Include="Content\Examples\DNS_Server_Simple_Server.cs" />
+    <None Include="Content\Examples\JSON_Serialization.aml" />
+    <None Include="Content\Examples\JSON_Serialization.cs" />
     <None Include="Content\Examples\SenderID_Validation.cs" />
     <None Include="Content\Examples\SPF_SenderID_Validation.aml" />
     <None Include="Content\Examples\SPF_Validation.cs" />

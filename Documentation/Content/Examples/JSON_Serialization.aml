@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<topic id="93CEAE66-0053-40E3-B4A4-9A7913B2AA6D" revisionNumber="1">
+	<developerSampleDocument
+		xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+		xmlns:xlink="http://www.w3.org/1999/xlink">
+
+		<introduction>
+			<para>JSON Serialization and deserialization</para>
+			<alert>
+				<para>			
+					The JSON serialization will be done according to RFC 8427.
+				</para>
+				<para>			
+					On Deserialization it is not guaranteed which value will be used, if there are non-matching attributes for the same field in the dns message
+					are used (e.g. "QTYPE":"1","QTYPEname":"MX").
+				</para>
+				<para>			
+					The raw octet properties defined in Secion 2.4 of RFC 8427 are not supported.
+				</para>
+			</alert>
+		</introduction>
+
+		<section>
+			<title>JSON Serialization/Deserialization</title>
+			<content>
+				<code language="c#" source="Content\Examples\JSON_Serialization.cs" />
+			</content>
+		</section>
+	</developerSampleDocument>
+</topic>

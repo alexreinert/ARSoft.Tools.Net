@@ -86,5 +86,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			DnsMessageBase.EncodeByteArray(messageData, ref currentPosition, RecordData);
 		}
+
+		protected override bool AvoidRfc8427Cleartext => true;
 	}
 }
