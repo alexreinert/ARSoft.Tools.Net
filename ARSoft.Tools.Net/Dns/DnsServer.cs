@@ -138,154 +138,9 @@ namespace ARSoft.Tools.Net.Dns
 					if (queryPackage == null)
 						break;
 
-					DnsMessageBase query;
-					byte[]? tsigMac;
-					try
-					{
-						query = DnsMessageBase.CreateByFlag(queryPackage.ToArraySegment(false), TsigKeySelector, null);
-						tsigMac = query.TSigOptions?.Mac;
-					}
-					catch (Exception e)
-					{
-						throw new Exception("Error parsing dns query", e);
-					}
-
-					DnsMessageBase response;
-					try
-					{
-						response = await ProcessMessageAsync(query, connection.Transport.TransportProtocol, connection.RemoteEndPoint!);
-					}
-					catch (Exception ex)
-					{
-						OnExceptionThrownAsync(ex);
-
-						response = query.CreateFailureResponse();
-					}
-
-					var responsePackage = response.Encode(tsigMac, false, out var newTsigMac);
-
-					if (responsePackage.Length <= connection.Transport.DefaultAllowedResponseSize)
-					{
-						await connection.SendAsync(responsePackage, token);
-					}
-					else
-					{
-						if (response.AllowMultipleResponses)
-						{
-							var isSubSequentResponse = false;
-
-							foreach (var partialResponse in response.SplitResponse())
-							{
-								responsePackage = partialResponse.Encode(tsigMac, isSubSequentResponse, out newTsigMac);
-								await connection.SendAsync(responsePackage, token);
-								isSubSequentResponse = true;
-								tsigMac = newTsigMac;
-							}
-						}
-						else if (connection.Transport.AllowTruncatedResponses)
-						{
-							#region Truncating
-							if (response is DnsMessage message)
-							{
-								int maxLength = connection.Transport.DefaultAllowedResponseSize;
-								if (query.IsEDnsEnabled && message.IsEDnsEnabled)
-								{
-									maxLength = Math.Max(connection.Transport.DefaultAllowedResponseSize, (int) message.EDnsOptions!.UdpPayloadSize);
-								}
-
-								while (responsePackage.Length > maxLength)
-								{
-									// First step: remove data from additional records except the opt record
-									if ((message.IsEDnsEnabled && (message.AdditionalRecords.Count > 1)) || (!message.IsEDnsEnabled && (message.AdditionalRecords.Count > 0)))
-									{
-										for (var i = message.AdditionalRecords.Count - 1; i >= 0; i--)
-										{
-											if (message.AdditionalRecords[i].RecordType != RecordType.Opt)
-											{
-												message.AdditionalRecords.RemoveAt(i);
-											}
-										}
-
-										responsePackage = message.Encode(tsigMac);
-										continue;
-									}
-
-									var savedLength = 0;
-									if (message.AuthorityRecords.Count > 0)
-									{
-										for (var i = message.AuthorityRecords.Count - 1; i >= 0; i--)
-										{
-											savedLength += message.AuthorityRecords[i].MaximumLength;
-											message.AuthorityRecords.RemoveAt(i);
-
-											if ((responsePackage.Length - savedLength) < maxLength)
-											{
-												break;
-											}
-										}
-
-										message.IsTruncated = true;
-
-										responsePackage = message.Encode(tsigMac);
-										continue;
-									}
-
-									if (message.AnswerRecords.Count > 0)
-									{
-										for (var i = message.AnswerRecords.Count - 1; i >= 0; i--)
-										{
-											savedLength += message.AnswerRecords[i].MaximumLength;
-											message.AnswerRecords.RemoveAt(i);
-
-											if ((responsePackage.Length - savedLength) < maxLength)
-											{
-												break;
-											}
-										}
-
-										message.IsTruncated = true;
-
-										responsePackage = message.Encode(tsigMac);
-										continue;
-									}
-
-									if (message.Questions.Count > 0)
-									{
-										for (var i = message.Questions.Count - 1; i >= 0; i--)
-										{
-											savedLength += message.Questions[i].MaximumLength;
-											message.Questions.RemoveAt(i);
-
-											if ((responsePackage.Length - savedLength) < maxLength)
-											{
-												break;
-											}
-										}
-
-										message.IsTruncated = true;
-
-										responsePackage = message.Encode(tsigMac);
-									}
-								}
-							}
-							#endregion
-
-							await connection.SendAsync(responsePackage, token);
-						}
-						else
-						{
-							OnExceptionThrownAsync(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
-
-							response = query.CreateFailureResponse();
-
-							responsePackage = response.Encode(tsigMac, false, out newTsigMac);
-							await connection.SendAsync(responsePackage, token);
-						}
-					}
-
-					// Since support for multiple tsig signed messages is not finished, just close connection after response to first signed query
-					if (newTsigMac != null)
-						break;
+#pragma warning disable CS4014
+					Task.Run(() => ProcessRawPackageAsync(connection, queryPackage, token), token);
+#pragma warning restore CS4014
 				}
 			}
 			catch (Exception ex)
@@ -296,13 +151,171 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				try
 				{
-					// ReSharper disable once ConstantConditionalAccessQualifier
-					connection?.Dispose();
+					connection.Dispose();
 				}
 				catch
 				{
 					// ignored
 				}
+			}
+		}
+
+		private async Task ProcessRawPackageAsync(IServerConnection connection, DnsReceivedRawPackage queryPackage, CancellationToken token)
+		{
+			try
+			{
+				DnsMessageBase query;
+				byte[]? tsigMac;
+				try
+				{
+					query = DnsMessageBase.CreateByFlag(queryPackage.ToArraySegment(false), TsigKeySelector, null);
+					tsigMac = query.TSigOptions?.Mac;
+				}
+				catch (Exception e)
+				{
+					throw new Exception("Error parsing dns query", e);
+				}
+
+				DnsMessageBase response;
+				try
+				{
+					response = await ProcessMessageAsync(query, connection.Transport.TransportProtocol, connection.RemoteEndPoint!);
+				}
+				catch (Exception ex)
+				{
+					OnExceptionThrownAsync(ex);
+
+					response = query.CreateFailureResponse();
+				}
+
+				var responsePackage = response.Encode(tsigMac, false, out var newTsigMac);
+
+				if (responsePackage.Length <= connection.Transport.DefaultAllowedResponseSize)
+				{
+					await connection.SendAsync(responsePackage, token);
+				}
+				else
+				{
+					if (response.AllowMultipleResponses)
+					{
+						var isSubSequentResponse = false;
+
+						foreach (var partialResponse in response.SplitResponse())
+						{
+							responsePackage = partialResponse.Encode(tsigMac, isSubSequentResponse, out newTsigMac);
+							await connection.SendAsync(responsePackage, token);
+							isSubSequentResponse = true;
+							tsigMac = newTsigMac;
+						}
+					}
+					else if (connection.Transport.AllowTruncatedResponses)
+					{
+						#region Truncating
+						if (response is DnsMessage message)
+						{
+							int maxLength = connection.Transport.DefaultAllowedResponseSize;
+							if (query.IsEDnsEnabled && message.IsEDnsEnabled)
+							{
+								maxLength = Math.Max(connection.Transport.DefaultAllowedResponseSize, (int) message.EDnsOptions!.UdpPayloadSize);
+							}
+
+							while (responsePackage.Length > maxLength)
+							{
+								// First step: remove data from additional records except the opt record
+								if ((message.IsEDnsEnabled && (message.AdditionalRecords.Count > 1)) || (!message.IsEDnsEnabled && (message.AdditionalRecords.Count > 0)))
+								{
+									for (var i = message.AdditionalRecords.Count - 1; i >= 0; i--)
+									{
+										if (message.AdditionalRecords[i].RecordType != RecordType.Opt)
+										{
+											message.AdditionalRecords.RemoveAt(i);
+										}
+									}
+
+									responsePackage = message.Encode(tsigMac);
+									continue;
+								}
+
+								var savedLength = 0;
+								if (message.AuthorityRecords.Count > 0)
+								{
+									for (var i = message.AuthorityRecords.Count - 1; i >= 0; i--)
+									{
+										savedLength += message.AuthorityRecords[i].MaximumLength;
+										message.AuthorityRecords.RemoveAt(i);
+
+										if ((responsePackage.Length - savedLength) < maxLength)
+										{
+											break;
+										}
+									}
+
+									message.IsTruncated = true;
+
+									responsePackage = message.Encode(tsigMac);
+									continue;
+								}
+
+								if (message.AnswerRecords.Count > 0)
+								{
+									for (var i = message.AnswerRecords.Count - 1; i >= 0; i--)
+									{
+										savedLength += message.AnswerRecords[i].MaximumLength;
+										message.AnswerRecords.RemoveAt(i);
+
+										if ((responsePackage.Length - savedLength) < maxLength)
+										{
+											break;
+										}
+									}
+
+									message.IsTruncated = true;
+
+									responsePackage = message.Encode(tsigMac);
+									continue;
+								}
+
+								if (message.Questions.Count > 0)
+								{
+									for (var i = message.Questions.Count - 1; i >= 0; i--)
+									{
+										savedLength += message.Questions[i].MaximumLength;
+										message.Questions.RemoveAt(i);
+
+										if ((responsePackage.Length - savedLength) < maxLength)
+										{
+											break;
+										}
+									}
+
+									message.IsTruncated = true;
+
+									responsePackage = message.Encode(tsigMac);
+								}
+							}
+						}
+						#endregion
+
+						await connection.SendAsync(responsePackage, token);
+					}
+					else
+					{
+						OnExceptionThrownAsync(new ArgumentException("The length of the serialized response is greater than 65,535 bytes"));
+
+						response = query.CreateFailureResponse();
+
+						responsePackage = response.Encode(tsigMac, false, out newTsigMac);
+						await connection.SendAsync(responsePackage, token);
+					}
+				}
+
+				// Since support for multiple tsig signed messages is not finished, just close connection after response to first signed query
+				if (newTsigMac != null)
+					connection.Dispose();
+			}
+			catch (Exception ex)
+			{
+				OnExceptionThrownAsync(ex);
 			}
 		}
 

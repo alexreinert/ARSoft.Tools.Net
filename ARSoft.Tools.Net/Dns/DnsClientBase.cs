@@ -86,151 +86,13 @@ namespace ARSoft.Tools.Net.Dns
 		protected TMessage? SendMessage<TMessage>(TMessage query)
 			where TMessage : DnsMessageBase, new()
 		{
-			SelectTsigKey? tsigKeySelector;
-
-			var package = PrepareMessage(query, out tsigKeySelector, out var tsigOriginalMac);
-
-			TMessage? response = null;
-
-			foreach (var connection in GetConnections(package, query.IsReliableSendingRequested))
-			{
-				try
-				{
-					var receivedMessage = SendMessage<TMessage>(package, connection, tsigKeySelector, tsigOriginalMac);
-
-					if ((receivedMessage != null) && ValidateResponse(query, receivedMessage.Message))
-					{
-						if (receivedMessage.Message.ReturnCode == ReturnCode.ServerFailure)
-						{
-							response = receivedMessage.Message;
-							continue;
-						}
-
-						if (!receivedMessage.Message.IsReliableResendingRequested)
-							return receivedMessage.Message;
-
-						var resendTransport = _transports.FirstOrDefault(t => t.SupportsReliableTransfer && t.MaximumAllowedQuerySize <= package.Length && t != connection.Transport);
-
-						if (resendTransport != null)
-						{
-							using (IClientConnection? resendConnection = resendTransport.Connect(new DnsClientEndpointInfo(false, receivedMessage.ResponderAddress.Address, receivedMessage.LocalAddress.Address), QueryTimeout))
-							{
-								if (resendConnection == null)
-								{
-									response = receivedMessage.Message;
-								}
-								else
-								{
-									var resendResponse = SendMessage<TMessage>(package, resendConnection, tsigKeySelector, tsigOriginalMac);
-
-									if ((resendResponse != null)
-									    && ValidateResponse(query, resendResponse.Message)
-									    && ((resendResponse.Message.ReturnCode != ReturnCode.ServerFailure)))
-									{
-										return resendResponse.Message;
-									}
-									else
-									{
-										resendConnection.MarkFaulty();
-										response = receivedMessage.Message;
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						connection.MarkFaulty();
-					}
-				}
-				catch (Exception e)
-				{
-					Trace.TraceError("Error on dns query: " + e);
-					connection.MarkFaulty();
-				}
-				finally
-				{
-					connection.Dispose();
-				}
-			}
-
-			return response;
-		}
-
-		private IEnumerable<IClientConnection> GetConnections(DnsRawPackage package, bool isReliableTransportRequested)
-		{
-			foreach (var transport in _transports)
-			{
-				if (transport.SupportsPooledConnections
-				    && package.Length <= transport.MaximumAllowedQuerySize
-				    && (!isReliableTransportRequested || transport.SupportsReliableTransfer))
-				{
-					foreach (var endpointInfo in _endpointInfos)
-					{
-						var connection = transport.GetPooledConnection(endpointInfo);
-						if (connection != null)
-							yield return connection;
-					}
-				}
-			}
-
-			foreach (var transport in _transports)
-			{
-				if (package.Length <= transport.MaximumAllowedQuerySize
-				    && (!isReliableTransportRequested || transport.SupportsReliableTransfer))
-				{
-					foreach (var endpointInfo in _endpointInfos)
-					{
-						var connection = transport.Connect(endpointInfo, QueryTimeout);
-						if (connection != null)
-							yield return connection;
-					}
-				}
-			}
-		}
-
-		private ReceivedMessage<TMessage>? SendMessage<TMessage>(DnsRawPackage package, IClientConnection connection, SelectTsigKey? tsigKeySelector, byte[]? tsigOriginalMac)
-			where TMessage : DnsMessageBase, new()
-		{
-			if (!connection.Send(package))
-				return null;
-
-			var resultData = connection.Receive();
-
-			if (resultData == null)
-				return null;
-
-			var response = DnsMessageBase.Parse<TMessage>(resultData.ToArraySegment(false), tsigKeySelector, tsigOriginalMac);
-
-			var isNextMessageWaiting = response.IsNextMessageWaiting(false);
-
-			while (isNextMessageWaiting)
-			{
-				resultData = connection.Receive();
-
-				if (resultData == null)
-					return null;
-
-				var nextResult = DnsMessageBase.Parse<TMessage>(resultData.ToArraySegment(false), tsigKeySelector, tsigOriginalMac);
-
-				if (nextResult.ReturnCode == ReturnCode.ServerFailure)
-					return null;
-
-				response.AddSubsequentResponse(nextResult);
-				isNextMessageWaiting = nextResult.IsNextMessageWaiting(true);
-			}
-
-			return new ReceivedMessage<TMessage>(resultData.RemoteEndpoint, resultData.LocalEndpoint, response);
+			return SendMessageAsync<TMessage>(query, CancellationToken.None).GetAwaiter().GetResult();
 		}
 
 		protected List<TMessage> SendMessageParallel<TMessage>(TMessage message)
 			where TMessage : DnsMessageBase, new()
 		{
-			var result = SendMessageParallelAsync(message, default);
-
-			result.Wait();
-
-			return result.Result;
+			return SendMessageParallelAsync(message, default).GetAwaiter().GetResult();
 		}
 
 		private bool ValidateResponse<TMessage>(TMessage message, TMessage response)
@@ -293,6 +155,8 @@ namespace ARSoft.Tools.Net.Dns
 
 					if ((receivedMessage != null) && ValidateResponse(query, receivedMessage.Message))
 					{
+						connection.RestartIdleTimeout(receivedMessage.Message.GetEDnsKeepAliveTimeout());
+
 						if (receivedMessage.Message.ReturnCode == ReturnCode.ServerFailure)
 						{
 							response = receivedMessage.Message;
@@ -320,6 +184,7 @@ namespace ARSoft.Tools.Net.Dns
 									    && ValidateResponse(query, resendResponse.Message)
 									    && ((resendResponse.Message.ReturnCode != ReturnCode.ServerFailure)))
 									{
+										resendConnection.RestartIdleTimeout(receivedMessage.Message.GetEDnsKeepAliveTimeout());
 										return resendResponse.Message;
 									}
 									else
@@ -360,9 +225,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					foreach (var endpointInfo in _endpointInfos)
 					{
-						var connection = transport.GetPooledConnection(endpointInfo);
-						if (connection != null)
-							yield return Task.FromResult<IClientConnection?>(connection);
+						yield return transport.GetPooledConnectionAsync(endpointInfo, token);
 					}
 				}
 			}
@@ -386,7 +249,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (!await connection.SendAsync(package, token))
 				return null;
 
-			var resultData = await connection.ReceiveAsync(token);
+			var resultData = await connection.ReceiveAsync(package.MessageIdentification, token);
 
 			if (resultData == null)
 				return null;
@@ -397,7 +260,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			while (isNextMessageWaiting)
 			{
-				resultData = await connection.ReceiveAsync(token);
+				resultData = await connection.ReceiveAsync(package.MessageIdentification, token);
 
 				if (resultData == null)
 					return null;
@@ -458,7 +321,7 @@ namespace ARSoft.Tools.Net.Dns
 					if (token.IsCancellationRequested)
 						break;
 
-					var response = await connection.ReceiveAsync(token);
+					var response = await connection.ReceiveAsync(package.MessageIdentification, token);
 
 					if (response == null)
 						continue;

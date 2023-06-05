@@ -86,10 +86,7 @@ namespace ARSoft.Tools.Net.Spf
 		/// <returns> The result of the evaluation </returns>
 		public ValidationResult CheckHost(IPAddress ip, DomainName domain, string sender, bool expandExplanation = false)
 		{
-			var result = CheckHostInternalAsync(ip, domain, sender, expandExplanation, new State(), default(CancellationToken));
-			result.Wait();
-
-			return result.Result;
+			return CheckHostInternalAsync(ip, domain, sender, expandExplanation, new State(), default).GetAwaiter().GetResult();
 		}
 
 		/// <summary>

@@ -16,32 +16,12 @@
 // limitations under the License.
 #endregion
 
-namespace ARSoft.Tools.Net
-{
-	internal static class TaskExtensions
-	{
-		public static async Task<T?> WithTimeout<T>(this Task<T> task, int timeout, CancellationToken token = default)
-		{
-			try
-			{
-				return await task.WaitAsync(TimeSpan.FromMilliseconds(timeout), token);
-			}
-			catch (TimeoutException)
-			{
-				return default;
-			}
-		}
+namespace ARSoft.Tools.Net.Dns;
 
-		public static async Task WithTimeout(this Task task, int timeout, CancellationToken token = default)
-		{
-			try
-			{
-				await task.WaitAsync(TimeSpan.FromMilliseconds(timeout), token);
-			}
-			catch (TimeoutException)
-			{
-				// ignore
-			}
-		}
+internal static class DnsMessageBaseExtensions
+{
+	public static TimeSpan? GetEDnsKeepAliveTimeout(this DnsMessageBase message)
+	{
+		return message.EDnsOptions?.Options?.OfType<TcpKeepAliveOption>()?.FirstOrDefault()?.Timeout;
 	}
 }

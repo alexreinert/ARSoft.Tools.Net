@@ -90,17 +90,11 @@ namespace ARSoft.Tools.Net.Dns
 
 			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
 
-			if (options == null)
-			{
-				message.IsRecursionDesired = true;
-				message.IsEDnsEnabled = true;
-			}
-			else
-			{
-				message.IsRecursionDesired = options.IsRecursionDesired;
-				message.IsCheckingDisabled = options.IsCheckingDisabled;
-				message.EDnsOptions = options.EDnsOptions;
-			}
+			options ??= DnsQueryOptions.DefaultQueryOptions;
+
+			message.IsRecursionDesired = options.IsRecursionDesired;
+			message.IsCheckingDisabled = options.IsCheckingDisabled;
+			message.EDnsOptions = options.EDnsOptions;
 
 			message.Questions.Add(new DnsQuestion(name, recordType, recordClass));
 
@@ -120,19 +114,13 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			_ = name ?? throw new ArgumentNullException(nameof(name), "Name must be provided");
 
-			DnsMessage message = new DnsMessage() { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
+			options ??= DnsQueryOptions.DefaultQueryOptions;
 
-			if (options == null)
-			{
-				message.IsRecursionDesired = true;
-				message.IsEDnsEnabled = true;
-			}
-			else
-			{
-				message.IsRecursionDesired = options.IsRecursionDesired;
-				message.IsCheckingDisabled = options.IsCheckingDisabled;
-				message.EDnsOptions = options.EDnsOptions;
-			}
+			var message = new DnsMessage { IsQuery = true, OperationCode = OperationCode.Query, IsRecursionDesired = true, IsEDnsEnabled = true };
+
+			message.IsRecursionDesired = options.IsRecursionDesired;
+			message.IsCheckingDisabled = options.IsCheckingDisabled;
+			message.EDnsOptions = options.EDnsOptions;
 
 			message.Questions.Add(new DnsQuestion(name, recordType, recordClass));
 

@@ -32,13 +32,6 @@ namespace ARSoft.Tools.Net.Dns
 		///   Sends as package to the server
 		/// </summary>
 		/// <param name="package">Package to be sent</param>
-		/// <returns>true, if the package could be sent; otherwise, false</returns>
-		bool Send(DnsRawPackage package);
-
-		/// <summary>
-		///   Sends as package to the server
-		/// </summary>
-		/// <param name="package">Package to be sent</param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns>true, if the package could be sent; otherwise, false</returns>
 		Task<bool> SendAsync(DnsRawPackage package, CancellationToken token = default);
@@ -46,15 +39,16 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Receives a package by the server
 		/// </summary>
-		/// <returns>The package received by the server</returns>
-		DnsReceivedRawPackage? Receive();
-
-		/// <summary>
-		///   Receives a package by the server
-		/// </summary>
+		/// <param name="identification">The identification of the message, that should be received</param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns>The package received by the server</returns>
-		Task<DnsReceivedRawPackage?> ReceiveAsync(CancellationToken token = default);
+		Task<DnsReceivedRawPackage?> ReceiveAsync(DnsMessageIdentification identification, CancellationToken token = default);
+
+		/// <summary>
+		///   Restarts the idle timeout
+		/// </summary>
+		/// <param name="timeout">New idle timeout or null, if only the timer should be restarted</param>
+		void RestartIdleTimeout(TimeSpan? timeout);
 
 		/// <summary>
 		///   Return a value indicating, if the connection is faulty.

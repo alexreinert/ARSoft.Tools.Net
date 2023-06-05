@@ -28,7 +28,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   Interface of a DNS resolver
 	/// </summary>
-	public interface IDnsResolver
+	public interface IDnsResolver : IDisposable
 	{
 		/// <summary>
 		///   Queries a dns resolver for specified records.

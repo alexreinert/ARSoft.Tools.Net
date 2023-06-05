@@ -35,7 +35,7 @@ public class Rfc8427JsonConverter<T> : JsonConverter<T>
 			case nameof(DnsRecordMessageBase):
 				return DnsMessageBase.ParseRfc8427Json<DnsMessage>(json) as T;
 			case nameof(DnsMessageBase):
-				if (json.TryGetProperty("Opcode", out var opcodeJson) && opcodeJson.GetUInt16() == (ushort)OperationCode.Update)
+				if (json.TryGetProperty("Opcode", out var opcodeJson) && opcodeJson.GetUInt16() == (ushort) OperationCode.Update)
 				{
 					return DnsMessageBase.ParseRfc8427Json<DnsUpdateMessage>(json) as T;
 				}

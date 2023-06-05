@@ -13,10 +13,10 @@
 		<Description>This project contains a complete managed .Net DNS and DNSSEC client, a DNS server and SPF and SenderID validation.</Description>
 		<PackageProjectUrl>https://github.com/alexreinert/ARSoft.Tools.Net</PackageProjectUrl>
 		<PackageTags>dns dnssec spf</PackageTags>
-		<PackageLicenseUrl>https://github.com/alexreinert/ARSoft.Tools.Net/blob/master/LICENSE</PackageLicenseUrl>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Copyright>Copyright 2010..2023 Alexander Reinert</Copyright>
-		<VersionPrefix>3.3.0</VersionPrefix>
+		<VersionPrefix>3.4.0</VersionPrefix>
 	</PropertyGroup>
 
 	<ItemGroup>

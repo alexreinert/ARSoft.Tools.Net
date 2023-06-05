@@ -24,7 +24,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   A transport used by a client using tcp communication
 	/// </summary>
-	public class TcpClientTransport : PooledClientTransportBase
+	public class TcpClientTransport : PipelinedClientTransportBase
 	{
 		/// <summary>
 		///   The default port of UDP DNS communication
@@ -39,16 +39,6 @@ namespace ARSoft.Tools.Net.Dns
 		public override ushort MaximumAllowedQuerySize => UInt16.MaxValue;
 
 		/// <summary>
-		///   Returns a value indicating if the transport is reliable
-		/// </summary>
-		public override bool SupportsReliableTransfer => true;
-
-		/// <summary>
-		///   Returns a value indicating if the transport supports multicast communication
-		/// </summary>
-		public override bool SupportsMulticastTransfer => false;
-
-		/// <summary>
 		///   Creates a new instance of the TcpClientTransport
 		/// </summary>
 		/// <param name="port">The port to be used</param>
@@ -58,30 +48,7 @@ namespace ARSoft.Tools.Net.Dns
 			_port = port;
 		}
 
-		protected override IPoolableClientConnection? ConnectInternal(DnsClientEndpointInfo endpointInfo, int queryTimeout)
-		{
-			var tcpClient = new TcpClient(endpointInfo.DestinationAddress.AddressFamily)
-			{
-				ReceiveTimeout = queryTimeout,
-				SendTimeout = queryTimeout
-			};
-
-			try
-			{
-				if (!tcpClient.TryConnect(endpointInfo.DestinationAddress, _port, queryTimeout))
-					return null;
-
-				var tcpStream = tcpClient.GetStream();
-
-				return new TcpClientConnection(this, (IPEndPoint) tcpClient.Client.RemoteEndPoint!, (IPEndPoint) tcpClient.Client.LocalEndPoint!, tcpClient, tcpStream);
-			}
-			catch
-			{
-				return null;
-			}
-		}
-
-		protected override async Task<IPoolableClientConnection?> ConnectInternalAsync(DnsClientEndpointInfo endpointInfo, int queryTimeout, CancellationToken token)
+		protected override async Task<IPipelineableClientConnection?> ConnectInternalAsync(DnsClientEndpointInfo endpointInfo, int queryTimeout, CancellationToken token)
 		{
 			var tcpClient = new TcpClient(endpointInfo.DestinationAddress.AddressFamily)
 			{
@@ -92,7 +59,9 @@ namespace ARSoft.Tools.Net.Dns
 			try
 			{
 				if (!await tcpClient.TryConnectAsync(endpointInfo.DestinationAddress, _port, queryTimeout, token))
+				{
 					return null;
+				}
 
 				var tcpStream = tcpClient.GetStream();
 
@@ -104,15 +73,16 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
-		private class TcpClientConnection : IPoolableClientConnection
+		private class TcpClientConnection : IPipelineableClientConnection
 		{
 			private readonly TcpClientTransport _transport;
 
-			//private readonly DnsClientEndpointInfo _endpointInfo;
 			private readonly IPEndPoint _destinationEndPoint;
 			private readonly IPEndPoint _localEndPoint;
 			private readonly TcpClient _client;
 			private readonly NetworkStream _stream;
+
+			private readonly TaskIdleCompletionSource _idleTCS = new TaskIdleCompletionSource(TimeSpan.FromMilliseconds(100)); // RFC 7766 states that a idle session should be closed unless higher timeout is signalized by server
 
 			public TcpClientConnection(TcpClientTransport transport, IPEndPoint destinationEndPoint, IPEndPoint localEndPoint, TcpClient client, NetworkStream stream)
 			{
@@ -121,26 +91,11 @@ namespace ARSoft.Tools.Net.Dns
 				_localEndPoint = localEndPoint;
 				_client = client;
 				_stream = stream;
+
+				_idleTCS.Task.ContinueWith((_) => { CloseConnection(); });
 			}
 
 			public IClientTransport Transport => _transport;
-
-			public bool Send(DnsRawPackage package)
-			{
-				if (package.Length > 0)
-				{
-					try
-					{
-						_stream.Write(package.ToArraySegment(true));
-					}
-					catch
-					{
-						return false;
-					}
-				}
-
-				return true;
-			}
 
 			public async Task<bool> SendAsync(DnsRawPackage package, CancellationToken token = new())
 			{
@@ -154,54 +109,6 @@ namespace ARSoft.Tools.Net.Dns
 					{
 						return false;
 					}
-				}
-
-				return true;
-			}
-
-			public DnsReceivedRawPackage? Receive()
-			{
-				var buffer = new byte[2];
-
-				try
-				{
-					if (!TryRead(buffer, 0, 2))
-					{
-						MarkFaulty();
-						return null;
-					}
-
-					var tmp = 0;
-					var length = DnsMessageBase.ParseUShort(buffer, ref tmp);
-
-					buffer = new byte[length + 2];
-					DnsMessageBase.EncodeUShort(buffer, 0, length);
-
-					if (!TryRead(buffer, 2, length))
-					{
-						MarkFaulty();
-						return null;
-					}
-
-					return new DnsReceivedRawPackage(buffer, _destinationEndPoint, _localEndPoint);
-				}
-				catch
-				{
-					MarkFaulty();
-					return null;
-				}
-			}
-
-			private bool TryRead(byte[] buffer, int offset, int length)
-			{
-				var readBytes = 0;
-
-				while (readBytes < length)
-				{
-					if (!_client.IsConnected())
-						return false;
-
-					readBytes += _stream.Read(buffer, offset + readBytes, length - readBytes);
 				}
 
 				return true;
@@ -230,6 +137,8 @@ namespace ARSoft.Tools.Net.Dns
 						MarkFaulty();
 						return null;
 					}
+
+					_idleTCS.ResetIdleTimeout();
 
 					return new DnsReceivedRawPackage(buffer, _destinationEndPoint, _localEndPoint);
 				}
@@ -260,6 +169,51 @@ namespace ARSoft.Tools.Net.Dns
 				}
 
 				return true;
+			}
+
+			public async Task<DnsReceivedRawPackage?> ReceiveAsync(DnsMessageIdentification identification, CancellationToken token)
+			{
+				DnsReceivedRawPackage? package;
+				while ((package = await ReceiveAsync(token)) != null)
+				{
+					if (package.MessageIdentification.Equals(identification))
+						return package;
+				}
+
+				return null;
+			}
+
+			public void RestartIdleTimeout(TimeSpan? timeout)
+			{
+				if (!timeout.HasValue)
+					return;
+
+				if (timeout.Value == TimeSpan.Zero)
+				{
+					CloseConnection();
+				}
+				else
+				{
+					// use provided timeout, but at least 100ms and at most 2m
+					_idleTCS.ResetIdleTimeout(TimeSpan.FromMilliseconds(Math.Min(Math.Max(timeout.Value.TotalMilliseconds - 1, 100), 2 * 60 * 1000)));
+				}
+			}
+
+			private void CloseConnection()
+			{
+				MarkFaulty();
+
+				try
+				{
+					_stream.Dispose();
+				}
+				catch { }
+
+				try
+				{
+					_client.Close();
+				}
+				catch { }
 			}
 
 			public bool IsAlive => !IsFaulty && _client.IsConnected();

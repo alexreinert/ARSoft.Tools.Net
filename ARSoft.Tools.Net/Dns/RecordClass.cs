@@ -128,9 +128,10 @@ namespace ARSoft.Tools.Net.Dns
 						ushort classValue;
 						if (UInt16.TryParse(s.Substring(5), out classValue))
 						{
-							return (RecordClass)classValue;
+							return (RecordClass) classValue;
 						}
 					}
+
 					break;
 			}
 

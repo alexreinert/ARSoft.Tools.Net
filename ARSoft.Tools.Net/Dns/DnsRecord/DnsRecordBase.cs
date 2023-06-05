@@ -409,11 +409,11 @@ public abstract class DnsRecordBase : DnsMessageEntryBase, IComparable<DnsRecord
 		writer.WriteStartObject();
 
 		writer.WriteString("NAME", Name.ToString(true));
-		writer.WriteNumber("TYPE", (ushort)RecordType);
+		writer.WriteNumber("TYPE", (ushort) RecordType);
 		writer.WriteString("TYPEname", RecordType.ToShortString());
-		writer.WriteNumber("CLASS", (ushort)RecordClass);
+		writer.WriteNumber("CLASS", (ushort) RecordClass);
 		writer.WriteString("CLASSname", RecordClass.ToShortString());
-		writer.WriteNumber("TTL", (ushort)TimeToLive);
+		writer.WriteNumber("TTL", (ushort) TimeToLive);
 
 		var rdata = new byte[MaximumRecordDataLength];
 		int pos = 0;
@@ -447,13 +447,13 @@ public abstract class DnsRecordBase : DnsMessageEntryBase, IComparable<DnsRecord
 					rname = DomainName.Parse(prop.Value.GetString() ?? String.Empty);
 					break;
 				case "TYPE":
-					rtype = (RecordType)prop.Value.GetUInt16();
+					rtype = (RecordType) prop.Value.GetUInt16();
 					break;
 				case "TYPEname":
 					rtype = RecordTypeHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
 					break;
 				case "CLASS":
-					rclass = (RecordClass)prop.Value.GetUInt16();
+					rclass = (RecordClass) prop.Value.GetUInt16();
 					break;
 				case "CLASSname":
 					rclass = RecordClassHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);

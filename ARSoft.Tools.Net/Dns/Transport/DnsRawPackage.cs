@@ -35,9 +35,14 @@ public class DnsRawPackage
 	private readonly ArraySegment<byte> _dataWithLengthHeader;
 
 	/// <summary>
+	///   The identification of the dns message
+	/// </summary>
+	public DnsMessageIdentification MessageIdentification { get; }
+
+	/// <summary>
 	///   Gets the length of the raw DNS package without length header
 	/// </summary>
-	public int Length { get; set; }
+	public int Length { get; }
 
 	/// <summary>
 	///   Creates a new instance of the DnsRawPackage class
@@ -47,12 +52,14 @@ public class DnsRawPackage
 	{
 		var tmp = 0;
 		Length = DnsMessageBase.ParseUShort(buffer, ref tmp);
+		MessageIdentification = DnsMessageIdentification.Parse(buffer[LENGTH_HEADER_LENGTH..]);
 		_dataWithLengthHeader = buffer;
 	}
 
 	internal DnsRawPackage(ArraySegment<byte> data, int length)
 	{
 		Length = length;
+		MessageIdentification = DnsMessageIdentification.Parse(data[LENGTH_HEADER_LENGTH..]);
 		_dataWithLengthHeader = data;
 	}
 
@@ -70,7 +77,7 @@ public class DnsRawPackage
 		}
 		else
 		{
-			return _dataWithLengthHeader.Slice(LENGTH_HEADER_LENGTH);
+			return _dataWithLengthHeader[LENGTH_HEADER_LENGTH..];
 		}
 	}
 }

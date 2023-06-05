@@ -54,19 +54,20 @@ namespace ARSoft.Tools.Net
 		{
 			try
 			{
-				var connectTask = tcpClient.ConnectAsync(address, port, token).AsTask();
-				var timeoutTask = Task.Delay(timeout, token);
-
-				await Task.WhenAny(connectTask, timeoutTask);
-
-				if (connectTask.IsCompleted)
-					return true;
-
-				tcpClient.Close();
-				return false;
+				await tcpClient.ConnectAsync(address, port, token).AsTask().WaitAsync(TimeSpan.FromMilliseconds(timeout), token);
+				return true;
 			}
 			catch
 			{
+				try
+				{
+					tcpClient.Close();
+				}
+				catch
+				{
+					// ignored
+				}
+
 				return false;
 			}
 		}

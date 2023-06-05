@@ -141,14 +141,14 @@ namespace ARSoft.Tools.Net.Dns
 					return records!;
 				}
 
-				DnsMessage? msg = await _dnsClient.ResolveAsync(name, recordType, recordClass, null, token);
+				var msg = await _dnsClient.ResolveAsync(name, recordType, recordClass, DnsQueryOptions.DefaultQueryOptions, token);
 
 				if ((msg == null) || ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain)))
 				{
 					throw new Exception("DNS request failed");
 				}
 
-				CNameRecord? cName = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
+				var cName = msg.AnswerRecords.Where(x => (x.RecordType == RecordType.CName) && (x.RecordClass == recordClass) && x.Name.Equals(name)).OfType<CNameRecord>().FirstOrDefault();
 
 				if (cName != null)
 				{
@@ -182,6 +182,19 @@ namespace ARSoft.Tools.Net.Dns
 		public void ClearCache()
 		{
 			_cache = new DnsCache();
+		}
+
+		void IDisposable.Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool isDisposing) { }
+
+		~DnsStubResolver()
+		{
+			Dispose(false);
 		}
 	}
 }

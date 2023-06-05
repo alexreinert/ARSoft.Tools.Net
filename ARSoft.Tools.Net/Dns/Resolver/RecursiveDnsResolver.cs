@@ -38,6 +38,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private DnsCache _cache = new DnsCache();
 		private NameserverCache _nameserverCache = new NameserverCache();
+		private IClientTransport[] _transports = { new TcpClientTransport(), new UdpClientTransport() };
 
 		private readonly IResolverHintStore _resolverHintStore;
 
@@ -96,9 +97,7 @@ namespace ARSoft.Tools.Net.Dns
 		public List<T> Resolve<T>(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet)
 			where T : DnsRecordBase
 		{
-			var res = ResolveAsync<T>(name, recordType, recordClass);
-			res.Wait();
-			return res.Result;
+			return ResolveAsync<T>(name, recordType, recordClass).GetAwaiter().GetResult();
 		}
 
 		/// <summary>
@@ -122,14 +121,14 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			for (; state.QueryCount <= MaximumReferalCount; state.QueryCount++)
 			{
-				DnsMessage? msg = await new DnsClient(GetBestNameservers(recordType == RecordType.Ds ? name.GetParentName() : name), QueryTimeout)
+				DnsMessage? msg = await new DnsClient(GetBestNameservers(recordType == RecordType.Ds ? name.GetParentName() : name), _transports, false, QueryTimeout)
 				{
 					IsResponseValidationEnabled = IsResponseValidationEnabled,
 					Is0x20ValidationEnabled = Is0x20ValidationEnabled
 				}.ResolveAsync(name, recordType, recordClass, new DnsQueryOptions()
 				{
 					IsRecursionDesired = false,
-					IsEDnsEnabled = true
+					EDnsOptions = DnsQueryOptions.DefaultQueryOptions.EDnsOptions
 				}, token);
 
 				if ((msg != null) && ((msg.ReturnCode == ReturnCode.NoError) || (msg.ReturnCode == ReturnCode.NxDomain)))
@@ -278,6 +277,25 @@ namespace ARSoft.Tools.Net.Dns
 			}
 
 			return _resolverHintStore.RootServers.OrderBy(x => x.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ThenBy(x => rnd.Next());
+		}
+
+		void IDisposable.Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool isDisposing)
+		{
+			foreach (var transport in _transports)
+			{
+				transport.Dispose();
+			}
+		}
+
+		~RecursiveDnsResolver()
+		{
+			Dispose(false);
 		}
 	}
 }

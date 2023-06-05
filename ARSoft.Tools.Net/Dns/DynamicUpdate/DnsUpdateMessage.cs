@@ -260,9 +260,9 @@ public class DnsUpdateMessage : DnsMessageBase
 		writer.WriteNumber("ARCOUNT", AdditionalRecords.Count);
 
 		writer.WriteString("QNAME", ZoneName.ToString(true));
-		writer.WriteNumber("QTYPE", (ushort)RecordType.Soa);
+		writer.WriteNumber("QTYPE", (ushort) RecordType.Soa);
 		writer.WriteString("QTYPEname", RecordType.Soa.ToShortString());
-		writer.WriteNumber("QCLASS", (ushort)RecordClass.INet);
+		writer.WriteNumber("QCLASS", (ushort) RecordClass.INet);
 		writer.WriteString("QCLASSname", RecordClass.INet.ToShortString());
 
 		WriteRfc8427PrequisiteSection(writer, options);
@@ -299,5 +299,4 @@ public class DnsUpdateMessage : DnsMessageBase
 
 		writer.WriteEndArray();
 	}
-
 }

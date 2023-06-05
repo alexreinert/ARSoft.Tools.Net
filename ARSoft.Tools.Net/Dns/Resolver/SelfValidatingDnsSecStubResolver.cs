@@ -79,9 +79,7 @@ namespace ARSoft.Tools.Net.Dns
 		public List<T> Resolve<T>(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet)
 			where T : DnsRecordBase
 		{
-			var res = ResolveAsync<T>(name, recordType, recordClass);
-			res.Wait();
-			return res.Result;
+			return ResolveAsync<T>(name, recordType, recordClass).GetAwaiter().GetResult();
 		}
 
 		/// <summary>
@@ -114,9 +112,7 @@ namespace ARSoft.Tools.Net.Dns
 		public DnsSecResult<T> ResolveSecure<T>(DomainName name, RecordType recordType = RecordType.A, RecordClass recordClass = RecordClass.INet)
 			where T : DnsRecordBase
 		{
-			var res = ResolveSecureAsync<T>(name, recordType, recordClass);
-			res.Wait();
-			return res.Result;
+			return ResolveSecureAsync<T>(name, recordType, recordClass).GetAwaiter().GetResult();
 		}
 
 		/// <summary>
@@ -149,12 +145,7 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					IsCheckingDisabled = true,
 					IsRecursionDesired = true,
-					EDnsOptions = new OptRecord(
-						4096,
-						new DnssecAlgorithmUnderstoodOption(EnumHelper<DnsSecAlgorithm>.Names.Keys.Where(a => a.IsSupported()).ToArray()),
-						new DsHashUnderstoodOption(EnumHelper<DnsSecDigestType>.Names.Keys.Where(d => d.IsSupported()).ToArray()),
-						new Nsec3HashUnderstoodOption(EnumHelper<NSec3HashAlgorithm>.Names.Keys.Where(a => a.IsSupported()).ToArray())
-					) { IsDnsSecOk = true }
+					EDnsOptions = DnsQueryOptions.DefaultDnsSecQueryOptions.EDnsOptions
 				}, token);
 
 				if ((msg == null) || ((msg.ReturnCode != ReturnCode.NoError) && (msg.ReturnCode != ReturnCode.NxDomain)))
@@ -218,12 +209,30 @@ namespace ARSoft.Tools.Net.Dns
 
 		Task<DnsMessage?> IInternalDnsSecResolver<ResolveLoopProtector>.ResolveMessageAsync(DomainName name, RecordType recordType, RecordClass recordClass, ResolveLoopProtector state, CancellationToken token)
 		{
-			return _dnsClient.ResolveAsync(name, RecordType.Ds, recordClass, new DnsQueryOptions() { IsEDnsEnabled = true, IsDnsSecOk = true, IsCheckingDisabled = true, IsRecursionDesired = true }, token);
+			return _dnsClient.ResolveAsync(name, RecordType.Ds, recordClass, new DnsQueryOptions()
+			{
+				IsRecursionDesired = true,
+				IsCheckingDisabled = true,
+				EDnsOptions = DnsQueryOptions.DefaultDnsSecQueryOptions.EDnsOptions
+			}, token);
 		}
 
 		Task<DnsSecResult<TRecord>> IInternalDnsSecResolver<ResolveLoopProtector>.ResolveSecureAsync<TRecord>(DomainName name, RecordType recordType, RecordClass recordClass, ResolveLoopProtector resolveLoopProtector, CancellationToken token)
 		{
 			return ResolveSecureAsyncInternal<TRecord>(name, recordType, recordClass, token, resolveLoopProtector);
+		}
+
+		void IDisposable.Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool isDisposing) { }
+
+		~SelfValidatingInternalDnsSecStubResolver()
+		{
+			Dispose(false);
 		}
 	}
 }

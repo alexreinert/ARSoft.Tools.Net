@@ -365,12 +365,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			for (var i = 0; i < recordCount; i++)
 			{
-				DnsQuestion question = new DnsQuestion(
-					ParseDomainName(data, ref currentPosition),
-					(RecordType)ParseUShort(data, ref currentPosition),
-					(RecordClass)ParseUShort(data, ref currentPosition));
-
-				questions.Add(question);
+				questions.Add(DnsQuestion.Parse(data, ref currentPosition));
 			}
 
 			SetQuestionSection(questions);
@@ -971,7 +966,7 @@ namespace ARSoft.Tools.Net.Dns
 						msg.IsQuery = !ReadBoolFlag(prop.Value);
 						break;
 					case "Opcode":
-						msg.OperationCodeInternal = (OperationCode)prop.Value.GetUInt16();
+						msg.OperationCodeInternal = (OperationCode) prop.Value.GetUInt16();
 						break;
 					case "AA":
 						msg.AAFlagInternal = ReadBoolFlag(prop.Value);
@@ -992,7 +987,7 @@ namespace ARSoft.Tools.Net.Dns
 						msg.CDFlagInternal = ReadBoolFlag(prop.Value);
 						break;
 					case "RCODE":
-						msg.ReturnCode = (ReturnCode)prop.Value.GetUInt16();
+						msg.ReturnCode = (ReturnCode) prop.Value.GetUInt16();
 						break;
 					case "QNAME":
 						qname = DomainName.Parse(prop.Value.GetString() ?? String.Empty);
@@ -1004,7 +999,7 @@ namespace ARSoft.Tools.Net.Dns
 						qtype = RecordTypeHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
 						break;
 					case "QCLASS":
-						qclass = (RecordClass)prop.Value.GetUInt16();
+						qclass = (RecordClass) prop.Value.GetUInt16();
 						break;
 					case "QCLASSname":
 						qclass = RecordClassHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
@@ -1082,6 +1077,5 @@ namespace ARSoft.Tools.Net.Dns
 				default: throw new JsonException("Not a valid boolean flag: '" + json.GetRawText() + "'");
 			}
 		}
-
 	}
 }

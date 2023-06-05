@@ -368,6 +368,9 @@
 								<para>RFC 7553 - The Uniform Resource Identifier (URI) DNS Resource Record</para>
 							</listItem>
 							<listItem>
+								<para>RFC 7766 - DNS Transport over TCP - Implementation Requirements</para>
+							</listItem>
+							<listItem>
 								<para>RFC 7828 - The edns-tcp-keepalive EDNS0 Option (Option parsing only)</para>
 							</listItem>
 							<listItem>

@@ -47,6 +47,14 @@ public class DnsQuestion : DnsMessageEntryBase, IEquatable<DnsQuestion>
 		DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordClass);
 	}
 
+	internal static DnsQuestion Parse(IList<byte> data, ref int currentPosition)
+	{
+		return new DnsQuestion(
+			DnsMessageBase.ParseDomainName(data, ref currentPosition),
+			(RecordType) DnsMessageBase.ParseUShort(data, ref currentPosition),
+			(RecordClass) DnsMessageBase.ParseUShort(data, ref currentPosition));
+	}
+
 	internal static DnsQuestion ParseRfc8427Json(JsonElement json)
 	{
 		var qname = DomainName.Root;
@@ -61,13 +69,13 @@ public class DnsQuestion : DnsMessageEntryBase, IEquatable<DnsQuestion>
 					qname = DomainName.Parse(prop.Value.GetString() ?? String.Empty);
 					break;
 				case "TYPE":
-					qtype = (RecordType)prop.Value.GetUInt16();
+					qtype = (RecordType) prop.Value.GetUInt16();
 					break;
 				case "TYPEname":
 					qtype = RecordTypeHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
 					break;
 				case "CLASS":
-					qclass = (RecordClass)prop.Value.GetUInt16();
+					qclass = (RecordClass) prop.Value.GetUInt16();
 					break;
 				case "CLASSname":
 					qclass = RecordClassHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
@@ -83,9 +91,9 @@ public class DnsQuestion : DnsMessageEntryBase, IEquatable<DnsQuestion>
 		writer.WriteStartObject();
 
 		writer.WriteString("NAME", Name.ToString(true));
-		writer.WriteNumber("TYPE", (ushort)RecordType);
+		writer.WriteNumber("TYPE", (ushort) RecordType);
 		writer.WriteString("TYPEname", RecordType.ToShortString());
-		writer.WriteNumber("CLASS", (ushort)RecordClass);
+		writer.WriteNumber("CLASS", (ushort) RecordClass);
 		writer.WriteString("CLASSname", RecordClass.ToShortString());
 
 		writer.WriteEndObject();

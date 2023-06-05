@@ -16,16 +16,22 @@
 // limitations under the License.
 #endregion
 
-namespace ARSoft.Tools.Net.Dns
+namespace ARSoft.Tools.Net.Dns;
+
+/// <summary>
+///   Interface of a pooled connection initiated by a client
+/// </summary>
+public interface IPipelineableClientConnection : IClientConnection
 {
 	/// <summary>
-	///   Interface of a pooled connection initiated by a client
+	///   Returns a value indicating if the connection is still alive
 	/// </summary>
-	public interface IPoolableClientConnection : IClientConnection
-	{
-		/// <summary>
-		///   Returns a value indicating if the connection is still alive
-		/// </summary>
-		bool IsAlive { get; }
-	}
+	bool IsAlive { get; }
+
+	/// <summary>
+	///   Receives a package by the server
+	/// </summary>
+	/// <param name="token"> The token to monitor cancellation requests </param>
+	/// <returns>The package received by the server</returns>
+	Task<DnsReceivedRawPackage?> ReceiveAsync(CancellationToken token = default);
 }

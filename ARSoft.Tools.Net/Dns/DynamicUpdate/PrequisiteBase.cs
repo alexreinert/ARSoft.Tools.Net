@@ -193,11 +193,11 @@ public abstract class PrequisiteBase
 		writer.WriteStartObject();
 
 		writer.WriteString("NAME", Name.ToString(true));
-		writer.WriteNumber("TYPE", (ushort)RecordTypeInternal);
+		writer.WriteNumber("TYPE", (ushort) RecordTypeInternal);
 		writer.WriteString("TYPEname", RecordTypeInternal.ToShortString());
-		writer.WriteNumber("CLASS", (ushort)RecordClassInternal);
+		writer.WriteNumber("CLASS", (ushort) RecordClassInternal);
 		writer.WriteString("CLASSname", RecordClassInternal.ToShortString());
-		writer.WriteNumber("TTL", (ushort)0);
+		writer.WriteNumber("TTL", (ushort) 0);
 
 		var rdata = new byte[MaximumRecordDataLength];
 		int pos = 0;

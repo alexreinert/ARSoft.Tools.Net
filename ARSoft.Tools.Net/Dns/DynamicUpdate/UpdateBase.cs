@@ -128,13 +128,13 @@ public abstract class UpdateBase
 					rname = DomainName.Parse(prop.Value.GetString() ?? String.Empty);
 					break;
 				case "TYPE":
-					rtype = (RecordType)prop.Value.GetUInt16();
+					rtype = (RecordType) prop.Value.GetUInt16();
 					break;
 				case "TYPEname":
 					rtype = RecordTypeHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
 					break;
 				case "CLASS":
-					rclass = (RecordClass)prop.Value.GetUInt16();
+					rclass = (RecordClass) prop.Value.GetUInt16();
 					break;
 				case "CLASSname":
 					rclass = RecordClassHelper.ParseShortString(prop.Value.GetString() ?? String.Empty);
@@ -198,11 +198,11 @@ public abstract class UpdateBase
 		writer.WriteStartObject();
 
 		writer.WriteString("NAME", Name.ToString(true));
-		writer.WriteNumber("TYPE", (ushort)RecordTypeInternal);
+		writer.WriteNumber("TYPE", (ushort) RecordTypeInternal);
 		writer.WriteString("TYPEname", RecordTypeInternal.ToShortString());
-		writer.WriteNumber("CLASS", (ushort)RecordClassInternal);
+		writer.WriteNumber("CLASS", (ushort) RecordClassInternal);
 		writer.WriteString("CLASSname", RecordClassInternal.ToShortString());
-		writer.WriteNumber("TTL", (ushort)TimeToLive);
+		writer.WriteNumber("TTL", (ushort) TimeToLive);
 
 		var rdata = new byte[MaximumRecordDataLength];
 		int pos = 0;
@@ -212,5 +212,4 @@ public abstract class UpdateBase
 
 		writer.WriteEndObject();
 	}
-
 }

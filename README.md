@@ -114,6 +114,7 @@ A API documentation can be found at [https://docs.ar-soft.de/arsoft.tools.net](h
 * RFC 7477 - Child-to-Parent Synchronization in DNS
 * RFC 7479 - Using Ed25519 in SSHFP Resource Records
 * RFC 7553 - The Uniform Resource Identifier (URI) DNS Resource Record
+* RFC 7766 - DNS Transport over TCP - Implementation Requirements
 * RFC 7828 - The edns-tcp-keepalive EDNS0 Option (Option parsing only)
 * RFC 7830 - The EDNS(0) Padding Option
 * RFC 7871 - Client Subnet in DNS Queries (Option parsing only)

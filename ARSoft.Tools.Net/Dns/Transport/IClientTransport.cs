@@ -52,14 +52,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="endpointInfo">The endpoint to connect to</param>
 		/// <param name="queryTimeout">The query timeout in milliseconds</param>
-		/// <returns>A connection to the specified server or null, if the connection could not be established</returns>
-		IClientConnection? Connect(DnsClientEndpointInfo endpointInfo, int queryTimeout);
-
-		/// <summary>
-		///   Creates a new connection to a server
-		/// </summary>
-		/// <param name="endpointInfo">The endpoint to connect to</param>
-		/// <param name="queryTimeout">The query timeout in milliseconds</param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns>A connection to the specified server or null, if the connection could not be established</returns>
 		Task<IClientConnection?> ConnectAsync(DnsClientEndpointInfo endpointInfo, int queryTimeout, CancellationToken token = default);
@@ -68,7 +60,8 @@ namespace ARSoft.Tools.Net.Dns
 		///   Gets connection from the pool
 		/// </summary>
 		/// <param name="endpointInfo">The endpoint of the connection</param>
+		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns>A pooled connection or null, if no connection to the specified endpoint exists in the pool</returns>
-		IClientConnection? GetPooledConnection(DnsClientEndpointInfo endpointInfo);
+		Task<IClientConnection?> GetPooledConnectionAsync(DnsClientEndpointInfo endpointInfo, CancellationToken token = default);
 	}
 }

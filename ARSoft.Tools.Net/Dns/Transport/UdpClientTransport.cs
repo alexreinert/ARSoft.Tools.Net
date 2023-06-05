@@ -67,32 +67,6 @@ namespace ARSoft.Tools.Net.Dns
 		/// </summary>
 		/// <param name="endpointInfo">The endpoint to connect to</param>
 		/// <param name="queryTimeout">The query timeout in milliseconds</param>
-		/// <returns>A connection to the specified server or null, if the connection could not be established</returns>
-		public IClientConnection? Connect(DnsClientEndpointInfo endpointInfo, int queryTimeout)
-		{
-			var socket = new Socket(endpointInfo.LocalAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp)
-			{
-				ReceiveTimeout = queryTimeout,
-				SendTimeout = queryTimeout
-			};
-
-			try
-			{
-				socket.Connect(endpointInfo.DestinationAddress, _port);
-
-				return new UdpClientConnection(this, endpointInfo, socket, queryTimeout);
-			}
-			catch
-			{
-				return null;
-			}
-		}
-
-		/// <summary>
-		///   Creates a new connection to a server
-		/// </summary>
-		/// <param name="endpointInfo">The endpoint to connect to</param>
-		/// <param name="queryTimeout">The query timeout in milliseconds</param>
 		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns>A connection to the specified server or null, if the connection could not be established</returns>
 		public async Task<IClientConnection?> ConnectAsync(DnsClientEndpointInfo endpointInfo, int queryTimeout, CancellationToken token = new())
@@ -119,8 +93,9 @@ namespace ARSoft.Tools.Net.Dns
 		///   Gets connection from the pool
 		/// </summary>
 		/// <param name="endpointInfo">The endpoint of the connection</param>
+		/// <param name="token"> The token to monitor cancellation requests </param>
 		/// <returns>A pooled connection or null, if no connection to the specified endpoint exists in the pool</returns>
-		public IClientConnection GetPooledConnection(DnsClientEndpointInfo endpointInfo)
+		Task<IClientConnection?> IClientTransport.GetPooledConnectionAsync(DnsClientEndpointInfo endpointInfo, CancellationToken token)
 		{
 			throw new NotSupportedException();
 		}
@@ -147,25 +122,6 @@ namespace ARSoft.Tools.Net.Dns
 
 			public IClientTransport Transport => _transport;
 
-			public bool Send(DnsRawPackage package)
-			{
-				try
-				{
-					if (_socket.Send(package.ToArraySegment(false), SocketFlags.None) < package.Length)
-					{
-						MarkFaulty();
-						return false;
-					}
-
-					return true;
-				}
-				catch
-				{
-					MarkFaulty();
-					return false;
-				}
-			}
-
 			public async Task<bool> SendAsync(DnsRawPackage package, CancellationToken token = new())
 			{
 				try
@@ -187,31 +143,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 			}
 
-			public DnsReceivedRawPackage? Receive()
-			{
-				try
-				{
-					var buffer = new byte[_socket.ReceiveBufferSize + DnsRawPackage.LENGTH_HEADER_LENGTH];
-					var length = _socket.Receive(buffer, DnsRawPackage.LENGTH_HEADER_LENGTH, buffer.Length - DnsRawPackage.LENGTH_HEADER_LENGTH, SocketFlags.None);
-
-					if (length == 0)
-					{
-						MarkFaulty();
-						return null;
-					}
-
-					DnsMessageBase.EncodeUShort(buffer, 0, (ushort) length);
-
-					return new DnsReceivedRawPackage(buffer, (IPEndPoint) _socket.RemoteEndPoint!, (IPEndPoint) _socket.LocalEndPoint!);
-				}
-				catch
-				{
-					MarkFaulty();
-					return null;
-				}
-			}
-
-			public async Task<DnsReceivedRawPackage?> ReceiveAsync(CancellationToken token = new())
+			private async Task<DnsReceivedRawPackage?> ReceiveAsync(CancellationToken token = new())
 			{
 				var buffer = new byte[_socket.ReceiveBufferSize + DnsRawPackage.LENGTH_HEADER_LENGTH];
 
@@ -236,6 +168,23 @@ namespace ARSoft.Tools.Net.Dns
 				}
 			}
 
+			public async Task<DnsReceivedRawPackage?> ReceiveAsync(DnsMessageIdentification identification, CancellationToken token)
+			{
+				DnsReceivedRawPackage? package;
+				while ((package = await ReceiveAsync(token)) != null)
+				{
+					if (package.MessageIdentification.Equals(identification))
+						return package;
+				}
+
+				return null;
+			}
+
+			void IClientConnection.RestartIdleTimeout(TimeSpan? timeout)
+			{
+				// UDP has no keep alive
+			}
+
 			public bool IsFaulty { get; private set; }
 
 			public void MarkFaulty()
@@ -249,7 +198,10 @@ namespace ARSoft.Tools.Net.Dns
 				{
 					_socket.Dispose();
 				}
-				catch { }
+				catch
+				{
+					// ignored
+				}
 			}
 		}
 	}
