@@ -73,11 +73,23 @@ namespace ARSoft.Tools.Net
 
 			separators = separators.Append('"').ToArray();
 
+			var lastQuoteStart = -1;
+			var lastQuoteEnd = -1;
+
 			var nextIndex = s.IndexOfAnyWithEscaping(separators, lastIndex);
 			while (nextIndex != -1)
 			{
 				if (s[nextIndex] == '"')
 				{
+					if (inQuote)
+					{
+						lastQuoteEnd = nextIndex;
+					}
+					else
+					{
+						lastQuoteStart = nextIndex;
+					}
+
 					inQuote = !inQuote;
 
 					if (!splitOnQuotes)
@@ -92,7 +104,7 @@ namespace ARSoft.Tools.Net
 					continue;
 				}
 
-				if ((nextIndex != 0 || s[nextIndex] != '"') && (lastIndex != nextIndex || !removeEmptyEntries))
+				if ((nextIndex != 0 || s[nextIndex] != '"') && (lastIndex != nextIndex || !removeEmptyEntries || lastQuoteStart == nextIndex - 1 && lastQuoteEnd == nextIndex))
 				{
 					res.Add(s[lastIndex..nextIndex]);
 				}

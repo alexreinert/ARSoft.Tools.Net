@@ -1,447 +1,450 @@
 <?xml version="1.0" encoding="utf-8"?>
 <topic id="89d89738-5679-43dc-9c36-a104b52ee842" revisionNumber="1">
-	<developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
-		<introduction>
-			<para>
-				Welcome to ARSoft.Tools.Net library
-			</para>
-		</introduction>
-		<section>
-			<title>Project Description</title>
-			<content>
-				<para>
-					This project contains a complete managed .Net SPF validation, SenderID validation and a dns client and dns server implementation written in C#.
-				</para>
-			</content>
-		</section>
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>
+        Welcome to ARSoft.Tools.Net library
+      </para>
+    </introduction>
+    <section>
+      <title>Project Description</title>
+      <content>
+        <para>
+          This project contains a complete managed .Net SPF validation, SenderID validation and a dns client and dns server implementation written in C#.
+        </para>
+      </content>
+    </section>
 
-		<section>
-			<title>Donations</title>
-			<content>
-				<para>
-					If you use this library, please send me your feedback and add a link to this page.
-				</para>
-				<para>
-					In addition you can donate via <externalLink>
-						<linkText>Ko-fi</linkText>
-						<linkUri>https://ko-fi.com/alexreinert</linkUri>
-					</externalLink>, <externalLink>
-						<linkText>Paypal</linkText>
-						<linkUri>https://www.paypal.com/donate/?cmd=_s-xclick&amp;hosted_button_id=4PW43VJ2DZ7R2</linkUri>
-					</externalLink> or send me a gift from my <externalLink>
-						<linkText>Amazon.de wishlist</linkText>
-						<linkUri>https://www.amazon.de/gp/registry/wishlist/3NNUQIQO20AAP/ref=nav_wishlist_lists_1</linkUri>
-					</externalLink>
-				</para>
-			</content>
-		</section>
+    <section>
+      <title>Donations</title>
+      <content>
+        <para>
+          If you use this library, please send me your feedback and add a link to this page.
+        </para>
+        <para>
+          In addition you can donate via <externalLink>
+            <linkText>Ko-fi</linkText>
+            <linkUri>https://ko-fi.com/alexreinert</linkUri>
+          </externalLink>, <externalLink>
+            <linkText>Paypal</linkText>
+            <linkUri>https://www.paypal.com/donate/?cmd=_s-xclick&amp;hosted_button_id=4PW43VJ2DZ7R2</linkUri>
+          </externalLink> or send me a gift from my <externalLink>
+            <linkText>Amazon.de wishlist</linkText>
+            <linkUri>https://www.amazon.de/gp/registry/wishlist/3NNUQIQO20AAP/ref=nav_wishlist_lists_1</linkUri>
+          </externalLink>
+        </para>
+      </content>
+    </section>
 
-		<section>
-			<title>Nuget Package</title>
-			<content>
-				<para>
-					The library is avaible on Nuget, too: <externalLink>
-						<linkText>http://nuget.org/packages/ARSoft.Tools.Net</linkText>
-						<linkUri>http://nuget.org/packages/ARSoft.Tools.Net</linkUri>
-					</externalLink>
-				</para>
-			</content>
-		</section>
+    <section>
+      <title>Nuget Package</title>
+      <content>
+        <para>
+          The library is avaible on Nuget, too: <externalLink>
+            <linkText>http://nuget.org/packages/ARSoft.Tools.Net</linkText>
+            <linkUri>http://nuget.org/packages/ARSoft.Tools.Net</linkUri>
+          </externalLink>
+        </para>
+      </content>
+    </section>
 
-		<section>
-			<title>Features</title>
-			<content>
-				<para>
+    <section>
+      <title>Features</title>
+      <content>
+        <para>
 
-				</para>
-			</content>
-			<sections>
-				<section>
-					<title>Parsing and Validating of SPF/SenderID records</title>
-					<content>
-						<list class="bullet">
-							<listItem>
-								<para>RFC 4406 - Sender ID: Authenticating E-Mail</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4408 - Sender Policy Framework (SPF)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7208 - Sender Policy Framework (SPF) for Authorizing Use of Domains in Email, Version 1</para>
-							</listItem>
-						</list>
-					</content>
-				</section>
-				<section>
-					<title>Encoding and Decoding</title>
-					<content>
-						<list class="bullet">
-							<listItem>
-								<para>RFC 4648 - The Base16, Base32, and Base64 Data Encodings</para>
-							</listItem>
-						</list>
-					</content>
-				</section>
-				<section>
-					<title>DNS related</title>
-					<content>
-						<list class="bullet">
-							<listItem>
-								<para>DNS Client</para>
-							</listItem>
-							<listItem>
-								<para>Client for Link-Local Multicast Name Resolution</para>
-							</listItem>
-							<listItem>
-								<para>One-shot-client for Multicast DNS</para>
-							</listItem>
-							<listItem>
-								<para>(Multithreaded) DNS Server</para>
-							</listItem>
-							<listItem>
-								<para>Supports synchronous as well as asynchronous resolving</para>
-							</listItem>
-							<listItem>
-								<para>Discovery of local configured resolver dns servers on Windows and Linux</para>
-							</listItem>
-							<listItem>
-								<para>Different resolvers</para>
-								<list class="bullet">
-									<listItem>
-										<para>Stub resolver</para>
-									</listItem>
-									<listItem>
-										<para>Recursive resolver</para>
-									</listItem>
-									<listItem>
-										<para>DNSSEC validating stub resolver</para>
-									</listItem>
-									<listItem>
-										<para>DNSSEC validating recursive resolver</para>
-									</listItem>
-								</list>
-							</listItem>
-							<listItem>
-								<para>UDP and TCP support</para>
-							</listItem>
-							<listItem>
-								<para>Full IPv6 support</para>
-							</listItem>
-							<listItem>
-								<para>DANE validation stream class</para>
-							</listItem>
-							<listItem>
-								<para>RFC 1034 - Domain Names - Concepts and Facilities</para>
-							</listItem>
-							<listItem>
-								<para>RFC 1035 - Domain Names - Implementation and Specification</para>
-							</listItem>
-							<listItem>
-								<para>RFC 1183 - New DNS RR Definitions</para>
-							</listItem>
-							<listItem>
-								<para>RFC 1348 - DNS NSAP RRs</para>
-							</listItem>
-							<listItem>
-								<para>RFC 1637 - DNS NSAP Resource Records</para>
-							</listItem>
-							<listItem>
-								<para>RFC 1706 - DNS NSAP Resource Records</para>
-							</listItem>
-							<listItem>
-								<para>RFC 1712 - DNS Encoding of Geographical Location</para>
-							</listItem>
-							<listItem>
-								<para>RFC 1876 - A Means for Expressing Location Information in the Domain Name System</para>
-							</listItem>
-							<listItem>
-								<para>RFC 1995 - Incremental Zone Transfer</para>
-							</listItem>
-							<listItem>
-								<para>RFC 1996 - A Mechanism for Prompt Notification of Zone Changes (DNS NOTIFY)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2136 - Dynamic Updates in the Domain Name System</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2163 - Using the Internet DNS to Distribute MIXER Conformant Global Address Mapping (MCGAM)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2168 - Resolution of Uniform Resource Identifiers using the Domain Name System</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2181 - Clarifications to the DNS Specification</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2230 - Key Exchange Delegation Record for the DNS</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2308 - Negative Caching of DNS Queries (DNS NCACHE)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2535 - Domain Name System Security Extensions</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2536 - DSA KEYs and SIGs in the Domain Name System</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2537 - RSA/MD5 KEYs and SIGs in the Domain Name System</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2539 - Storage of Diffie-Hellman Keys in the Domain Name System</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2671 - Extension Mechanisms for DNS (EDNS0)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2672 - Non-Terminal DNS Name Redirection</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2673 - Binary Labels in the Domain Name System</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2782 - A DNS RR for specifying the location of services (DNS SRV)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2845 - Secret Key Transaction Authentication for DNS (TSIG)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2915 - The Naming Authority Pointer (NAPTR) DNS Resource Record</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2930 - Secret Key Establishment for DNS (TKEY RR)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 2931 - DNS Request and Transaction Signatures (SIG(0)s) (Record parsing only)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3110 - RSA/SHA-1 SIGs and RSA KEYs in the Domain Name System</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3123 - A DNS RR Type for Lists of Address Prefixes (APL RR)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3225 - Indicating Resolver Support of DNSSEC</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3226 - DNSSEC and IPv6 A6 aware server/resolver message size requirements</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3403 - Dynamic Delegation Discovery System (DDDS)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3425 - Obsoleting IQUERY</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3596 - DNS Extensions to Support IP Version 6</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3597 - Handling of Unknown DNS Resource Record (RR) Types</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3658 - Delegation Signer (DS) Resource Record (RR)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3755 - Legacy Resolver Compatibility for Delegation Signer (DS)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 3757 - Domain Name System KEY (DNSKEY) Resource Record (RR) Secure Entry Point (SEP) Flag</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4025 - A Method for Storing IPsec Keying Material in DNS</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4033 - DNS Security Introduction and Requirements</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4034 - Resource Records for the DNS Security Extensions</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4035 - Protocol Modifications for the DNS Security Extensions</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4255 - Using DNS to Securely Publish Secure Shell (SSH) Key Fingerprints</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4398 - Storing Certificates in the Domain Name System (DNS)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4431 - The DNSSEC Lookaside Validation (DLV) DNS Resource Record</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4509 - Use of SHA-256 in DNSSEC Delegation Signer (DS) Resource Records (RRs)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4635 - HMAC SHA TSIG Algorithm Identifiers</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4701 - A DNS Resource Record (RR) for Encoding Dynamic Host Configuration Protocol (DHCP) Information (DHCID RR)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 4795 - Link-Local Multicast Name Resolution (LLMNR)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 5001 - DNS Name Server Identifier (NSID) Option</para>
-							</listItem>
-							<listItem>
-								<para>RFC 5155 - DNS Security (DNSSEC) Hashed Authenticated Denial of Existence</para>
-							</listItem>
-							<listItem>
-								<para>RFC 5205 - Host Identity Protocol (HIP) Domain Name System (DNS) Extension</para>
-							</listItem>
-							<listItem>
-								<para>RFC 5452 - Measures for Making DNS More Resilient against Forged Answers</para>
-							</listItem>
-							<listItem>
-								<para>RFC 5702 - Use of SHA-2 Algorithms with RSA in DNSKEY and RRSIG Resource Records for DNSSEC</para>
-							</listItem>
-							<listItem>
-								<para>RFC 5864 - DNS SRV Resource Records for AFS</para>
-							</listItem>
-							<listItem>
-								<para>RFC 5933 - Use of GOST Signature Algorithms in DNSKEY and RRSIG Resource Records for DNSSEC</para>
-							</listItem>
-							<listItem>
-								<para>RFC 5936 - DNS Zone Transfer Protocol (AXFR)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 5966 - DNS Transport over TCP - Implementation Requirements</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6563 - Moving A6 to Historic Status</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6594 - Use of the SHA-256 Algorithm with RSA, Digital Signature Algorithm (DSA), and Elliptic Curve DSA (ECDSA) in SSHFP Resource Records</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6605 - Elliptic Curve Digital Signature Algorithm (DSA) for DNSSEC</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6672 - DNAME Redirection in the DNS (Record parsing only)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6698 - The DNS-Based Authentication of Named Entities (DANE) Transport Layer Security (TLS) Protocol: TLSA</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6742 - DNS Resource Records for the Identifier-Locator Network Protocol (ILNP)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6762 - Multicast DNS (One-shot queries only)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6840 - Clarifications and Implementation Notes for DNS Security (DNSSEC)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6844 - DNS Certification Authority Authorization (CAA) Resource Record</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6891 - Extension Mechanisms for DNS (EDNS(0))</para>
-							</listItem>
-							<listItem>
-								<para>RFC 6975 - Signaling Cryptographic Algorithm Understanding in DNS Security Extensions (DNSSEC)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7043 - Resource Records for EUI-48 and EUI-64 Addresses in the DNS</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7129 - Authenticated Denial of Existence in the DNS</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7208 - Sender Policy Framework (SPF) for Authorizing Use of Domains in Email, Version 1</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7218 - Adding Acronyms to Simplify Conversations about DNS-Based Authentication of Named Entities (DANE)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7314 - Extension Mechanisms for DNS (EDNS) EXPIRE Option</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7344 - Automating DNSSEC Delegation Trust Maintenance</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7477 - Child-to-Parent Synchronization in DNS</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7479 - Using Ed25519 in SSHFP Resource Records</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7553 - The Uniform Resource Identifier (URI) DNS Resource Record</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7766 - DNS Transport over TCP - Implementation Requirements</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7828 - The edns-tcp-keepalive EDNS0 Option (Option parsing only)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7830 - The EDNS(0) Padding Option</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7871 - Client Subnet in DNS Queries (Option parsing only)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7873 - Domain Name System (DNS) Cookies (Option parsing only)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 7929 - DNS-Based Authentication of Named Entities (DANE) Bindings for OpenPGP</para>
-							</listItem>
-							<listItem>
-								<para>RFC 8005 - Host Identity Protocol (HIP) Domain Name System (DNS) Extension</para>
-							</listItem>
-							<listItem>
-								<para>RFC 8080 - Edwards-Curve Digital Security Algorithm (EdDSA) for DNSSEC</para>
-							</listItem>
-							<listItem>
-								<para>RFC 8162 - Using Secure DNS to Associate Certificates with Domain Names for S/MIME</para>
-							</listItem>
-							<listItem>
-								<para>RFC 8427 - Representing DNS Messages in JSON</para>
-							</listItem>
-							<listItem>
-								<para>RFC 8749 - Moving DNSSEC Lookaside Validation (DLV) to Historic Status</para>
-							</listItem>
-							<listItem>
-								<para>RFC 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery</para>
-							</listItem>
-							<listItem>
-								<para>RFC 8945 - Secret Key Transaction Authentication for DNS (TSIG)</para>
-							</listItem>
-							<listItem>
-								<para>RFC 9373 - EdDSA Value for IPSECKEY</para>
-							</listItem>
-							<listItem>
-								<para>draft-vixie-dnsext-dns0x20 - Use of Bit 0x20 in DNS Labels to Improve Transaction Identity</para>
-							</listItem>
-							<listItem>
-								<para>draft-sekar-dns-llq - DNS Long-Lived Queries</para>
-							</listItem>
-							<listItem>
-								<para>draft-sekar-dns-ul - Dynamic DNS Update Leases</para>
-							</listItem>
-							<listItem>
-								<para>draft-cheshire-edns0-owner-option - EDNS0 OWNER Option</para>
-							</listItem>
-							<listItem>
-								<para>draft-ietf-dnsop-svcb-https - Service binding and parameter specification via the DNS (DNS SVCB and HTTPS RRs) (Record parsing only)</para>
-							</listItem>
-						</list>
-					</content>
-				</section>
-			</sections>
-		</section>
-		<section>
-			<title>License</title>
-			<content>
-				<para>
-					The library is released under <externalLink>
-						<linkText>Apache License 2.0</linkText>
-						<linkUri>https://github.com/alexreinert/ARSoft.Tools.Net/blob/master/LICENSE</linkUri>
-					</externalLink>
-				</para>
-			</content>
-		</section>
+        </para>
+      </content>
+      <sections>
+        <section>
+          <title>Parsing and Validating of SPF/SenderID records</title>
+          <content>
+            <list class="bullet">
+              <listItem>
+                <para>RFC 4406 - Sender ID: Authenticating E-Mail</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4408 - Sender Policy Framework (SPF)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7208 - Sender Policy Framework (SPF) for Authorizing Use of Domains in Email, Version 1</para>
+              </listItem>
+            </list>
+          </content>
+        </section>
+        <section>
+          <title>Encoding and Decoding</title>
+          <content>
+            <list class="bullet">
+              <listItem>
+                <para>RFC 4648 - The Base16, Base32, and Base64 Data Encodings</para>
+              </listItem>
+            </list>
+          </content>
+        </section>
+        <section>
+          <title>DNS related</title>
+          <content>
+            <list class="bullet">
+              <listItem>
+                <para>DNS Client</para>
+              </listItem>
+              <listItem>
+                <para>Client for Link-Local Multicast Name Resolution</para>
+              </listItem>
+              <listItem>
+                <para>One-shot-client for Multicast DNS</para>
+              </listItem>
+              <listItem>
+                <para>(Multithreaded) DNS Server</para>
+              </listItem>
+              <listItem>
+                <para>Supports synchronous as well as asynchronous resolving</para>
+              </listItem>
+              <listItem>
+                <para>Discovery of local configured resolver dns servers on Windows and Linux</para>
+              </listItem>
+              <listItem>
+                <para>Different resolvers</para>
+                <list class="bullet">
+                  <listItem>
+                    <para>Stub resolver</para>
+                  </listItem>
+                  <listItem>
+                    <para>Recursive resolver</para>
+                  </listItem>
+                  <listItem>
+                    <para>DNSSEC validating stub resolver</para>
+                  </listItem>
+                  <listItem>
+                    <para>DNSSEC validating recursive resolver</para>
+                  </listItem>
+                </list>
+              </listItem>
+              <listItem>
+                <para>UDP and TCP support</para>
+              </listItem>
+              <listItem>
+                <para>Full IPv6 support</para>
+              </listItem>
+              <listItem>
+                <para>DANE validation stream class</para>
+              </listItem>
+              <listItem>
+                <para>RFC 1034 - Domain Names - Concepts and Facilities</para>
+              </listItem>
+              <listItem>
+                <para>RFC 1035 - Domain Names - Implementation and Specification</para>
+              </listItem>
+              <listItem>
+                <para>RFC 1183 - New DNS RR Definitions</para>
+              </listItem>
+              <listItem>
+                <para>RFC 1348 - DNS NSAP RRs</para>
+              </listItem>
+              <listItem>
+                <para>RFC 1637 - DNS NSAP Resource Records</para>
+              </listItem>
+              <listItem>
+                <para>RFC 1706 - DNS NSAP Resource Records</para>
+              </listItem>
+              <listItem>
+                <para>RFC 1712 - DNS Encoding of Geographical Location</para>
+              </listItem>
+              <listItem>
+                <para>RFC 1876 - A Means for Expressing Location Information in the Domain Name System</para>
+              </listItem>
+              <listItem>
+                <para>RFC 1995 - Incremental Zone Transfer</para>
+              </listItem>
+              <listItem>
+                <para>RFC 1996 - A Mechanism for Prompt Notification of Zone Changes (DNS NOTIFY)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2136 - Dynamic Updates in the Domain Name System</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2163 - Using the Internet DNS to Distribute MIXER Conformant Global Address Mapping (MCGAM)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2168 - Resolution of Uniform Resource Identifiers using the Domain Name System</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2181 - Clarifications to the DNS Specification</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2230 - Key Exchange Delegation Record for the DNS</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2308 - Negative Caching of DNS Queries (DNS NCACHE)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2535 - Domain Name System Security Extensions</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2536 - DSA KEYs and SIGs in the Domain Name System</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2537 - RSA/MD5 KEYs and SIGs in the Domain Name System</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2539 - Storage of Diffie-Hellman Keys in the Domain Name System</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2671 - Extension Mechanisms for DNS (EDNS0)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2672 - Non-Terminal DNS Name Redirection</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2673 - Binary Labels in the Domain Name System</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2782 - A DNS RR for specifying the location of services (DNS SRV)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2845 - Secret Key Transaction Authentication for DNS (TSIG)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2915 - The Naming Authority Pointer (NAPTR) DNS Resource Record</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2930 - Secret Key Establishment for DNS (TKEY RR)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 2931 - DNS Request and Transaction Signatures (SIG(0)s) (Record parsing only)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3110 - RSA/SHA-1 SIGs and RSA KEYs in the Domain Name System</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3123 - A DNS RR Type for Lists of Address Prefixes (APL RR)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3225 - Indicating Resolver Support of DNSSEC</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3226 - DNSSEC and IPv6 A6 aware server/resolver message size requirements</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3403 - Dynamic Delegation Discovery System (DDDS)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3425 - Obsoleting IQUERY</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3596 - DNS Extensions to Support IP Version 6</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3597 - Handling of Unknown DNS Resource Record (RR) Types</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3658 - Delegation Signer (DS) Resource Record (RR)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3755 - Legacy Resolver Compatibility for Delegation Signer (DS)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 3757 - Domain Name System KEY (DNSKEY) Resource Record (RR) Secure Entry Point (SEP) Flag</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4025 - A Method for Storing IPsec Keying Material in DNS</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4033 - DNS Security Introduction and Requirements</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4034 - Resource Records for the DNS Security Extensions</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4035 - Protocol Modifications for the DNS Security Extensions</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4255 - Using DNS to Securely Publish Secure Shell (SSH) Key Fingerprints</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4398 - Storing Certificates in the Domain Name System (DNS)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4431 - The DNSSEC Lookaside Validation (DLV) DNS Resource Record</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4509 - Use of SHA-256 in DNSSEC Delegation Signer (DS) Resource Records (RRs)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4635 - HMAC SHA TSIG Algorithm Identifiers</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4701 - A DNS Resource Record (RR) for Encoding Dynamic Host Configuration Protocol (DHCP) Information (DHCID RR)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 4795 - Link-Local Multicast Name Resolution (LLMNR)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 5001 - DNS Name Server Identifier (NSID) Option</para>
+              </listItem>
+              <listItem>
+                <para>RFC 5155 - DNS Security (DNSSEC) Hashed Authenticated Denial of Existence</para>
+              </listItem>
+              <listItem>
+                <para>RFC 5205 - Host Identity Protocol (HIP) Domain Name System (DNS) Extension</para>
+              </listItem>
+              <listItem>
+                <para>RFC 5452 - Measures for Making DNS More Resilient against Forged Answers</para>
+              </listItem>
+              <listItem>
+                <para>RFC 5702 - Use of SHA-2 Algorithms with RSA in DNSKEY and RRSIG Resource Records for DNSSEC</para>
+              </listItem>
+              <listItem>
+                <para>RFC 5864 - DNS SRV Resource Records for AFS</para>
+              </listItem>
+              <listItem>
+                <para>RFC 5933 - Use of GOST Signature Algorithms in DNSKEY and RRSIG Resource Records for DNSSEC</para>
+              </listItem>
+              <listItem>
+                <para>RFC 5936 - DNS Zone Transfer Protocol (AXFR)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 5966 - DNS Transport over TCP - Implementation Requirements</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6563 - Moving A6 to Historic Status</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6594 - Use of the SHA-256 Algorithm with RSA, Digital Signature Algorithm (DSA), and Elliptic Curve DSA (ECDSA) in SSHFP Resource Records</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6605 - Elliptic Curve Digital Signature Algorithm (DSA) for DNSSEC</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6672 - DNAME Redirection in the DNS (Record parsing only)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6698 - The DNS-Based Authentication of Named Entities (DANE) Transport Layer Security (TLS) Protocol: TLSA</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6742 - DNS Resource Records for the Identifier-Locator Network Protocol (ILNP)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6762 - Multicast DNS (One-shot queries only)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6840 - Clarifications and Implementation Notes for DNS Security (DNSSEC)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6844 - DNS Certification Authority Authorization (CAA) Resource Record</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6891 - Extension Mechanisms for DNS (EDNS(0))</para>
+              </listItem>
+              <listItem>
+                <para>RFC 6975 - Signaling Cryptographic Algorithm Understanding in DNS Security Extensions (DNSSEC)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7043 - Resource Records for EUI-48 and EUI-64 Addresses in the DNS</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7129 - Authenticated Denial of Existence in the DNS</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7208 - Sender Policy Framework (SPF) for Authorizing Use of Domains in Email, Version 1</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7218 - Adding Acronyms to Simplify Conversations about DNS-Based Authentication of Named Entities (DANE)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7314 - Extension Mechanisms for DNS (EDNS) EXPIRE Option</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7344 - Automating DNSSEC Delegation Trust Maintenance</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7477 - Child-to-Parent Synchronization in DNS</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7479 - Using Ed25519 in SSHFP Resource Records</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7553 - The Uniform Resource Identifier (URI) DNS Resource Record</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7766 - DNS Transport over TCP - Implementation Requirements</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7828 - The edns-tcp-keepalive EDNS0 Option (Option parsing only)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7830 - The EDNS(0) Padding Option</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7871 - Client Subnet in DNS Queries (Option parsing only)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7873 - Domain Name System (DNS) Cookies (Option parsing only)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 7929 - DNS-Based Authentication of Named Entities (DANE) Bindings for OpenPGP</para>
+              </listItem>
+              <listItem>
+                <para>RFC 8005 - Host Identity Protocol (HIP) Domain Name System (DNS) Extension</para>
+              </listItem>
+              <listItem>
+                <para>RFC 8080 - Edwards-Curve Digital Security Algorithm (EdDSA) for DNSSEC</para>
+              </listItem>
+              <listItem>
+                <para>RFC 8162 - Using Secure DNS to Associate Certificates with Domain Names for S/MIME</para>
+              </listItem>
+              <listItem>
+                <para>RFC 8427 - Representing DNS Messages in JSON</para>
+              </listItem>
+              <listItem>
+                <para>RFC 8749 - Moving DNSSEC Lookaside Validation (DLV) to Historic Status</para>
+              </listItem>
+              <listItem>
+                <para>RFC 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery</para>
+              </listItem>
+              <listItem>
+                <para>RFC 8945 - Secret Key Transaction Authentication for DNS (TSIG)</para>
+              </listItem>
+              <listItem>
+                <para>RFC 8976 - Message Digest for DNS Zones</para>
+              </listItem>
+              <listItem>
+                <para>RFC 9373 - EdDSA Value for IPSECKEY</para>
+              </listItem>
+              <listItem>
+                <para>draft-vixie-dnsext-dns0x20 - Use of Bit 0x20 in DNS Labels to Improve Transaction Identity</para>
+              </listItem>
+              <listItem>
+                <para>draft-sekar-dns-llq - DNS Long-Lived Queries</para>
+              </listItem>
+              <listItem>
+                <para>draft-sekar-dns-ul - Dynamic DNS Update Leases</para>
+              </listItem>
+              <listItem>
+                <para>draft-cheshire-edns0-owner-option - EDNS0 OWNER Option</para>
+              </listItem>
+              <listItem>
+                <para>draft-ietf-dnsop-svcb-https - Service binding and parameter specification via the DNS (DNS SVCB and HTTPS RRs) (Record parsing only)</para>
+              </listItem>
+            </list>
+          </content>
+        </section>
+      </sections>
+    </section>
+    <section>
+      <title>License</title>
+      <content>
+        <para>
+          The library is released under <externalLink>
+            <linkText>Apache License 2.0</linkText>
+            <linkUri>https://github.com/alexreinert/ARSoft.Tools.Net/blob/master/LICENSE</linkUri>
+          </externalLink>
+        </para>
+      </content>
+    </section>
 
-		<relatedTopics>
-		</relatedTopics>
-	</developerConceptualDocument>
+    <relatedTopics>
+    </relatedTopics>
+  </developerConceptualDocument>
 </topic>

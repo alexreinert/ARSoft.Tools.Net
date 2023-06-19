@@ -18,11 +18,9 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Prng;
 using Org.BouncyCastle.Security;
 
@@ -106,7 +104,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			List<DnsRecordBase> records = ParseRecords(reader, name, 0, new UnknownRecord(name, RecordType.Invalid, RecordClass.INet, 0, new byte[] { }));
 
-			SoaRecord? soa = (SoaRecord?) records.SingleOrDefault(x => x.RecordType == RecordType.Soa);
+			SoaRecord? soa = (SoaRecord?) records.FirstOrDefault(x => x.RecordType == RecordType.Soa);
 
 			if (soa != null)
 			{
@@ -128,7 +126,7 @@ namespace ARSoft.Tools.Net.Dns
 			{
 				var line = ReadRecordLine(reader);
 
-				if (!String.IsNullOrEmpty(line))
+				if (!String.IsNullOrWhiteSpace(line))
 				{
 					var parts = line.SplitWithQuoting(new[] { ' ', '\t' }, true, true).Select(x => x.FromMasterfileLabelRepresentation()).ToArray();
 
@@ -164,100 +162,102 @@ namespace ARSoft.Tools.Net.Dns
 						string? domainString;
 						RecordType recordType;
 						RecordClass recordClass;
+						int recordTtl;
 						string[] rrData;
 
-						if (Int32.TryParse(parts[0], out var recordTtl))
+						// label ttl class type rd
+						if (parts.Length >= 5
+						    && Int32.TryParse(parts[1], out recordTtl)
+						    && RecordClassHelper.TryParseShortString(parts[2], out recordClass, false)
+						    && RecordTypeHelper.TryParseShortString(parts[3], out recordType))
 						{
-							// no domain, starts with ttl
-							if (RecordClassHelper.TryParseShortString(parts[1], out recordClass, false))
-							{
-								// second is record class
-								domainString = null;
-								recordType = RecordTypeHelper.ParseShortString(parts[2]);
-								rrData = parts.Skip(3).ToArray();
-							}
-							else
-							{
-								// no record class
-								domainString = null;
-								recordClass = RecordClass.Invalid;
-								recordType = RecordTypeHelper.ParseShortString(parts[1]);
-								rrData = parts.Skip(2).ToArray();
-							}
+							domainString = parts[0];
+							rrData = parts.Skip(4).ToArray();
 						}
-						else if (RecordClassHelper.TryParseShortString(parts[0], out recordClass, false))
+						// label class ttl type rd
+						else if (parts.Length >= 5
+						    && RecordClassHelper.TryParseShortString(parts[1], out recordClass, false)
+						    && Int32.TryParse(parts[2], out recordTtl)
+						    && RecordTypeHelper.TryParseShortString(parts[3], out recordType))
 						{
-							// no domain, starts with record class
-							if (Int32.TryParse(parts[1], out recordTtl))
-							{
-								// second is ttl
-								domainString = null;
-								recordType = RecordTypeHelper.ParseShortString(parts[2]);
-								rrData = parts.Skip(3).ToArray();
-							}
-							else
-							{
-								// no ttl
-								recordTtl = 0;
-								domainString = null;
-								recordType = RecordTypeHelper.ParseShortString(parts[1]);
-								rrData = parts.Skip(2).ToArray();
-							}
+							domainString = parts[0];
+							rrData = parts.Skip(4).ToArray();
 						}
-						else if (RecordTypeHelper.TryParseShortString(parts[0], out recordType))
+						//       ttl class type rd
+						else if (parts.Length >= 4
+						    && Int32.TryParse(parts[0], out recordTtl)
+						    && RecordClassHelper.TryParseShortString(parts[1], out recordClass, false)
+						    && RecordTypeHelper.TryParseShortString(parts[2], out recordType))
 						{
-							// no domain, start with record type
-							recordTtl = 0;
-							recordClass = RecordClass.Invalid;
 							domainString = null;
+							rrData = parts.Skip(3).ToArray();
+						}
+						//       class ttl type rd
+						else if (parts.Length >= 4
+						         && RecordClassHelper.TryParseShortString(parts[0], out recordClass, false)
+						         && Int32.TryParse(parts[1], out recordTtl)
+						         && RecordTypeHelper.TryParseShortString(parts[2], out recordType))
+						{
+							domainString = null;
+							rrData = parts.Skip(3).ToArray();
+						}
+						// label ttl       type rd
+						else if (parts.Length >= 4
+						         && Int32.TryParse(parts[1], out recordTtl)
+						         && RecordTypeHelper.TryParseShortString(parts[2], out recordType))
+						{
+							domainString = parts[0];
+							recordClass = RecordClass.Invalid;
+							rrData = parts.Skip(3).ToArray();
+						}
+						// label     class type rd
+						else if (parts.Length >= 4
+						         && RecordClassHelper.TryParseShortString(parts[1], out recordClass, false)
+						         && RecordTypeHelper.TryParseShortString(parts[2], out recordType))
+						{
+							domainString = parts[0];
+							recordTtl = 0;
+							rrData = parts.Skip(3).ToArray();
+						}
+						//       ttl       type rd
+						else if (parts.Length >= 3
+						         && Int32.TryParse(parts[0], out recordTtl)
+						         && RecordTypeHelper.TryParseShortString(parts[1], out recordType))
+						{
+							domainString = null;
+							recordClass = RecordClass.Invalid;
+							rrData = parts.Skip(2).ToArray();
+						}
+						//           class type rd
+						else if (parts.Length >= 3
+						         && RecordClassHelper.TryParseShortString(parts[0], out recordClass, false)
+						         && RecordTypeHelper.TryParseShortString(parts[1], out recordType))
+						{
+							domainString = null;
+							recordTtl = 0;
+							rrData = parts.Skip(2).ToArray();
+						}
+						//                 type rd
+						else if (parts.Length >= 2
+						         && RecordTypeHelper.TryParseShortString(parts[0], out recordType))
+						{
+							domainString = null;
+							recordClass = RecordClass.Invalid;
+							recordTtl = 0;
+							rrData = parts.Skip(1).ToArray();
+						}
+						// label           type rd
+						else if (parts.Length >= 3
+						         && RecordTypeHelper.TryParseShortString(parts[1], out recordType))
+						{
+							domainString = parts[0];
+							recordClass = RecordClass.Invalid;
+							recordTtl = 0;
 							rrData = parts.Skip(2).ToArray();
 						}
 						else
 						{
-							domainString = parts[0];
-
-							if (Int32.TryParse(parts[1], out recordTtl))
-							{
-								// domain, second is ttl
-								if (RecordClassHelper.TryParseShortString(parts[2], out recordClass, false))
-								{
-									// third is record class
-									recordType = RecordTypeHelper.ParseShortString(parts[3]);
-									rrData = parts.Skip(4).ToArray();
-								}
-								else
-								{
-									// no record class
-									recordClass = RecordClass.Invalid;
-									recordType = RecordTypeHelper.ParseShortString(parts[2]);
-									rrData = parts.Skip(3).ToArray();
-								}
-							}
-							else if (RecordClassHelper.TryParseShortString(parts[1], out recordClass, false))
-							{
-								// domain, second is record class
-								if (Int32.TryParse(parts[2], out recordTtl))
-								{
-									// third is ttl
-									recordType = RecordTypeHelper.ParseShortString(parts[3]);
-									rrData = parts.Skip(4).ToArray();
-								}
-								else
-								{
-									// no ttl
-									recordTtl = 0;
-									recordType = RecordTypeHelper.ParseShortString(parts[2]);
-									rrData = parts.Skip(3).ToArray();
-								}
-							}
-							else
-							{
-								// domain with record type
-								recordType = RecordTypeHelper.ParseShortString(parts[1]);
-								recordTtl = 0;
-								recordClass = RecordClass.Invalid;
-								rrData = parts.Skip(2).ToArray();
-							}
+							throw new FormatException("Could not parse line");
 						}
 
 						DomainName domain;
@@ -359,6 +359,283 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
+		/// Updates all supported ZONEMD records
+		/// </summary>
+		/// <param name="signingKeys">The signing keys, if the covering RRSIG records should be resigned.</param>
+		public void UpdateZoneDigests(List<DnsKeyRecord>? signingKeys = null)
+		{
+			var zoneMdRecords = this.OfType<ZoneMDRecord>().Where(x => x.RecordType == RecordType.ZoneMD && x.Name.Equals(Name) && x.Scheme.IsSupported() && x.HashAlgorithm.IsSupported()).ToList();
+
+			foreach (var record in zoneMdRecords)
+			{
+				record.UpdateDigest(this);
+			}
+
+			if (signingKeys != null && signingKeys.Count != 0)
+			{
+				foreach (var rrSigRecord in this.OfType<RrSigRecord>().Where(x => x.Name.Equals(Name) && x.TypeCovered == RecordType.ZoneMD))
+				{
+					rrSigRecord.Resign(this.Where(x => x.RecordType == RecordType.ZoneMD && x.Name.Equals(Name)).ToList(), signingKeys);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Validates a zone
+		/// </summary>
+		/// <param name="isDnsSecRequired">true, if the Zone needs to be signed</param>
+		/// <param name="isZoneMdRequired">true, if the Zone needs to be covered by ZONEMD records</param>
+		/// <param name="ignoreRecordErrors">true, if error in the zone records should be ignored</param>
+		/// <returns></returns>
+		public bool ValidateZone(bool isDnsSecRequired = false, bool isZoneMdRequired = false, bool ignoreRecordErrors = false)
+		{
+			var delegations = this.OfType<NsRecord>().Select(x => x.Name).Where(x => !x.Equals(Name)).ToHashSet();
+
+			var glueRecords = this.Where(
+				r => delegations.Any(d => r.Name.IsSubDomainOf(d))
+				     || delegations.Any(d => r.Name.Equals(d) && !r.RecordType.IsAnyOf(RecordType.Ns, RecordType.RrSig, RecordType.NSec, RecordType.Ds))).ToArray();
+
+			var zoneRecords = this.Where(r => !glueRecords.Any(r.Equals));
+
+			var recordsByName = new SortedMultiDimensionalLookup<DomainName, RecordType, DnsRecordBase>(zoneRecords, x => x.Name, x => x.RecordType);
+
+			var soa = recordsByName[Name][RecordType.Soa].Cast<SoaRecord>().FirstOrDefault();
+
+			return (ignoreRecordErrors || ValidateZoneRecords(delegations, glueRecords, recordsByName))
+			       && ValidateDnsSec(delegations, glueRecords, recordsByName, isDnsSecRequired)
+			       && ValidateZoneDigest(delegations, glueRecords, recordsByName, isZoneMdRequired);
+		}
+
+		internal bool ValidateZoneRecords(HashSet<DomainName> delegations, DnsRecordBase[] glueRecords, SortedMultiDimensionalLookup<DomainName, RecordType, DnsRecordBase> recordsByName)
+		{
+			SoaRecord? soa = recordsByName[Name][RecordType.Soa].Cast<SoaRecord>().SingleOrDefaultIfMultiple();
+
+			// Zone Apex requires exactly one SOA
+			if (soa == null)
+				return false;
+
+			// SOA name must be zone Name
+			if (!soa.Name.Equals(Name))
+				return false;
+
+
+			// SOA is only allowed on zone apex
+			if (recordsByName.Where(x => x.Key.IsSubDomainOf(Name)).Any(x => x.Value.Contains(RecordType.Soa)))
+				return false;
+
+			// check if there is any out of zone record
+			if (recordsByName.Any(x => !x.Key.IsEqualOrSubDomainOf(Name)))
+				return false;
+
+			// check for sub-delegations
+			if (delegations.Any(p => delegations.Any(s => s.IsSubDomainOf(p))))
+				return false;
+
+			// Only A and AAAA are allowed for glue records (NS,DS,RRSIG and NSEC are part of parental zone)
+			if (glueRecords.Any(x => !x.RecordType.IsAnyOf(RecordType.A, RecordType.Aaaa)))
+				return false;
+
+			foreach (var nameSet in recordsByName)
+			{
+				var name = nameSet.Key;
+				var rrset = nameSet.Value;
+
+				if (!name.IsEqualOrSubDomainOf(Name))
+					return false;
+
+				if (rrset.Contains(RecordType.CName))
+				{
+					// only single CNAME is allowed
+					if (rrset[RecordType.CName].Count() > 1)
+						return false;
+
+					// no other records are allowed on CNAME, except RRSIG and NSEC
+					if (rrset.Any(x=>!x.Key.IsAnyOf(RecordType.CName, RecordType.RrSig, RecordType.NSec)))
+						return false;
+				}
+			}
+
+			return true;
+		}
+
+		internal bool ValidateDnsSec(HashSet<DomainName> delegations, DnsRecordBase[] glueRecords, SortedMultiDimensionalLookup<DomainName, RecordType, DnsRecordBase> recordsByName, bool isDnsSecRequired)
+		{
+			var dnsKeys = recordsByName[Name][RecordType.DnsKey].Cast<DnsKeyRecord>().Where(k => k.IsZoneKey && k.Protocol == 3).ToArray();
+
+			if (dnsKeys.Length == 0 && !recordsByName.Any(x=>x.Value.Contains(RecordType.RrSig)))
+				return !isDnsSecRequired;
+
+			if (dnsKeys.Count(x => x.IsSecureEntryPoint) == 0)
+				return false;
+
+			var keyTags = dnsKeys.Select(x => x.CalculateKeyTag()).ToHashSet();
+
+			var nsec3params = recordsByName[Name][RecordType.NSec3Param].Cast<NSec3ParamRecord>().ToArray();
+			if (nsec3params.Length > 1)
+				return false;
+
+			var nsec3param = nsec3params.FirstOrDefault();
+
+			var nsec3Records = recordsByName.SelectMany(x => x.Value[RecordType.NSec3]).Cast<NSec3Record>().OrderBy(x => x.Name).ToArray();
+
+			var recordHashes = new List<DomainName>();
+
+			for (var i = 0; i < recordsByName.Count; i++)
+			{
+				var set = recordsByName[i];
+
+				// check RRSIG, if it is not a glue record
+				if (!delegations.Any(delegation => set.Key.IsSubDomainOf(delegation)))
+				{
+					var typedSets = set.Value;
+					var coveredTypes = new HashSet<RecordType>();
+
+					foreach (var rrsig in typedSets[RecordType.RrSig].Cast<RrSigRecord>())
+					{
+						if (!keyTags.Contains(rrsig.KeyTag))
+							return false;
+
+						if (!rrsig.Verify(typedSets[rrsig.TypeCovered].ToList(), dnsKeys))
+							return false;
+
+						coveredTypes.Add(RecordType.RrSig);
+						coveredTypes.Add(rrsig.TypeCovered);
+					}
+
+					if (!set.Key.Equals(Name) && typedSets.Contains(RecordType.Ns))
+						coveredTypes.Add(RecordType.Ns);
+
+					if (typedSets.Any(typedSet => !coveredTypes.Contains(typedSet.Key)))
+						return false;
+
+					if (typedSets[RecordType.NSec].Count() > 1)
+						return false;
+
+					if (typedSets[RecordType.NSec3].Count() > 1)
+						return false;
+
+					if (nsec3param != null)
+					{
+						// check NSEC3 records of empty parent labels
+						if (set.Key.IsSubDomainOf(Name))
+						{
+							var parent = set.Key.GetParentName();
+							while (recordsByName[parent].Count == 0)
+							{
+								if (!recordsByName.TryGetValue(parent.GetNSec3HashName(nsec3param.HashAlgorithm, nsec3param.Iterations, nsec3param.Salt, Name), RecordType.NSec3, out var parentHashOwnerSet))
+									return false;
+
+								var nsec3 = parentHashOwnerSet.Cast<NSec3Record>().FirstOrDefault();
+
+								if (nsec3 == null)
+									return false;
+
+								if (nsec3.Types.Any())
+									return false;
+
+								parent = parent.GetParentName();
+							}
+						}
+
+						var nsec3hashname = set.Key.GetNSec3HashName(nsec3param.HashAlgorithm, nsec3param.Iterations, nsec3param.Salt, Name);
+
+						// check covering NSEC3 records, if set contains more than just the NSEC3 record
+						if (!coveredTypes.OrderBy(x => x).SequenceEqual(new [] { RecordType.RrSig ,RecordType.NSec3}))
+						{
+							if (recordsByName.TryGetValue(nsec3hashname, RecordType.NSec3, out var nextHashOwnerSet))
+							{
+								// there is a rrset on the next hash owner, check if it contains a matching NSEC3 record
+								var nsec3 = nextHashOwnerSet.Cast<NSec3Record>().FirstOrDefault();
+
+								if (nsec3 == null)
+									return false;
+
+								if (!nsec3.Types.OrderBy(x => x).SequenceEqual(coveredTypes.Where(x => x != RecordType.NSec3).OrderBy(x => x)))
+									return false;
+
+								recordHashes.Add(nsec3hashname);
+							}
+							else
+							{
+								// No matching next hash owner rrset, check for opt-out
+								var coveringNSec3 = nsec3Records.FirstOrDefault(x => x.IsCovering(nsec3hashname));
+
+								if (coveringNSec3 == null)
+									return false;
+
+								if (!coveringNSec3.Flags.HasFlag(NSec3Flags.OptOut))
+									return false;
+							}
+						}
+					}
+					else
+					{
+						var nsec = typedSets[RecordType.NSec].Cast<NSecRecord>().FirstOrDefault();
+
+						if (nsec == null) 
+							return false;
+
+						if (!nsec.Types.OrderBy(x => x).SequenceEqual(coveredTypes.OrderBy(x => x)))
+							return false;
+
+						if (!nsec.NextDomainName.Equals(recordsByName[(i + 1) % recordsByName.Count].Key))
+							return false;
+					}
+				}
+			}
+
+			if (nsec3param != null)
+			{
+				//check for NSEC3 chain
+				for (var i = 0; i < nsec3Records.Length; i++)
+				{
+					if (!nsec3Records[i].NextHashedOwnerName.Equals(nsec3Records[(i + 1) % nsec3Records.Length].Name))
+						return false;
+				}
+
+				if (!recordHashes.OrderBy(x => x).SequenceEqual(nsec3Records.Where(x=>x.Types.Any()).Select(x => x.Name)))
+					return false;
+			}
+
+
+			return true;
+		}
+
+		internal bool ValidateZoneDigest(HashSet<DomainName> delegations, DnsRecordBase[] glueRecords, SortedMultiDimensionalLookup<DomainName, RecordType, DnsRecordBase> recordsByName, bool isValidDigestRequired = false)
+		{
+			var zoneMDs = recordsByName[Name][RecordType.ZoneMD].OfType<ZoneMDRecord>().Where(x => x.HashAlgorithm.IsSupported() && x.Scheme.IsSupported()).ToArray();
+
+			if (zoneMDs.Any())
+			{
+				SoaRecord? soa = recordsByName[Name][RecordType.Soa].Cast<SoaRecord>().SingleOrDefaultIfMultiple();
+
+				// a SOA record is needed for validation of ZONEMD record
+				if (soa == null)
+					return false;
+
+				//var zoneBuffer = GetSimpleZoneDigestBuffer();
+
+				foreach (var group in zoneMDs.GroupBy(x => new { x.Scheme, x.HashAlgorithm }))
+				{
+					if (group.Take(2).Count() != 1)
+						continue;
+
+					var record = group.First();
+
+					if (record.SerialNumber != soa.SerialNumber)
+						continue;
+
+					if (record.Validate(this))
+						return true;
+				}
+
+				return false;
+			}
+
+			return !isValidDigestRequired;
+		}
+
+		/// <summary>
 		///   Signs a zone
 		/// </summary>
 		/// <param name="keys">A list of keys to sign the zone</param>
@@ -368,8 +645,9 @@ namespace ARSoft.Tools.Net.Dns
 		/// <param name="nsec3Iterations">The number of iterations when NSEC3 is used</param>
 		/// <param name="nsec3Salt">The salt when NSEC3 is used</param>
 		/// <param name="nsec3OptOut">true, of NSEC3 OptOut should be used for delegations without DS record</param>
+		/// <param name="updateZoneDigests">true, if ZONEMD records should be updated while signing</param>
 		/// <returns>A signed zone</returns>
-		public Zone Sign(List<DnsKeyRecord> keys, DateTime inception, DateTime expiration, NSec3HashAlgorithm nsec3Algorithm = 0, int nsec3Iterations = 10, byte[]? nsec3Salt = null, bool nsec3OptOut = false)
+		public Zone Sign(List<DnsKeyRecord> keys, DateTime inception, DateTime expiration, NSec3HashAlgorithm nsec3Algorithm = 0, int nsec3Iterations = 10, byte[]? nsec3Salt = null, bool nsec3OptOut = false, bool updateZoneDigests = true)
 		{
 			if ((keys == null) || (keys.Count == 0))
 				throw new Exception("No DNS Keys were provided");
@@ -383,23 +661,36 @@ namespace ARSoft.Tools.Net.Dns
 			if (keys.Any(x => (x.Protocol != 3) || ((nsec3Algorithm != 0) ? !x.Algorithm.IsCompatibleWithNSec3() : !x.Algorithm.IsCompatibleWithNSec())))
 				throw new Exception("At least one invalid DNS key was provided");
 
-			List<DnsKeyRecord> keySigningKeys = keys.Where(x => x.IsSecureEntryPoint).ToList();
-			List<DnsKeyRecord> zoneSigningKeys = keys.Where(x => !x.IsSecureEntryPoint).ToList();
+			DnsKeyRecord[] keySigningKeys = keys.Where(x => x.IsSecureEntryPoint).ToArray();
+			DnsKeyRecord[] zoneSigningKeys = keys.Where(x => !x.IsSecureEntryPoint).ToArray();
+
+			if (zoneSigningKeys.Length == 0)
+			{
+				zoneSigningKeys = keySigningKeys;
+				keySigningKeys = Array.Empty<DnsKeyRecord>();
+			}
+
+			Zone res;
 
 			if (nsec3Algorithm == 0)
 			{
-				return SignWithNSec(inception, expiration, zoneSigningKeys, keySigningKeys);
+				res = SignWithNSec(inception, expiration, zoneSigningKeys, keySigningKeys);
 			}
 			else
 			{
-				return SignWithNSec3(inception, expiration, zoneSigningKeys, keySigningKeys, nsec3Algorithm, nsec3Iterations, nsec3Salt, nsec3OptOut);
+				res = SignWithNSec3(inception, expiration, zoneSigningKeys, keySigningKeys, nsec3Algorithm, nsec3Iterations, nsec3Salt, nsec3OptOut);
 			}
+
+			if (updateZoneDigests)
+				res.UpdateZoneDigests(keys);
+
+			return res;
 		}
 
-		private Zone SignWithNSec(DateTime inception, DateTime expiration, List<DnsKeyRecord> zoneSigningKeys, List<DnsKeyRecord> keySigningKeys)
+		private Zone SignWithNSec(DateTime inception, DateTime expiration, DnsKeyRecord[] zoneSigningKeys, DnsKeyRecord[] keySigningKeys)
 		{
 			var soaRecord = _records.OfType<SoaRecord>().First();
-			var subZones = _records.Where(x => (x.RecordType == RecordType.Ns) && (x.Name != Name)).Select(x => x.Name).Distinct().ToList();
+			var subZones = _records.Where(x => (x.RecordType == RecordType.Ns) && !x.Name.Equals(Name)).Select(x => x.Name).Distinct().ToList();
 			var glueRecords = _records.Where(x => subZones.Any(y => x.Name.IsSubDomainOf(y))).ToList();
 			var recordsByName = _records.Except(glueRecords).Union(zoneSigningKeys).Union(keySigningKeys).GroupBy(x => x.Name).Select(x => new Tuple<DomainName, List<DnsRecordBase>>(x.Key, x.OrderBy(y => y.RecordType == RecordType.Soa ? -1 : (int) y.RecordType).ToList())).OrderBy(x => x.Item1).ToList();
 
@@ -419,7 +710,7 @@ namespace ARSoft.Tools.Net.Dns
 					res.AddRange(records);
 
 					// do not sign nameserver delegations for sub zones
-					if ((records[0].RecordType == RecordType.Ns) && (currentName != Name))
+					if ((records[0].RecordType == RecordType.Ns) && !currentName.Equals(Name))
 						continue;
 
 					recordTypes.Add(RecordType.RrSig);
@@ -439,6 +730,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 
 				recordTypes.Add(RecordType.NSec);
+				recordTypes.Add(RecordType.RrSig);
 
 				NSecRecord nsecRecord = new NSecRecord(recordsByName[i].Item1, soaRecord.RecordClass, soaRecord.NegativeCachingTTL, recordsByName[(i + 1) % recordsByName.Count].Item1, recordTypes);
 				res.Add(nsecRecord);
@@ -454,14 +746,14 @@ namespace ARSoft.Tools.Net.Dns
 			return res;
 		}
 
-		private Zone SignWithNSec3(DateTime inception, DateTime expiration, List<DnsKeyRecord> zoneSigningKeys, List<DnsKeyRecord> keySigningKeys, NSec3HashAlgorithm nsec3Algorithm, int nsec3Iterations, byte[]? nsec3Salt, bool nsec3OptOut)
+		private Zone SignWithNSec3(DateTime inception, DateTime expiration, DnsKeyRecord[] zoneSigningKeys, DnsKeyRecord[] keySigningKeys, NSec3HashAlgorithm nsec3Algorithm, int nsec3Iterations, byte[]? nsec3Salt, bool nsec3OptOut)
 		{
 			var soaRecord = _records.OfType<SoaRecord>().First();
-			var subZoneNameserver = _records.Where(x => (x.RecordType == RecordType.Ns) && (x.Name != Name)).ToList();
+			var subZoneNameserver = _records.Where(x => (x.RecordType == RecordType.Ns) && !x.Name.Equals(Name)).ToList();
 			var subZones = subZoneNameserver.Select(x => x.Name).Distinct().ToList();
 			var unsignedRecords = _records.Where(x => subZones.Any(y => x.Name.IsSubDomainOf(y))).ToList(); // glue records
 			if (nsec3OptOut)
-				unsignedRecords = unsignedRecords.Union(subZoneNameserver.Where(x => !_records.Any(y => (y.RecordType == RecordType.Ds) && (y.Name == x.Name)))).ToList(); // delegations without DS record
+				unsignedRecords = unsignedRecords.Union(subZoneNameserver.Where(x => !_records.Any(y => (y.RecordType == RecordType.Ds) && y.Name.Equals(x.Name)))).ToList(); // delegations without DS record
 			var recordsByName = _records.Except(unsignedRecords).Union(zoneSigningKeys).Union(keySigningKeys).GroupBy(x => x.Name).Select(x => new Tuple<DomainName, List<DnsRecordBase>>(x.Key, x.OrderBy(y => y.RecordType == RecordType.Soa ? -1 : (int) y.RecordType).ToList())).OrderBy(x => x.Item1).ToList();
 
 			NSec3Flags nsec3RecordFlags = nsec3OptOut ? NSec3Flags.OptOut : NSec3Flags.None;
@@ -490,7 +782,7 @@ namespace ARSoft.Tools.Net.Dns
 					res.AddRange(records);
 
 					// do not sign nameserver delegations for sub zones
-					if ((records[0].RecordType == RecordType.Ns) && (currentName != Name))
+					if ((records[0].RecordType == RecordType.Ns) && !currentName.Equals(Name))
 						continue;
 
 					recordTypes.Add(RecordType.RrSig);
@@ -510,7 +802,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 
 				var nsec3Hash = recordsByName[i].Item1.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
-				nSec3Records.Add(new NSec3Record(new DomainName(nsec3Hash.ToBase32String(), Name), soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, nsec3Hash, recordTypes));
+				nSec3Records.Add(new NSec3Record(new DomainName(nsec3Hash.ToBase32HexString(), Name), soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, nsec3Hash, recordTypes));
 
 				allNames.Add(currentName);
 				for (int j = currentName.LabelCount - Name.LabelCount; j > 0; j--)
@@ -520,7 +812,7 @@ namespace ARSoft.Tools.Net.Dns
 					if (!allNames.Contains(possibleNonTerminal))
 					{
 						nsec3Hash = possibleNonTerminal.GetNSec3Hash(nsec3Algorithm, nsec3Iterations, nsec3Salt);
-						nSec3Records.Add(new NSec3Record(new DomainName(nsec3Hash.ToBase32String(), Name), soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, nsec3Hash, new List<RecordType>()));
+						nSec3Records.Add(new NSec3Record(new DomainName(nsec3Hash.ToBase32HexString(), Name), soaRecord.RecordClass, soaRecord.NegativeCachingTTL, nsec3Algorithm, nsec3RecordFlags, (ushort) nsec3Iterations, nsec3Salt, nsec3Hash, new List<RecordType>()));
 
 						allNames.Add(possibleNonTerminal);
 					}
@@ -529,14 +821,14 @@ namespace ARSoft.Tools.Net.Dns
 
 			nSec3Records = nSec3Records.OrderBy(x => x.Name).ToList();
 
-			byte[] firstNextHashedOwnerName = nSec3Records[0].NextHashedOwnerName;
+			byte[] firstNextHashedOwnerName = nSec3Records[0].NextHashedOwner;
 
 			for (int i = 1; i < nSec3Records.Count; i++)
 			{
-				nSec3Records[i - 1].NextHashedOwnerName = nSec3Records[i].NextHashedOwnerName;
+				nSec3Records[i - 1].NextHashedOwner = nSec3Records[i].NextHashedOwner;
 			}
 
-			nSec3Records[nSec3Records.Count - 1].NextHashedOwnerName = firstNextHashedOwnerName;
+			nSec3Records[nSec3Records.Count - 1].NextHashedOwner = firstNextHashedOwnerName;
 
 			foreach (var nSec3Record in nSec3Records)
 			{

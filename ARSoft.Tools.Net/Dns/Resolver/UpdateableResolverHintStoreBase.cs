@@ -95,9 +95,9 @@ namespace ARSoft.Tools.Net.Dns
 
 		private void LoadZoneInternal(Zone zone)
 		{
-			var nameServers = zone.OfType<NsRecord>().Where(x => x.Name == DomainName.Root).Select(x => x.NameServer);
+			var nameServers = zone.OfType<NsRecord>().Where(x => x.Name.IsRoot).Select(x => x.NameServer);
 			_rootServers = zone.Where(x => x.RecordType == RecordType.A || x.RecordType == RecordType.Aaaa).Join(nameServers, x => x.Name, x => x, (x, y) => ((IAddressRecord) x).Address).ToList();
-			_rootKeys = zone.OfType<DnsKeyRecord>().Where(x => (x.Name == DomainName.Root) && x.IsSecureEntryPoint).Select(x => new DsRecord(x, x.TimeToLive, DnsSecDigestType.Sha256)).ToList();
+			_rootKeys = zone.OfType<DnsKeyRecord>().Where(x => (x.Name.IsRoot) && x.IsSecureEntryPoint).Select(x => new DsRecord(x, x.TimeToLive, DnsSecDigestType.Sha256)).ToList();
 		}
 
 		/// <summary>

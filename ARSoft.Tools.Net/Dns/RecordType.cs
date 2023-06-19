@@ -613,6 +613,16 @@ namespace ARSoft.Tools.Net.Dns
 		CSync = 62,
 
 		/// <summary>
+		///   <para>ZONEMD</para>
+		///   <para>
+		///     Defined in
+		///     <a href="https://www.rfc-editor.org/rfc/rfc8976.html">RFC 8976</a>.
+		///   </para>
+		/// </summary>
+		// ReSharper disable once InconsistentNaming
+		ZoneMD = 63,
+
+		/// <summary>
 		///   <para>Service Binding</para>
 		///   <para>
 		///     Defined in

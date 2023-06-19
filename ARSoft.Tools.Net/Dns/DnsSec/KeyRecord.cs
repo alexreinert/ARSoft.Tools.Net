@@ -46,13 +46,14 @@ namespace ARSoft.Tools.Net.Dns
 		internal KeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, IList<byte> resultData, int currentPosition, int length)
 			: base(name, recordType, recordClass, timeToLive, resultData, currentPosition, length)
 		{
+			currentPosition += 4;
 			PublicKey = DnsMessageBase.ParseByteData(resultData, ref currentPosition, length - 4);
 		}
 
 		internal KeyRecord(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
-			: base(name, RecordClass.Any, 0, 0, ProtocolType.Any, DnsSecAlgorithm.Indirect)
+			: base(name, recordType, recordClass, timeToLive, origin, stringRepresentation)
 		{
-			throw new NotSupportedException();
+			PublicKey = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
 		}
 
 		/// <summary>

@@ -81,7 +81,7 @@ namespace ARSoft.Tools.Net.Dns
 			: base(name, recordType, recordClass, timeToLive)
 		{
 			if (stringRepresentation.Length != 6)
-				throw new NotSupportedException();
+				throw new FormatException();
 
 			Order = UInt16.Parse(stringRepresentation[0]);
 			Preference = UInt16.Parse(stringRepresentation[1]);

@@ -814,12 +814,9 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			var textData = Encoding.ASCII.GetBytes(text);
 
-			for (var i = 0; i < textData.Length; i += 255)
-			{
-				var blockLength = Math.Min(255, (textData.Length - i));
-				messageData[currentPosition++] = (byte) blockLength;
-				EncodeByteArray(messageData, ref currentPosition, textData, i, blockLength);
-			}
+			var blockLength = Math.Min(255, textData.Length);
+			messageData[currentPosition++] = (byte) blockLength;
+			EncodeByteArray(messageData, ref currentPosition, textData, 0, blockLength);
 		}
 
 		internal static void EncodeTextWithoutLength(IList<byte> messageData, ref int currentPosition, string text)

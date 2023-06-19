@@ -24,7 +24,7 @@ using System.Text;
 namespace ARSoft.Tools.Net
 {
 	internal static class EnumHelper<T>
-		where T : struct
+		where T : struct, Enum
 	{
 		private static readonly Dictionary<T, string> _names;
 		private static readonly Dictionary<string, T> _values;
@@ -49,7 +49,7 @@ namespace ARSoft.Tools.Net
 		{
 			if (String.IsNullOrEmpty(s))
 			{
-				value = default(T);
+				value = default;
 				return false;
 			}
 
@@ -58,26 +58,31 @@ namespace ARSoft.Tools.Net
 
 		public static string ToString(T value)
 		{
-			string? res;
-			return _names.TryGetValue(value, out res) ? res : Convert.ToInt64(value).ToString();
+			return _names.TryGetValue(value, out var res) ? res : Convert.ToInt64(value).ToString();
 		}
 
 		public static Dictionary<T, string> Names => _names;
 
 		internal static T Parse(string s, bool ignoreCase, T defaultValue)
 		{
-			T res;
-			return TryParse(s, ignoreCase, out res) ? res : defaultValue;
+			return TryParse(s, ignoreCase, out var res) ? res : defaultValue;
 		}
 
 		internal static T Parse(string s, bool ignoreCase)
 		{
-			T res;
-
-			if (TryParse(s, ignoreCase, out res))
+			if (TryParse(s, ignoreCase, out var res))
 				return res;
 
 			throw new ArgumentOutOfRangeException(nameof(s));
+		}
+	}
+
+	internal static class EnumHelper
+	{
+		public static bool IsAnyOf<T>(this T value, params T[] valuesToCheck)
+			where T : struct, Enum
+		{
+			return valuesToCheck.Any(x => value.Equals(x));
 		}
 	}
 }

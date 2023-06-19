@@ -142,8 +142,8 @@ namespace ARSoft.Tools.Net.Dns
 			SignatureExpiration = signatureExpiration;
 			SignatureInception = signatureInception;
 			KeyTag = keyTag;
-			SignersName = signersName ?? DomainName.Root;
-			Signature = signature ?? new byte[] { };
+			SignersName = signersName;
+			Signature = signature;
 		}
 
 		internal RrSigRecord(List<DnsRecordBase> records, DnsKeyRecord key, DateTime inception, DateTime expiration)
@@ -157,12 +157,9 @@ namespace ARSoft.Tools.Net.Dns
 			SignatureInception = inception;
 			KeyTag = key.CalculateKeyTag();
 			SignersName = key.Name;
-			Signature = new byte[] { };
 
-			byte[] signBuffer;
-			int signBufferLength;
-			EncodeSigningBuffer(records, out signBuffer, out signBufferLength);
-
+			Signature = Array.Empty<byte>();
+			EncodeSigningBuffer(records, out var signBuffer, out var signBufferLength);
 			Signature = key.Sign(signBuffer, signBufferLength);
 		}
 
@@ -224,6 +221,18 @@ namespace ARSoft.Tools.Net.Dns
 			return dnsKeys
 				.Where(x => x.IsZoneKey && (x.Protocol == 3) && x.Algorithm.IsSupported() && (KeyTag == x.CalculateKeyTag()))
 				.Any(x => x.Verify(messageData, length, Signature));
+		}
+
+		internal void Resign(List<DnsRecordBase> records, List<DnsKeyRecord> keys)
+		{
+			EncodeSigningBuffer(records, out var signBuffer, out var signBufferLength);
+
+			var key = keys.FirstOrDefault(x => x.CalculateKeyTag() == KeyTag);
+
+			if (key == null)
+				throw new KeyNotFoundException();
+
+			Signature = key.Sign(signBuffer, signBufferLength);
 		}
 
 		private void EncodeSigningBuffer<T>(List<T> records, out byte[] messageData, out int length)

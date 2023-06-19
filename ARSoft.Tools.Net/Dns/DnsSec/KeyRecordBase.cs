@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace ARSoft.Tools.Net.Dns
@@ -41,6 +42,7 @@ namespace ARSoft.Tools.Net.Dns
 		/// <summary>
 		///   Type of key
 		/// </summary>
+		[Flags]
 		public enum KeyTypeFlag : ushort
 		{
 			/// <summary>
@@ -327,7 +329,18 @@ namespace ARSoft.Tools.Net.Dns
 			Algorithm = algorithm;
 		}
 
-		internal override sealed string RecordDataToString()
+		protected KeyRecordBase(DomainName name, RecordType recordType, RecordClass recordClass, int timeToLive, DomainName origin, string[] stringRepresentation)
+			: base(name, recordType, recordClass, timeToLive)
+		{
+			if (stringRepresentation.Length < 4)
+				throw new FormatException();
+
+			Flags = UInt16.Parse(stringRepresentation[0]);
+			Protocol = (ProtocolType)Byte.Parse(stringRepresentation[1]);
+			Algorithm = (DnsSecAlgorithm)Byte.Parse(stringRepresentation[2]);
+		}
+
+		internal sealed override string RecordDataToString()
 		{
 			return Flags
 			       + " " + (byte) Protocol

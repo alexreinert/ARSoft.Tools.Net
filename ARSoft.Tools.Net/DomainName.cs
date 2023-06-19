@@ -70,6 +70,8 @@ namespace ARSoft.Tools.Net
 		/// </summary>
 		public int LabelCount => _labels.Length;
 
+		internal bool IsRoot => _labels.Length == 0;
+
 		internal int MaximumRecordDataLength
 		{
 			get { return LabelCount + _labels.Sum(x => x.Length); }

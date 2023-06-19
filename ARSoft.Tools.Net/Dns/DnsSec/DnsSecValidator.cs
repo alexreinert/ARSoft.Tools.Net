@@ -58,7 +58,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		private async Task<bool> ValidateOptOut(DomainName name, RecordClass recordClass, TState state, CancellationToken token)
 		{
-			while (name != DomainName.Root)
+			while (!name.IsRoot)
 			{
 				DnsMessage? msg = await _resolver.ResolveMessageAsync(name, RecordType.Ds, recordClass, state, token);
 
@@ -93,7 +93,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (nsecRes == DnsSecValidationResult.Signed)
 				return nsecRes;
 
-			var nsec3Res = await ValidateNSec3Async(name, recordType, recordClass, rrSigRecords, stop == DomainName.Asterisk + zoneApex, zoneApex, msg, state, token);
+			var nsec3Res = await ValidateNSec3Async(name, recordType, recordClass, rrSigRecords, stop.Equals(DomainName.Asterisk + zoneApex), zoneApex, msg, state, token);
 			if (nsec3Res == DnsSecValidationResult.Signed)
 				return nsec3Res;
 
@@ -165,7 +165,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			DomainName hashedName = name.GetNSec3HashName(nsec3Parameter.HashAlgorithm, nsec3Parameter.Iterations, nsec3Parameter.Salt, zoneApex);
 
-			if (recordType == RecordType.Ds && nsecRecords.Any(x => (x.Flags == NSec3Flags.OptOut) && (x.IsCovering(hashedName))))
+			if (recordType == RecordType.Ds && nsecRecords.Any(x => x.IsCovering(hashedName) && x.Flags.HasFlag(NSec3Flags.OptOut)))
 				return DnsSecValidationResult.Unsigned;
 
 			var directMatch = nsecRecords.FirstOrDefault(x => x.Name.Equals(hashedName));
@@ -183,7 +183,7 @@ namespace ARSoft.Tools.Net.Dns
 				if (nsecRecords.Any(x => x.Name.Equals(hashedName, true)))
 					break;
 
-				if (current == zoneApex)
+				if (current.Equals(zoneApex))
 					return DnsSecValidationResult.Bogus; // closest encloser could not be found, but at least the zone apex must be found as
 
 				current = current.GetParentName();

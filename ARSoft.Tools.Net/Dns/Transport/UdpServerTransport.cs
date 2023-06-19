@@ -124,11 +124,7 @@ public class UdpServerTransport : IServerTransport
 
 	public void Dispose()
 	{
-		try
-		{
-			_socket.Dispose();
-		}
-		catch { }
+		_socket.TryDispose();
 	}
 
 	private class UdpServerConnection : IServerConnection

@@ -118,7 +118,10 @@ public abstract class TcpServerTransportBase<TTransport, TConnection, TStream> :
 		{
 			_tcpListener.Stop();
 		}
-		catch { }
+		catch
+		{
+			// ignored
+		}
 	}
 
 	/// <summary>
@@ -232,17 +235,8 @@ public abstract class TcpServerTransportBase<TTransport, TConnection, TStream> :
 
 		public void Dispose()
 		{
-			try
-			{
-				Stream.Dispose();
-			}
-			catch { }
-
-			try
-			{
-				_client.Dispose();
-			}
-			catch { }
+			Stream.TryDispose();
+			_client.TryDispose();
 		}
 	}
 }

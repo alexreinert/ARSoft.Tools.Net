@@ -139,7 +139,7 @@ namespace ARSoft.Tools.Net.Spf
 
 		private async Task<ValidationResult> CheckHostInternalAsync(IPAddress ip, DomainName? domain, string sender, bool expandExplanation, State state, CancellationToken token)
 		{
-			if ((domain == null) || (domain.Equals(DomainName.Root)))
+			if ((domain == null) || (domain.IsRoot))
 			{
 				return new ValidationResult() { Result = SpfQualifier.None, Explanation = String.Empty };
 			}
@@ -197,7 +197,7 @@ namespace ARSoft.Tools.Net.Spf
 
 					DomainName redirectDomain = await ExpandDomainAsync(redirectModifier.Domain ?? String.Empty, ip, domain, sender, token);
 
-					if ((redirectDomain == null) || (redirectDomain == DomainName.Root) || (redirectDomain.Equals(domain)))
+					if ((redirectDomain == null) || (redirectDomain.IsRoot) || (redirectDomain.Equals(domain)))
 					{
 						result.Result = SpfQualifier.PermError;
 					}
@@ -217,7 +217,7 @@ namespace ARSoft.Tools.Net.Spf
 				{
 					DomainName target = await ExpandDomainAsync(expModifier.Domain, ip, domain, sender, token);
 
-					if ((target == null) || (target.Equals(DomainName.Root)))
+					if (target.IsRoot)
 					{
 						result.Explanation = String.Empty;
 					}
@@ -483,12 +483,9 @@ namespace ARSoft.Tools.Net.Spf
 
 		private async Task<DomainName> ExpandDomainAsync(string pattern, IPAddress ip, DomainName domain, string sender, CancellationToken token)
 		{
-			string expanded = await ExpandMacroAsync(pattern, ip, domain, sender, token);
+			var expanded = await ExpandMacroAsync(pattern, ip, domain, sender, token);
 
-			if (String.IsNullOrEmpty(expanded))
-				return DomainName.Root;
-
-			return DomainName.Parse(expanded);
+			return String.IsNullOrEmpty(expanded) ? DomainName.Root : DomainName.Parse(expanded);
 		}
 
 		private async Task<string> ExpandMacroAsync(string pattern, IPAddress ip, DomainName domain, string sender, CancellationToken token)

@@ -172,7 +172,7 @@ namespace ARSoft.Tools.Net.Dns
 			if (stringRepresentation.Length < 4)
 				throw new FormatException();
 
-			Type = (CertType) UInt16.Parse(stringRepresentation[0]);
+			Type = ParseCertType(stringRepresentation[0]);
 			KeyTag = UInt16.Parse(stringRepresentation[1]);
 			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
 			Certificate = String.Join(String.Empty, stringRepresentation.Skip(3)).FromBase64String();
@@ -194,6 +194,17 @@ namespace ARSoft.Tools.Net.Dns
 			KeyTag = keyTag;
 			Algorithm = algorithm;
 			Certificate = certificate ?? new byte[] { };
+		}
+
+		private static CertType ParseCertType(string s)
+		{
+			if (EnumHelper<CertType>.TryParse(s, true, out var mnemonic))
+				return mnemonic;
+
+			if (UInt16.TryParse(s, out var numeric))
+				return (CertType) numeric;
+
+			throw new FormatException();
 		}
 
 		internal override string RecordDataToString()

@@ -16,7 +16,7 @@
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Copyright>Copyright 2010..2023 Alexander Reinert</Copyright>
-		<VersionPrefix>3.4.0</VersionPrefix>
+		<VersionPrefix>3.5.0</VersionPrefix>
 	</PropertyGroup>
 
 	<ItemGroup>

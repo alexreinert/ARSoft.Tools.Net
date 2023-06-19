@@ -17,6 +17,7 @@
 #endregion
 
 using System.Net;
+using System.Threading;
 
 namespace ARSoft.Tools.Net.Dns;
 
@@ -129,7 +130,7 @@ public abstract class PipelinedClientTransportBase : IClientTransport
 #pragma warning disable IDE0079
 #pragma warning disable CS4014
 						// ReSharper disable once MethodSupportsCancellation
-						Task.Run(() => connectTask.Result.Dispose());
+						Task.Run(() => connectTask.Result.MarkFaulty());
 #pragma warning restore CS4014
 #pragma warning restore IDE0079
 #pragma warning restore CA2016
@@ -164,13 +165,9 @@ public abstract class PipelinedClientTransportBase : IClientTransport
 	{
 		lock (_pool)
 		{
-			foreach (var connection in _pool.Values)
+			foreach (var conTask in _pool.Values)
 			{
-				try
-				{
-					connection.Dispose();
-				}
-				catch { }
+				conTask.ContinueWith(c => c.Result?.MarkFaulty());
 			}
 
 			_pool.Clear();
@@ -184,13 +181,20 @@ public abstract class PipelinedClientTransportBase : IClientTransport
 		internal IPAddress DestinationAddress { get; }
 
 		private readonly Dictionary<DnsMessageIdentification, TaskCompletionSource<DnsReceivedRawPackage?>> _receivers = new();
-		private CancellationTokenSource _globalReceiveCts = new CancellationTokenSource();
+		private CancellationTokenSource _globalReceiveCts = new();
+
+		private readonly TaskIdleCompletionSource _idleTcs;
 
 		public PipelinedClientConnection(PipelinedClientTransportBase transport, IPipelineableClientConnection connection, IPAddress destinationAddress)
 		{
 			_transport = transport;
 			_connection = connection;
 			DestinationAddress = destinationAddress;
+			_idleTcs = new TaskIdleCompletionSource(TimeSpan.FromMilliseconds(100));
+			_idleTcs.Task.ContinueWith((_) =>
+			{
+				MarkFaulty();
+			});
 		}
 
 		public IClientTransport Transport => _transport;
@@ -201,6 +205,7 @@ public abstract class PipelinedClientTransportBase : IClientTransport
 		{
 			lock (_connection)
 			{
+				_idleTcs.Pause();
 				return _connection.SendAsync(package, token);
 			}
 		}
@@ -209,9 +214,12 @@ public abstract class PipelinedClientTransportBase : IClientTransport
 		{
 			var isDone = false;
 
+			_idleTcs.Pause();
+
 			while (!isDone)
 			{
 				var package = await _connection.ReceiveAsync(_globalReceiveCts.Token);
+
 				if (package == null)
 				{
 					lock (_receivers)
@@ -234,7 +242,10 @@ public abstract class PipelinedClientTransportBase : IClientTransport
 						_receivers.Remove(package.MessageIdentification, out tcs);
 
 						if (_receivers.Count == 0)
+						{
 							isDone = true;
+							_idleTcs.Start();
+						}
 					}
 
 					tcs?.SetResult(package);
@@ -250,6 +261,7 @@ public abstract class PipelinedClientTransportBase : IClientTransport
 
 			lock (_receivers)
 			{
+				_idleTcs.Pause();
 				_receivers.Add(identification, tcs);
 
 				if (_receivers.Count == 1)
@@ -294,6 +306,11 @@ public abstract class PipelinedClientTransportBase : IClientTransport
 
 		public void RestartIdleTimeout(TimeSpan? timeout)
 		{
+			if (!timeout.HasValue)
+				return;
+
+			_idleTcs.SetIdleTimeout(TimeSpan.Zero);
+
 			_connection.RestartIdleTimeout(timeout);
 		}
 
@@ -301,10 +318,15 @@ public abstract class PipelinedClientTransportBase : IClientTransport
 
 		public void MarkFaulty()
 		{
-			_connection.MarkFaulty();
 			_transport.RemoveFromPool(this);
+			_connection.MarkFaulty();
+			_idleTcs.TryDispose();
+			_connection.TryDispose();
 		}
 
-		public void Dispose() { }
+		public void Dispose()
+		{
+			// Do nothing as the DnsClient does Dispose the connection after each request
+		}
 	}
 }

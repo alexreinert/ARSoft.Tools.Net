@@ -27,22 +27,43 @@ internal class TaskIdleCompletionSource : IDisposable
 	public TaskIdleCompletionSource(TimeSpan idleTimeout)
 	{
 		_timer = new Timer(TimerCallback);
-		ResetIdleTimeout(idleTimeout);
+		_timeout = idleTimeout;
 	}
 
 	public Task Task => _tcs.Task;
 
-	public bool ResetIdleTimeout(TimeSpan? newIdleTimeout = null)
+	public bool SetIdleTimeout(TimeSpan newIdleTimeout)
 	{
 		lock (_tcs)
 		{
 			if (_tcs.Task.IsCompleted)
 				return false;
 
-			_timeout = newIdleTimeout ?? _timeout;
-
+			_timeout = newIdleTimeout;
 			_timer.Change(_timeout, Timeout.InfiniteTimeSpan);
 			return true;
+		}
+	}
+
+	public void Pause()
+	{
+		lock (_tcs)
+		{
+			if (_tcs.Task.IsCompleted)
+				return;
+
+			_timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+		}
+	}
+
+	public void Start()
+	{
+		lock (_tcs)
+		{
+			if (_tcs.Task.IsCompleted)
+				return;
+
+			_timer.Change(_timeout, Timeout.InfiniteTimeSpan);
 		}
 	}
 

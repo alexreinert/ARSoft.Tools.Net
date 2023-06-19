@@ -149,14 +149,7 @@ namespace ARSoft.Tools.Net.Dns
 			}
 			finally
 			{
-				try
-				{
-					connection.Dispose();
-				}
-				catch
-				{
-					// ignored
-				}
+				connection.TryDispose();
 			}
 		}
 

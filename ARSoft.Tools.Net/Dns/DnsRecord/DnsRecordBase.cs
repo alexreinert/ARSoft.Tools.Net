@@ -174,6 +174,8 @@ public abstract class DnsRecordBase : DnsMessageEntryBase, IComparable<DnsRecord
 				return new OpenPGPKeyRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
 			case RecordType.CSync:
 				return new CSyncRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
+			case RecordType.ZoneMD:
+				return new ZoneMDRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
 			case RecordType.SvcB:
 				return new SvcBRecord(name, recordType, recordClass, timeToLive, resultData, recordDataPosition, recordDataLength);
 			case RecordType.Https:
@@ -322,6 +324,8 @@ public abstract class DnsRecordBase : DnsMessageEntryBase, IComparable<DnsRecord
 					return new OpenPGPKeyRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
 				case RecordType.CSync:
 					return new CSyncRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
+				case RecordType.ZoneMD:
+					return new ZoneMDRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
 				case RecordType.SvcB:
 					return new SvcBRecord(name, recordType, recordClass, timeToLive, origin, stringRepresentation);
 				case RecordType.Https:
@@ -372,13 +376,13 @@ public abstract class DnsRecordBase : DnsMessageEntryBase, IComparable<DnsRecord
 	#region Encoding
 	internal sealed override int MaximumLength => Name.MaximumRecordDataLength + 12 + MaximumRecordDataLength;
 
-	internal void Encode(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical = false)
+	internal void Encode(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical = false)
 	{
 		EncodeRecordHeader(messageData, ref currentPosition, domainNames, useCanonical);
 		EncodeRecordBody(messageData, ref currentPosition, domainNames, useCanonical);
 	}
 
-	internal void EncodeRecordHeader(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort> domainNames, bool useCanonical)
+	internal void EncodeRecordHeader(IList<byte> messageData, ref int currentPosition, Dictionary<DomainName, ushort>? domainNames, bool useCanonical)
 	{
 		DnsMessageBase.EncodeDomainName(messageData, ref currentPosition, Name, domainNames, useCanonical);
 		DnsMessageBase.EncodeUShort(messageData, ref currentPosition, (ushort) RecordType);
@@ -508,17 +512,13 @@ public abstract class DnsRecordBase : DnsMessageEntryBase, IComparable<DnsRecord
 		if (compare != 0)
 			return compare;
 
-		compare = TimeToLive.CompareTo(other.TimeToLive);
-		if (compare != 0)
-			return compare;
-
 		var thisBuffer = new byte[MaximumRecordDataLength];
 		int thisLength = 0;
-		EncodeRecordData(thisBuffer, ref thisLength, null, false);
+		EncodeRecordData(thisBuffer, ref thisLength, null, true);
 
 		var otherBuffer = new byte[other.MaximumRecordDataLength];
 		int otherLength = 0;
-		other.EncodeRecordData(otherBuffer, ref otherLength, null, false);
+		other.EncodeRecordData(otherBuffer, ref otherLength, null, true);
 
 		for (int i = 0; i < Math.Min(thisLength, otherLength); i++)
 		{

@@ -211,14 +211,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			public void Dispose()
 			{
-				try
-				{
-					_socket.Dispose();
-				}
-				catch
-				{
-					// ignored
-				}
+				_socket.TryDispose();
 			}
 		}
 	}

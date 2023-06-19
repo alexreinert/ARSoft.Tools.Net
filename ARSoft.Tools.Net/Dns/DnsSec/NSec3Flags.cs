@@ -21,6 +21,7 @@ namespace ARSoft.Tools.Net.Dns
 	/// <summary>
 	///   Flags of the <see cref="NSec3Record" />
 	/// </summary>
+	[Flags]
 	public enum NSec3Flags : byte
 	{
 		/// <summary>

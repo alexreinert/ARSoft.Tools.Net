@@ -117,7 +117,7 @@ namespace ARSoft.Tools.Net.Dns
 				if ((address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) && (groups["fam"].Value != "1"))
 					throw new FormatException();
 
-				return new AddressPrefix(groups["isneg"].Success, address, Byte.Parse(groups["pref"].Value));
+				return new AddressPrefix(groups["isneg"].Length > 0, address, Byte.Parse(groups["pref"].Value));
 			}
 		}
 

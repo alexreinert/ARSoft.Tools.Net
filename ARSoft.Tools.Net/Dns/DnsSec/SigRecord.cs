@@ -110,8 +110,8 @@ namespace ARSoft.Tools.Net.Dns
 			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[1]);
 			Labels = Byte.Parse(stringRepresentation[2]);
 			OriginalTimeToLive = Int32.Parse(stringRepresentation[3]);
-			SignatureExpiration = DateTime.ParseExact(stringRepresentation[4], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-			SignatureInception = DateTime.ParseExact(stringRepresentation[5], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+			SignatureExpiration = DateTime.ParseExact(stringRepresentation[4], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToLocalTime();
+			SignatureInception = DateTime.ParseExact(stringRepresentation[5], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToLocalTime();
 			KeyTag = UInt16.Parse(stringRepresentation[6]);
 			SignersName = ParseDomainName(origin, stringRepresentation[7]);
 			Signature = String.Join(String.Empty, stringRepresentation.Skip(8)).FromBase64String();
@@ -156,8 +156,8 @@ namespace ARSoft.Tools.Net.Dns
 			       + " " + (byte) Algorithm
 			       + " " + Labels
 			       + " " + OriginalTimeToLive
-			       + " " + SignatureExpiration.ToString("yyyyMMddHHmmss")
-			       + " " + SignatureInception.ToString("yyyyMMddHHmmss")
+			       + " " + SignatureExpiration.ToUniversalTime().ToString("yyyyMMddHHmmss")
+			       + " " + SignatureInception.ToUniversalTime().ToString("yyyyMMddHHmmss")
 			       + " " + KeyTag
 			       + " " + SignersName.ToString(true)
 			       + " " + Signature.ToBase64String();
@@ -180,13 +180,13 @@ namespace ARSoft.Tools.Net.Dns
 
 		internal static void EncodeDateTime(IList<byte> buffer, ref int currentPosition, DateTime value)
 		{
-			int timeStamp = (int) (value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
-			DnsMessageBase.EncodeInt(buffer, ref currentPosition, timeStamp);
+			var timeStamp = (uint) (value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+			DnsMessageBase.EncodeUInt(buffer, ref currentPosition, timeStamp);
 		}
 
 		private static DateTime ParseDateTime(IList<byte> buffer, ref int currentPosition)
 		{
-			int timeStamp = DnsMessageBase.ParseInt(buffer, ref currentPosition);
+			var timeStamp = DnsMessageBase.ParseUInt(buffer, ref currentPosition);
 			return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timeStamp).ToLocalTime();
 		}
 	}

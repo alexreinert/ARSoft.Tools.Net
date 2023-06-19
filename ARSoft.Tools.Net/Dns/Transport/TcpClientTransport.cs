@@ -82,8 +82,6 @@ namespace ARSoft.Tools.Net.Dns
 			private readonly TcpClient _client;
 			private readonly NetworkStream _stream;
 
-			private readonly TaskIdleCompletionSource _idleTCS = new TaskIdleCompletionSource(TimeSpan.FromMilliseconds(100)); // RFC 7766 states that a idle session should be closed unless higher timeout is signalized by server
-
 			public TcpClientConnection(TcpClientTransport transport, IPEndPoint destinationEndPoint, IPEndPoint localEndPoint, TcpClient client, NetworkStream stream)
 			{
 				_transport = transport;
@@ -91,8 +89,6 @@ namespace ARSoft.Tools.Net.Dns
 				_localEndPoint = localEndPoint;
 				_client = client;
 				_stream = stream;
-
-				_idleTCS.Task.ContinueWith((_) => { CloseConnection(); });
 			}
 
 			public IClientTransport Transport => _transport;
@@ -137,8 +133,6 @@ namespace ARSoft.Tools.Net.Dns
 						MarkFaulty();
 						return null;
 					}
-
-					_idleTCS.ResetIdleTimeout();
 
 					return new DnsReceivedRawPackage(buffer, _destinationEndPoint, _localEndPoint);
 				}
@@ -185,35 +179,7 @@ namespace ARSoft.Tools.Net.Dns
 
 			public void RestartIdleTimeout(TimeSpan? timeout)
 			{
-				if (!timeout.HasValue)
-					return;
-
-				if (timeout.Value == TimeSpan.Zero)
-				{
-					CloseConnection();
-				}
-				else
-				{
-					// use provided timeout, but at least 100ms and at most 2m
-					_idleTCS.ResetIdleTimeout(TimeSpan.FromMilliseconds(Math.Min(Math.Max(timeout.Value.TotalMilliseconds - 1, 100), 2 * 60 * 1000)));
-				}
-			}
-
-			private void CloseConnection()
-			{
-				MarkFaulty();
-
-				try
-				{
-					_stream.Dispose();
-				}
-				catch { }
-
-				try
-				{
-					_client.Close();
-				}
-				catch { }
+				// do nothing, is implemented in PipelinedClientConnection
 			}
 
 			public bool IsAlive => !IsFaulty && _client.IsConnected();
@@ -227,17 +193,9 @@ namespace ARSoft.Tools.Net.Dns
 
 			public void Dispose()
 			{
-				try
-				{
-					_stream.Dispose();
-				}
-				catch { }
-
-				try
-				{
-					_client.Close();
-				}
-				catch { }
+				MarkFaulty();
+				_stream.TryDispose();
+				_client.TryDispose();
 			}
 		}
 	}
