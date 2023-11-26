@@ -25,12 +25,8 @@ namespace ARSoft.Tools.Net.Dns;
 ///   A abstract base transport used by a server using tcp communication
 /// </summary>
 /// <typeparam name="TTransport">The type of the implemented transport</typeparam>
-/// <typeparam name="TConnection">The type of the connection used by the transport</typeparam>
-/// <typeparam name="TStream">The type of the Stream used by the transport</typeparam>
-public abstract class TcpServerTransportBase<TTransport, TConnection, TStream> : IServerTransport
-	where TTransport : TcpServerTransportBase<TTransport, TConnection, TStream>
-	where TConnection : TcpServerTransportBase<TTransport, TConnection, TStream>.TcpServerConnectionBase
-	where TStream : Stream
+public abstract class TcpServerTransportBase<TTransport> : IServerTransport
+	where TTransport : TcpServerTransportBase<TTransport>
 {
 	/// <summary>
 	///   The read and write timeout of the transport in milliseconds
@@ -89,7 +85,7 @@ public abstract class TcpServerTransportBase<TTransport, TConnection, TStream> :
 		_tcpListener.Stop();
 	}
 
-	protected abstract TConnection CreateConnection(TcpClient client);
+	protected abstract TcpServerConnectionBase CreateConnection(TcpClient client, CancellationToken token);
 
 	/// <summary>
 	///   Waits for a new connection and return the connection
@@ -104,7 +100,7 @@ public abstract class TcpServerTransportBase<TTransport, TConnection, TStream> :
 			client.SendTimeout = Timeout;
 			client.ReceiveTimeout = Timeout;
 
-			return CreateConnection(client);
+			return CreateConnection(client, token);
 		}
 		catch
 		{
@@ -125,13 +121,14 @@ public abstract class TcpServerTransportBase<TTransport, TConnection, TStream> :
 	}
 
 	/// <summary>
-	///   The abstract base connection which is used to the server using TCP communitions
+	///   The connection which is used to the server using TCP communication
 	/// </summary>
-	public class TcpServerConnectionBase : IServerConnection
+	protected abstract class TcpServerConnectionBase : IServerConnection
 	{
-		private readonly TcpClient _client;
-		protected readonly TStream Stream;
 		protected readonly TTransport TransportInternal;
+		private Stream? _stream;
+
+		protected TcpClient Client { get; }
 
 		/// <summary>
 		///   The corresponding transport
@@ -141,18 +138,28 @@ public abstract class TcpServerTransportBase<TTransport, TConnection, TStream> :
 		/// <summary>
 		///   The remote endpoint of the connection
 		/// </summary>
-		public IPEndPoint RemoteEndPoint => (IPEndPoint) _client.Client.RemoteEndPoint!;
+		public IPEndPoint RemoteEndPoint => (IPEndPoint) Client.Client.RemoteEndPoint!;
 
 		/// <summary>
 		///   The local endpoint of the connection
 		/// </summary>
-		public IPEndPoint LocalEndPoint => (IPEndPoint) _client.Client.LocalEndPoint!;
+		public IPEndPoint LocalEndPoint => (IPEndPoint) Client.Client.LocalEndPoint!;
 
-		protected TcpServerConnectionBase(TTransport transport, TcpClient client, TStream stream)
+		protected TcpServerConnectionBase(TTransport transport, TcpClient client)
 		{
 			TransportInternal = transport;
-			_client = client;
-			Stream = stream;
+			Client = client;
+		}
+
+		protected abstract Task<Stream?> GetStreamFromClientAsync(CancellationToken token);
+
+		/// <summary>
+		///   Initializes the connection before it can be used for sending/receiving data
+		/// </summary>
+		public async Task<bool> InitializeAsync(CancellationToken token)
+		{
+			_stream = await GetStreamFromClientAsync(token);
+			return _stream != null;
 		}
 
 		/// <summary>
@@ -185,15 +192,18 @@ public abstract class TcpServerTransportBase<TTransport, TConnection, TStream> :
 
 		private async Task<bool> TryReadAsync(ArraySegment<byte> buffer, int timeout, CancellationToken token)
 		{
+			if (_stream == null)
+				return false;
+
 			try
 			{
 				var readBytes = 0;
 				while (readBytes < buffer.Count)
 				{
-					if (token.IsCancellationRequested || !_client.IsConnected())
+					if (token.IsCancellationRequested || !Client.IsConnected())
 						return false;
 
-					var newReadBytes = await Stream.ReadAsync(buffer.Array!, buffer.Offset + readBytes, buffer.Count - readBytes, token).WithTimeout(timeout, token);
+					var newReadBytes = await _stream.ReadAsync(buffer.Array!, buffer.Offset + readBytes, buffer.Count - readBytes, token).WithTimeout(timeout, token);
 
 					if (newReadBytes == 0) // timeout
 						return false;
@@ -217,9 +227,12 @@ public abstract class TcpServerTransportBase<TTransport, TConnection, TStream> :
 		/// <returns>true, of the package could be sent to the client; otherwise, false</returns>
 		public virtual async Task<bool> SendAsync(DnsRawPackage package, CancellationToken token = default)
 		{
+			if (_stream == null)
+				return false;
+
 			try
 			{
-				await Stream.WriteAsync(package.ToArraySegment(true), token);
+				await _stream.WriteAsync(package.ToArraySegment(true), token);
 				return true;
 			}
 			catch
@@ -231,12 +244,12 @@ public abstract class TcpServerTransportBase<TTransport, TConnection, TStream> :
 		/// <summary>
 		///   A value indicating if data could be read from the client
 		/// </summary>
-		public bool CanRead => _client.Connected;
+		public bool CanRead => Client.Connected;
 
 		public void Dispose()
 		{
-			Stream.TryDispose();
-			_client.TryDispose();
+			_stream?.TryDispose();
+			Client.TryDispose();
 		}
 	}
 }

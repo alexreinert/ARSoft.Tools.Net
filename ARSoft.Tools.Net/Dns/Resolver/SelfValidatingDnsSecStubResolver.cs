@@ -69,6 +69,14 @@ namespace ARSoft.Tools.Net.Dns
 			: this(new DnsClient(servers, queryTimeout)) { }
 
 		/// <summary>
+		///   Provides a new instance using a list of custom DNS servers and a custom query timeout
+		/// </summary>
+		/// <param name="dnsOverHttpsEndpoint"> The uri of a DNS over HTTPS server to use </param>
+		/// <param name="queryTimeout"> The query timeout in milliseconds </param>
+		public SelfValidatingInternalDnsSecStubResolver(Uri dnsOverHttpsEndpoint, int queryTimeout = 10000)
+			: this(new DnsClient(new[] { IPAddress.Any, }, new IClientTransport[] { new HttpsClientTransport(dnsOverHttpsEndpoint) }, true, queryTimeout)) { }
+
+		/// <summary>
 		///   Resolves specified records.
 		/// </summary>
 		/// <typeparam name="T"> Type of records, that should be returned </typeparam>

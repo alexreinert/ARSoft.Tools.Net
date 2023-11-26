@@ -191,10 +191,7 @@ public abstract class PipelinedClientTransportBase : IClientTransport
 			_connection = connection;
 			DestinationAddress = destinationAddress;
 			_idleTcs = new TaskIdleCompletionSource(TimeSpan.FromMilliseconds(100));
-			_idleTcs.Task.ContinueWith((_) =>
-			{
-				MarkFaulty();
-			});
+			_idleTcs.Task.ContinueWith((_) => { MarkFaulty(); });
 		}
 
 		public IClientTransport Transport => _transport;

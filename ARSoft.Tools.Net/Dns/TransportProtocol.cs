@@ -46,6 +46,11 @@ public enum TransportProtocol
 	Https,
 
 	/// <summary>
+	///   DTLS
+	/// </summary>
+	DTls,
+
+	/// <summary>
 	///   Custom
 	/// </summary>
 	Custom
@@ -58,6 +63,7 @@ internal static class TransportProtocolHelper
 		switch (protocol)
 		{
 			case TransportProtocol.Udp:
+			case TransportProtocol.DTls:
 				return ProtocolType.Udp;
 
 			case TransportProtocol.Tcp:

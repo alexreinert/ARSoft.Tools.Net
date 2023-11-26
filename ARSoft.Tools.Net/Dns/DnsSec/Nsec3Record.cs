@@ -127,7 +127,7 @@ namespace ARSoft.Tools.Net.Dns
 		internal override string RecordDataToString()
 		{
 			return (byte) HashAlgorithm
-			       + " " + (byte)Flags
+			       + " " + (byte) Flags
 			       + " " + Iterations
 			       + " " + ((Salt.Length == 0) ? "-" : Salt.ToBase16String())
 			       + " " + NextHashedOwner.ToBase32String()

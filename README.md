@@ -117,6 +117,7 @@ A API documentation can be found at [https://docs.ar-soft.de/arsoft.tools.net](h
 * RFC 7766 - DNS Transport over TCP - Implementation Requirements
 * RFC 7828 - The edns-tcp-keepalive EDNS0 Option (Option parsing only)
 * RFC 7830 - The EDNS(0) Padding Option
+* RFC 7858 - Specification for DNS over Transport Layer Security (TLS)
 * RFC 7871 - Client Subnet in DNS Queries (Option parsing only)
 * RFC 7873 - Domain Name System (DNS) Cookies (Option parsing only)
 * RFC 7929 - DNS-Based Authentication of Named Entities (DANE) Bindings for OpenPGP
@@ -124,10 +125,12 @@ A API documentation can be found at [https://docs.ar-soft.de/arsoft.tools.net](h
 * RFC 8080 - Edwards-Curve Digital Security Algorithm (EdDSA) for DNSSEC
 * RFC 8162 - Using Secure DNS to Associate Certificates with Domain Names for S/MIME
 * RFC 8427 - Representing DNS Messages in JSON
+* RFC 8484 - DNS Queries over HTTPS (DoH)
 * RFC 8749 - Moving DNSSEC Lookaside Validation (DLV) to Historic Status
 * RFC 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery
 * RFC 8945 - Secret Key Transaction Authentication for DNS (TSIG)
 * RFC 8976 - Message Digest for DNS Zones
+* RFC 9210 - DNS Transport over TCP - Operational Requirements
 * RFC 9373 - EdDSA Value for IPSECKEY
 * draft-vixie-dnsext-dns0x20 - Use of Bit 0x20 in DNS Labels to Improve Transaction Identity
 * draft-sekar-dns-llq - DNS Long-Lived Queries

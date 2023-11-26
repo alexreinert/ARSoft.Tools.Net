@@ -144,6 +144,11 @@ public class UdpServerTransport : IServerTransport
 
 		public IServerTransport Transport => _transport;
 
+		public Task<bool> InitializeAsync(CancellationToken token)
+		{
+			return Task.FromResult(true);
+		}
+
 		public Task<DnsReceivedRawPackage?> ReceiveAsync(CancellationToken token)
 		{
 			CanRead = false;

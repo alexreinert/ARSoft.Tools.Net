@@ -176,18 +176,18 @@ namespace ARSoft.Tools.Net.Dns
 						}
 						// label class ttl type rd
 						else if (parts.Length >= 5
-						    && RecordClassHelper.TryParseShortString(parts[1], out recordClass, false)
-						    && Int32.TryParse(parts[2], out recordTtl)
-						    && RecordTypeHelper.TryParseShortString(parts[3], out recordType))
+						         && RecordClassHelper.TryParseShortString(parts[1], out recordClass, false)
+						         && Int32.TryParse(parts[2], out recordTtl)
+						         && RecordTypeHelper.TryParseShortString(parts[3], out recordType))
 						{
 							domainString = parts[0];
 							rrData = parts.Skip(4).ToArray();
 						}
 						//       ttl class type rd
 						else if (parts.Length >= 4
-						    && Int32.TryParse(parts[0], out recordTtl)
-						    && RecordClassHelper.TryParseShortString(parts[1], out recordClass, false)
-						    && RecordTypeHelper.TryParseShortString(parts[2], out recordType))
+						         && Int32.TryParse(parts[0], out recordTtl)
+						         && RecordClassHelper.TryParseShortString(parts[1], out recordClass, false)
+						         && RecordTypeHelper.TryParseShortString(parts[2], out recordType))
 						{
 							domainString = null;
 							rrData = parts.Skip(3).ToArray();
@@ -359,7 +359,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Updates all supported ZONEMD records
+		///   Updates all supported ZONEMD records
 		/// </summary>
 		/// <param name="signingKeys">The signing keys, if the covering RRSIG records should be resigned.</param>
 		public void UpdateZoneDigests(List<DnsKeyRecord>? signingKeys = null)
@@ -381,7 +381,7 @@ namespace ARSoft.Tools.Net.Dns
 		}
 
 		/// <summary>
-		/// Validates a zone
+		///   Validates a zone
 		/// </summary>
 		/// <param name="isDnsSecRequired">true, if the Zone needs to be signed</param>
 		/// <param name="isZoneMdRequired">true, if the Zone needs to be covered by ZONEMD records</param>
@@ -450,7 +450,7 @@ namespace ARSoft.Tools.Net.Dns
 						return false;
 
 					// no other records are allowed on CNAME, except RRSIG and NSEC
-					if (rrset.Any(x=>!x.Key.IsAnyOf(RecordType.CName, RecordType.RrSig, RecordType.NSec)))
+					if (rrset.Any(x => !x.Key.IsAnyOf(RecordType.CName, RecordType.RrSig, RecordType.NSec)))
 						return false;
 				}
 			}
@@ -462,7 +462,7 @@ namespace ARSoft.Tools.Net.Dns
 		{
 			var dnsKeys = recordsByName[Name][RecordType.DnsKey].Cast<DnsKeyRecord>().Where(k => k.IsZoneKey && k.Protocol == 3).ToArray();
 
-			if (dnsKeys.Length == 0 && !recordsByName.Any(x=>x.Value.Contains(RecordType.RrSig)))
+			if (dnsKeys.Length == 0 && !recordsByName.Any(x => x.Value.Contains(RecordType.RrSig)))
 				return !isDnsSecRequired;
 
 			if (dnsKeys.Count(x => x.IsSecureEntryPoint) == 0)
@@ -540,7 +540,7 @@ namespace ARSoft.Tools.Net.Dns
 						var nsec3hashname = set.Key.GetNSec3HashName(nsec3param.HashAlgorithm, nsec3param.Iterations, nsec3param.Salt, Name);
 
 						// check covering NSEC3 records, if set contains more than just the NSEC3 record
-						if (!coveredTypes.OrderBy(x => x).SequenceEqual(new [] { RecordType.RrSig ,RecordType.NSec3}))
+						if (!coveredTypes.OrderBy(x => x).SequenceEqual(new[] { RecordType.RrSig, RecordType.NSec3 }))
 						{
 							if (recordsByName.TryGetValue(nsec3hashname, RecordType.NSec3, out var nextHashOwnerSet))
 							{
@@ -572,7 +572,7 @@ namespace ARSoft.Tools.Net.Dns
 					{
 						var nsec = typedSets[RecordType.NSec].Cast<NSecRecord>().FirstOrDefault();
 
-						if (nsec == null) 
+						if (nsec == null)
 							return false;
 
 						if (!nsec.Types.OrderBy(x => x).SequenceEqual(coveredTypes.OrderBy(x => x)))
@@ -593,7 +593,7 @@ namespace ARSoft.Tools.Net.Dns
 						return false;
 				}
 
-				if (!recordHashes.OrderBy(x => x).SequenceEqual(nsec3Records.Where(x=>x.Types.Any()).Select(x => x.Name)))
+				if (!recordHashes.OrderBy(x => x).SequenceEqual(nsec3Records.Where(x => x.Types.Any()).Select(x => x.Name)))
 					return false;
 			}
 

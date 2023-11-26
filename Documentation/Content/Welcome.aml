@@ -377,6 +377,9 @@
                 <para>RFC 7830 - The EDNS(0) Padding Option</para>
               </listItem>
               <listItem>
+                <para>RFC 7858 - Specification for DNS over Transport Layer Security (TLS)</para>
+              </listItem>
+              <listItem>
                 <para>RFC 7871 - Client Subnet in DNS Queries (Option parsing only)</para>
               </listItem>
               <listItem>
@@ -398,6 +401,9 @@
                 <para>RFC 8427 - Representing DNS Messages in JSON</para>
               </listItem>
               <listItem>
+                <para>RFC 8484 - DNS Queries over HTTPS (DoH)</para>
+              </listItem>
+              <listItem>
                 <para>RFC 8749 - Moving DNSSEC Lookaside Validation (DLV) to Historic Status</para>
               </listItem>
               <listItem>
@@ -408,6 +414,9 @@
               </listItem>
               <listItem>
                 <para>RFC 8976 - Message Digest for DNS Zones</para>
+              </listItem>
+              <listItem>
+                <para>RFC 9210 - DNS Transport over TCP - Operational Requirements</para>
               </listItem>
               <listItem>
                 <para>RFC 9373 - EdDSA Value for IPSECKEY</para>

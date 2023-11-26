@@ -31,6 +31,11 @@ public interface IServerConnection : IDisposable
 	IServerTransport Transport { get; }
 
 	/// <summary>
+	///   Initializes the connection before it can be used for sending/receiving data
+	/// </summary>
+	Task<bool> InitializeAsync(CancellationToken token = default);
+
+	/// <summary>
 	///   Receives a new package of the client
 	/// </summary>
 	/// <param name="token"> The token to monitor cancellation requests </param>

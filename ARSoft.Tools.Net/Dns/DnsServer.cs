@@ -121,39 +121,64 @@ namespace ARSoft.Tools.Net.Dns
 			}
 		}
 
+		private class RefCountDispose
+		{
+			private int _count = 0;
+			private readonly IDisposable _disposable;
+
+			public RefCountDispose(IDisposable disposable)
+			{
+				_disposable = disposable;
+			}
+
+			public void Increment()
+			{
+				Interlocked.Increment(ref _count);
+			}
+
+			public void Decrement()
+			{
+				if (Interlocked.Decrement(ref _count) <= 0)
+					_disposable.TryDispose();
+			}
+		}
+
 		private async void ProcessConnectionAsync(IServerConnection connection, CancellationToken token)
 		{
-			var clientConnectedEventArgs = new ClientConnectedEventArgs(connection.Transport.TransportProtocol, connection.RemoteEndPoint, connection.LocalEndPoint);
-			await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
-
-			if (clientConnectedEventArgs.RefuseConnect)
-				return;
+			var refCount = new RefCountDispose(connection);
 
 			try
 			{
+				var clientConnectedEventArgs = new ClientConnectedEventArgs(connection.Transport.TransportProtocol, connection.RemoteEndPoint, connection.LocalEndPoint);
+				await ClientConnected.RaiseAsync(this, clientConnectedEventArgs);
+
+				if (clientConnectedEventArgs.RefuseConnect)
+					return;
+
+				if (!await connection.InitializeAsync(token))
+					return;
+
 				while (connection.CanRead)
 				{
+					refCount.Increment();
 					var queryPackage = await connection.ReceiveAsync(token);
 
 					if (queryPackage == null)
 						break;
 
 #pragma warning disable CS4014
-					Task.Run(() => ProcessRawPackageAsync(connection, queryPackage, token), token);
+					Task.Run(() => ProcessRawPackageAsync(connection, queryPackage, refCount, token), token);
 #pragma warning restore CS4014
 				}
 			}
 			catch (Exception ex)
 			{
 				OnExceptionThrownAsync(ex);
-			}
-			finally
-			{
-				connection.TryDispose();
+				refCount.Decrement();
 			}
 		}
 
-		private async Task ProcessRawPackageAsync(IServerConnection connection, DnsReceivedRawPackage queryPackage, CancellationToken token)
+		private async Task ProcessRawPackageAsync(IServerConnection connection, DnsReceivedRawPackage queryPackage, RefCountDispose refCount, CancellationToken token)
 		{
 			try
 			{
@@ -189,7 +214,7 @@ namespace ARSoft.Tools.Net.Dns
 				}
 				else
 				{
-					if (response.AllowMultipleResponses)
+					if (response.AllowMultipleResponses && connection.Transport.SupportsMultipleResponses)
 					{
 						var isSubSequentResponse = false;
 
@@ -309,6 +334,10 @@ namespace ARSoft.Tools.Net.Dns
 			catch (Exception ex)
 			{
 				OnExceptionThrownAsync(ex);
+			}
+			finally
+			{
+				refCount.Decrement();
 			}
 		}
 

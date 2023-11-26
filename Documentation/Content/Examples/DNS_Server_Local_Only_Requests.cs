@@ -5,12 +5,18 @@
 		using (DnsServer server = new DnsServer(IPAddress.Any, 10, 10))
 		{
 			server.QueryReceived += OnQueryReceived;
+			server.ClientConnected += OnClientConnected;
 
 			server.Start();
 
 			Console.WriteLine("Press any key to stop server");
 			Console.ReadLine();
 		}
+	}
+
+	static async void OnClientConnected(object sender, ClientConnectedEventArgs e)
+	{
+		e.RefuseConnect = !e.RemoteEndpoint.Address.Equals(IPAddress.Parse("127.0.0.1"));
 	}
 
 	static async void OnQueryReceived(object sender, QueryReceivedEventArgs e)

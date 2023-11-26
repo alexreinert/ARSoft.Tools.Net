@@ -415,7 +415,7 @@ namespace ARSoft.Tools.Net
 		/// <returns> Decoded data </returns>
 		public static byte[] FromBase64CharArray(this char[] inData, int offset, int length)
 		{
-			return inData.FromBase64CharArray(offset, length, _base64ReverseAlphabet);
+			return inData.FromBase64CharArray(0, offset, length, _base64ReverseAlphabet);
 		}
 
 		/// <summary>
@@ -456,6 +456,11 @@ namespace ARSoft.Tools.Net
 			return inData.ToCharArray().FromBase64UrlCharArray(0, inData.Length);
 		}
 
+		internal static byte[] FromBase64UrlString(this string inData, int prefixBytes)
+		{
+			return inData.ToCharArray().FromBase64CharArray(prefixBytes, 0, inData.Length, _base64UrlReverseAlphabet);
+		}
+
 		/// <summary>
 		///   Decodes a Base64Url char array as described in <a href="https://www.rfc-editor.org/rfc/rfc4648.html">RFC 4648</a>.
 		/// </summary>
@@ -465,7 +470,7 @@ namespace ARSoft.Tools.Net
 		/// <returns> Decoded data </returns>
 		public static byte[] FromBase64UrlCharArray(this char[] inData, int offset, int length)
 		{
-			return inData.FromBase64CharArray(offset, length, _base64UrlReverseAlphabet);
+			return inData.FromBase64CharArray(0, offset, length, _base64UrlReverseAlphabet);
 		}
 
 		/// <summary>
@@ -492,13 +497,13 @@ namespace ARSoft.Tools.Net
 			return inArray.ToBase64String(offset, length, _base64UrlAlphabet);
 		}
 
-		private static byte[] FromBase64CharArray(this char[] inData, int offset, int length, Dictionary<char, byte> alphabet)
+		private static byte[] FromBase64CharArray(this char[] inData, int prefixBytes, int offset, int length, Dictionary<char, byte> alphabet)
 		{
 			int paddingCount;
 			int remain;
 
 			if (length == 0)
-				return Array.Empty<byte>();
+				return new byte[prefixBytes];
 
 			if (alphabet[inData[offset + length - 2]] == 64)
 			{
@@ -518,10 +523,10 @@ namespace ARSoft.Tools.Net
 
 			int outSafeLength = (length - paddingCount) / 4 * 3;
 
-			byte[] res = new byte[outSafeLength + remain];
+			byte[] res = new byte[prefixBytes + outSafeLength + remain];
 
 			int inPos = offset;
-			int outPos = 0;
+			int outPos = prefixBytes;
 
 			byte[] buffer = new byte[4];
 

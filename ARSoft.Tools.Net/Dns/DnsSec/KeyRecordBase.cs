@@ -336,8 +336,8 @@ namespace ARSoft.Tools.Net.Dns
 				throw new FormatException();
 
 			Flags = UInt16.Parse(stringRepresentation[0]);
-			Protocol = (ProtocolType)Byte.Parse(stringRepresentation[1]);
-			Algorithm = (DnsSecAlgorithm)Byte.Parse(stringRepresentation[2]);
+			Protocol = (ProtocolType) Byte.Parse(stringRepresentation[1]);
+			Algorithm = (DnsSecAlgorithm) Byte.Parse(stringRepresentation[2]);
 		}
 
 		internal sealed override string RecordDataToString()

@@ -38,10 +38,7 @@ internal class SortedMultiDimensionalLookup<TKey1, TKey2, TElement> : IEnumerabl
 
 	public ILookup<TKey2, TElement> this[TKey1 key]
 	{
-		get
-		{
-			return TryGetValue(key, out var values) ? values : Enumerable.Empty<TElement>().ToLookup(x => (TKey2) default!);
-		}
+		get { return TryGetValue(key, out var values) ? values : Enumerable.Empty<TElement>().ToLookup(x => (TKey2) default!); }
 	}
 
 	public KeyValuePair<TKey1, ILookup<TKey2, TElement>> this[int index]
