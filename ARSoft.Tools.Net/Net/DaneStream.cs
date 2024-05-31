@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2023 Alexander Reinert
+// Copyright 2010..2024 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -139,7 +139,7 @@ namespace ARSoft.Tools.Net.Net
 		/// </param>
 		public void AuthenticateAsClient(string targetHost, int port, ProtocolType protocol = ProtocolType.Tcp, X509CertificateCollection? clientCertificates = null, SslProtocols enabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13, bool checkCertificateRevocation = false)
 		{
-			_tlsaRecords = _resolver.ResolveSecure<TlsaRecord>(DomainName.Parse("_" + port + "._" + EnumHelper<ProtocolType>.ToString(protocol).ToLower() + "." + targetHost), RecordType.Tlsa);
+			_tlsaRecords = _resolver.ResolveSecure<TlsaRecord>(DomainName.Parse("_" + port + "._" + EnumHelper<ProtocolType>.ToString(protocol).ToLowerInvariant() + "." + targetHost), RecordType.Tlsa);
 			_sslStream.AuthenticateAsClient(targetHost, clientCertificates ?? new X509CertificateCollection(), enabledSslProtocols, checkCertificateRevocation);
 		}
 
@@ -157,7 +157,7 @@ namespace ARSoft.Tools.Net.Net
 		/// </param>
 		public async Task AuthenticateAsClientAsync(string targetHost, int port, ProtocolType protocol = ProtocolType.Tcp, X509CertificateCollection? clientCertificates = null, SslProtocols enabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13, bool checkCertificateRevocation = false)
 		{
-			_tlsaRecords = await _resolver.ResolveSecureAsync<TlsaRecord>(DomainName.Parse("_" + port + "._" + EnumHelper<ProtocolType>.ToString(protocol).ToLower() + "." + targetHost), RecordType.Tlsa);
+			_tlsaRecords = await _resolver.ResolveSecureAsync<TlsaRecord>(DomainName.Parse("_" + port + "._" + EnumHelper<ProtocolType>.ToString(protocol).ToLowerInvariant() + "." + targetHost), RecordType.Tlsa);
 			await _sslStream.AuthenticateAsClientAsync(targetHost, clientCertificates ?? new X509CertificateCollection(), enabledSslProtocols, checkCertificateRevocation);
 		}
 

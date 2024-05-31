@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2023 Alexander Reinert
+// Copyright 2010..2024 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -41,7 +41,7 @@ namespace ARSoft.Tools.Net
 			{
 				_names[values[i]] = names[i];
 				_values[names[i]] = values[i];
-				_values[names[i].ToLower()] = values[i];
+				_values[names[i].ToLowerInvariant()] = values[i];
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace ARSoft.Tools.Net
 				return false;
 			}
 
-			return _values.TryGetValue((ignoreCase ? s.ToLower() : s), out value);
+			return _values.TryGetValue((ignoreCase ? s.ToLowerInvariant() : s), out value);
 		}
 
 		public static string ToString(T value)

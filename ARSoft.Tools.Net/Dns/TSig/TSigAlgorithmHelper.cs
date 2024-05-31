@@ -1,5 +1,5 @@
 ﻿#region Copyright and License
-// Copyright 2010..2023 Alexander Reinert
+// Copyright 2010..2024 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -54,7 +54,7 @@ namespace ARSoft.Tools.Net.Dns
 
 		public static TSigAlgorithm GetAlgorithmByName(DomainName name)
 		{
-			switch (name.ToString(false).ToLower())
+			switch (name.ToString(false).ToLowerInvariant())
 			{
 				case "hmac-md5.sig-alg.reg.int":
 					return TSigAlgorithm.Md5;

@@ -1,5 +1,5 @@
 #region Copyright and License
-// Copyright 2010..2023 Alexander Reinert
+// Copyright 2010..2024 Alexander Reinert
 // 
 // This file is part of the ARSoft.Tools.Net - C# DNS client/server and SPF Library (https://github.com/alexreinert/ARSoft.Tools.Net)
 // 
@@ -34,8 +34,8 @@ namespace ARSoft.Tools.Net.Dns
 			IPAddress.Parse("2001:503:ba3e::2:30"),
 
 			// b.root-servers.net
-			IPAddress.Parse("199.9.14.201"),
-			IPAddress.Parse("2001:500:200::b"),
+			IPAddress.Parse("170.247.170.2"),
+			IPAddress.Parse("2801:1b8:10::b"),
 
 			// c.root-servers.net
 			IPAddress.Parse("192.33.4.12"),
